@@ -64,7 +64,7 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
   - Tests: T-MKT-001..008
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 3.2 PTV-07 Mock und deterministische Baseline; Evidenz: T-DEC-001/002/004/006/008.
+- [x] 3.2 PTV-07 Mock und deterministische Baseline; Evidenz: T-DEC-001/002/004/006/008.
   - Requirements: REQ-DEC-001, REQ-DEC-002, REQ-DEC-004, REQ-DEC-006, REQ-DEC-008
   - Zielpfade: `packages/decisions/mock.py`, `packages/decisions/baseline.py`, `services/worker/planner.py`, `tests/unit/test_decision.py`
   - Abhängigkeiten: PTV-02, PTV-04, PTV-06

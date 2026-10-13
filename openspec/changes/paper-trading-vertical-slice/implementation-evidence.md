@@ -2,6 +2,8 @@
 
 ## Autorisierter CLI-Fortlauf 2026-10-13
 
+PTV-07 erneut mit38 Decision/Domain/Market-Tests bestanden und formal abgeschlossen. Issue#7 completed, Einzel- und23-Issue-Read-back ohne Drift. PTV-05-Branch50d3e8c bereits gepusht/nach main gemergt. PTV-07 wird getrennt auf codex/ptv-07-decision-baseline integriert; Root-Git-Mutationen erhalten offene Risk-Dateien. Acht von23 Tasks abgeschlossen. Remote-Contracts-CI für main4f1dcc1 und7945fcb tatsächlich success; neuere Runs werden gesondert geprüft und nicht pauschal als grün behauptet.
+
 Der Nutzer erlaubt GH CLI ausdrücklich als Alternative zum fehlenden MCP. gh2.100.0/fjure/Zielrepository bestätigt; Projektregeln um die konkrete Transportausnahme ergänzt. PTV-05 nach bereits bestandenem96-Test-Lauf und unabhängigem Safety-Closure formal abgeschlossen. Issue#5 per gh api nur Managedblock und completed-State aktualisiert, Einzel- und23-Issue-Read-back bestanden; Wiederholung0 Writes. Keine Kommentare, Labels oder PRs verändert. Stabile Marker/Dependencies/Hashes und manuelle Außeninhalte erhalten. Ein kurzzeitiger lesender CLI-Fehler wurde ohne Mutation wiederholt; keine Credentials ausgelesen oder Berechtigungen erweitert.
 
 ## Aktueller integrierter Prüfstand 2026-10-13
