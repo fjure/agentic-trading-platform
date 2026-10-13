@@ -44,7 +44,7 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
   - Tests: T-RUN-001/002/005, T-RSK-007
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 2.2 PTV-05 Jobleases und transaktionale Outbox; Evidenz: T-RUN-002/003/004.
+- [x] 2.2 PTV-05 Jobleases und transaktionale Outbox; Evidenz: T-RUN-002/003/004.
   - Requirements: REQ-RUN-002, REQ-RUN-003, REQ-RUN-004
   - Zielpfade: `services/worker/jobs.py`, `packages/observability/outbox.py`, `tests/integration/test_jobs_outbox.py`, `docs/runbooks/jobs.md`
   - Abhängigkeiten: PTV-04

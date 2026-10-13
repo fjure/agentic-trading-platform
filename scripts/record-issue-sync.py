@@ -1,4 +1,4 @@
-"""Persist MCP-verified issue read-backs; does not call any external service."""
+"""Persist verified issue read-backs; does not call any external service."""
 import argparse
 import hashlib
 import json
@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser()
 p.add_argument('--complete',action='store_true')
+p.add_argument('--transport', choices=['github-mcp','github-cli'], default='github-mcp')
 args=p.parse_args()
 entries=json.loads((ROOT/'.tooling/output/verified-issue-readbacks.json').read_text(encoding='utf-8'))
 mapping_path=ROOT/'docs/development/github-issue-sync.json'
@@ -42,9 +43,16 @@ assert known<=planned
 pending=sorted(planned-known)
 if args.complete: assert len(entries)==len(source_tasks) and not pending
 mapping.update(tasks=tasks,pendingTaskIds=pending,status='synchronized-read-back-verified' if args.complete else 'sync-in-progress-read-back-verified',lastReadBackAt=entries[-1]['verifiedAt'],lastRepositoryReadAt=entries[-1]['verifiedAt'],blockers=[] if args.complete else ['Remaining leaf-task writes and final repository-wide read-back pending.'])
-mapping['toolingVerification'].update(recordedAt=entries[-1]['verifiedAt'],writeExecutionVerified=True,formCompatibilityFix='dynamically-verified-direct-official-mcp-write')
-if args.complete:
-    mapping['toolingVerification']['readChecks']['issues']=len(entries)
+mapping['activeSyncTransport']=args.transport
+if args.transport=='github-mcp':
+    mapping['toolingVerification'].update(recordedAt=entries[-1]['verifiedAt'],writeExecutionVerified=True,formCompatibilityFix='dynamically-verified-direct-official-mcp-write')
+    if args.complete:
+        mapping['toolingVerification']['readChecks']['issues']=len(entries)
+else:
+    mapping['githubCliVerification']={'version':'2.100.0','authenticatedLogin':'fjure',
+        'authorizedByUserAt':'2026-10-13','repository':'fjure/agentic-trading-platform',
+        'verifiedAt':entries[-1]['verifiedAt'],'issueWriteReadBackVerified':True,
+        'readChecks':{'issues':len(entries)}}
 mapping.pop('pendingMutation',None)
 mapping['applicationProgress']={'complete':sum(t['done'] for t in source_tasks),'total':len(source_tasks),'openIssues':sum(e['state']=='open' for e in entries),'closedIssues':sum(e['state']=='closed' for e in entries)}
 if args.complete:

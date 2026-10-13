@@ -1,8 +1,10 @@
 # Codex-Tooling: Bootstrap-Status
 
-Stand: 2026-10-13 (Europe/Berlin); ursprüngliche Quellenprüfung 2026-10-12. **Definition of Ready erfüllt; Apply gesondert freigegeben, 6/23 Tasks abgeschlossen.**
+Stand: 2026-10-13 (Europe/Berlin); ursprüngliche Quellenprüfung 2026-10-12. **Definition of Ready erfüllt; Apply gesondert freigegeben, 7/23 Tasks abgeschlossen.**
 
 ## Aktueller Apply-Stand
+
+Aktuell maßgeblich: Der Nutzer hat die installierte offizielle GH CLI als Alternative ausdrücklich freigegeben. gh2.100.0 authentifiziert fjure und bestätigt das Zielrepository/main; PTV-05 ist abgeschlossen und Issue#5 über den eng begrenzten CLI-Pfad geschlossen. Einzel- und vollständiger23-Issue-Read-back prüfen Marker, Managedblocks, Titel, Labels, Dependencies, Status und SHA256; der identische zweite Lauf erzeugt0 Writes. Damit ist der frühere reine MCP-Transportblocker aufgehoben. CLI-Evidenz getrennt in github-issue-sync.json; MCP-Befunde darunter bleiben historische Evidenz. Scope und Read-back-Gates unverändert, siehe github-cli-sync.md.
 
 Aktualisierung 2026-10-13: Der Nutzer hat Issue-Branches, Commit/Push und anschließenden Merge nach main autorisiert; verbindlicher Ablauf in git-workflow.md und AGENTS.md. Bootstrap sowie PTV-01/02/03/04/06/08 jeweils auf eigenem Branch gepusht und in main integriert. Remote-SHAs, main als Remote-HEAD und Commit-Erreichbarkeit geprüft; Evidenz: git-issue-integrations.json. Generierter Client bleibt bytegenau einschließlich Upstream-Whitespace, .gitattributes verhindert Normalisierungsdrift. Echte main-Vertragsbaseline durch oasdiff geprüft.
 

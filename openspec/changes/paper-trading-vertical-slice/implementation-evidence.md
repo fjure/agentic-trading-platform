@@ -1,5 +1,9 @@
 # Implementierungsstand und Evidenz
 
+## Autorisierter CLI-Fortlauf 2026-10-13
+
+Der Nutzer erlaubt GH CLI ausdrücklich als Alternative zum fehlenden MCP. gh2.100.0/fjure/Zielrepository bestätigt; Projektregeln um die konkrete Transportausnahme ergänzt. PTV-05 nach bereits bestandenem96-Test-Lauf und unabhängigem Safety-Closure formal abgeschlossen. Issue#5 per gh api nur Managedblock und completed-State aktualisiert, Einzel- und23-Issue-Read-back bestanden; Wiederholung0 Writes. Keine Kommentare, Labels oder PRs verändert. Stabile Marker/Dependencies/Hashes und manuelle Außeninhalte erhalten. Ein kurzzeitiger lesender CLI-Fehler wurde ohne Mutation wiederholt; keine Credentials ausgelesen oder Berechtigungen erweitert.
+
 ## Aktueller integrierter Prüfstand 2026-10-13
 
 Gesonderter Nutzerauftrag erlaubt jetzt Issue-Branch-Commits, Push und Merge nach main. Bootstrapbasis plus sechs fertig synchronisierte Pakete PTV-01/02/03/04/06/08 entsprechend integriert; Remote-SHAs und Erreichbarkeit geprüft. docs/development/git-issue-integrations.json enthält die Zuordnung. Kein Force-Push, keine Branchlöschung, keine Pull-Request-Erstellung. Generierter Client samt 65 Indexblobs bytegleich zu zwei frischen Generierungen; Upstream-Whitespace nicht manuell bearbeitet. Oasdiff prüft nun eine echte vorhandene main-Baseline erfolgreich.
