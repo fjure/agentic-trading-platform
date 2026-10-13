@@ -1,5 +1,9 @@
 # Implementierungsstand und Evidenz
 
+## PTV-11 Reconciliation-Abschluss
+
+PTV-11: **18 verschiedene Prüfungen bestanden**:15PG-Recoveryfälle347.51s, zusätzlichungeordnetesCancelPending/Teilfill/CancelAck1passed23.23s und2Fingerprint-/Redactiontests0.22s. FakeBroker/Risk-Regression33passed0.46s. KumulativeDeltas/SELL-PnL/Cash/Portfolio/Ownership atomar; Duplikate/ungeordneteEreignisse/lateFills ohneDoppelbuchung; UNKNOWNretain/noSubmit, vollständigeClient-/Broker-IDbelege, historischeKosten-/Terminalbelege, fehlenderPreis/unbepreisterMehrfill/negativeCashbasis→durablePause/UNKNOWN. Commit-Abbruch verifiziert gemeinsamPosition/Report/Outboxrollback undeinmaligeWiederholungsbuchung. Unabhängiger starkerReview ohneoffeneBefunde, PolicyVersionen inauditserhalten. Ruff/strict/40REQ23DAG/Source248/0grün. docs/evidence/ptv-11-reconciliation.md unddocs/runbooks/recovery.md. FreshPortfolio/Health/Resume-/Watchdogkontrollen folgen12; keinexternerBroker, echteOrder oderCredentialzugriff.
+
 ## PTV-10 Execution-Abschluss 2026-10-13
 
 Issue#10 completed; vollständiger23-Issue-Read-back ohneDrift, identischerAbgleich0Writes. Branch f3ff185d regulärgepusht, Merge-main b38b9a2d regulärgepusht; zehnIssueBranchSHA undAncestry nachgewiesen. NeuereCI nichtpauschal alsgrün behauptet.
