@@ -1,1 +1,2 @@
 * text=auto eol=lf
+apps/dashboard/src/app/api/generated/control-api/** -text whitespace=-blank-at-eol,-blank-at-eof

@@ -1,0 +1,66 @@
+name: Contracts
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13.16'
+      - name: Locked Python and contract tools
+        run: |
+          python -m venv .tooling/application/tool-venv
+          if ($LASTEXITCODE -ne 0) { throw 'Tool venv failed' }
+          ./.tooling/application/tool-venv/Scripts/python.exe -m pip install uv==0.13.0
+          if ($LASTEXITCODE -ne 0) { throw 'uv install failed' }
+          ./.tooling/application/tool-venv/Scripts/uv.exe sync --frozen --python python --no-python-downloads
+          if ($LASTEXITCODE -ne 0) { throw 'Frozen install failed' }
+          ./scripts/bootstrap-contract-tools.ps1 -SkipPython
+      - name: Canonical schemas, examples and lint
+        run: |
+          ./.venv/Scripts/python.exe scripts/validate-contracts.py
+          if ($LASTEXITCODE -ne 0) { throw 'Contract validation failed' }
+          $nodeRoot = (Resolve-Path .tooling/contracts/node/node-v22.23.3-win-x64).Path
+          $env:PATH = "$nodeRoot;$env:PATH"
+          & "$nodeRoot/npm.cmd" --prefix .tooling/contracts run lint
+          if ($LASTEXITCODE -ne 0) { throw 'Contract lint failed' }
+      - name: Real baseline semantic breaking gate
+        env:
+          CONTRACT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if ($env:CONTRACT_BASE_SHA -match '^[0]{40}$') {
+            ./.venv/Scripts/python.exe scripts/check-contract-breaking.py --initial-contract
+          } elseif ($env:CONTRACT_BASE_SHA -match '^[0-9a-f]{40}$') {
+            ./.venv/Scripts/python.exe scripts/check-contract-breaking.py --base-ref $env:CONTRACT_BASE_SHA
+          } else { throw 'Missing trustworthy baseline SHA' }
+          if ($LASTEXITCODE -ne 0) { throw 'Breaking contract change detected' }
+      - name: Reproducible application client and negative contract tests
+        run: |
+          ./scripts/check-angular-client.ps1
+          ./.venv/Scripts/python.exe -m pytest tests/contracts -q
+          if ($LASTEXITCODE -ne 0) { throw 'Contract tests failed' }
+      - name: Source credential patterns
+        run: |
+          ./.venv/Scripts/python.exe scripts/scan-source-secrets.py
+          if ($LASTEXITCODE -ne 0) { throw 'Source credential scan failed' }
+      - name: Application client compiles in Angular production build
+        run: |
+          $nodeRoot = (Resolve-Path .tooling/contracts/node/node-v22.23.3-win-x64).Path
+          $env:PATH = "$nodeRoot;$env:PATH"
+          & "$nodeRoot/npm.cmd" --prefix apps/dashboard ci --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { throw 'Frontend frozen install failed' }
+          & "$nodeRoot/npm.cmd" --prefix apps/dashboard run build
+          if ($LASTEXITCODE -ne 0) { throw 'Application client compilation failed' }
