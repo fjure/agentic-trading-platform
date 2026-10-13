@@ -1,21 +1,43 @@
-"""Persist verified issue read-backs; does not call any external service."""
+"""Persist verified issue read-backs; CLI mode independently re-reads GitHub."""
 import argparse
 import hashlib
 import json
 import runpy
 import re
+import subprocess
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser()
 p.add_argument('--complete',action='store_true')
 p.add_argument('--transport', choices=['github-mcp','github-cli'], default='github-mcp')
+p.add_argument('--write-task', help='Task whose actual mutation was followed by live read-back')
 args=p.parse_args()
 entries=json.loads((ROOT/'.tooling/output/verified-issue-readbacks.json').read_text(encoding='utf-8'))
 mapping_path=ROOT/'docs/development/github-issue-sync.json'
 mapping=json.loads(mapping_path.read_text(encoding='utf-8'))
 previous={t['taskId']:t for t in mapping.get('tasks',[])}
 assert mapping['repository']=='fjure/agentic-trading-platform'
+cli_login=None
+cli_version=None
+if args.transport=='github-cli':
+    def gh_json(*command):
+        result=subprocess.run(['gh',*command],text=True,encoding='utf-8',capture_output=True)
+        if result.returncode:
+            raise RuntimeError('Independent CLI verification failed; diagnostics withheld')
+        return json.loads(result.stdout)
+    cli_login=gh_json('api','user','--hostname','github.com','--jq','{login:.login}')['login']
+    assert cli_login=='fjure'
+    result=subprocess.run(['gh','--version'],text=True,encoding='utf-8',capture_output=True,check=True)
+    cli_version=result.stdout.splitlines()[0].split()[2]
+    live=gh_json('issue','list','--repo','github.com/fjure/agentic-trading-platform',
+                 '--state','all','--limit','1000','--json','number,title,body,state,labels,url')
+    live_by_number={issue['number']:issue for issue in live}
+    for entry in entries:
+        issue=live_by_number[entry['issueNumber']]
+        assert issue['body']==entry['body'] and issue['title']==entry['title']
+        assert issue['state'].lower()==entry['state'] and issue['url']==entry['issueUrl']
+        assert sorted(label['name'] for label in issue['labels'])==sorted(entry['labels'])
 assert len({e['taskId'] for e in entries})==len(entries)
 assert len({e['issueNumber'] for e in entries})==len(entries)
 tasks=[]
@@ -45,14 +67,23 @@ if args.complete: assert len(entries)==len(source_tasks) and not pending
 mapping.update(tasks=tasks,pendingTaskIds=pending,status='synchronized-read-back-verified' if args.complete else 'sync-in-progress-read-back-verified',lastReadBackAt=entries[-1]['verifiedAt'],lastRepositoryReadAt=entries[-1]['verifiedAt'],blockers=[] if args.complete else ['Remaining leaf-task writes and final repository-wide read-back pending.'])
 mapping['activeSyncTransport']=args.transport
 if args.transport=='github-mcp':
-    mapping['toolingVerification'].update(recordedAt=entries[-1]['verifiedAt'],writeExecutionVerified=True,formCompatibilityFix='dynamically-verified-direct-official-mcp-write')
-    if args.complete:
-        mapping['toolingVerification']['readChecks']['issues']=len(entries)
+    # A local recorder cannot manufacture new MCP authentication or write proof.
+    mapping['readBackProvenance']='caller-provided official MCP tool results'
 else:
-    mapping['githubCliVerification']={'version':'2.100.0','authenticatedLogin':'fjure',
+    prior_cli=mapping.get('githubCliVerification',{})
+    mapping['githubCliVerification']={**prior_cli,'version':cli_version,'authenticatedLogin':cli_login,
         'authorizedByUserAt':'2026-10-13','repository':'fjure/agentic-trading-platform',
-        'verifiedAt':entries[-1]['verifiedAt'],'issueWriteReadBackVerified':True,
+        'verifiedAt':entries[-1]['verifiedAt'],'readBackIndependentlyVerified':True,
         'readChecks':{'issues':len(entries)}}
+    if args.write_task:
+        write_entry=next(e for e in entries if e['taskId']==args.write_task)
+        write_issue=gh_json('api',f"repos/fjure/agentic-trading-platform/issues/{write_entry['issueNumber']}",
+                            '--hostname','github.com')
+        assert 'pull_request' not in write_issue
+        assert write_issue['body']==write_entry['body'] and write_issue['state']==write_entry['state']
+        mapping['githubCliVerification'].update(issueWriteReadBackVerified=True,
+            lastVerifiedWriteTask=args.write_task,lastVerifiedWriteAt=entries[-1]['verifiedAt'])
+    mapping['readBackProvenance']='independently re-read via user-authorized GH CLI'
 mapping.pop('pendingMutation',None)
 mapping['applicationProgress']={'complete':sum(t['done'] for t in source_tasks),'total':len(source_tasks),'openIssues':sum(e['state']=='open' for e in entries),'closedIssues':sum(e['state']=='closed' for e in entries)}
 if args.complete:

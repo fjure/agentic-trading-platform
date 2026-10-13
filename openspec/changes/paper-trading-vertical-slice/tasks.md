@@ -84,9 +84,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
 
 ## 4. Risk Execution Recovery und Kontrollpfade
 
-- [ ] 4.1 PTV-09 Risk-Policy und atomare Reservierung; Evidenz: T-RSK-003..007.
+- [x] 4.1 PTV-09 Risk-Policy und atomare Reservierung; Evidenz: T-RSK-003..007.
   - Requirements: REQ-RSK-003, REQ-RSK-004, REQ-RSK-005, REQ-RSK-006, REQ-RSK-007
-  - Zielpfade: `packages/risk/engine.py`, `packages/risk/reservations.py`, `config/risk/paper.yaml`, `tests/property/test_risk.py`, `tests/integration/test_risk_races.py`
+  - Zielpfade: `packages/risk/engine.py`, `packages/risk/reservations.py`, `config/risk/paper.yaml`, `services/control_api/migrations/versions/0003_risk_context.py`, `tests/property/test_risk.py`, `tests/integration/test_risk_races.py`, `tests/integration/risk_support.py`, `docs/evidence/ptv-09-risk.md`
   - Abhängigkeiten: PTV-04, PTV-06, PTV-07
   - Verhalten: Deterministische Limits/TTL, Accountlock und Exposure aus Positionen/Orders/Reservierungen; Policyversion auditiert.
   - Akzeptanz: Parallelität 100 konkurrierender Vorschläge verbraucht nie doppeltes Budget; expiry reject.
