@@ -1,0 +1,15 @@
+.git
+.codex
+.agents
+.tooling
+.venv
+apps
+docs
+openspec
+contracts
+tests
+__pycache__
+*.pyc
+.env
+.env.*
+secrets
