@@ -1,0 +1,16 @@
+export * from './control.service';
+import { ControlService } from './control.service';
+export * from './control.serviceInterface';
+export * from './history.service';
+import { HistoryService } from './history.service';
+export * from './history.serviceInterface';
+export * from './riskPolicy.service';
+import { RiskPolicyService } from './riskPolicy.service';
+export * from './riskPolicy.serviceInterface';
+export * from './snapshot.service';
+import { SnapshotService } from './snapshot.service';
+export * from './snapshot.serviceInterface';
+export * from './stream.service';
+import { StreamService } from './stream.service';
+export * from './stream.serviceInterface';
+export const APIS = [ControlService, HistoryService, RiskPolicyService, SnapshotService, StreamService];
