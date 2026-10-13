@@ -1,0 +1,25 @@
+{
+  "name": "@agentic-trading-lab/dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "ng build --configuration production"
+  },
+  "dependencies": {
+    "@angular/cdk": "22.2.2",
+    "@angular/common": "22.2.2",
+    "@angular/compiler": "22.2.2",
+    "@angular/core": "22.2.2",
+    "@angular/material": "22.2.2",
+    "@angular/platform-browser": "22.2.2",
+    "rxjs": "7.8.2",
+    "tslib": "2.8.1",
+    "zone.js": "0.15.1"
+  },
+  "devDependencies": {
+    "@angular/build": "22.2.2",
+    "@angular/cli": "22.2.2",
+    "@angular/compiler-cli": "22.2.2",
+    "typescript": "6.0.2"
+  }
+}
