@@ -14,7 +14,7 @@ from decimal import Decimal
 from pathlib import Path
 
 
-def host() -> str:
+def host(*, guest_path: Path | None = None, guest_args: tuple[str, ...] = ()) -> str:
     from tests.integration.ledger_support import GROUPS, _admin
 
     root = Path(__file__).resolve().parents[2]
@@ -57,7 +57,21 @@ def host() -> str:
         (Path(__file__).resolve(), "/opt/lab/risk_support.py"),
     ):
         command.extend(("--mount", f"type=bind,source={source},target={target},readonly"))
-    command.extend(("agentic-trading-lab-dev-build-smoke:latest", "risk_support.py", "guest"))
+    if guest_path is not None:
+        guest_path = guest_path.resolve()
+        if not guest_path.is_relative_to(root / "tests"):
+            raise ValueError("guest test must be inside repository tests")
+        command.extend(
+            ("--mount", f"type=bind,source={guest_path},target=/opt/lab/test_guest.py,readonly")
+        )
+    command.extend(
+        (
+            "agentic-trading-lab-dev-build-smoke:latest",
+            "test_guest.py" if guest_path else "risk_support.py",
+            "guest",
+        )
+    )
+    command.extend(guest_args)
     try:
         _admin("\n".join(f"GRANT {group} TO {role} WITH ADMIN OPTION;" for group in GROUPS))
         _admin(f"CREATE DATABASE {database} OWNER {role};")
@@ -80,7 +94,7 @@ def host() -> str:
         _admin(f"DROP ROLE {role};")
 
 
-def guest() -> None:
+def guest(run_checks=None) -> None:
     from alembic import command
     from alembic.config import Config
     from sqlalchemy import create_engine, event, text
@@ -376,6 +390,12 @@ def guest() -> None:
         dbapi_connection.commit()
 
     execution_ledger = PostgresLedger(engine=role_engine)
+
+    if run_checks is not None:
+        run_checks(ledger, execution_ledger, engine, now)
+        role_engine.dispose()
+        engine.dispose()
+        return
 
     def run(index):
         return reserve(

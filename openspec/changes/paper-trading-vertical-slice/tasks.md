@@ -93,9 +93,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
   - Tests: T-RSK-003..007
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 4.2 PTV-10 Execution-Submitgate und Paperguard; Evidenz: T-RSK-001/002/004/005/008, T-RUN-006.
+- [x] 4.2 PTV-10 Execution-Submitgate und Paperguard; Evidenz: T-RSK-001/002/004/005/008, T-RUN-006.
   - Requirements: REQ-RSK-001, REQ-RSK-002, REQ-RSK-004, REQ-RSK-005, REQ-RSK-008, REQ-RUN-006
-  - Zielpfade: `services/execution/gates.py`, `services/execution/intents.py`, `tests/security/test_execution_isolation.py`, `tests/recovery/test_submit_crash.py`
+  - Zielpfade: `services/execution/gates.py`, `services/execution/intents.py`, `tests/security/test_execution_isolation.py`, `tests/recovery/test_submit_crash.py`, `tests/recovery/execution_support.py`, `tests/integration/risk_support.py`, `docs/evidence/ptv-10-execution.md`
   - Abhängigkeiten: PTV-05, PTV-08, PTV-09
   - Verhalten: Dauerhaftes SUBMITTING vor I/O, eindeutige clientOrderId, TTL/Version/Pause recheck, nur Execution-Paperport.
   - Akzeptanz: LIVE/REPLAY/SHADOW/agentischer Submit haben 0 Brokeraufrufe; Crash erzeugt keinen blinden Retry.

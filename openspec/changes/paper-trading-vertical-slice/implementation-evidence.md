@@ -1,5 +1,9 @@
 # Implementierungsstand und Evidenz
 
+## PTV-10 Execution-Abschluss 2026-10-13
+
+PTV-10: **16 Tests bestanden in321.21s**, zusätzliche Capability-/Startupregression2passed46.25s und100-Proposal-Riskregression1passed24.48s. Tatsächliche Execution-DBrolle, Fake-only und expliziter Smoke-Pfad; dauerhaftes SUBMITTING vor I/O, frische vollständige Gates nach allen Locks und nach Capability-I/O; UNKNOWN hält Budget/Pause und kein blinder Retry. Neustart setzt auditiert Pause, HALTED erhalten. GetrenntePG-Verbindung sieht vor Fake-Annahme den bestätigten Status. Pause zwischen Commits verhindert I/O, während Anfrage blockierter Pausewriter per pg_blocking_pids nachgewiesen. LONG/FLAT, Undercoverage, Policy/Portfolio/Capabilities/Session, Expiry, Crash vor/nach Annahme, Timeout, ACK-Konflikt und Redaction geprüft. Unabhängiger starker Code-Review ohne verbleibende Blocker; dokumentierte Befunde korrigiert. Ruff/strict/40REQ23DAG/Source243/0 grün. docs/evidence/ptv-10-execution.md; vollständige Reconciliation folgt11, Health-/Resume-/Kill-Orchestrierung12, Deploymentisolation21.
+
 ## PTV-09 Risk-Abschluss 2026-10-13
 
 PTV-09: **14 Tests bestanden in99.96s** (Risk-Hypothesis, echte 100-Proposal-/Cash-Rennen für zwei Instrumente, pending-SELL-Sperre, Ownership-/Rollen-/Auditkontexte sowie Ledger/Jobs). Hauptagent-Safetyreview korrigiert Exitmengen, isolierte Decimalrechnung und unveränderliche Kontozuordnung. Unabhängige Subagenten wegen Nutzungslimit vor Abschluss gestoppt; kein unabhängiges Prüfergebnis behauptet. Evidenz docs/evidence/ptv-09-risk.md; Issue#9 completed mit vollständigem23-Issue-Read-back; Wiederholung0Writes. Branch ae76ca73 regulär gepusht, Merge-main3d90857 regulär gepusht; RemoteSHA und Commit-Ancestry bestätigt.9/23 abgeschlossen. Submit-, Kill- und Prozessgrenzen verbleiben PTV-10..13.
