@@ -1,6 +1,6 @@
 # Kontextübergabe
 
-Stand 2026-10-13: PTV-01..09 umgesetzt; PTV-09 formal geprüft, Issue-Sync/Branchintegration im laufenden Durchlauf. Vor Fortsetzung aktuelle Mapping-/Remote-SHAs lesen. Vorangehend8/23 geschlossen,23 eindeutige Issues. Nutzer erlaubt GH CLI ausdrücklich bei fehlendem offiziellen MCP; nur fjure/agentic-trading-platform, Issue-/Labelscope unverändert. Kein Token-/Credential-/Prozessumgebungslesen und keine globalen Änderungen.
+Stand 2026-10-13: PTV-01..09 abgeschlossen,9/23 geschlossen,14 offen,23 eindeutige Issues. PTV09 Branchcommit ae76ca731c4dd34e2b89c6cfb72f562037ed4e7d; Merge-main3d90857b5e8d16cb784c9fbd56d8311a6c872350. Issue9 completed; vollständiger23Readback, identische Wiederholung0Writes. NeunRemoteIssueBranches undMain/Ancestry nachgewiesen. Vor Fortsetzung aktuelle Mapping-/Remote-SHAs lesen; spätere Evidenzcommits dürfen main weiterführen. Nutzer erlaubt GH CLI ausdrücklich bei fehlendem offiziellen MCP; nur fjure/agentic-trading-platform, Issue-/Labelscope unverändert. Kein Token-/Credential-/Prozessumgebungslesen und keine globalen Änderungen.
 
 Apply ist separat autorisiert; ebenso Issue-Branchcommit/push und anschließender main-Merge/push. Jeder Task eigener codex/ptv-NN-Branch; keine PRs, Kommentare, Branchdeletes oder Force-Pushes. Root integriert. Vor PTV09 main c4b35360, acht geprüfte Issue-Branches enthalten, Remote-Contracts-CI c4b35360 und21e5a106 success. Gitzuordnung docs/development/git-issue-integrations.json. Generated65Dateien bleiben bytegenau, nie manuell editieren.
 
