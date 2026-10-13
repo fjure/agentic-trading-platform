@@ -1,12 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$projectRoot = Split-Path -Parent $PSScriptRoot
-$env:OPENSPEC_TELEMETRY = '0'
-$env:DO_NOT_TRACK = '1'
-$env:XDG_CONFIG_HOME = Join-Path $projectRoot '.tooling/config'
-Push-Location $projectRoot
-try {
-    & (Join-Path $projectRoot '.tooling/node_modules/.bin/openspec.cmd') @args
-    exit $LASTEXITCODE
-} finally {
-    Pop-Location
-}
+# Keep the project profile and telemetry overrides out of the caller's environment.
+# In particular, GH CLI must retain its own private authentication configuration.
+& (Join-Path $PSHOME 'pwsh.exe') -NoProfile -File (Join-Path $PSScriptRoot 'openspec-entrypoint.ps1') @args
+exit $LASTEXITCODE

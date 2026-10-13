@@ -1,0 +1,9 @@
+version: paper-risk-v1
+simulation: true
+max_positions_per_instrument: 1
+max_positions_total: 2
+max_position_fraction: "0.10"
+max_daily_loss_fraction: "0.01"
+max_spread_fraction: "0.01"
+market_max_age_seconds: 120
+decision_ttl_seconds: 30

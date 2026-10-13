@@ -1,5 +1,11 @@
 # Implementierungsstand und Evidenz
 
+## PTV-09 Risk-Abschluss 2026-10-13
+
+PTV-09: **14 Tests bestanden in99.96s** (Risk-Hypothesis, echte 100-Proposal-/Cash-Rennen für zwei Instrumente, pending-SELL-Sperre, Ownership-/Rollen-/Auditkontexte sowie Ledger/Jobs). Hauptagent-Safetyreview korrigiert Exitmengen, isolierte Decimalrechnung und unveränderliche Kontozuordnung. Unabhängige Subagenten wegen Nutzungslimit vor Abschluss gestoppt; kein unabhängiges Prüfergebnis behauptet. Evidenz docs/evidence/ptv-09-risk.md; nach formaler Synchronisierung9/23 abgeschlossen. Submit-, Kill- und Prozessgrenzen verbleiben PTV-10..13.
+
+PTV-05 und PTV-07 sind inzwischen jeweils gepusht und nach main gemergt; Remote-main c4b35360 enthält alle acht vorangegangenen Issue-Branches. Contracts-CI für c4b35360 und21e5a106 tatsächlich success. Wrapper-Korrektur: OpenSpec setzt XDG_CONFIG_HOME/Telemetrie nur im privaten Kindprozess; derselbe aufrufende Shellkontext kann danach GH als fjure verwenden. Vollständiger Read-back23/23, identischer Scope-Sync0 Writes. CLI-Recorder liest aktuelle GitHub-Daten selbst erneut; lokale JSON-Dateien allein erzeugen keinen Auth-/Read-back-Nachweis.
+
 ## Autorisierter CLI-Fortlauf 2026-10-13
 
 PTV-07 erneut mit38 Decision/Domain/Market-Tests bestanden und formal abgeschlossen. Issue#7 completed, Einzel- und23-Issue-Read-back ohne Drift. PTV-05-Branch50d3e8c bereits gepusht/nach main gemergt. PTV-07 wird getrennt auf codex/ptv-07-decision-baseline integriert; Root-Git-Mutationen erhalten offene Risk-Dateien. Acht von23 Tasks abgeschlossen. Remote-Contracts-CI für main4f1dcc1 und7945fcb tatsächlich success; neuere Runs werden gesondert geprüft und nicht pauschal als grün behauptet.

@@ -37,7 +37,7 @@ def managed(body: str) -> str:
     return blocks[0]
 
 
-def validate_issue(issue: dict, task: dict, mapping: dict) -> None:
+def validate_issue(issue: dict, task: dict, mapping: dict, *, check_paths: bool = True) -> None:
     if "pull_request" in issue:
         raise ValueError("PR mutation forbidden")
     assert issue["number"] == mapping["issueNumber"]
@@ -48,22 +48,33 @@ def validate_issue(issue: dict, task: dict, mapping: dict) -> None:
     assert {"openspec", "change:paper-trading-vertical-slice"} <= labels
     block = managed(issue["body"])
     assert f"Requirements: {', '.join(task['requirements'])}" in block
-    assert all(f"`{path}`" in block for path in task["paths"])
+    if check_paths:
+        assert all(f"`{path}`" in block for path in task["paths"])
     assert re.findall(r"^- (PTV-\d+): #", block, re.M) == task["dependsOn"]
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("task_id")
-    parser.add_argument("--evidence-file", type=Path, required=True)
+    parser.add_argument("--evidence-file", type=Path)
+    parser.add_argument(
+        "--scope-only",
+        action="store_true",
+        help="Sync target paths of an open task without changing completion state",
+    )
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
     if not re.fullmatch(r"PTV-\d{2}", args.task_id):
         raise ValueError("invalid task ID")
-    evidence_path = args.evidence_file.resolve()
-    assert evidence_path.is_relative_to(ROOT), "Evidence must be inside repository"
-    evidence = evidence_path.read_text(encoding="utf-8").strip()
-    assert evidence and "\n" not in evidence, "Single evidence paragraph required"
+    evidence = None
+    if args.scope_only:
+        assert args.evidence_file is None, "Scope sync must not replace test evidence"
+    else:
+        assert args.evidence_file is not None, "Completion requires evidence"
+        evidence_path = args.evidence_file.resolve()
+        assert evidence_path.is_relative_to(ROOT), "Evidence must be inside repository"
+        evidence = evidence_path.read_text(encoding="utf-8").strip()
+        assert evidence and "\n" not in evidence, "Single evidence paragraph required"
     assert gh("api", "user", "--jq", ".login").strip() == "fjure"
     version = gh("--version").splitlines()[0].split()[2]
     repository = json.loads(
@@ -78,10 +89,16 @@ def main() -> None:
     by_task = {task["id"]: task for task in tasks}
     mapped = {task["taskId"]: task for task in mapping["tasks"]}
     assert set(mapped) == set(by_task)
-    assert args.task_id in by_task and by_task[args.task_id]["done"]
-    assert (
-        ROOT / "openspec/changes/paper-trading-vertical-slice/implementation-evidence.md"
-    ).is_file()
+    assert args.task_id in by_task
+    assert by_task[args.task_id]["done"] is (not args.scope_only)
+    audit_path = ROOT / "openspec/changes/paper-trading-vertical-slice/implementation-evidence.md"
+    assert audit_path.is_file()
+    if not args.scope_only:
+        audit_paragraphs = audit_path.read_text(encoding="utf-8").split("\n\n")
+        assert any(
+            args.task_id in paragraph and re.search(r"passed|bestanden", paragraph, re.I)
+            for paragraph in audit_paragraphs
+        ), "Task-specific passed evidence missing"
     raw = json.loads(
         gh("api", f"repos/{REPOSITORY}/issues?state=all&per_page=100", "--paginate", "--slurp")
     )
@@ -111,7 +128,9 @@ def main() -> None:
     for task in tasks:
         entry = mapped[task["id"]]
         issue = by_number[entry["issueNumber"]]
-        validate_issue(issue, task, entry)
+        validate_issue(
+            issue, task, entry, check_paths=not (args.scope_only and task["id"] == args.task_id)
+        )
         assert hashlib.sha256(managed(issue["body"]).encode()).hexdigest() == entry["contentHash"]
         assert issue["state"].lower() == entry["state"]
         if task["id"] != args.task_id:
@@ -122,21 +141,30 @@ def main() -> None:
     single = json.loads(gh("api", endpoint))
     assert "pull_request" not in single and single["body"] == before["body"]
     old = managed(before["body"])
-    updated, count = re.subn(
-        r"Testevidenz \([^\n]+\):[^\n]*", lambda _: f"Testevidenz (bestanden): {evidence}", old
-    )
-    assert count == 1, "Evidence section missing or duplicated"
-    updated = updated.replace(
-        "Anwendungstasks bleiben in diesem Planungsdurchlauf offen.",
-        f"OpenSpec Apply: {args.task_id} abgeschlossen; weitere Tasks separat.",
-    )
+    if args.scope_only:
+        paths = "\n".join(f"- `{path}`" for path in by_task[args.task_id]["paths"])
+        updated, count = re.subn(
+            r"Zielpfade:\n.*?(?=\n\nDepends on:)", lambda _: f"Zielpfade:\n{paths}", old, flags=re.S
+        )
+        assert count == 1, "Target-path section missing or duplicated"
+    else:
+        updated, count = re.subn(
+            r"Testevidenz \([^\n]+\):[^\n]*", lambda _: f"Testevidenz (bestanden): {evidence}", old
+        )
+        assert count == 1, "Evidence section missing or duplicated"
+        updated = updated.replace(
+            "Anwendungstasks bleiben in diesem Planungsdurchlauf offen.",
+            f"OpenSpec Apply: {args.task_id} abgeschlossen; weitere Tasks separat.",
+        )
     body = before["body"].replace(old, updated, 1)
-    changed = body != before["body"] or before["state"].lower() != "closed"
+    expected_state = before["state"].lower() if args.scope_only else "closed"
+    changed = body != before["body"] or before["state"].lower() != expected_state
+    payload = {"body": body}
+    if not args.scope_only:
+        payload.update(state="closed", state_reason="completed")
     payload_path = OUTPUT / f"{args.task_id.lower()}-issue-patch.json"
     payload_path.write_text(
-        json.dumps(
-            {"body": body, "state": "closed", "state_reason": "completed"}, ensure_ascii=False
-        ),
+        json.dumps(payload, ensure_ascii=False),
         encoding="utf-8",
     )
     print(
@@ -151,8 +179,9 @@ def main() -> None:
         assert latest["state"] == before["state"].lower()
         gh("api", endpoint, "--method", "PATCH", "--input", str(payload_path), "--silent")
     readback = json.loads(gh("api", endpoint))
-    assert readback["body"] == body and readback["state"] == "closed"
-    assert readback["state_reason"] == "completed"
+    assert readback["body"] == body and readback["state"] == expected_state
+    if not args.scope_only:
+        assert readback["state_reason"] == "completed"
     after = json.loads(
         gh(
             "issue",
@@ -200,14 +229,17 @@ def main() -> None:
     (OUTPUT / "verified-issue-readbacks.json").write_text(
         json.dumps(verified, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
+    recorder = [
+        str(Path(sys.executable)),
+        str(ROOT / "scripts/record-issue-sync.py"),
+        "--complete",
+        "--transport",
+        "github-cli",
+    ]
+    if changed:
+        recorder.extend(("--write-task", args.task_id))
     subprocess.run(
-        [
-            str(Path(sys.executable)),
-            str(ROOT / "scripts/record-issue-sync.py"),
-            "--complete",
-            "--transport",
-            "github-cli",
-        ],
+        recorder,
         cwd=ROOT,
         check=True,
     )
