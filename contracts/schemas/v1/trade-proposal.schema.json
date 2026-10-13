@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/trade-proposal.schema.json",
+  "title": "TradeProposal v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "decisionId", "marketStateId", "instrument", "target", "quantity", "createdAt", "validUntil", "traceId"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string"},
+    "decisionId": {"type": "string"},
+    "marketStateId": {"type": "string"},
+    "instrument": {"type": "string"},
+    "target": {"enum": ["LONG", "FLAT"]},
+    "quantity": {"$ref": "common.schema.json#/$defs/decimal"},
+    "rationaleCodes": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/reasonCode"}},
+    "createdAt": {"$ref": "common.schema.json#/$defs/utc"},
+    "validUntil": {"$ref": "common.schema.json#/$defs/utc"},
+    "traceId": {"$ref": "common.schema.json#/$defs/traceId"}
+  }
+}

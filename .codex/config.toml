@@ -1,0 +1,27 @@
+# Official project-only MCPs. No secrets. GitHub authentication is external.
+[mcp_servers.context7]
+command = "node"
+args = ["C:/Users/Domenik/ai-projects/agentic-trading-platform/.tooling/node_modules/@upstash/context7-mcp/dist/index.js"]
+enabled_tools = ["resolve-library-id", "query-docs"]
+default_tools_approval_mode = "prompt"
+startup_timeout_sec = 30
+
+[mcp_servers.playwright]
+command = "node"
+args = ["C:/Users/Domenik/ai-projects/agentic-trading-platform/.tooling/node_modules/@playwright/mcp/cli.js", "--isolated", "--headless", "--browser", "msedge", "--block-service-workers", "--no-webmcp", "--codegen", "none", "--output-dir", "C:/Users/Domenik/ai-projects/agentic-trading-platform/.tooling/output"]
+enabled_tools = ["browser_navigate", "browser_snapshot", "browser_take_screenshot", "browser_console_messages", "browser_network_requests", "browser_click", "browser_fill_form", "browser_select_option", "browser_press_key", "browser_wait_for", "browser_close", "browser_resize"]
+default_tools_approval_mode = "prompt"
+startup_timeout_sec = 30
+
+[mcp_servers.github]
+url = "https://api.githubcopilot.com/mcp/"
+bearer_token_env_var = "GITHUB_PAT_TOKEN"
+enabled_tools = ["get_me", "get_file_contents", "list_branches", "list_commits", "list_issues", "search_issues", "issue_read", "get_label", "list_label", "list_pull_requests", "pull_request_read", "actions_list", "actions_get", "issue_write", "label_write"]
+default_tools_approval_mode = "writes"
+http_headers = { "X-MCP-Toolsets" = "context,repos,issues,labels,pull_requests,actions", "X-MCP-Features" = "mcp_apps_disable_form_deferral" }
+
+[mcp_servers.github.tools.issue_write]
+approval_mode = "prompt"
+
+[mcp_servers.github.tools.label_write]
+approval_mode = "prompt"

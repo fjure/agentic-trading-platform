@@ -1,0 +1,908 @@
+{
+  "schemaVersion": 1,
+  "changeId": "paper-trading-vertical-slice",
+  "rows": [
+    {
+      "requirementId": "REQ-CTL-001",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/supervisor-control/spec.md",
+      "decisions": [
+        "D-08"
+      ],
+      "tasks": [
+        "PTV-03",
+        "PTV-18",
+        "PTV-20"
+      ],
+      "testId": "T-CTL-001",
+      "testPath": "tests/contracts/test_control_api.py",
+      "contracts": [
+        "operation:activateLocalSession",
+        "operation:getSupervisorSnapshot",
+        "operation:streamSupervisorEvents",
+        "operation:getMode",
+        "operation:setMode",
+        "operation:pauseNewEntries",
+        "operation:resumeNewEntries",
+        "operation:activateKillSwitch",
+        "operation:getRiskPolicy",
+        "operation:updateRiskPolicy",
+        "operation:listApiCosts"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-CTL-002",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/supervisor-control/spec.md",
+      "decisions": [
+        "D-08"
+      ],
+      "tasks": [
+        "PTV-03",
+        "PTV-18"
+      ],
+      "testId": "T-CTL-002",
+      "testPath": "tests/contracts/test_control_mutations.py",
+      "contracts": [
+        "operation:activateLocalSession",
+        "operation:getSupervisorSnapshot",
+        "operation:streamSupervisorEvents",
+        "operation:getMode",
+        "operation:setMode",
+        "operation:pauseNewEntries",
+        "operation:resumeNewEntries",
+        "operation:activateKillSwitch",
+        "operation:getRiskPolicy",
+        "operation:updateRiskPolicy",
+        "operation:listApiCosts"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-CTL-003",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/supervisor-control/spec.md",
+      "decisions": [
+        "D-08"
+      ],
+      "tasks": [
+        "PTV-03",
+        "PTV-18"
+      ],
+      "testId": "T-CTL-003",
+      "testPath": "tests/contracts/test_problem_responses.py",
+      "contracts": [
+        "operation:activateLocalSession",
+        "operation:getSupervisorSnapshot",
+        "operation:streamSupervisorEvents",
+        "operation:getMode",
+        "operation:setMode",
+        "operation:pauseNewEntries",
+        "operation:resumeNewEntries",
+        "operation:activateKillSwitch",
+        "operation:getRiskPolicy",
+        "operation:updateRiskPolicy",
+        "operation:listApiCosts"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-CTL-004",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/supervisor-control/spec.md",
+      "decisions": [
+        "D-08"
+      ],
+      "tasks": [
+        "PTV-19",
+        "PTV-20"
+      ],
+      "testId": "T-CTL-004",
+      "testPath": "tests/integration/test_sse_reconnect.py",
+      "contracts": [
+        "operation:activateLocalSession",
+        "operation:getSupervisorSnapshot",
+        "operation:streamSupervisorEvents",
+        "operation:getMode",
+        "operation:setMode",
+        "operation:pauseNewEntries",
+        "operation:resumeNewEntries",
+        "operation:activateKillSwitch",
+        "operation:getRiskPolicy",
+        "operation:updateRiskPolicy",
+        "operation:listApiCosts"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-CTL-005",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/supervisor-control/spec.md",
+      "decisions": [
+        "D-08"
+      ],
+      "tasks": [
+        "PTV-12",
+        "PTV-13",
+        "PTV-18",
+        "PTV-20",
+        "PTV-21"
+      ],
+      "testId": "T-CTL-005",
+      "testPath": "tests/recovery/test_independent_kill.py",
+      "contracts": [
+        "operation:activateLocalSession",
+        "operation:getSupervisorSnapshot",
+        "operation:streamSupervisorEvents",
+        "operation:getMode",
+        "operation:setMode",
+        "operation:pauseNewEntries",
+        "operation:resumeNewEntries",
+        "operation:activateKillSwitch",
+        "operation:getRiskPolicy",
+        "operation:updateRiskPolicy",
+        "operation:listApiCosts"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-CTL-006",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/supervisor-control/spec.md",
+      "decisions": [
+        "D-08"
+      ],
+      "tasks": [
+        "PTV-20",
+        "PTV-23"
+      ],
+      "testId": "T-CTL-006",
+      "testPath": "tests/e2e/test_supervisor_trace.py",
+      "contracts": [
+        "operation:activateLocalSession",
+        "operation:getSupervisorSnapshot",
+        "operation:streamSupervisorEvents",
+        "operation:getMode",
+        "operation:setMode",
+        "operation:pauseNewEntries",
+        "operation:resumeNewEntries",
+        "operation:activateKillSwitch",
+        "operation:getRiskPolicy",
+        "operation:updateRiskPolicy",
+        "operation:listApiCosts"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-CTL-007",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/supervisor-control/spec.md",
+      "decisions": [
+        "D-08"
+      ],
+      "tasks": [
+        "PTV-18",
+        "PTV-20",
+        "PTV-21"
+      ],
+      "testId": "T-CTL-007",
+      "testPath": "tests/security/test_control_surface.py",
+      "contracts": [
+        "operation:activateLocalSession",
+        "operation:getSupervisorSnapshot",
+        "operation:streamSupervisorEvents",
+        "operation:getMode",
+        "operation:setMode",
+        "operation:pauseNewEntries",
+        "operation:resumeNewEntries",
+        "operation:activateKillSwitch",
+        "operation:getRiskPolicy",
+        "operation:updateRiskPolicy",
+        "operation:listApiCosts"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-DEC-001",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/decision-replay/spec.md",
+      "decisions": [
+        "D-02",
+        "D-07"
+      ],
+      "tasks": [
+        "PTV-07",
+        "PTV-13",
+        "PTV-14"
+      ],
+      "testId": "T-DEC-001",
+      "testPath": "tests/integration/test_decision_inputs.py",
+      "contracts": [
+        "contracts/schemas/v1/decision-result.schema.json",
+        "operation:listDecisions"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-DEC-002",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/decision-replay/spec.md",
+      "decisions": [
+        "D-02",
+        "D-07"
+      ],
+      "tasks": [
+        "PTV-07",
+        "PTV-15"
+      ],
+      "testId": "T-DEC-002",
+      "testPath": "tests/contracts/test_decision_schema.py",
+      "contracts": [
+        "contracts/schemas/v1/decision-result.schema.json",
+        "operation:listDecisions"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-DEC-003",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/decision-replay/spec.md",
+      "decisions": [
+        "D-02",
+        "D-07"
+      ],
+      "tasks": [
+        "PTV-15"
+      ],
+      "testId": "T-DEC-003",
+      "testPath": "tests/contracts/test_jev_mapping.py",
+      "contracts": [
+        "contracts/schemas/v1/decision-result.schema.json",
+        "operation:listDecisions"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-DEC-004",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/decision-replay/spec.md",
+      "decisions": [
+        "D-02",
+        "D-07"
+      ],
+      "tasks": [
+        "PTV-07",
+        "PTV-15"
+      ],
+      "testId": "T-DEC-004",
+      "testPath": "tests/unit/test_decision_fallback.py",
+      "contracts": [
+        "contracts/schemas/v1/decision-result.schema.json",
+        "operation:listDecisions"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-DEC-005",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/decision-replay/spec.md",
+      "decisions": [
+        "D-02",
+        "D-07"
+      ],
+      "tasks": [
+        "PTV-15"
+      ],
+      "testId": "T-DEC-005",
+      "testPath": "tests/contracts/test_atomic_questions.py",
+      "contracts": [
+        "contracts/schemas/v1/decision-result.schema.json",
+        "operation:listDecisions"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-DEC-006",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/decision-replay/spec.md",
+      "decisions": [
+        "D-02",
+        "D-07"
+      ],
+      "tasks": [
+        "PTV-07",
+        "PTV-14",
+        "PTV-15"
+      ],
+      "testId": "T-DEC-006",
+      "testPath": "tests/integration/test_decision_versions.py",
+      "contracts": [
+        "contracts/schemas/v1/decision-result.schema.json",
+        "operation:listDecisions"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-DEC-007",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/decision-replay/spec.md",
+      "decisions": [
+        "D-02",
+        "D-07"
+      ],
+      "tasks": [
+        "PTV-14",
+        "PTV-23"
+      ],
+      "testId": "T-DEC-007",
+      "testPath": "tests/recovery/test_replay.py",
+      "contracts": [
+        "contracts/schemas/v1/decision-result.schema.json",
+        "operation:listDecisions"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-DEC-008",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/decision-replay/spec.md",
+      "decisions": [
+        "D-02",
+        "D-07"
+      ],
+      "tasks": [
+        "PTV-02",
+        "PTV-07",
+        "PTV-15"
+      ],
+      "testId": "T-DEC-008",
+      "testPath": "tests/contracts/test_decision_capabilities.py",
+      "contracts": [
+        "contracts/schemas/v1/decision-result.schema.json",
+        "operation:listDecisions"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-MKT-001",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/market-evidence/spec.md",
+      "decisions": [
+        "D-02",
+        "D-03"
+      ],
+      "tasks": [
+        "PTV-02",
+        "PTV-06",
+        "PTV-16",
+        "PTV-23"
+      ],
+      "testId": "T-MKT-001",
+      "testPath": "tests/contracts/test_market_data_contract.py",
+      "contracts": [
+        "contracts/schemas/v1/market-state.schema.json",
+        "operation:listMarketStates"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-MKT-002",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/market-evidence/spec.md",
+      "decisions": [
+        "D-02",
+        "D-03"
+      ],
+      "tasks": [
+        "PTV-06",
+        "PTV-13",
+        "PTV-16"
+      ],
+      "testId": "T-MKT-002",
+      "testPath": "tests/unit/test_market_bars.py",
+      "contracts": [
+        "contracts/schemas/v1/market-state.schema.json",
+        "operation:listMarketStates"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-MKT-003",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/market-evidence/spec.md",
+      "decisions": [
+        "D-02",
+        "D-03"
+      ],
+      "tasks": [
+        "PTV-02",
+        "PTV-06",
+        "PTV-16"
+      ],
+      "testId": "T-MKT-003",
+      "testPath": "tests/property/test_decimal_time.py",
+      "contracts": [
+        "contracts/schemas/v1/market-state.schema.json",
+        "operation:listMarketStates"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-MKT-004",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/market-evidence/spec.md",
+      "decisions": [
+        "D-02",
+        "D-03"
+      ],
+      "tasks": [
+        "PTV-06",
+        "PTV-14"
+      ],
+      "testId": "T-MKT-004",
+      "testPath": "tests/property/test_availability.py",
+      "contracts": [
+        "contracts/schemas/v1/market-state.schema.json",
+        "operation:listMarketStates"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-MKT-005",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/market-evidence/spec.md",
+      "decisions": [
+        "D-02",
+        "D-03"
+      ],
+      "tasks": [
+        "PTV-06",
+        "PTV-16"
+      ],
+      "testId": "T-MKT-005",
+      "testPath": "tests/unit/test_market_quality.py",
+      "contracts": [
+        "contracts/schemas/v1/market-state.schema.json",
+        "operation:listMarketStates"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-MKT-006",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/market-evidence/spec.md",
+      "decisions": [
+        "D-02",
+        "D-03"
+      ],
+      "tasks": [
+        "PTV-06",
+        "PTV-16"
+      ],
+      "testId": "T-MKT-006",
+      "testPath": "tests/unit/test_market_sessions.py",
+      "contracts": [
+        "contracts/schemas/v1/market-state.schema.json",
+        "operation:listMarketStates"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-MKT-007",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/market-evidence/spec.md",
+      "decisions": [
+        "D-02",
+        "D-03"
+      ],
+      "tasks": [
+        "PTV-06"
+      ],
+      "testId": "T-MKT-007",
+      "testPath": "tests/contracts/test_evidence_schema.py",
+      "contracts": [
+        "contracts/schemas/v1/market-state.schema.json",
+        "operation:listMarketStates"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-MKT-008",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/market-evidence/spec.md",
+      "decisions": [
+        "D-02",
+        "D-03"
+      ],
+      "tasks": [
+        "PTV-02",
+        "PTV-06",
+        "PTV-16"
+      ],
+      "testId": "T-MKT-008",
+      "testPath": "tests/contracts/test_market_capabilities.py",
+      "contracts": [
+        "contracts/schemas/v1/market-state.schema.json",
+        "operation:listMarketStates"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RSK-001",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/risk-execution/spec.md",
+      "decisions": [
+        "D-04",
+        "D-05"
+      ],
+      "tasks": [
+        "PTV-10",
+        "PTV-12",
+        "PTV-15",
+        "PTV-21"
+      ],
+      "testId": "T-RSK-001",
+      "testPath": "tests/unit/test_modes.py",
+      "contracts": [
+        "contracts/schemas/v1/risk-decision.schema.json",
+        "contracts/schemas/v1/risk-reservation.schema.json",
+        "contracts/schemas/v1/execution-report.schema.json",
+        "operation:listRiskDecisions",
+        "operation:listOrders"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RSK-002",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/risk-execution/spec.md",
+      "decisions": [
+        "D-04",
+        "D-05"
+      ],
+      "tasks": [
+        "PTV-10",
+        "PTV-12"
+      ],
+      "testId": "T-RSK-002",
+      "testPath": "tests/recovery/test_unsafe_restart.py",
+      "contracts": [
+        "contracts/schemas/v1/risk-decision.schema.json",
+        "contracts/schemas/v1/risk-reservation.schema.json",
+        "contracts/schemas/v1/execution-report.schema.json",
+        "operation:listRiskDecisions",
+        "operation:listOrders"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RSK-003",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/risk-execution/spec.md",
+      "decisions": [
+        "D-04",
+        "D-05"
+      ],
+      "tasks": [
+        "PTV-02",
+        "PTV-08",
+        "PTV-09",
+        "PTV-16",
+        "PTV-17"
+      ],
+      "testId": "T-RSK-003",
+      "testPath": "tests/contracts/test_broker_capabilities.py",
+      "contracts": [
+        "contracts/schemas/v1/risk-decision.schema.json",
+        "contracts/schemas/v1/risk-reservation.schema.json",
+        "contracts/schemas/v1/execution-report.schema.json",
+        "operation:listRiskDecisions",
+        "operation:listOrders"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RSK-004",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/risk-execution/spec.md",
+      "decisions": [
+        "D-04",
+        "D-05"
+      ],
+      "tasks": [
+        "PTV-09",
+        "PTV-10",
+        "PTV-13"
+      ],
+      "testId": "T-RSK-004",
+      "testPath": "tests/unit/test_risk_decision.py",
+      "contracts": [
+        "contracts/schemas/v1/risk-decision.schema.json",
+        "contracts/schemas/v1/risk-reservation.schema.json",
+        "contracts/schemas/v1/execution-report.schema.json",
+        "operation:listRiskDecisions",
+        "operation:listOrders"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RSK-005",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/risk-execution/spec.md",
+      "decisions": [
+        "D-04",
+        "D-05"
+      ],
+      "tasks": [
+        "PTV-09",
+        "PTV-10"
+      ],
+      "testId": "T-RSK-005",
+      "testPath": "tests/recovery/test_submit_gate.py",
+      "contracts": [
+        "contracts/schemas/v1/risk-decision.schema.json",
+        "contracts/schemas/v1/risk-reservation.schema.json",
+        "contracts/schemas/v1/execution-report.schema.json",
+        "operation:listRiskDecisions",
+        "operation:listOrders"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RSK-006",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/risk-execution/spec.md",
+      "decisions": [
+        "D-04",
+        "D-05"
+      ],
+      "tasks": [
+        "PTV-09"
+      ],
+      "testId": "T-RSK-006",
+      "testPath": "tests/property/test_risk_limits.py",
+      "contracts": [
+        "contracts/schemas/v1/risk-decision.schema.json",
+        "contracts/schemas/v1/risk-reservation.schema.json",
+        "contracts/schemas/v1/execution-report.schema.json",
+        "operation:listRiskDecisions",
+        "operation:listOrders"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RSK-007",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/risk-execution/spec.md",
+      "decisions": [
+        "D-04",
+        "D-05"
+      ],
+      "tasks": [
+        "PTV-04",
+        "PTV-09",
+        "PTV-13",
+        "PTV-23"
+      ],
+      "testId": "T-RSK-007",
+      "testPath": "tests/integration/test_parallel_reservations.py",
+      "contracts": [
+        "contracts/schemas/v1/risk-decision.schema.json",
+        "contracts/schemas/v1/risk-reservation.schema.json",
+        "contracts/schemas/v1/execution-report.schema.json",
+        "operation:listRiskDecisions",
+        "operation:listOrders"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RSK-008",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/risk-execution/spec.md",
+      "decisions": [
+        "D-04",
+        "D-05"
+      ],
+      "tasks": [
+        "PTV-08",
+        "PTV-10",
+        "PTV-17",
+        "PTV-21",
+        "PTV-22"
+      ],
+      "testId": "T-RSK-008",
+      "testPath": "tests/security/test_execution_isolation.py",
+      "contracts": [
+        "contracts/schemas/v1/risk-decision.schema.json",
+        "contracts/schemas/v1/risk-reservation.schema.json",
+        "contracts/schemas/v1/execution-report.schema.json",
+        "operation:listRiskDecisions",
+        "operation:listOrders"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RSK-009",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/risk-execution/spec.md",
+      "decisions": [
+        "D-04",
+        "D-05"
+      ],
+      "tasks": [
+        "PTV-08",
+        "PTV-11",
+        "PTV-13",
+        "PTV-17",
+        "PTV-22",
+        "PTV-23"
+      ],
+      "testId": "T-RSK-009",
+      "testPath": "tests/recovery/test_unknown_reconcile.py",
+      "contracts": [
+        "contracts/schemas/v1/risk-decision.schema.json",
+        "contracts/schemas/v1/risk-reservation.schema.json",
+        "contracts/schemas/v1/execution-report.schema.json",
+        "operation:listRiskDecisions",
+        "operation:listOrders"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RSK-010",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/risk-execution/spec.md",
+      "decisions": [
+        "D-04",
+        "D-05"
+      ],
+      "tasks": [
+        "PTV-08",
+        "PTV-11",
+        "PTV-13",
+        "PTV-17",
+        "PTV-22"
+      ],
+      "testId": "T-RSK-010",
+      "testPath": "tests/property/test_order_state_machine.py",
+      "contracts": [
+        "contracts/schemas/v1/risk-decision.schema.json",
+        "contracts/schemas/v1/risk-reservation.schema.json",
+        "contracts/schemas/v1/execution-report.schema.json",
+        "operation:listRiskDecisions",
+        "operation:listOrders"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RUN-001",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/durable-runtime/spec.md",
+      "decisions": [
+        "D-01",
+        "D-06",
+        "D-09"
+      ],
+      "tasks": [
+        "PTV-02",
+        "PTV-04",
+        "PTV-11"
+      ],
+      "testId": "T-RUN-001",
+      "testPath": "tests/integration/test_ledger_restore.py",
+      "contracts": [
+        "contracts/schemas/v1/event-envelope.schema.json",
+        "operation:listAuditEvents",
+        "operation:listAgentRuns"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RUN-002",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/durable-runtime/spec.md",
+      "decisions": [
+        "D-01",
+        "D-06",
+        "D-09"
+      ],
+      "tasks": [
+        "PTV-04",
+        "PTV-05",
+        "PTV-08",
+        "PTV-11",
+        "PTV-17"
+      ],
+      "testId": "T-RUN-002",
+      "testPath": "tests/recovery/test_duplicate_events.py",
+      "contracts": [
+        "contracts/schemas/v1/event-envelope.schema.json",
+        "operation:listAuditEvents",
+        "operation:listAgentRuns"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RUN-003",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/durable-runtime/spec.md",
+      "decisions": [
+        "D-01",
+        "D-06",
+        "D-09"
+      ],
+      "tasks": [
+        "PTV-05",
+        "PTV-21"
+      ],
+      "testId": "T-RUN-003",
+      "testPath": "tests/integration/test_job_leases.py",
+      "contracts": [
+        "contracts/schemas/v1/event-envelope.schema.json",
+        "operation:listAuditEvents",
+        "operation:listAgentRuns"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RUN-004",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/durable-runtime/spec.md",
+      "decisions": [
+        "D-01",
+        "D-06",
+        "D-09"
+      ],
+      "tasks": [
+        "PTV-03",
+        "PTV-05",
+        "PTV-13",
+        "PTV-19"
+      ],
+      "testId": "T-RUN-004",
+      "testPath": "tests/recovery/test_outbox_crash.py",
+      "contracts": [
+        "contracts/schemas/v1/event-envelope.schema.json",
+        "operation:listAuditEvents",
+        "operation:listAgentRuns"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RUN-005",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/durable-runtime/spec.md",
+      "decisions": [
+        "D-01",
+        "D-06",
+        "D-09"
+      ],
+      "tasks": [
+        "PTV-04",
+        "PTV-12",
+        "PTV-13",
+        "PTV-19",
+        "PTV-21",
+        "PTV-22"
+      ],
+      "testId": "T-RUN-005",
+      "testPath": "tests/security/test_audit_redaction.py",
+      "contracts": [
+        "contracts/schemas/v1/event-envelope.schema.json",
+        "operation:listAuditEvents",
+        "operation:listAgentRuns"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RUN-006",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/durable-runtime/spec.md",
+      "decisions": [
+        "D-01",
+        "D-06",
+        "D-09"
+      ],
+      "tasks": [
+        "PTV-01",
+        "PTV-10",
+        "PTV-16",
+        "PTV-17",
+        "PTV-21",
+        "PTV-23"
+      ],
+      "testId": "T-RUN-006",
+      "testPath": "tests/security/test_secret_boundaries.py",
+      "contracts": [
+        "contracts/schemas/v1/event-envelope.schema.json",
+        "operation:listAuditEvents",
+        "operation:listAgentRuns"
+      ],
+      "testStatus": "planned-not-executed"
+    },
+    {
+      "requirementId": "REQ-RUN-007",
+      "spec": "openspec/changes/paper-trading-vertical-slice/specs/durable-runtime/spec.md",
+      "decisions": [
+        "D-01",
+        "D-06",
+        "D-09"
+      ],
+      "tasks": [
+        "PTV-01",
+        "PTV-12",
+        "PTV-21"
+      ],
+      "testId": "T-RUN-007",
+      "testPath": "tests/integration/test_health_fail_closed.py",
+      "contracts": [
+        "contracts/schemas/v1/event-envelope.schema.json",
+        "operation:listAuditEvents",
+        "operation:listAgentRuns"
+      ],
+      "testStatus": "planned-not-executed"
+    }
+  ]
+}

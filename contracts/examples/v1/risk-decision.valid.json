@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"risk_1","proposalId":"prop_1","approved":true,"reasonCode":"OK","reasonCodes":["OK"],"policyVersion":3,"exposureSnapshot":{"equity":"100000.00","grossNotional":"0","reservedNotional":"0"},"reservationId":"res_1","decidedAt":"2026-10-12T14:45:04Z","validUntil":"2026-10-12T14:46:03Z","traceId":"4bf92f3577b34da6a3ce929d0e0e4736"}

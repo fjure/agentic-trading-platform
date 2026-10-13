@@ -1,0 +1,5 @@
+extends:
+  - minimal
+rules:
+  no-unused-components: off # SupervisorEvent is intentionally referenced by x-event-schema for SSE per-frame data.
+  no-invalid-media-type-examples: error

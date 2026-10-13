@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/risk-decision.schema.json",
+  "title": "RiskDecision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "proposalId", "approved", "reasonCode", "reasonCodes", "policyVersion", "exposureSnapshot", "decidedAt", "validUntil", "traceId"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string"},
+    "proposalId": {"type": "string"},
+    "approved": {"type": "boolean"},
+    "reasonCode": {"$ref": "common.schema.json#/$defs/reasonCode"},
+    "reasonCodes": {"type": "array", "minItems": 1, "items": {"$ref": "common.schema.json#/$defs/reasonCode"}},
+    "policyVersion": {"type": "integer", "minimum": 1},
+    "exposureSnapshot": {"type": "object", "additionalProperties": false, "required": ["equity", "grossNotional", "reservedNotional"], "properties": {"equity": {"$ref": "common.schema.json#/$defs/decimal"}, "grossNotional": {"$ref": "common.schema.json#/$defs/decimal"}, "reservedNotional": {"$ref": "common.schema.json#/$defs/decimal"}}},
+    "reservationId": {"type": "string"},
+    "decidedAt": {"$ref": "common.schema.json#/$defs/utc"},
+    "validUntil": {"$ref": "common.schema.json#/$defs/utc"},
+    "traceId": {"$ref": "common.schema.json#/$defs/traceId"}
+  }
+}

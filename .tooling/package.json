@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@fission-ai/openspec": "1.14.1",
+    "@playwright/mcp": "0.0.83",
+    "@upstash/context7-mcp": "4.3.0"
+  }
+}

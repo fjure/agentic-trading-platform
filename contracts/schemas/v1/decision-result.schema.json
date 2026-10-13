@@ -1,0 +1,575 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/decision-result.schema.json",
+  "title": "DecisionResult v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "marketStateId",
+    "choice",
+    "typedAnswers",
+    "confidence",
+    "distribution",
+    "regime",
+    "evidenceQuality",
+    "signalConflict",
+    "modelId",
+    "promptVersion",
+    "questionVersion",
+    "configVersion",
+    "inputHash",
+    "latencyMs",
+    "apiUnits",
+    "estimatedCost",
+    "validUntil",
+    "traceId",
+    "reasonCode"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string"
+    },
+    "marketStateId": {
+      "type": "string"
+    },
+    "choice": {
+      "enum": [
+        "LONG",
+        "FLAT",
+        "ABSTAIN"
+      ]
+    },
+    "typedAnswers": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "regime",
+        "evidenceQuality",
+        "signalConflict"
+      ],
+      "properties": {
+        "regime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "questionVersion",
+            "choice",
+            "confidence",
+            "distribution"
+          ],
+          "properties": {
+            "kind": {
+              "const": "CHOICE"
+            },
+            "questionVersion": {
+              "type": "string"
+            },
+            "choice": {
+              "enum": [
+                "TREND",
+                "RANGE",
+                "UNCERTAIN"
+              ]
+            },
+            "confidence": {
+              "$ref": "common.schema.json#/$defs/fraction"
+            },
+            "distribution": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "TREND",
+                "RANGE",
+                "UNCERTAIN"
+              ],
+              "properties": {
+                "TREND": {
+                  "$ref": "common.schema.json#/$defs/fraction"
+                },
+                "RANGE": {
+                  "$ref": "common.schema.json#/$defs/fraction"
+                },
+                "UNCERTAIN": {
+                  "$ref": "common.schema.json#/$defs/fraction"
+                }
+              }
+            }
+          }
+        },
+        "evidenceQuality": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "questionVersion",
+            "score",
+            "legend",
+            "distribution",
+            "confidence"
+          ],
+          "properties": {
+            "kind": {
+              "const": "SCORE"
+            },
+            "questionVersion": {
+              "type": "string"
+            },
+            "score": {
+              "type": "string",
+              "pattern": "^([0-8](\\.[0-9]{1,18})?|9(\\.0{1,18})?)$"
+            },
+            "legend": {
+              "type": "object",
+              "minProperties": 2,
+              "patternProperties": {
+                "^[0-9]$": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "additionalProperties": false
+            },
+            "distribution": {
+              "type": "object",
+              "minProperties": 2,
+              "patternProperties": {
+                "^[0-9]$": {
+                  "$ref": "common.schema.json#/$defs/fraction"
+                }
+              },
+              "additionalProperties": false
+            },
+            "confidence": {
+              "$ref": "common.schema.json#/$defs/fraction"
+            }
+          }
+        },
+        "signalConflict": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "questionVersion",
+            "noul"
+          ],
+          "properties": {
+            "kind": {
+              "const": "NOUL"
+            },
+            "questionVersion": {
+              "type": "string"
+            },
+            "noul": {
+              "$ref": "common.schema.json#/$defs/fraction"
+            }
+          }
+        },
+        "shadowDirection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "questionVersion",
+            "choice",
+            "confidence",
+            "distribution"
+          ],
+          "properties": {
+            "kind": {
+              "const": "CHOICE"
+            },
+            "questionVersion": {
+              "type": "string"
+            },
+            "choice": {
+              "enum": [
+                "LONG",
+                "FLAT",
+                "ABSTAIN"
+              ]
+            },
+            "confidence": {
+              "$ref": "common.schema.json#/$defs/fraction"
+            },
+            "distribution": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "LONG",
+                "FLAT",
+                "ABSTAIN"
+              ],
+              "properties": {
+                "LONG": {
+                  "$ref": "common.schema.json#/$defs/fraction"
+                },
+                "FLAT": {
+                  "$ref": "common.schema.json#/$defs/fraction"
+                },
+                "ABSTAIN": {
+                  "$ref": "common.schema.json#/$defs/fraction"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "confidence": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^(0(\\.[0-9]{1,18})?|1(\\.0{1,18})?)$"
+    },
+    "distribution": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": {
+        "$ref": "common.schema.json#/$defs/fraction"
+      }
+    },
+    "regime": {
+      "enum": [
+        "TREND",
+        "RANGE",
+        "UNCERTAIN",
+        null
+      ],
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "evidenceQuality": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^(0(\\.[0-9]{1,18})?|1(\\.0{1,18})?)$"
+    },
+    "signalConflict": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^(0(\\.[0-9]{1,18})?|1(\\.0{1,18})?)$"
+    },
+    "shadowChoice": {
+      "enum": [
+        "LONG",
+        "FLAT",
+        "ABSTAIN"
+      ]
+    },
+    "modelId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "promptVersion": {
+      "type": "string"
+    },
+    "questionVersion": {
+      "type": "string"
+    },
+    "configVersion": {
+      "type": "string"
+    },
+    "inputHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "latencyMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "apiUnits": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^-?(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+    },
+    "estimatedCost": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^-?(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+    },
+    "validUntil": {
+      "$ref": "common.schema.json#/$defs/utc"
+    },
+    "traceId": {
+      "$ref": "common.schema.json#/$defs/traceId"
+    },
+    "reasonCode": {
+      "$ref": "common.schema.json#/$defs/reasonCode"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "typedAnswers": {
+            "type": "null"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "typedAnswers": {
+            "type": "null"
+          },
+          "confidence": {
+            "type": "null"
+          },
+          "distribution": {
+            "type": "null"
+          },
+          "regime": {
+            "type": "null"
+          },
+          "evidenceQuality": {
+            "type": "null"
+          },
+          "signalConflict": {
+            "type": "null"
+          },
+          "modelId": {
+            "type": "null"
+          },
+          "choice": {
+            "const": "ABSTAIN"
+          },
+          "reasonCode": {
+            "enum": [
+              "ABSTAIN_MISSING_EVIDENCE",
+              "ABSTAIN_INVALID_RESPONSE",
+              "ABSTAIN_UNAVAILABLE"
+            ]
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "typedAnswers": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "regime",
+              "evidenceQuality",
+              "signalConflict"
+            ],
+            "properties": {
+              "regime": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "questionVersion",
+                  "choice",
+                  "confidence",
+                  "distribution"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "CHOICE"
+                  },
+                  "questionVersion": {
+                    "type": "string"
+                  },
+                  "choice": {
+                    "enum": [
+                      "TREND",
+                      "RANGE",
+                      "UNCERTAIN"
+                    ]
+                  },
+                  "confidence": {
+                    "$ref": "common.schema.json#/$defs/fraction"
+                  },
+                  "distribution": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "TREND",
+                      "RANGE",
+                      "UNCERTAIN"
+                    ],
+                    "properties": {
+                      "TREND": {
+                        "$ref": "common.schema.json#/$defs/fraction"
+                      },
+                      "RANGE": {
+                        "$ref": "common.schema.json#/$defs/fraction"
+                      },
+                      "UNCERTAIN": {
+                        "$ref": "common.schema.json#/$defs/fraction"
+                      }
+                    }
+                  }
+                }
+              },
+              "evidenceQuality": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "questionVersion",
+                  "score",
+                  "legend",
+                  "distribution",
+                  "confidence"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "SCORE"
+                  },
+                  "questionVersion": {
+                    "type": "string"
+                  },
+                  "score": {
+                    "type": "string",
+                    "pattern": "^([0-8](\\.[0-9]{1,18})?|9(\\.0{1,18})?)$"
+                  },
+                  "legend": {
+                    "type": "object",
+                    "minProperties": 2,
+                    "patternProperties": {
+                      "^[0-9]$": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "distribution": {
+                    "type": "object",
+                    "minProperties": 2,
+                    "patternProperties": {
+                      "^[0-9]$": {
+                        "$ref": "common.schema.json#/$defs/fraction"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "confidence": {
+                    "$ref": "common.schema.json#/$defs/fraction"
+                  }
+                }
+              },
+              "signalConflict": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "questionVersion",
+                  "noul"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "NOUL"
+                  },
+                  "questionVersion": {
+                    "type": "string"
+                  },
+                  "noul": {
+                    "$ref": "common.schema.json#/$defs/fraction"
+                  }
+                }
+              },
+              "shadowDirection": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "questionVersion",
+                  "choice",
+                  "confidence",
+                  "distribution"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "CHOICE"
+                  },
+                  "questionVersion": {
+                    "type": "string"
+                  },
+                  "choice": {
+                    "enum": [
+                      "LONG",
+                      "FLAT",
+                      "ABSTAIN"
+                    ]
+                  },
+                  "confidence": {
+                    "$ref": "common.schema.json#/$defs/fraction"
+                  },
+                  "distribution": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "LONG",
+                      "FLAT",
+                      "ABSTAIN"
+                    ],
+                    "properties": {
+                      "LONG": {
+                        "$ref": "common.schema.json#/$defs/fraction"
+                      },
+                      "FLAT": {
+                        "$ref": "common.schema.json#/$defs/fraction"
+                      },
+                      "ABSTAIN": {
+                        "$ref": "common.schema.json#/$defs/fraction"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "confidence": {
+            "$ref": "common.schema.json#/$defs/fraction"
+          },
+          "distribution": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "common.schema.json#/$defs/fraction"
+            }
+          },
+          "regime": {
+            "enum": [
+              "TREND",
+              "RANGE",
+              "UNCERTAIN"
+            ]
+          },
+          "evidenceQuality": {
+            "$ref": "common.schema.json#/$defs/fraction"
+          },
+          "signalConflict": {
+            "$ref": "common.schema.json#/$defs/fraction"
+          },
+          "modelId": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
+}

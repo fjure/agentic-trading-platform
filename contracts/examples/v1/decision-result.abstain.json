@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "dec_abstain",
+  "marketStateId": "mkt_1",
+  "choice": "ABSTAIN",
+  "typedAnswers": null,
+  "confidence": null,
+  "distribution": null,
+  "regime": null,
+  "evidenceQuality": null,
+  "signalConflict": null,
+  "modelId": null,
+  "promptVersion": "p1",
+  "questionVersion": "q1",
+  "configVersion": "c1",
+  "inputHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "latencyMs": 8,
+  "apiUnits": null,
+  "estimatedCost": null,
+  "validUntil": "2026-10-12T15:00:00Z",
+  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "reasonCode": "ABSTAIN_UNAVAILABLE"
+}

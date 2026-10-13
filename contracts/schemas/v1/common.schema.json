@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/common.schema.json",
+  "title": "Shared internal scalar types v1",
+  "$defs": {
+    "decimal": {"type": "string", "pattern": "^-?(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"},
+    "fraction": {"type": "string", "pattern": "^(0(\\.[0-9]{1,18})?|1(\\.0{1,18})?)$"},
+    "utc": {"type": "string", "format": "date-time", "pattern": "Z$"},
+    "traceId": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+    "reasonCode": {"type": "string", "enum": ["OK", "ABSTAIN_MISSING_EVIDENCE", "ABSTAIN_INVALID_RESPONSE", "ABSTAIN_UNAVAILABLE", "RISK_STALE_MARKET", "RISK_SESSION_CLOSED", "RISK_POLICY_INCOMPLETE", "RISK_LIMIT_EXCEEDED", "RISK_CAPABILITY_UNCONFIRMED", "RISK_PROPOSAL_EXPIRED", "RISK_RECONCILIATION_REQUIRED", "MODE_NOT_PAPER", "PAUSED_NEW", "KILL_SWITCH_ACTIVE", "HEALTH_CHECK_FAILED", "BROKER_STATUS_UNKNOWN", "TEMPORARILY_UNAVAILABLE", "VERSION_CONFLICT", "PRECONDITION_REQUIRED", "IDEMPOTENCY_CONFLICT", "CURSOR_EXPIRED", "INVALID_REQUEST"]}
+  }
+}

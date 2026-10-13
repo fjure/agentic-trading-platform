@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/risk-reservation.schema.json",
+  "title": "RiskReservation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "proposalId", "riskDecisionId", "reservedNotional", "state", "version", "createdAt", "traceId"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string"},
+    "proposalId": {"type": "string"},
+    "riskDecisionId": {"type": "string"},
+    "reservedNotional": {"$ref": "common.schema.json#/$defs/decimal"},
+    "state": {"enum": ["ACTIVE", "RELEASED", "CONSUMED", "HELD_UNKNOWN"]},
+    "version": {"type": "integer", "minimum": 1},
+    "createdAt": {"$ref": "common.schema.json#/$defs/utc"},
+    "releasedAt": {"$ref": "common.schema.json#/$defs/utc"},
+    "traceId": {"$ref": "common.schema.json#/$defs/traceId"}
+  }
+}

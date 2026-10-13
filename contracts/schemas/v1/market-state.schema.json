@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/market-state.schema.json",
+  "title": "MarketState v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "instrument", "market", "interval", "bar", "eventTime", "receivedAt", "availableAt", "asOf", "features", "evidence", "spread", "quality", "portfolio", "position", "traceId"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "instrument": {"type": "string", "minLength": 1},
+    "market": {"enum": ["US_EQUITY", "CRYPTO"]},
+    "interval": {"const": "PT15M"},
+    "bar": {"type": "object", "additionalProperties": false, "required": ["startAt", "endAt", "open", "high", "low", "close", "volume", "closed"], "properties": {"startAt": {"$ref": "common.schema.json#/$defs/utc"}, "endAt": {"$ref": "common.schema.json#/$defs/utc"}, "open": {"$ref": "common.schema.json#/$defs/decimal"}, "high": {"$ref": "common.schema.json#/$defs/decimal"}, "low": {"$ref": "common.schema.json#/$defs/decimal"}, "close": {"$ref": "common.schema.json#/$defs/decimal"}, "volume": {"$ref": "common.schema.json#/$defs/decimal"}, "closed": {"const": true}}},
+    "eventTime": {"$ref": "common.schema.json#/$defs/utc"},
+    "receivedAt": {"$ref": "common.schema.json#/$defs/utc"},
+    "availableAt": {"$ref": "common.schema.json#/$defs/utc"},
+    "asOf": {"$ref": "common.schema.json#/$defs/utc"},
+    "features": {"type": "object", "additionalProperties": {"$ref": "common.schema.json#/$defs/decimal"}},
+    "evidence": {"type": "object", "additionalProperties": false, "required": ["neutral", "sources", "availableAt", "conflicts", "quality"], "properties": {"neutral": {"const": true}, "sources": {"type": "array", "items": {"type": "string"}}, "availableAt": {"$ref": "common.schema.json#/$defs/utc"}, "conflicts": {"type": "array", "items": {"type": "string"}}, "quality": {"enum": ["VALID", "STALE", "GAP", "CONFLICT", "INVALID"]}}},
+    "spread": {"$ref": "common.schema.json#/$defs/decimal"},
+    "quality": {"enum": ["VALID", "STALE", "GAP", "CONFLICT", "INVALID"]},
+    "portfolio": {"type": "object", "additionalProperties": false, "required": ["equity", "cash"], "properties": {"equity": {"$ref": "common.schema.json#/$defs/decimal"}, "cash": {"$ref": "common.schema.json#/$defs/decimal"}}},
+    "position": {"type": "object", "additionalProperties": false, "required": ["quantity"], "properties": {"quantity": {"$ref": "common.schema.json#/$defs/decimal"}, "averagePrice": {"$ref": "common.schema.json#/$defs/decimal"}}},
+    "traceId": {"$ref": "common.schema.json#/$defs/traceId"}
+  }
+}

@@ -1,0 +1,1830 @@
+openapi: 3.1.2
+info:
+  title: Agentic Trading Lab local control API
+  version: 1.0.0
+  description: Canonical planning contract for the local, paper-only supervisor. No broker submit, provider raw
+    payload, credential, or live-mode operation is exposed. The contract does not assert that a runtime implementation
+    exists.
+servers:
+- url: http://127.0.0.1:8000
+  description: Loopback only; deployment must reject non-loopback bind and untrusted Origin.
+security:
+- LocalSession: []
+tags:
+- name: Snapshot
+  description: Atomic current supervisor state.
+- name: Stream
+  description: Retained sanitized live updates.
+- name: Control
+  description: Local operating controls.
+- name: Risk policy
+  description: Versioned simulation limits.
+- name: History
+  description: Paginated audit and trading history.
+paths:
+  /api/v1/session:
+    post:
+      tags:
+      - Control
+      operationId: activateLocalSession
+      summary: Exchange a one-time local launcher code for an HttpOnly session
+      description: The trusted local launcher displays a random, single-use activation code to the operator, never
+        in a URL or log. The same-origin form posts it over loopback; the server checks Host and Origin, expires
+        the code within five minutes, rate limits attempts, and sets an HttpOnly SameSite=Strict cookie. No broker
+        or Jev credential is involved. Browser writes require the session, exact same Origin, JSON content type,
+        and CSRF protection. This is a planning contract only.
+      security: []
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateSessionRequest'
+      responses:
+        '204':
+          description: Local operator session created; code immediately consumed.
+          headers:
+            Set-Cookie:
+              description: HttpOnly SameSite=Strict local session; Secure when TLS is used.
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /api/v1/snapshot:
+    get:
+      tags:
+      - Snapshot
+      operationId: getSupervisorSnapshot
+      summary: Read an atomic supervisor view and the cursor to continue from it
+      description: Cursor marks the last event included at the atomic snapshot boundary; SSE resumes strictly after
+        it. If the stream later reports CURSOR_EXPIRED, discard cached state and fetch a new snapshot.
+      parameters:
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Current sanitized supervisor state and event cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupervisorSnapshot'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /api/v1/events:
+    get:
+      tags:
+      - Stream
+      operationId: streamSupervisorEvents
+      summary: Resume sanitized supervisor events using SSE
+      x-event-schema:
+        $ref: '#/components/schemas/SupervisorEvent'
+      description: 'The client first reads /snapshot, then connects with that response''s cursor. Last-Event-ID
+        takes precedence over the cursor query when both are supplied. Each data frame is one SupervisorEvent JSON
+        value; id is the event cursor, event is its versioned eventType. Events can be redelivered; clients deduplicate
+        by eventId and apply monotonically increasing aggregateVersion. A comment heartbeat (`: heartbeat`) is sent
+        at most every 15 seconds while idle and carries no state. Reconnect uses Last-Event-ID. Expired/unknown
+        cursor returns HTTP 410 problem+json before the stream opens; midstream interruption requires a reconnect,
+        which either replays all retained events or returns 410. If a gap is detected after streaming begins, emit
+        `event: reset-required` with a sanitized CURSOR_EXPIRED problem JSON payload, then close; the client fetches
+        a fresh snapshot. Retention defaults to seven days. A missing heartbeat for 45 seconds marks the client
+        connection stale. The server must never silently skip a gap. Events are at-least-once and ordered by cursor,
+        not necessarily by aggregate. Browser EventSource cannot attach arbitrary headers; authentication must use
+        a same-origin, HttpOnly local session cookie.'
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - name: Last-Event-ID
+        in: header
+        description: Opaque cursor from the last delivered SSE id.
+        schema:
+          $ref: '#/components/schemas/Cursor'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Event stream; each data frame validates as SupervisorEvent.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: 'id: c_000123
+
+                event: order.updated.v1
+
+                data: {"eventId":"evt_123","eventType":"order.updated.v1","occurredAt":"2026-10-12T10:00:00Z","aggregateId":"ord_1","aggregateVersion":2,"traceId":"4bf92f3577b34da6a3ce929d0e0e4736","cursor":"c_000123","payload":{"orderId":"ord_1","status":"UNKNOWN"}}
+
+
+                '
+        '410':
+          $ref: '#/components/responses/CursorExpired'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /api/v1/mode:
+    get:
+      tags:
+      - Control
+      operationId: getMode
+      summary: Read the effective mode and safety controls
+      parameters:
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Effective operating mode and pause state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModeState'
+    put:
+      tags:
+      - Control
+      operationId: setMode
+      summary: Request DISABLED, REPLAY, SHADOW, or PAPER
+      description: PAPER requires explicit health and reconciliation success. LIVE is absent from the schema and
+        must be rejected at every layer. No mode directly submits orders.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetModeRequest'
+      responses:
+        '200':
+          description: Result, also returned for a valid replay of the idempotency key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModeState'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /api/v1/control/pause:
+    post:
+      tags:
+      - Control
+      operationId: pauseNewEntries
+      summary: Immediately block new entries independent of decision or dashboard health
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ControlReason'
+      responses:
+        '200':
+          description: Effective control state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModeState'
+              example:
+                mode: PAPER
+                pauseNew: true
+                killSwitch: false
+                health: HEALTHY
+                reconciliation: CURRENT
+                changedAt: '2026-10-12T10:00:00Z'
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /api/v1/control/resume:
+    post:
+      tags:
+      - Control
+      operationId: resumeNewEntries
+      summary: Resume only after explicit health and reconciliation checks
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ControlReason'
+      responses:
+        '200':
+          description: Effective control state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModeState'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /api/v1/control/kill:
+    post:
+      tags:
+      - Control
+      operationId: activateKillSwitch
+      summary: Latch the independent kill switch; no API route clears it
+      description: Recovery requires the separately documented operator runbook.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ControlReason'
+      responses:
+        '200':
+          description: Effective control state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModeState'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /api/v1/risk-policy:
+    get:
+      tags:
+      - Risk policy
+      operationId: getRiskPolicy
+      summary: Read the versioned paper risk policy
+      parameters:
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Versioned simulation limits
+          headers:
+            ETag:
+              description: Opaque strong version token for If-Match.
+              schema:
+                type: string
+                example: '"risk-policy-v3"'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskPolicy'
+    put:
+      tags:
+      - Risk policy
+      operationId: updateRiskPolicy
+      summary: Replace the complete validated paper risk policy
+      description: Check the actor/operation/idempotency-key record before evaluating If-Match, so an exact retry
+        returns the original result even after ETag advancement. A new key with an old ETag receives 412.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskPolicyUpdate'
+      responses:
+        '200':
+          description: Updated policy with next version token
+          headers:
+            ETag:
+              schema:
+                type: string
+                example: '"risk-policy-v4"'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskPolicy'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '412':
+          $ref: '#/components/responses/VersionConflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /api/v1/market-states:
+    get:
+      tags:
+      - History
+      operationId: listMarketStates
+      summary: List recent normalized market states
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Cursor page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketStatePage'
+        '410':
+          $ref: '#/components/responses/CursorExpired'
+  /api/v1/decisions:
+    get:
+      tags:
+      - History
+      operationId: listDecisions
+      summary: List versioned decision results
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Cursor page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecisionPage'
+        '410':
+          $ref: '#/components/responses/CursorExpired'
+  /api/v1/proposals:
+    get:
+      tags:
+      - History
+      operationId: listProposals
+      summary: List trade proposals
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Cursor page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProposalPage'
+        '410':
+          $ref: '#/components/responses/CursorExpired'
+  /api/v1/risk-decisions:
+    get:
+      tags:
+      - History
+      operationId: listRiskDecisions
+      summary: List deterministic risk decisions
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Cursor page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskDecisionPage'
+        '410':
+          $ref: '#/components/responses/CursorExpired'
+  /api/v1/orders:
+    get:
+      tags:
+      - History
+      operationId: listOrders
+      summary: List internal paper order states
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Cursor page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPage'
+        '410':
+          $ref: '#/components/responses/CursorExpired'
+  /api/v1/audit:
+    get:
+      tags:
+      - History
+      operationId: listAuditEvents
+      summary: List audit entries, optionally by trace ID
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Traceparent'
+      - name: traceId
+        in: query
+        description: Filter to one business trace.
+        schema:
+          $ref: '#/components/schemas/TraceId'
+      responses:
+        '200':
+          description: Cursor page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditPage'
+        '410':
+          $ref: '#/components/responses/CursorExpired'
+  /api/v1/runs:
+    get:
+      tags:
+      - History
+      operationId: listAgentRuns
+      summary: List agent and worker runs
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Cursor page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunPage'
+        '410':
+          $ref: '#/components/responses/CursorExpired'
+  /api/v1/costs:
+    get:
+      tags:
+      - History
+      operationId: listApiCosts
+      summary: List available API and token costs
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Cursor page; unknown provider cost is null, not zero
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostPage'
+        '410':
+          $ref: '#/components/responses/CursorExpired'
+components:
+  securitySchemes:
+    LocalSession:
+      type: apiKey
+      in: cookie
+      name: atl_session
+      description: Same-origin HttpOnly Secure (where TLS is used), SameSite=Strict local operator session. The
+        runtime must provide explicit local authentication, Origin checks, and CSRF protection for writes; never
+        place tokens in URLs or SSE cursors.
+  parameters:
+    Traceparent:
+      name: traceparent
+      in: header
+      required: false
+      description: W3C Trace Context; absent or invalid input is replaced by a server trace.
+      schema:
+        type: string
+        pattern: ^[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key
+        and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+      schema:
+        type: string
+        minLength: 16
+        maxLength: 128
+        pattern: ^[A-Za-z0-9._:-]+$
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: Strong ETag from GET /risk-policy. Missing yields 428; stale yields 412.
+      schema:
+        type: string
+        minLength: 3
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque server cursor; do not infer timestamps or database positions.
+      schema:
+        $ref: '#/components/schemas/Cursor'
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+  responses:
+    Refused:
+      description: Business rule refused the requested state transition.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            refused:
+              value:
+                type: https://agentic-trading-lab.invalid/problems/control-refused
+                title: Control action refused
+                status: 409
+                code: HEALTH_CHECK_FAILED
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+            idempotencyConflict:
+              value:
+                type: https://agentic-trading-lab.invalid/problems/idempotency-conflict
+                title: Idempotency key reused with different payload
+                status: 409
+                code: IDEMPOTENCY_CONFLICT
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+    InvalidRequest:
+      description: Invalid request shape or activation code.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://agentic-trading-lab.invalid/problems/invalid-request
+            title: Invalid request
+            status: 400
+            code: INVALID_REQUEST
+            traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+    VersionConflict:
+      description: If-Match does not match the current policy ETag.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://agentic-trading-lab.invalid/problems/version-conflict
+            title: Policy version conflict
+            status: 412
+            code: VERSION_CONFLICT
+            traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+    PreconditionRequired:
+      description: The required If-Match precondition is absent.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://agentic-trading-lab.invalid/problems/precondition-required
+            title: If-Match required
+            status: 428
+            code: PRECONDITION_REQUIRED
+            traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+    CursorExpired:
+      description: Cursor is unknown, expired, or no longer contiguous; fetch a fresh snapshot.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://agentic-trading-lab.invalid/problems/cursor-expired
+            title: Cursor expired
+            status: 410
+            code: CURSOR_EXPIRED
+            traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+    TemporarilyUnavailable:
+      description: Required dependency unavailable; request did not authorize a broker retry.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            unavailable:
+              value:
+                type: https://agentic-trading-lab.invalid/problems/temporarily-unavailable
+                title: Dependency unavailable
+                status: 503
+                code: TEMPORARILY_UNAVAILABLE
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+            brokerUnknown:
+              value:
+                type: https://agentic-trading-lab.invalid/problems/broker-status-unknown
+                title: Broker status unknown; reconciliation required
+                status: 503
+                code: BROKER_STATUS_UNKNOWN
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+  schemas:
+    Cursor:
+      type: string
+      minLength: 1
+      maxLength: 256
+      example: c_000123
+    UtcTimestamp:
+      type: string
+      format: date-time
+      pattern: Z$
+      example: '2026-10-12T10:00:00Z'
+    Decimal:
+      type: string
+      pattern: ^-?(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+      example: '123.45'
+    Fraction:
+      type: string
+      pattern: ^(0(\.[0-9]{1,18})?|1(\.0{1,18})?)$
+      example: '0.10'
+    TraceId:
+      type: string
+      pattern: ^[0-9a-f]{32}$
+      example: 4bf92f3577b34da6a3ce929d0e0e4736
+    ReasonCode:
+      type: string
+      description: Stable internal code, never raw provider text.
+      enum:
+      - OK
+      - ABSTAIN_MISSING_EVIDENCE
+      - ABSTAIN_INVALID_RESPONSE
+      - ABSTAIN_UNAVAILABLE
+      - RISK_STALE_MARKET
+      - RISK_SESSION_CLOSED
+      - RISK_POLICY_INCOMPLETE
+      - RISK_LIMIT_EXCEEDED
+      - RISK_CAPABILITY_UNCONFIRMED
+      - RISK_PROPOSAL_EXPIRED
+      - RISK_RECONCILIATION_REQUIRED
+      - MODE_NOT_PAPER
+      - PAUSED_NEW
+      - KILL_SWITCH_ACTIVE
+      - HEALTH_CHECK_FAILED
+      - BROKER_STATUS_UNKNOWN
+      - TEMPORARILY_UNAVAILABLE
+      - VERSION_CONFLICT
+      - PRECONDITION_REQUIRED
+      - IDEMPOTENCY_CONFLICT
+      - CURSOR_EXPIRED
+      - INVALID_REQUEST
+    Problem:
+      type: object
+      additionalProperties: false
+      required:
+      - type
+      - title
+      - status
+      - code
+      - traceId
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+          description: Sanitized text with no secret or stack trace.
+        instance:
+          type: string
+        code:
+          $ref: '#/components/schemas/ReasonCode'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    ModeState:
+      type: object
+      additionalProperties: false
+      required:
+      - mode
+      - pauseNew
+      - killSwitch
+      - health
+      - reconciliation
+      - changedAt
+      - traceId
+      properties:
+        mode:
+          type: string
+          enum:
+          - DISABLED
+          - REPLAY
+          - SHADOW
+          - PAPER
+        pauseNew:
+          type: boolean
+        killSwitch:
+          type: boolean
+        health:
+          type: string
+          enum:
+          - HEALTHY
+          - DEGRADED
+          - UNAVAILABLE
+        reconciliation:
+          type: string
+          enum:
+          - CURRENT
+          - PENDING
+          - MISMATCH
+        changedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    SetModeRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - mode
+      - reason
+      properties:
+        mode:
+          type: string
+          enum:
+          - DISABLED
+          - REPLAY
+          - SHADOW
+          - PAPER
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    ControlReason:
+      type: object
+      additionalProperties: false
+      required:
+      - reason
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    ActivateSessionRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - activationCode
+      properties:
+        activationCode:
+          type: string
+          minLength: 32
+          maxLength: 256
+          description: One-use local operator code; never log or echo it.
+    RiskPolicyUpdate:
+      type: object
+      additionalProperties: false
+      required:
+      - maxPositionsPerInstrument
+      - maxOpenPositions
+      - maxPositionEquityFraction
+      - maxDailyLossFraction
+      properties:
+        maxPositionsPerInstrument:
+          type: integer
+          minimum: 1
+        maxOpenPositions:
+          type: integer
+          minimum: 1
+        maxPositionEquityFraction:
+          $ref: '#/components/schemas/Fraction'
+        maxDailyLossFraction:
+          $ref: '#/components/schemas/Fraction'
+    RiskPolicy:
+      type: object
+      additionalProperties: false
+      required:
+      - maxPositionsPerInstrument
+      - maxOpenPositions
+      - maxPositionEquityFraction
+      - maxDailyLossFraction
+      - version
+      - simulationOnly
+      - effectiveAt
+      - changedAt
+      - changedBy
+      - auditEventId
+      properties:
+        maxPositionsPerInstrument:
+          type: integer
+          minimum: 1
+        maxOpenPositions:
+          type: integer
+          minimum: 1
+        maxPositionEquityFraction:
+          $ref: '#/components/schemas/Fraction'
+        maxDailyLossFraction:
+          $ref: '#/components/schemas/Fraction'
+        version:
+          type: integer
+          minimum: 1
+        simulationOnly:
+          type: boolean
+          const: true
+        effectiveAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        changedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        changedBy:
+          type: string
+          description: Non-PII local operator alias.
+        auditEventId:
+          type: string
+    MarketState:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - instrument
+      - market
+      - interval
+      - bar
+      - eventTime
+      - receivedAt
+      - availableAt
+      - asOf
+      - features
+      - evidence
+      - spread
+      - quality
+      - portfolio
+      - position
+      - traceId
+      properties:
+        id:
+          type: string
+        instrument:
+          type: string
+        market:
+          type: string
+          enum:
+          - US_EQUITY
+          - CRYPTO
+        interval:
+          type: string
+          const: PT15M
+        bar:
+          type: object
+          additionalProperties: false
+          required:
+          - startAt
+          - endAt
+          - open
+          - high
+          - low
+          - close
+          - volume
+          - closed
+          properties:
+            startAt:
+              $ref: '#/components/schemas/UtcTimestamp'
+            endAt:
+              $ref: '#/components/schemas/UtcTimestamp'
+            open:
+              $ref: '#/components/schemas/Decimal'
+            high:
+              $ref: '#/components/schemas/Decimal'
+            low:
+              $ref: '#/components/schemas/Decimal'
+            close:
+              $ref: '#/components/schemas/Decimal'
+            volume:
+              $ref: '#/components/schemas/Decimal'
+            closed:
+              type: boolean
+              const: true
+        eventTime:
+          $ref: '#/components/schemas/UtcTimestamp'
+        receivedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        availableAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        asOf:
+          $ref: '#/components/schemas/UtcTimestamp'
+        features:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Decimal'
+        evidence:
+          type: object
+          additionalProperties: false
+          required:
+          - neutral
+          - sources
+          - availableAt
+          - conflicts
+          - quality
+          properties:
+            neutral:
+              type: boolean
+              const: true
+            sources:
+              type: array
+              items:
+                type: string
+            availableAt:
+              $ref: '#/components/schemas/UtcTimestamp'
+            conflicts:
+              type: array
+              items:
+                type: string
+            quality:
+              type: string
+              enum:
+              - VALID
+              - STALE
+              - GAP
+              - CONFLICT
+              - INVALID
+        spread:
+          $ref: '#/components/schemas/Decimal'
+        quality:
+          type: string
+          enum:
+          - VALID
+          - STALE
+          - GAP
+          - CONFLICT
+          - INVALID
+        portfolio:
+          type: object
+          additionalProperties: false
+          required:
+          - equity
+          - cash
+          properties:
+            equity:
+              $ref: '#/components/schemas/Decimal'
+            cash:
+              $ref: '#/components/schemas/Decimal'
+        position:
+          type: object
+          additionalProperties: false
+          required:
+          - quantity
+          properties:
+            quantity:
+              $ref: '#/components/schemas/Decimal'
+            averagePrice:
+              $ref: '#/components/schemas/Decimal'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    Decision:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - marketStateId
+      - choice
+      - typedAnswers
+      - confidence
+      - distribution
+      - regime
+      - evidenceQuality
+      - signalConflict
+      - modelId
+      - promptVersion
+      - questionVersion
+      - configVersion
+      - inputHash
+      - latencyMs
+      - apiUnits
+      - estimatedCost
+      - validUntil
+      - traceId
+      - reasonCode
+      properties:
+        id:
+          type: string
+        marketStateId:
+          type: string
+        choice:
+          type: string
+          enum:
+          - LONG
+          - FLAT
+          - ABSTAIN
+        typedAnswers:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - regime
+          - evidenceQuality
+          - signalConflict
+          properties:
+            regime:
+              type: object
+              additionalProperties: false
+              required:
+              - kind
+              - questionVersion
+              - choice
+              - confidence
+              - distribution
+              properties:
+                kind:
+                  type: string
+                  const: CHOICE
+                questionVersion:
+                  type: string
+                choice:
+                  type: string
+                  enum:
+                  - TREND
+                  - RANGE
+                  - UNCERTAIN
+                confidence:
+                  $ref: '#/components/schemas/Fraction'
+                distribution:
+                  type: object
+                  additionalProperties: false
+                  required:
+                  - TREND
+                  - RANGE
+                  - UNCERTAIN
+                  properties:
+                    TREND:
+                      $ref: '#/components/schemas/Fraction'
+                    RANGE:
+                      $ref: '#/components/schemas/Fraction'
+                    UNCERTAIN:
+                      $ref: '#/components/schemas/Fraction'
+            evidenceQuality:
+              type: object
+              additionalProperties: false
+              required:
+              - kind
+              - questionVersion
+              - score
+              - legend
+              - distribution
+              - confidence
+              properties:
+                kind:
+                  type: string
+                  const: SCORE
+                questionVersion:
+                  type: string
+                score:
+                  type: string
+                  pattern: ^([0-8](\.[0-9]{1,18})?|9(\.0{1,18})?)$
+                legend:
+                  type: object
+                  minProperties: 2
+                  patternProperties:
+                    ^[0-9]$:
+                      type: string
+                      minLength: 1
+                  additionalProperties: false
+                distribution:
+                  type: object
+                  minProperties: 2
+                  patternProperties:
+                    ^[0-9]$:
+                      $ref: '#/components/schemas/Fraction'
+                  additionalProperties: false
+                confidence:
+                  $ref: '#/components/schemas/Fraction'
+            signalConflict:
+              type: object
+              additionalProperties: false
+              required:
+              - kind
+              - questionVersion
+              - noul
+              properties:
+                kind:
+                  type: string
+                  const: NOUL
+                questionVersion:
+                  type: string
+                noul:
+                  $ref: '#/components/schemas/Fraction'
+            shadowDirection:
+              type: object
+              additionalProperties: false
+              required:
+              - kind
+              - questionVersion
+              - choice
+              - confidence
+              - distribution
+              properties:
+                kind:
+                  type: string
+                  const: CHOICE
+                questionVersion:
+                  type: string
+                choice:
+                  type: string
+                  enum:
+                  - LONG
+                  - FLAT
+                  - ABSTAIN
+                confidence:
+                  $ref: '#/components/schemas/Fraction'
+                distribution:
+                  type: object
+                  additionalProperties: false
+                  required:
+                  - LONG
+                  - FLAT
+                  - ABSTAIN
+                  properties:
+                    LONG:
+                      $ref: '#/components/schemas/Fraction'
+                    FLAT:
+                      $ref: '#/components/schemas/Fraction'
+                    ABSTAIN:
+                      $ref: '#/components/schemas/Fraction'
+        confidence:
+          type:
+          - string
+          - 'null'
+          pattern: ^(0(\.[0-9]{1,18})?|1(\.0{1,18})?)$
+          example: '0.10'
+        distribution:
+          type:
+          - object
+          - 'null'
+          additionalProperties:
+            $ref: '#/components/schemas/Fraction'
+        regime:
+          type:
+          - string
+          - 'null'
+          enum:
+          - TREND
+          - RANGE
+          - UNCERTAIN
+          - null
+        evidenceQuality:
+          type:
+          - string
+          - 'null'
+          pattern: ^(0(\.[0-9]{1,18})?|1(\.0{1,18})?)$
+          example: '0.10'
+        signalConflict:
+          type:
+          - string
+          - 'null'
+          pattern: ^(0(\.[0-9]{1,18})?|1(\.0{1,18})?)$
+          example: '0.10'
+        shadowChoice:
+          type: string
+          enum:
+          - LONG
+          - FLAT
+          - ABSTAIN
+        modelId:
+          type:
+          - string
+          - 'null'
+        promptVersion:
+          type: string
+        questionVersion:
+          type: string
+        configVersion:
+          type: string
+        inputHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        latencyMs:
+          type: integer
+          minimum: 0
+        apiUnits:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+          example: '123.45'
+        estimatedCost:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+          example: '123.45'
+        validUntil:
+          $ref: '#/components/schemas/UtcTimestamp'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+        reasonCode:
+          $ref: '#/components/schemas/ReasonCode'
+      if:
+        properties:
+          typedAnswers:
+            type: 'null'
+      then:
+        properties:
+          typedAnswers:
+            type: 'null'
+          confidence:
+            type: 'null'
+          distribution:
+            type: 'null'
+          regime:
+            type: 'null'
+          evidenceQuality:
+            type: 'null'
+          signalConflict:
+            type: 'null'
+          modelId:
+            type: 'null'
+          choice:
+            const: ABSTAIN
+          reasonCode:
+            enum:
+            - ABSTAIN_MISSING_EVIDENCE
+            - ABSTAIN_INVALID_RESPONSE
+            - ABSTAIN_UNAVAILABLE
+      else:
+        properties:
+          typedAnswers:
+            type: object
+            additionalProperties: false
+            required:
+            - regime
+            - evidenceQuality
+            - signalConflict
+            properties:
+              regime:
+                type: object
+                additionalProperties: false
+                required:
+                - kind
+                - questionVersion
+                - choice
+                - confidence
+                - distribution
+                properties:
+                  kind:
+                    type: string
+                    const: CHOICE
+                  questionVersion:
+                    type: string
+                  choice:
+                    type: string
+                    enum:
+                    - TREND
+                    - RANGE
+                    - UNCERTAIN
+                  confidence:
+                    $ref: '#/components/schemas/Fraction'
+                  distribution:
+                    type: object
+                    additionalProperties: false
+                    required:
+                    - TREND
+                    - RANGE
+                    - UNCERTAIN
+                    properties:
+                      TREND:
+                        $ref: '#/components/schemas/Fraction'
+                      RANGE:
+                        $ref: '#/components/schemas/Fraction'
+                      UNCERTAIN:
+                        $ref: '#/components/schemas/Fraction'
+              evidenceQuality:
+                type: object
+                additionalProperties: false
+                required:
+                - kind
+                - questionVersion
+                - score
+                - legend
+                - distribution
+                - confidence
+                properties:
+                  kind:
+                    type: string
+                    const: SCORE
+                  questionVersion:
+                    type: string
+                  score:
+                    type: string
+                    pattern: ^([0-8](\.[0-9]{1,18})?|9(\.0{1,18})?)$
+                  legend:
+                    type: object
+                    minProperties: 2
+                    patternProperties:
+                      ^[0-9]$:
+                        type: string
+                        minLength: 1
+                    additionalProperties: false
+                  distribution:
+                    type: object
+                    minProperties: 2
+                    patternProperties:
+                      ^[0-9]$:
+                        $ref: '#/components/schemas/Fraction'
+                    additionalProperties: false
+                  confidence:
+                    $ref: '#/components/schemas/Fraction'
+              signalConflict:
+                type: object
+                additionalProperties: false
+                required:
+                - kind
+                - questionVersion
+                - noul
+                properties:
+                  kind:
+                    type: string
+                    const: NOUL
+                  questionVersion:
+                    type: string
+                  noul:
+                    $ref: '#/components/schemas/Fraction'
+              shadowDirection:
+                type: object
+                additionalProperties: false
+                required:
+                - kind
+                - questionVersion
+                - choice
+                - confidence
+                - distribution
+                properties:
+                  kind:
+                    type: string
+                    const: CHOICE
+                  questionVersion:
+                    type: string
+                  choice:
+                    type: string
+                    enum:
+                    - LONG
+                    - FLAT
+                    - ABSTAIN
+                  confidence:
+                    $ref: '#/components/schemas/Fraction'
+                  distribution:
+                    type: object
+                    additionalProperties: false
+                    required:
+                    - LONG
+                    - FLAT
+                    - ABSTAIN
+                    properties:
+                      LONG:
+                        $ref: '#/components/schemas/Fraction'
+                      FLAT:
+                        $ref: '#/components/schemas/Fraction'
+                      ABSTAIN:
+                        $ref: '#/components/schemas/Fraction'
+          confidence:
+            $ref: '#/components/schemas/Fraction'
+          distribution:
+            type: object
+            additionalProperties:
+              $ref: '#/components/schemas/Fraction'
+          regime:
+            type: string
+            enum:
+            - TREND
+            - RANGE
+            - UNCERTAIN
+          evidenceQuality:
+            $ref: '#/components/schemas/Fraction'
+          signalConflict:
+            $ref: '#/components/schemas/Fraction'
+          modelId:
+            type: string
+    TradeProposal:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - decisionId
+      - marketStateId
+      - instrument
+      - target
+      - quantity
+      - createdAt
+      - validUntil
+      - traceId
+      properties:
+        id:
+          type: string
+        decisionId:
+          type: string
+        marketStateId:
+          type: string
+        instrument:
+          type: string
+        target:
+          type: string
+          enum:
+          - LONG
+          - FLAT
+        quantity:
+          $ref: '#/components/schemas/Decimal'
+        rationaleCodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReasonCode'
+        createdAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        validUntil:
+          $ref: '#/components/schemas/UtcTimestamp'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    RiskDecision:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - proposalId
+      - approved
+      - reasonCode
+      - reasonCodes
+      - policyVersion
+      - exposureSnapshot
+      - decidedAt
+      - validUntil
+      - traceId
+      properties:
+        id:
+          type: string
+        proposalId:
+          type: string
+        approved:
+          type: boolean
+        reasonCode:
+          $ref: '#/components/schemas/ReasonCode'
+        reasonCodes:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ReasonCode'
+        policyVersion:
+          type: integer
+          minimum: 1
+        exposureSnapshot:
+          type: object
+          additionalProperties: false
+          required:
+          - equity
+          - grossNotional
+          - reservedNotional
+          properties:
+            equity:
+              $ref: '#/components/schemas/Decimal'
+            grossNotional:
+              $ref: '#/components/schemas/Decimal'
+            reservedNotional:
+              $ref: '#/components/schemas/Decimal'
+        reservationId:
+          type: string
+        decidedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        validUntil:
+          $ref: '#/components/schemas/UtcTimestamp'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    Order:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - proposalId
+      - riskDecisionId
+      - instrument
+      - status
+      - requestedQuantity
+      - filledQuantity
+      - reconciliation
+      - updatedAt
+      - traceId
+      properties:
+        id:
+          type: string
+        proposalId:
+          type: string
+        riskDecisionId:
+          type: string
+        instrument:
+          type: string
+        status:
+          type: string
+          enum:
+          - CREATED
+          - RISK_RESERVED
+          - SUBMITTING
+          - ACKNOWLEDGED
+          - PARTIALLY_FILLED
+          - FILLED
+          - REJECTED
+          - CANCEL_PENDING
+          - CANCELED
+          - UNKNOWN
+        requestedQuantity:
+          $ref: '#/components/schemas/Decimal'
+        filledQuantity:
+          $ref: '#/components/schemas/Decimal'
+        averageFillPrice:
+          $ref: '#/components/schemas/Decimal'
+        reconciliation:
+          type: string
+          enum:
+          - CURRENT
+          - PENDING
+          - MISMATCH
+        updatedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    AuditEvent:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - occurredAt
+      - actor
+      - action
+      - outcome
+      - reasonCode
+      - traceId
+      properties:
+        id:
+          type: string
+        occurredAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        actor:
+          type: string
+          description: Non-PII service or local operator alias.
+        action:
+          type: string
+        outcome:
+          type: string
+          enum:
+          - ACCEPTED
+          - REFUSED
+          - OBSERVED
+        reasonCode:
+          $ref: '#/components/schemas/ReasonCode'
+        policyVersion:
+          type: integer
+          minimum: 1
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    AgentRun:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - role
+      - status
+      - startedAt
+      - heartbeatAt
+      - traceId
+      properties:
+        id:
+          type: string
+        role:
+          type: string
+          enum:
+          - MARKET_INTELLIGENCE
+          - QUANT_RESEARCH
+          - PORTFOLIO_PLANNER
+          - WORKER
+        status:
+          type: string
+          enum:
+          - RUNNING
+          - SUCCEEDED
+          - FAILED
+          - DEAD_LETTER
+        startedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        heartbeatAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    ApiCost:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - provider
+      - observedAt
+      - currency
+      - amount
+      - traceId
+      properties:
+        id:
+          type: string
+        provider:
+          type: string
+        observedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+        amount:
+          oneOf:
+          - $ref: '#/components/schemas/Decimal'
+          - type: 'null'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    SupervisorEvent:
+      type: object
+      additionalProperties: false
+      required:
+      - eventId
+      - eventType
+      - occurredAt
+      - aggregateId
+      - aggregateVersion
+      - traceId
+      - cursor
+      - payload
+      properties:
+        eventId:
+          type: string
+        eventType:
+          type: string
+          pattern: ^[a-z]+\.[a-z]+\.v[1-9][0-9]*$
+        occurredAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        aggregateId:
+          type: string
+        aggregateVersion:
+          type: integer
+          minimum: 1
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+        cursor:
+          $ref: '#/components/schemas/Cursor'
+        payload:
+          type: object
+          description: Sanitized versioned internal event data.
+    SupervisorSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+      - asOf
+      - cursor
+      - mode
+      - paperAccount
+      - connections
+      - portfolioEquity
+      - workers
+      - recentOrders
+      properties:
+        asOf:
+          $ref: '#/components/schemas/UtcTimestamp'
+        cursor:
+          $ref: '#/components/schemas/Cursor'
+        mode:
+          $ref: '#/components/schemas/ModeState'
+        paperAccount:
+          type: string
+          description: Non-sensitive local alias only.
+        connections:
+          type: object
+          additionalProperties:
+            type: string
+            enum:
+            - HEALTHY
+            - DEGRADED
+            - UNAVAILABLE
+        portfolioEquity:
+          $ref: '#/components/schemas/Decimal'
+        workers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentRun'
+        recentOrders:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+    MarketStatePage:
+      $ref: '#/components/schemas/MarketStatePageData'
+    MarketStatePageData:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketState'
+        nextCursor:
+          oneOf:
+          - $ref: '#/components/schemas/Cursor'
+          - type: 'null'
+    DecisionPage:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Decision'
+        nextCursor:
+          oneOf:
+          - $ref: '#/components/schemas/Cursor'
+          - type: 'null'
+    ProposalPage:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TradeProposal'
+        nextCursor:
+          oneOf:
+          - $ref: '#/components/schemas/Cursor'
+          - type: 'null'
+    RiskDecisionPage:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskDecision'
+        nextCursor:
+          oneOf:
+          - $ref: '#/components/schemas/Cursor'
+          - type: 'null'
+    OrderPage:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        nextCursor:
+          oneOf:
+          - $ref: '#/components/schemas/Cursor'
+          - type: 'null'
+    AuditPage:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+        nextCursor:
+          oneOf:
+          - $ref: '#/components/schemas/Cursor'
+          - type: 'null'
+    RunPage:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentRun'
+        nextCursor:
+          oneOf:
+          - $ref: '#/components/schemas/Cursor'
+          - type: 'null'
+    CostPage:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiCost'
+        nextCursor:
+          oneOf:
+          - $ref: '#/components/schemas/Cursor'
+          - type: 'null'

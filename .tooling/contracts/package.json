@@ -1,0 +1,21 @@
+{
+  "name": "agentic-trading-contract-checks",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pinned local-only OpenAPI and JSON Schema validation tooling",
+  "scripts": {
+    "lint": "redocly lint ../../contracts/http/control-api.openapi.yaml --config ./redocly.yaml",
+    "generator-version": "openapi-generator-cli version"
+  },
+  "devDependencies": {
+    "@angular/common": "22.2.2",
+    "@angular/compiler": "22.2.2",
+    "@angular/core": "22.2.2",
+    "@openapitools/openapi-generator-cli": "2.41.0",
+    "@redocly/cli": "2.62.1",
+    "ajv-cli": "5.0.0",
+    "rxjs": "7.8.2",
+    "tslib": "2.8.1",
+    "typescript": "6.0.2"
+  }
+}

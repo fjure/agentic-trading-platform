@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/execution-report.schema.json",
+  "title": "ExecutionReport v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "orderId", "status", "requestedQuantity", "filledQuantity", "reconciliation", "occurredAt", "receivedAt", "traceId"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string"},
+    "orderId": {"type": "string"},
+    "status": {"enum": ["CREATED", "RISK_RESERVED", "SUBMITTING", "ACKNOWLEDGED", "PARTIALLY_FILLED", "FILLED", "REJECTED", "CANCEL_PENDING", "CANCELED", "UNKNOWN"]},
+    "requestedQuantity": {"$ref": "common.schema.json#/$defs/decimal"},
+    "filledQuantity": {"$ref": "common.schema.json#/$defs/decimal"},
+    "averageFillPrice": {"$ref": "common.schema.json#/$defs/decimal"},
+    "fee": {"$ref": "common.schema.json#/$defs/decimal"},
+    "brokerEventId": {"type": "string", "description": "Non-sensitive deduplication identity, if known."},
+    "reconciliation": {"enum": ["CURRENT", "PENDING", "MISMATCH"]},
+    "reasonCode": {"$ref": "common.schema.json#/$defs/reasonCode"},
+    "occurredAt": {"$ref": "common.schema.json#/$defs/utc"},
+    "receivedAt": {"$ref": "common.schema.json#/$defs/utc"},
+    "traceId": {"$ref": "common.schema.json#/$defs/traceId"}
+  }
+}
