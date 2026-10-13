@@ -1,0 +1,27 @@
+{
+  "version": "paper-market-2026-v1",
+  "source_id": "synthetic-fixture-v1",
+  "interval": "PT15M",
+  "max_age_seconds": 120,
+  "max_spread_fraction": "0.01",
+  "required_bars": 2,
+  "instruments": {
+    "SPY": {"market": "US_EQUITY", "asset_class": "ETF", "currency": "USD", "session": "XNYS"},
+    "QQQ": {"market": "US_EQUITY", "asset_class": "ETF", "currency": "USD", "session": "XNYS"}
+  },
+  "calendar": {
+    "name": "XNYS",
+    "timezone": "America/New_York",
+    "coverage_start": "2026-01-01",
+    "coverage_end": "2026-12-31",
+    "open": "09:30",
+    "close": "16:00",
+    "holidays": [
+      "2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03",
+      "2026-05-25", "2026-06-19", "2026-07-03", "2026-09-07",
+      "2026-11-26", "2026-12-25"
+    ],
+    "early_closes": {"2026-11-27": "13:00", "2026-12-24": "13:00"},
+    "source": "https://www.nyse.com/trade/hours-calendars"
+  }
+}
