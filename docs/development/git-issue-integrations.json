@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "repository": "fjure/agentic-trading-platform",
+  "authorizedByUserAt": "2026-10-13",
+  "bootstrapBranch": "codex/repository-bootstrap",
+  "bootstrapCommit": "11a9737415911c3585248026ffbeae0c1d60ed68",
+  "verifiedImplementationMainCommit": "4f1dcc1f358da20df7f69b4650166337ced87028",
+  "verifiedAt": "2026-10-13T12:03:19.658867Z",
+  "issueIntegrations": [
+    {
+      "taskId": "PTV-01",
+      "issueNumber": 1,
+      "branch": "codex/ptv-01-build-foundation",
+      "branchCommit": "0513de8b2ee40f4d0fbf720bbf60982f30f38e95",
+      "mergeCommit": "24d7e378c0d2cebd8bb234868dc515c79f242e18",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true,
+      "verifiedAt": "2026-10-13T12:03:19.658867Z"
+    },
+    {
+      "taskId": "PTV-02",
+      "issueNumber": 2,
+      "branch": "codex/ptv-02-domain-ports",
+      "branchCommit": "cd6ad94ce30c3a7bb133491d24f9ae6a43a5a78a",
+      "mergeCommit": "8e40e7e0d6cdea59d5559ed282747dce5ba3ee63",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true,
+      "verifiedAt": "2026-10-13T12:03:19.658867Z"
+    },
+    {
+      "taskId": "PTV-03",
+      "issueNumber": 3,
+      "branch": "codex/ptv-03-contract-client-ci",
+      "branchCommit": "79d390ff15956a763deaae1ca26506ac6790e61d",
+      "mergeCommit": "41815e2242d81d377be4b582d836ac6c2935575f",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true,
+      "verifiedAt": "2026-10-13T12:03:19.658867Z"
+    },
+    {
+      "taskId": "PTV-04",
+      "issueNumber": 4,
+      "branch": "codex/ptv-04-ledger-persistence",
+      "branchCommit": "49a769f0a76279f233aeec8157b5602f90953897",
+      "mergeCommit": "a95039cd75d85d612f793759bd55c463e4caaf01",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true,
+      "verifiedAt": "2026-10-13T12:03:19.658867Z"
+    },
+    {
+      "taskId": "PTV-06",
+      "issueNumber": 6,
+      "branch": "codex/ptv-06-market-fixtures",
+      "branchCommit": "99c06d0e8b0e3c55ed9eaebfa17a674c5184a030",
+      "mergeCommit": "7945fcb622b6be9a3e8b2cf3fa132e70f1c34ea9",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true,
+      "verifiedAt": "2026-10-13T12:03:19.658867Z"
+    },
+    {
+      "taskId": "PTV-08",
+      "issueNumber": 8,
+      "branch": "codex/ptv-08-fake-broker",
+      "branchCommit": "78ca33d70372674fdb6c46fa7b29a74d57a60e4d",
+      "mergeCommit": "4f1dcc1f358da20df7f69b4650166337ced87028",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true,
+      "verifiedAt": "2026-10-13T12:03:19.658867Z"
+    }
+  ],
+  "note": "Observed before this evidence document is committed; later documentation commits may advance main. No remote CI status asserted."
+}

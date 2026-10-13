@@ -591,6 +591,17 @@
     "pushIssueBranch": true,
     "mergeIntoMain": true,
     "forcePush": false,
-    "remoteIntegrationVerified": false
+    "remoteIntegrationVerified": true,
+    "verifiedAt": "2026-10-13T12:03:19.658867Z",
+    "evidencePath": "docs/development/git-issue-integrations.json",
+    "verifiedImplementationMainCommit": "4f1dcc1f358da20df7f69b4650166337ced87028",
+    "integratedTaskIds": [
+      "PTV-01",
+      "PTV-02",
+      "PTV-03",
+      "PTV-04",
+      "PTV-06",
+      "PTV-08"
+    ]
   }
 }
