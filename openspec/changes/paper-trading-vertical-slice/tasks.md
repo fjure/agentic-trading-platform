@@ -102,9 +102,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
   - Tests: T-RSK-001/002/004/005/008, T-RUN-006
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 4.3 PTV-11 Reconciliation und Orderledger; Evidenz: T-RSK-009/010, T-RUN-001/002.
+- [x] 4.3 PTV-11 Reconciliation und Orderledger; Evidenz: T-RSK-009/010, T-RUN-001/002.
   - Requirements: REQ-RSK-009, REQ-RSK-010, REQ-RUN-001, REQ-RUN-002
-  - Zielpfade: `services/execution/reconciliation.py`, `packages/brokers/reports.py`, `tests/recovery/test_reconciliation.py`, `docs/runbooks/recovery.md`
+  - Zielpfade: `services/execution/reconciliation.py`, `packages/brokers/reports.py`, `tests/recovery/test_reconciliation.py`, `tests/recovery/reconciliation_support.py`, `docs/runbooks/recovery.md`, `docs/evidence/ptv-11-reconciliation.md`
   - Abhängigkeiten: PTV-10
   - Verhalten: Alle Zustände/Fills/Cancelrennen deduplizieren, UNKNOWN hält Budget, authoritative Reconcile vor Retry.
   - Akzeptanz: Keine Doppelorder oder doppelte Fillbuchung in allen Crash-/Racefixtures; ungeklärte Abweichung sperrt neue Risiken.
