@@ -591,9 +591,9 @@
     "mergeIntoMain": true,
     "forcePush": false,
     "remoteIntegrationVerified": true,
-    "verifiedAt": "2026-10-13T16:53:53.860703Z",
+    "verifiedAt": "2026-10-13T17:21:44.945254Z",
     "evidencePath": "docs/development/git-issue-integrations.json",
-    "verifiedImplementationMainCommit": "3d90857b5e8d16cb784c9fbd56d8311a6c872350",
+    "verifiedImplementationMainCommit": "b38b9a2d655062c1df52f217dab4a51c1c5c54ce",
     "integratedTaskIds": [
       "PTV-01",
       "PTV-02",
@@ -603,7 +603,8 @@
       "PTV-06",
       "PTV-07",
       "PTV-08",
-      "PTV-09"
+      "PTV-09",
+      "PTV-10"
     ]
   },
   "activeSyncTransport": "github-cli",
