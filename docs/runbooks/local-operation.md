@@ -1,6 +1,22 @@
 # Lokaler Betrieb
 
-Apply ist freigegeben. Aktuell existiert die Buildgrundlage mit einem neutralen Angular-Root und einem isolierten DISABLED-Build-Smoke. Trading-Kommandos und Laufzeitprozesse folgen in späteren Tasks. Dieses Runbook autorisiert keine Order. Produktions- und LIVE-Endpunkte sind ausgeschlossen. Maßgeblich sind `REQ-RSK-001..008`, `REQ-RUN-001..007`, `REQ-CTL-001..007` und Design D-01/D-04/D-06/D-08.
+Apply ist freigegeben. Der lokale Fake-Durchstich verbindet Marktnormalisierung, Mock-Entscheidung, Planner, deterministisches Risk-Gate, Execution, Fill-Reconciliation und persistierte Portfolio-/Audit-/Outboxevidenz. Er ist als isolierter Integrationstest ausführbar; dauerhafte Dienste und externe Paperadapter benötigen ihre gesonderten Tasks und Prüfungen. Produktions- und LIVE-Endpunkte sind ausgeschlossen. Maßgeblich sind `REQ-RSK-001..010`, `REQ-RUN-001..007`, `REQ-CTL-001..007` und Design D-01/D-04/D-06/D-08.
+
+## Vollständiger lokaler Fake-Durchstich (PTV-13)
+
+Im Repository-Root mit der gesperrten lokalen Python-Umgebung, laufendem PostgreSQL im internen Compose-Netz und dem bereits gebauten Smoke-Testimage ausführen:
+
+```powershell
+.venv/Scripts/python.exe -m pytest tests/integration/test_vertical_fake.py tests/recovery/test_vertical_failures.py -q
+```
+
+Bei fehlender Infrastruktur zuerst die folgende Buildprüfung durchführen. Die Testfixture erzeugt pro Fall eine eigene UUID-Datenbank und einen temporären Login, migriert bis HEAD und verwendet tatsächliche Worker-, Execution- und Control-Rollen. Der Testcontainer ist read-only, ohne Capabilities und ohne Secretmounts. Das synthetische Testpasswort bleibt ausschließlich in Memory/STDIN; keine Credentialdatei auslesen. Datenbank und Login werden anschließend entfernt; vorhandene Entwicklungsdaten und Volumes bleiben erhalten.
+
+Die Eingabekerzen und eine ausdrücklich versionierte synthetische Testsession mit UTC-Zeitstempeln sind relativ zur DB-Uhr aufgebaut. Dadurch funktioniert der lokale Nachweis auch außerhalb der echten XNYS-Handelszeit. Diese Testsession bestätigt weder aktuelle Börsenöffnungszeiten noch produktive Kalender-/Marktfähigkeiten. Geld und Mengen bleiben Decimal. Mock und Fake sind prozesslokal und besitzen keine Netzwerk- oder Credentialabhängigkeit.
+
+Der Test prüft die gespeicherte Identitäts-/Tracekette statt nur eines Endwerts. Nach Prozessabbruch vor beziehungsweise nach Submit bleibt der dauerhafte Auftrag sichtbar, der neue Execution-Owner startet pausiert und ein Wiederholungsversuch erzeugt keine Doppelorder. UNKNOWN hält die Reservierung und bleibt im Ledger erkennbar; Reconciliation plus ausdrücklich angeforderte und vollständig geprüfte Recovery ist die Voraussetzung für eine Freigabe. In diesen Tests bleibt das Fake-Brokerobjekt als simulierte Brokerwelt über den Execution-Neustart erhalten. Das ist ein deterministischer Prozessabbruchnachweis, kein OS-Kill-, DB-Restore- oder externer Broker-Neustartnachweis.
+
+Bei einem fehlgeschlagenen Test das vollständige Paket nicht als freigegeben behandeln. Keine Testfixture gegen einen externen Broker richten. Redigierte Prüfevidenz: `docs/evidence/ptv-13-vertical-fake.md`; Kontroll-/Incidentablauf: `incident.md`; wirtschaftliche Reconciliation: `recovery.md`.
 
 ## Ausführbare Buildprüfung (PTV-01)
 
@@ -23,13 +39,13 @@ Compose 5.3.1 wurde lokal erfolgreich geprüft; die zuvor geplante 5.5.0 ist kei
 1. Lokale Dienste werden erst nach Implementierung mit einem geprüften Compose-Profil gestartet. **Geplanter Befehlsplatzhalter, derzeit nicht ausführbar:** `docker compose -f infra/compose/compose.yaml up -d`. Der tatsächliche Dateiname und die Dienste müssen im späteren Apply festgelegt und gegen das Runbook geprüft werden.
 2. Operator liest Health/Readiness, Worker-/Execution-/Watchdog-Heartbeats, Datenalter, Outboxlag, offene Orders, UNKNOWN-Anzahl und Reconciliationstatus. `ready` allein ist keine Handelsfreigabe.
 3. Execution gleicht Account, offene und abgeschlossene Orders, Fills, Positionen und Reservierungen über stabile interne und brokerseitige IDs ab. Jede Abweichung hält `PAUSE_NEW`.
-4. Nur nach ausdrücklicher lokaler Operatoraktion und erfolgreicher Health-, Capability-, Policy- und Reconciliationprüfung darf PAPER aktiviert werden. **Geplante CLI-Schnittstelle, kein vorhandener Befehl:** `tradingctl mode paper --if-policy-version <VERSION>`; die spätere Implementierung muss Idempotenz, Audit und Versionsschutz nachweisen. Das Dashboard darf dieselbe fachliche Aktion anbieten, sein UI entscheidet aber nicht über Freigabe.
+4. Nur nach ausdrücklicher lokaler Operatoraktion und erfolgreicher Health-, Capability-, Policy- und Reconciliationprüfung darf PAPER aktiviert werden. Der implementierte private Linux-Kontrollsocket akzeptiert `activate-paper --policy-version <VERSION>` beziehungsweise `resume --policy-version <VERSION>` über `python -m services.execution.control_socket --socket <PFAD>`; genaue Syntax und Rollenverdrahtung siehe `incident.md`. REQUESTED bestätigt nur die Anfrage; ausschließlich Execution bestätigt nach Prüfung die Freigabe. Der dauerhafte Dienststart und die HTTP-/Dashboardkontrollen folgen ihren eigenen Tasks.
 
 ## Laufende Kontrolle
 
 - Supervisor betrachtet Modus/SafetyState, Paper-Konto, Markt- und Jev-Frische, Budgetreservierungen, Orders/Teilfüllungen, UNKNOWN, Jobleases, Outbox, API-Kosten und Trace-Audit. Anzeigegrün ohne frischen Backend-Snapshot gilt als unbekannt.
 - Aktienentscheidungen benötigen abgeschlossene Bars innerhalb der tatsächlichen Session einschließlich Feiertag, Halbtag und DST. Krypto 24/7 nur bei bestätigter Instrumentfähigkeit. Stale oder fehlende Daten sperren neue Einstiege.
-- `PAUSE_NEW` verhindert neue Einstiege, lässt Reconciliation und geprüfte risikoabbauende Aktionen weiterlaufen. **Geplante CLI-Schnittstelle:** `tradingctl pause --reason <CODE>`. Watchdog/CLI müssen ohne Jev und Dashboard funktionieren.
+- `PAUSE_NEW` verhindert neue Einstiege, lässt Reconciliation und geprüfte risikoabbauende Aktionen weiterlaufen. Der private Linux-Kontrollpfad `python -m services.execution.control_socket --socket <PFAD> pause` und Watchdog funktionieren unabhängig von Jev und Dashboard; Details in `incident.md`.
 - `HALTED` stoppt neue Submits und kann best-effort Cancel auslösen. Es garantiert nicht, dass bereits in-flight Brokerrequests oder Fills rückgängig werden. Flatten ist eine eigene geprüfte Aktion, kein automatischer Bestandteil des Kill-Switches.
 
 ## Geordneter Stopp

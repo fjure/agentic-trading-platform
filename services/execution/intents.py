@@ -272,6 +272,41 @@ def submit_once(
             now=now,
         )
         tx.insert(order, adapter=_ADAPTER)
+        report = m.ExecutionReport(
+            id=_id("report:SUBMITTING", intent.id),
+            order_id=order.id,
+            status=m.OrderStatus.SUBMITTING,
+            requested_quantity=intent.quantity,
+            filled_quantity=Decimal("0"),
+            reconciliation=m.Reconciliation.PENDING,
+            occurred_at=now,
+            received_at=now,
+            trace_id=intent.trace_id,
+            reason_code="GATE_APPROVED",
+        )
+        _audit(
+            tx,
+            intent=intent,
+            decision=decision,
+            entity_id=report.id,
+            version=1,
+            phase="submitting_report",
+            reason="GATE_APPROVED",
+            now=now,
+        )
+        tx.insert(report, adapter=_ADAPTER)
+        persist(
+            tx.connection,
+            m.EventEnvelope(
+                event_id=_id("event:SUBMITTING", intent.id),
+                event_type="execution.reported.v1",
+                occurred_at=now,
+                aggregate_id=report.id,
+                aggregate_version=1,
+                trace_id=intent.trace_id,
+                payload=report,
+            ),
+        )
 
     # A pause, policy change, expiry, or other mutation may win the interval
     # between transactions. Recheck everything after acquiring every lock.
