@@ -589,6 +589,8 @@ class DecisionResult:
     evidence_quality: Decimal | None = None
     signal_conflict: Decimal | None = None
     shadow_choice: Choice | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
 
     def __post_init__(self) -> None:
         for value in (
@@ -656,6 +658,11 @@ class DecisionResult:
         for name in ("api_units", "estimated_cost"):
             if (value := getattr(self, name)) is not None:
                 object.__setattr__(self, name, _nonnegative(value))
+        if (self.input_tokens is None) != (self.output_tokens is None):
+            raise ValueError("token counts must be reported together")
+        for value in (self.input_tokens, self.output_tokens):
+            if value is not None and (type(value) is not int or not 0 <= value <= 9007199254740991):
+                raise ValueError("invalid token count")
 
 
 @dataclass(frozen=True, slots=True)

@@ -1205,6 +1205,20 @@ components:
           - 'null'
           pattern: ^-?(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
           example: '123.45'
+        inputTokens:
+          description: Project-safe observed Jev input token count; paired with outputTokens when supplied.
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+          maximum: 9007199254740991
+        outputTokens:
+          description: Project-safe observed Jev output token count; paired with inputTokens when supplied.
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+          maximum: 9007199254740991
         estimatedCost:
           type:
           - string
@@ -1217,6 +1231,25 @@ components:
           $ref: '#/components/schemas/TraceId'
         reasonCode:
           $ref: '#/components/schemas/ReasonCode'
+      dependentRequired:
+        inputTokens:
+        - outputTokens
+        outputTokens:
+        - inputTokens
+      dependentSchemas:
+        inputTokens:
+          if:
+            properties:
+              inputTokens:
+                type: 'null'
+          then:
+            properties:
+              outputTokens:
+                type: 'null'
+          else:
+            properties:
+              outputTokens:
+                type: integer
       if:
         properties:
           typedAnswers:

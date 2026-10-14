@@ -126,7 +126,13 @@ for entity_type in ENTITY_TYPES:
             field_name + "_id" if reference and not field_name.endswith("_id") else field_name
         )
         target = REFERENCES.get(name, {}).get(field_name)
-        args = [column_name, _sql_type(hint, reference=reference)]
+        column_type = (
+            BigInteger()
+            if entity_type is models.DecisionResult
+            and field_name in {"input_tokens", "output_tokens"}
+            else _sql_type(hint, reference=reference)
+        )
+        args = [column_name, column_type]
         if target:
             args.append(ForeignKey(f"{target}.id", ondelete="RESTRICT"))
         columns.append(
@@ -185,6 +191,15 @@ TABLES[models.RiskReservation].append_constraint(
 )
 TABLES[models.DecisionResult].append_constraint(
     UniqueConstraint("id", "market_state_id", name="uq_decision_market_state")
+)
+TABLES[models.DecisionResult].append_constraint(
+    CheckConstraint(
+        "(input_tokens IS NULL AND output_tokens IS NULL) OR "
+        "(input_tokens IS NOT NULL AND output_tokens IS NOT NULL AND "
+        "input_tokens BETWEEN 0 AND 9007199254740991 AND "
+        "output_tokens BETWEEN 0 AND 9007199254740991)",
+        name="ck_decision_token_pair",
+    )
 )
 TABLES[models.TradeProposal].append_constraint(
     ForeignKeyConstraint(

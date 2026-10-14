@@ -220,8 +220,21 @@ def guest() -> None:
     config = Config("alembic.ini")
     with engine.begin() as connection:
         config.attributes["connection"] = connection
-        # This regression suite verifies the frozen ledger boundary, not later runtime revisions.
+        # Verify the frozen first migration before testing today's runtime/restore.
         command.upgrade(config, "0001_ledger")
+        assert (
+            connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
+            == "0001_ledger"
+        )
+        assert (
+            connection.execute(text(
+                "SELECT count(*) FROM information_schema.columns "
+                "WHERE table_schema='public' AND table_name='decisions' "
+                "AND column_name IN ('input_tokens','output_tokens')"
+            )).scalar_one()
+            == 0
+        )
+        command.upgrade(config, "head")
     now = datetime(2026, 10, 12, 15, 0, tzinfo=UTC)
     trace = "a" * 32
     instrument = m.Instrument("spy", m.Market.US_EQUITY, "SPY", "EQUITY", "USD", 1, "NYSE")

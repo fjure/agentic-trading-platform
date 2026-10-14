@@ -29,6 +29,14 @@ export interface Decision {
     inputHash: string;
     latencyMs: number;
     apiUnits: string | null;
+    /**
+     * Project-safe observed Jev input token count; paired with outputTokens when supplied.
+     */
+    inputTokens?: number | null;
+    /**
+     * Project-safe observed Jev output token count; paired with inputTokens when supplied.
+     */
+    outputTokens?: number | null;
     estimatedCost: string | null;
     validUntil: string;
     traceId: string;

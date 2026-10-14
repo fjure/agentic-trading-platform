@@ -53,6 +53,7 @@ def host(*, guest_path: Path | None = None, guest_args: tuple[str, ...] = ()) ->
     for source, target in (
         (root / "packages", "/opt/lab/packages"),
         (root / "services", "/opt/lab/services"),
+        (root / "config/agents/jev.yaml", "/opt/lab/config/agents/jev.yaml"),
         (root / "alembic.ini", "/opt/lab/alembic.ini"),
         (Path(__file__).resolve(), "/opt/lab/risk_support.py"),
     ):
