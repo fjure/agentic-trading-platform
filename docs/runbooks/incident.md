@@ -1,6 +1,6 @@
-# Sicherheits- und Betriebsincident (geplant)
+# Sicherheits- und Betriebsincident
 
-Dieses Runbook beschreibt die Reaktion auf Daten-, Broker-, Decision-, DB-, Secret- und Kontrollstörungen der späteren lokalen Anwendung. Derzeit gibt es keine Runtime. Priorität haben Stoppen neuer Risiken, Erhalten des Ledgers und beweisbare Reconciliation; ein Incident ist keine Freigabe für einen direkten Brokerorder-Workaround.
+Der lokale Fake-PAPER-Kontrollpfad ist implementiert. Priorität haben Stoppen neuer Risiken, Erhalten des Ledgers und beweisbare Reconciliation. Dieser Nachweis umfasst keinen externen Brokeradapter oder produktiven Betrieb.
 
 ## Erkennen und Eingrenzen
 
@@ -13,7 +13,24 @@ Dieses Runbook beschreibt die Reaktion auf Daten-, Broker-, Decision-, DB-, Secr
 | Secret-Canary in Log/API/Browser oder unzulässiger Egress | `HALTED`; betroffene lokalen Dienste isolieren | Nur redigierte Artefakte sichern; Secretrotation außerhalb Repo/Prompt |
 | UI/SSE-Lücke oder Dashboardausfall | Unabhängigen CLI-/Watchdog-Kontrollpfad nutzen | Backend-Snapshot, Cursor, `410`/`reset-required`, Heartbeats |
 
-**Geplante CLI-Schnittstellen, derzeit nicht ausführbar:** `tradingctl pause --reason <CODE>`, `tradingctl halt --reason <CODE>` und `tradingctl status --redacted`. Diese Namen sind Entwurfsplatzhalter; der spätere Apply muss den tatsächlichen Vertrag und die Tests festlegen. Kein Befehl in diesem Dokument darf vor Runtime-Zertifizierung als Ordersteuerung benutzt werden.
+## Lokaler Kontrollpfad
+
+Im Linux-Execution-Container mit bereits gestartetem `LocalControlServer` und der privaten Socketdatei ausführen:
+
+```sh
+python -m services.execution.control_socket --socket /run/trading/control.sock pause
+python -m services.execution.control_socket --socket /run/trading/control.sock kill
+python -m services.execution.control_socket --socket /run/trading/control.sock resume --policy-version 1
+python -m services.execution.control_socket --socket /run/trading/control.sock activate-paper --policy-version 1
+```
+
+Den tatsächlichen Socketpfad und die aktuelle Policyversion einsetzen. Das Verzeichnis muss dem lokalen Dienstbenutzer gehören und Modus 0700, der Socket Modus 0600 besitzen. Server und CLI unterstützen ausschließlich die Linux/Unix-Prozessgrenze; auf nativem Windows bleibt der Pfad geschlossen. Der Containerstart und dauerhafte Dienstbetrieb werden durch diese Tests noch nicht zertifiziert. Der Serverdispatch nutzt eine Control-Rollenverbindung und einen fest zugeordneten Account; Benutzer können weder Account noch Actor noch Healthwerte mitgeben. Jev und Browser werden nicht benötigt.
+
+`pause` bestätigt den persistierten SafetyState und seine Version. `kill` persistiert HALTED; `cancellation=REQUESTED` bedeutet einen ausgeführten best-effort Cancel-Callback, keine bestätigte Orderclosure. Bei `NOT_CONFIGURED` fehlt dieser Callback, bei `UNAVAILABLE` schlug er fehl. In beiden Fällen bleibt HALTED erhalten; bekannte Orders weiter über Execution reconciliieren. Für Cancel muss der Server den Execution-eigenen `cancel_known_after_halt`-Callback ausdrücklich erhalten. Kein Flatten und kein Submit aus dem Kontrollpfad.
+
+`resume` und `activate-paper` liefern ausschließlich REQUESTED mit Request-ID. Das ist keine Handelsfreigabe: Execution muss die Request-ID über `ExecutionProcess.recover` prüfen. Resume gilt nur für bereits aktives PAPER; ein Wechsel aus DISABLED/REPLAY/SHADOW benötigt die getrennte explizite PAPER-Aktivierung. HALTED kann damit nicht aufgehoben werden. Policyversion, aktueller Owner/Fencingtoken, Heartbeat, vollständiges Broker-/Ledgerinventar, alle Instrumentdaten und Portfolio müssen aktuell übereinstimmen. Health allein aktiviert PAPER nicht.
+
+Bei `DENIED`, Timeout oder DB-Verlust keinen erfolgreichen Zustandswechsel annehmen. Audit und Ledger über den autorisierten lokalen Lesepfad prüfen; keine Credentials oder freien Quellfehlertexte kopieren. Eine beobachtete DB-/Ownerstörung sperrt den Execution-Prozess bis zur erfolgreich geprüften Recovery. Watchdog pausiert bei fehlendem, über30 Sekunden altem oder zukünftigem Execution-Heartbeat; wiederkehrende Health hebt die Pause nicht automatisch auf.
 
 ## Incidentablauf
 

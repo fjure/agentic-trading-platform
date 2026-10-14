@@ -190,6 +190,18 @@ class FakeBrokerAdapter:
     def holding(self, instrument_id: str) -> Decimal:
         return self._holdings.get(instrument_id, Decimal("0"))
 
+    def all_orders(self) -> tuple[BrokerOrder, ...]:
+        """Read-only inventory proof; a disconnected fixture proves nothing."""
+        if not self._connected:
+            raise ConnectionError("fake broker disconnected")
+        return tuple(self._orders.values())
+
+    def all_holdings(self) -> dict[str, Decimal]:
+        """Return an isolated copy including instruments unknown to the ledger."""
+        if not self._connected:
+            raise ConnectionError("fake broker disconnected")
+        return dict(self._holdings)
+
     def disconnect(self) -> None:
         self._connected = False
 

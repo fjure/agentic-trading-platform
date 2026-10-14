@@ -938,6 +938,71 @@ class AuditEvent:
             _positive_version(self.policy_version)
 
 
+SAFETY_REASON_CODES = frozenset(
+    {
+        "OK",
+        "PAUSED_NEW",
+        "KILL_SWITCH_ACTIVE",
+        "HEALTH_CHECK_FAILED",
+        "TEMPORARILY_UNAVAILABLE",
+        "VERSION_CONFLICT",
+        "INVALID_REQUEST",
+    }
+)
+
+
+@dataclass(frozen=True, slots=True)
+class SafetyEvent:
+    account_id: str
+    action: str
+    mode: Mode
+    safety_state: SafetyState
+    policy_version: int
+    reason_code: str
+    request_id: str | None = None
+
+    def __post_init__(self) -> None:
+        _id(self.account_id)
+        if self.action not in {
+            "PAUSE",
+            "KILL",
+            "RESUME_REQUESTED",
+            "RESUMED",
+            "PAPER_ACTIVATION_REQUESTED",
+            "PAPER_ACTIVATED",
+        }:
+            raise ValueError("invalid safety action")
+        if not isinstance(self.mode, Mode) or not isinstance(self.safety_state, SafetyState):
+            raise ValueError("invalid safety state")
+        _positive_version(self.policy_version)
+        if self.reason_code not in SAFETY_REASON_CODES:
+            raise ValueError("invalid safety reason code")
+        if self.request_id is not None:
+            _id(self.request_id)
+        expected_state = (
+            SafetyState.HALTED
+            if self.action == "KILL"
+            else SafetyState.RUNNING
+            if self.action in {"RESUMED", "PAPER_ACTIVATED"}
+            else SafetyState.PAUSE_NEW
+        )
+        if self.safety_state is not expected_state:
+            raise ValueError("safety action/state mismatch")
+        if (
+            self.action in {"RESUME_REQUESTED", "RESUMED", "PAPER_ACTIVATED"}
+            and self.mode is not Mode.PAPER
+        ):
+            raise ValueError("paper operation requires PAPER mode")
+        if self.action == "PAPER_ACTIVATION_REQUESTED" and self.mode is Mode.PAPER:
+            raise ValueError("paper activation requires a different starting mode")
+        if (
+            self.action
+            in {"RESUME_REQUESTED", "RESUMED", "PAPER_ACTIVATION_REQUESTED", "PAPER_ACTIVATED"}
+            and self.request_id is None
+        ):
+            raise ValueError("resume event requires request identity")
+
+
 @dataclass(frozen=True, slots=True)
 class EventEnvelope:
     event_id: str
@@ -963,11 +1028,18 @@ class EventEnvelope:
             "risk.decided.v1": RiskDecision,
             "risk.reserved.v1": RiskReservation,
             "execution.reported.v1": ExecutionReport,
+            "safety.changed.v1": SafetyEvent,
+            "safety.resume_requested.v1": SafetyEvent,
         }
         if self.event_type not in expected or not isinstance(
             self.payload, expected[self.event_type]
         ):
             raise ValueError("event type/payload mismatch")
+        if isinstance(self.payload, SafetyEvent) and (
+            (self.event_type == "safety.resume_requested.v1")
+            != (self.payload.action in {"RESUME_REQUESTED", "PAPER_ACTIVATION_REQUESTED"})
+        ):
+            raise ValueError("safety event type/action mismatch")
         object.__setattr__(self, "occurred_at", utc_time(self.occurred_at))
 
 

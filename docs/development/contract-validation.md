@@ -13,10 +13,12 @@ Anwendungsclient: `apps/dashboard/src/app/api/generated/control-api/`, 65 mechan
 
 - OpenSpec: `openspec/changes/paper-trading-vertical-slice/specs/` mit `REQ-CTL-001` bis `REQ-CTL-007`, `REQ-RSK-*`, `REQ-DEC-*`, `REQ-MKT-*` und `REQ-RUN-*`.
 - HTTP: `contracts/http/control-api.openapi.yaml`, OpenAPI 3.1.2, 18 Operationen unter `/api/v1`.
-- Intern: acht Draft-2020-12-Schemas in `contracts/schemas/v1/` (inklusive gemeinsamer Skalar-Definitionen) und Beispiele in `contracts/examples/v1/`.
+- Intern: neun Draft-2020-12-Schemas in `contracts/schemas/v1/` (inklusive gemeinsamer Skalar-Definitionen und SafetyEvent aus PTV-12) und Beispiele in `contracts/examples/v1/`.
 - ADR: `docs/adr/0002-openapi.md` erläutert Versionswahl, Sicherheitsgrenzen und AsyncAPI-Schwelle.
 
 `MarketState`, `DecisionResult`, `TradeProposal`, `RiskDecision`, `RiskReservation`, `ExecutionReport` und der Outbox-Umschlag sind jeweils versioniert. Der Umschlag enthält `eventId`, versionierten `eventType`, `occurredAt`, `aggregateId`, `aggregateVersion`, `traceId` und `payload`. Provider-Rohdaten, Secretwerte und Chain-of-Thought sind nicht Teil der öffentlichen DTOs. RFC-9457-Problemantworten benutzen einen stabilen internen `code`.
+
+PTV-12 ergänzt intern `safety.changed.v1` und `safety.resume_requested.v1` mit typisiertem SafetyEvent. Request-Ereignisse können nicht als Zustandsfreigabe auftreten; Aktion, Mode, SafetyState, positive Policyversion und notwendige Request-ID werden zusammen validiert. LIVE, zusätzliche Healthbehauptungen und ungültige Beispiele werden abgelehnt. HTTP/OpenAPI bleibt unverändert. Prüflauf 2026-10-14: neun Schemas und alle Beispiele gültig, oasdiff gegen main 11a1f4f ohne Breaking Change, zwei Angular-Generierungen mit 65 Dateien bytegleich zum vorhandenen Client und erfolgreiche Typprüfung. Sechs zusätzliche Safety-Negativ-/Eventprüfungen bestanden; Clientcode wurde nicht verändert.
 
 ## Gepinnte Werkzeuge
 

@@ -104,8 +104,8 @@ def main() -> None:
         fail("operationIds are missing or duplicated")
 
     schema_docs = {p.name: json.loads(p.read_text(encoding="utf-8")) for p in SCHEMAS.glob("*.schema.json")}
-    if len(schema_docs) != 8:
-        fail(f"expected 8 versioned schemas, found {len(schema_docs)}")
+    if len(schema_docs) != 9:
+        fail(f"expected 9 versioned schemas, found {len(schema_docs)}")
     registry = Registry()
     for filename, schema in schema_docs.items():
         Draft202012Validator.check_schema(schema)

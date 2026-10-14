@@ -54,14 +54,14 @@ def collect():
         "MKT": ["MarketState", "listMarketStates"],
         "DEC": ["DecisionResult", "listDecisions"],
         "RSK": ["RiskDecision", "RiskReservation", "ExecutionReport", "listRiskDecisions", "listOrders"],
-        "RUN": ["EventEnvelope", "listAuditEvents", "listAgentRuns"],
-        "CTL": ["activateLocalSession", "getSupervisorSnapshot", "streamSupervisorEvents", "getMode", "setMode",
+        "RUN": ["EventEnvelope", "SafetyEvent", "listAuditEvents", "listAgentRuns"],
+        "CTL": ["SafetyEvent", "activateLocalSession", "getSupervisorSnapshot", "streamSupervisorEvents", "getMode", "setMode",
                 "pauseNewEntries", "resumeNewEntries", "activateKillSwitch", "getRiskPolicy",
                 "updateRiskPolicy", "listApiCosts"],
     }
     schemas = {"MarketState":"market-state", "DecisionResult":"decision-result",
                "RiskDecision":"risk-decision", "RiskReservation":"risk-reservation",
-               "ExecutionReport":"execution-report", "EventEnvelope":"event-envelope"}
+               "SafetyEvent":"safety-event", "ExecutionReport":"execution-report", "EventEnvelope":"event-envelope"}
     decisions = {"MKT":["D-02","D-03"], "DEC":["D-02","D-07"],
                  "RSK":["D-04","D-05"], "RUN":["D-01","D-06","D-09"], "CTL":["D-08"]}
     rows = []

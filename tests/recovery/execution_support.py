@@ -252,6 +252,8 @@ def checks(ledger, execution_ledger, engine, now):
             limits=RiskLimits(),
             broker=broker,
             paper_smoke_enabled=enabled,
+            owner_id="fixture",
+            fencing_token=1,
         )
 
     if scenario == "startup":
@@ -285,7 +287,7 @@ def checks(ledger, execution_ledger, engine, now):
                 observer.execute(
                     text("SELECT version FROM public.risk_account_context WHERE account_id='paper'")
                 ).scalar_one()
-                == context.version
+                >= context.version
             )
         update_context(safety_state="HALTED", reconciliation_current=True)
         ExecutionProcess(
@@ -385,13 +387,25 @@ def checks(ledger, execution_ledger, engine, now):
         return
 
     if scenario == "pause-gap":
-        stages = []
+        paused_after_commit = []
+        with execution_ledger.transaction() as tx:
+            tx.connection.execute(
+                text(
+                    "UPDATE public.execution_owners SET heartbeat_at=clock_timestamp() "
+                    "WHERE account_id='paper' AND owner_id='fixture' AND fencing_token=1"
+                )
+            )
 
         @event.listens_for(execution_ledger.engine, "before_cursor_execute")
         def pause_between_stages(_connection, _cursor, statement, _params, _context, _many):
-            if statement == "SELECT current_user":
-                stages.append(1)
-                if len(stages) == 2:
+            if statement == "SELECT current_user" and not paused_after_commit:
+                with engine.connect() as observer:
+                    persisted = observer.execute(
+                        text("SELECT status FROM public.broker_orders WHERE intent_id=:id"),
+                        {"id": intent_id},
+                    ).scalar_one_or_none()
+                if persisted == "SUBMITTING":
+                    paused_after_commit.append(True)
                     update_context(safety_state="PAUSE_NEW")
 
         try:
@@ -400,7 +414,7 @@ def checks(ledger, execution_ledger, engine, now):
             pass
         else:
             raise AssertionError("pause between transactions allowed submit")
-        assert not calls and not capability_calls
+        assert paused_after_commit and not calls and not capability_calls
         with engine.connect() as observer:
             assert (
                 observer.execute(text("SELECT status FROM public.broker_orders")).scalar_one()
@@ -445,6 +459,10 @@ def checks(ledger, execution_ledger, engine, now):
             raise AssertionError("worker DB role allowed submit")
         finally:
             worker_engine.dispose()
+        with engine.connect() as observer:
+            next_context_version = observer.execute(
+                text("SELECT version+1 FROM public.risk_account_context WHERE account_id='paper'")
+            ).scalar_one()
         for version, (mode, safety) in enumerate(
             (
                 ("DISABLED", "RUNNING"),
@@ -453,7 +471,7 @@ def checks(ledger, execution_ledger, engine, now):
                 ("PAPER", "PAUSE_NEW"),
                 ("PAPER", "HALTED"),
             ),
-            start=2,
+            start=next_context_version,
         ):
             with ledger.transaction() as tx:
                 tx.insert(

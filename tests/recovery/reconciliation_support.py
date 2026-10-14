@@ -165,6 +165,8 @@ def checks(ledger, execution_ledger, engine, now):
             limits=RiskLimits(),
             broker=broker,
             paper_smoke_enabled=True,
+            owner_id="fixture",
+            fencing_token=1,
         )
     except Crash:
         with ledger.transaction() as tx:

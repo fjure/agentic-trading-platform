@@ -111,9 +111,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
   - Tests: T-RSK-009/010, T-RUN-001/002
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 4.4 PTV-12 Pause, Resume und unabhängiger Watchdog; Evidenz: T-RSK-001/002, T-CTL-005, T-RUN-005/007.
+- [x] 4.4 PTV-12 Pause, Resume und unabhängiger Watchdog; Evidenz: T-RSK-001/002, T-CTL-005, T-RUN-005/007.
   - Requirements: REQ-RSK-001, REQ-RSK-002, REQ-CTL-005, REQ-RUN-005, REQ-RUN-007
-  - Zielpfade: `services/watchdog/main.py`, `services/control_api/control.py`, `services/execution/control_socket.py`, `tests/integration/test_pause_resume.py`, `docs/runbooks/incident.md`
+  - Zielpfade: `services/watchdog/main.py`, `services/watchdog/__init__.py`, `services/control_api/control.py`, `services/control_api/migrations/versions/0004_safety_controls.py`, `services/execution/control_socket.py`, `services/execution/recovery_health.py`, `services/execution/gates.py`, `services/execution/intents.py`, `packages/brokers/fake.py`, `packages/domain/models.py`, `packages/observability/outbox.py`, `contracts/schemas/v1/safety-event.schema.json`, `contracts/schemas/v1/event-envelope.schema.json`, `contracts/examples/v1/safety-event.valid.json`, `contracts/examples/v1/safety-event.invalid.json`, `scripts/validate-contracts.py`, `scripts/validate-plan.py`, `tests/contracts/test_examples.py`, `tests/integration/test_pause_resume.py`, `tests/integration/control_support.py`, `tests/integration/risk_support.py`, `tests/recovery/execution_support.py`, `tests/recovery/reconciliation_support.py`, `docs/runbooks/incident.md`, `docs/evidence/ptv-12-safety-controls.md`
   - Abhängigkeiten: PTV-10, PTV-11
   - Verhalten: Persistente Safety-Latches, CLI-Kontrollsocket, Health/Reconcilegate für Resume und unabhängige Pause/Kill.
   - Akzeptanz: Jev-/UI-Ausfall blockiert keine Pause; DB-Ausfall oder Leaseverlust verhindert Submit.

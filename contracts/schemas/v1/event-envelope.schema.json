@@ -4,23 +4,212 @@
   "title": "Internal outbox event envelope v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "eventId", "eventType", "occurredAt", "aggregateId", "aggregateVersion", "traceId", "payload"],
+  "required": [
+    "schemaVersion",
+    "eventId",
+    "eventType",
+    "occurredAt",
+    "aggregateId",
+    "aggregateVersion",
+    "traceId",
+    "payload"
+  ],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "eventId": {"type": "string", "minLength": 1},
-    "eventType": {"enum": ["market.state.v1", "decision.completed.v1", "trade.proposed.v1", "risk.decided.v1", "risk.reserved.v1", "execution.reported.v1"]},
-    "occurredAt": {"$ref": "common.schema.json#/$defs/utc"},
-    "aggregateId": {"type": "string", "minLength": 1},
-    "aggregateVersion": {"type": "integer", "minimum": 1},
-    "traceId": {"$ref": "common.schema.json#/$defs/traceId"},
-    "payload": {"type": "object"}
+    "schemaVersion": {
+      "const": 1
+    },
+    "eventId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "eventType": {
+      "enum": [
+        "market.state.v1",
+        "decision.completed.v1",
+        "trade.proposed.v1",
+        "risk.decided.v1",
+        "risk.reserved.v1",
+        "execution.reported.v1",
+        "safety.changed.v1",
+        "safety.resume_requested.v1"
+      ]
+    },
+    "occurredAt": {
+      "$ref": "common.schema.json#/$defs/utc"
+    },
+    "aggregateId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "aggregateVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "traceId": {
+      "$ref": "common.schema.json#/$defs/traceId"
+    },
+    "payload": {
+      "type": "object"
+    }
   },
   "allOf": [
-    {"if": {"properties": {"eventType": {"const": "market.state.v1"}}}, "then": {"properties": {"payload": {"$ref": "market-state.schema.json"}}}},
-    {"if": {"properties": {"eventType": {"const": "decision.completed.v1"}}}, "then": {"properties": {"payload": {"$ref": "decision-result.schema.json"}}}},
-    {"if": {"properties": {"eventType": {"const": "trade.proposed.v1"}}}, "then": {"properties": {"payload": {"$ref": "trade-proposal.schema.json"}}}},
-    {"if": {"properties": {"eventType": {"const": "risk.decided.v1"}}}, "then": {"properties": {"payload": {"$ref": "risk-decision.schema.json"}}}},
-    {"if": {"properties": {"eventType": {"const": "risk.reserved.v1"}}}, "then": {"properties": {"payload": {"$ref": "risk-reservation.schema.json"}}}},
-    {"if": {"properties": {"eventType": {"const": "execution.reported.v1"}}}, "then": {"properties": {"payload": {"$ref": "execution-report.schema.json"}}}}
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "market.state.v1"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "market-state.schema.json"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "decision.completed.v1"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "decision-result.schema.json"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "trade.proposed.v1"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "trade-proposal.schema.json"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "risk.decided.v1"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "risk-decision.schema.json"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "risk.reserved.v1"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "risk-reservation.schema.json"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "execution.reported.v1"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "execution-report.schema.json"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "safety.changed.v1"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "allOf": [
+              {
+                "$ref": "safety-event.schema.json"
+              },
+              {
+                "properties": {
+                  "action": {
+                    "enum": [
+                      "PAUSE",
+                      "KILL",
+                      "RESUMED",
+                      "PAPER_ACTIVATED"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "safety.resume_requested.v1"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "allOf": [
+              {
+                "$ref": "safety-event.schema.json"
+              },
+              {
+                "properties": {
+                  "action": {
+                    "enum": [
+                      "RESUME_REQUESTED",
+                      "PAPER_ACTIVATION_REQUESTED"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
   ]
 }
