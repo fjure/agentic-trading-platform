@@ -151,9 +151,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
   - Tests: T-DEC-002..006/008, T-RSK-001
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 6.2 PTV-16 Alpaca-MarketData und Fähigkeiten; Evidenz: T-MKT-001/002/003/005/006/008, T-RSK-003, T-RUN-006.
+- [x] 6.2 PTV-16 Alpaca-MarketData und Fähigkeiten; Evidenz: T-MKT-001/002/003/005/006/008, T-RSK-003, T-RUN-006.
   - Requirements: REQ-MKT-001, REQ-MKT-002, REQ-MKT-003, REQ-MKT-005, REQ-MKT-006, REQ-MKT-008, REQ-RSK-003, REQ-RUN-006
-  - Zielpfade: `packages/brokers/alpaca_market_data.py`, `services/execution/market_gateway.py`, `tests/contracts/test_alpaca_market.py`, `docs/runbooks/alpaca-data.md`
+  - Zielpfade: `packages/brokers/alpaca_market_data.py`, `services/execution/market_gateway.py`, `tests/contracts/test_alpaca_market.py`, `tests/security/test_market_gateway.py`, `docs/runbooks/alpaca-data.md`, `docs/evidence/ptv-16-alpaca-market.md`
   - Abhängigkeiten: PTV-14
   - Verhalten: Execution-seitiges credentialgebundenes Gateway, read-only Asset/Sessionabfrage und capability mapping; Worker DTOs ohne Secrets.
   - Akzeptanz: SPY/QQQ/BTC/USD nur bei aktuell bestätigter Berechtigung; rate limit/stale/DST mapped.
