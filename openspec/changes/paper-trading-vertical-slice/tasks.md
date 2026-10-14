@@ -122,9 +122,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
 
 ## 5. Erster vollständig lokaler Meilenstein
 
-- [ ] 5.1 PTV-13 Vollständiger lokaler Fake-Trade; Evidenz: T-MKT-002, T-DEC-001, T-RSK-004/007/009/010, T-RUN-004/005, T-CTL-005.
+- [x] 5.1 PTV-13 Vollständiger lokaler Fake-Trade; Evidenz: T-MKT-002, T-DEC-001, T-RSK-004/007/009/010, T-RUN-004/005, T-CTL-005.
   - Requirements: REQ-MKT-002, REQ-DEC-001, REQ-RSK-004, REQ-RSK-007, REQ-RSK-009, REQ-RSK-010, REQ-RUN-004, REQ-RUN-005, REQ-CTL-005
-  - Zielpfade: `tests/integration/test_vertical_fake.py`, `tests/recovery/test_vertical_failures.py`, `docs/runbooks/local-operation.md`
+  - Zielpfade: `services/execution/intents.py`, `tests/integration/test_vertical_fake.py`, `tests/integration/vertical_support.py`, `tests/recovery/test_vertical_failures.py`, `docs/runbooks/local-operation.md`, `docs/evidence/ptv-13-vertical-fake.md`
   - Abhängigkeiten: PTV-05, PTV-06, PTV-07, PTV-08, PTV-11, PTV-12
   - Verhalten: Fixture → MarketState → Mock → Proposal → Risk → Fake fill → Portfolio/Audit ohne externe Dienste beweisen.
   - Akzeptanz: Vollständige Tracekette, 0 Doppelorders bei Crash vor/nach Submit; alle offenen UNKNOWNs sichtbar.
