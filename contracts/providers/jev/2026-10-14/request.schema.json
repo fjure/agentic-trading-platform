@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.local/contracts/providers/jev/2026-10-14/request.schema.json",
+  "title": "Jev PTV-15 project request profile",
+  "description": "Project-local, deliberately narrower profile of the TypeSafe API documented at https://docs.typesafe.ai/api and https://docs.typesafe.ai/models (accessed 2026-10-14). This is not a claim that the provider rejects other valid requests. Exact question IDs, string-length limits, and pinned model belong to this project profile.",
+  "type": "object",
+  "required": ["model", "state", "questions"],
+  "additionalProperties": false,
+  "properties": {
+    "model": { "const": "jev-1.13.0" },
+    "state": {
+      "description": "Provider accepts text, structured objects, and arrays. This profile leaves the state shape to the adapter's admitted MarketState serialization.",
+      "type": ["string", "object", "array"]
+    },
+    "questions": {
+      "type": "object",
+      "required": ["regime", "evidence_quality", "signal_conflict"],
+      "additionalProperties": false,
+      "properties": {
+        "regime": { "$ref": "#/$defs/regimeQuestion" },
+        "evidence_quality": { "$ref": "#/$defs/evidenceQuestion" },
+        "signal_conflict": { "$ref": "#/$defs/conflictQuestion" },
+        "shadow_direction": { "$ref": "#/$defs/directionQuestion" }
+      }
+    }
+  },
+  "$defs": {
+    "instructions": { "type": "string", "minLength": 1, "maxLength": 2048 },
+    "description": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "regimeQuestion": {
+      "type": "object",
+      "required": ["type", "instructions", "criteria"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "choice" },
+        "instructions": { "$ref": "#/$defs/instructions" },
+        "criteria": {
+          "type": "object",
+          "required": ["TREND", "RANGE", "UNCERTAIN"],
+          "additionalProperties": false,
+          "properties": {
+            "TREND": { "$ref": "#/$defs/description" },
+            "RANGE": { "$ref": "#/$defs/description" },
+            "UNCERTAIN": { "$ref": "#/$defs/description" }
+          }
+        }
+      }
+    },
+    "directionQuestion": {
+      "type": "object",
+      "required": ["type", "instructions", "criteria"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "choice" },
+        "instructions": { "$ref": "#/$defs/instructions" },
+        "criteria": {
+          "type": "object",
+          "required": ["LONG", "FLAT", "ABSTAIN"],
+          "additionalProperties": false,
+          "properties": {
+            "LONG": { "$ref": "#/$defs/description" },
+            "FLAT": { "$ref": "#/$defs/description" },
+            "ABSTAIN": { "$ref": "#/$defs/description" }
+          }
+        }
+      }
+    },
+    "evidenceQuestion": {
+      "type": "object",
+      "required": ["type", "instructions", "criteria"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "score" },
+        "instructions": { "$ref": "#/$defs/instructions" },
+        "criteria": {
+          "type": "array",
+          "prefixItems": [
+            { "$ref": "#/$defs/description" },
+            { "$ref": "#/$defs/description" },
+            { "$ref": "#/$defs/description" },
+            { "$ref": "#/$defs/description" },
+            { "$ref": "#/$defs/description" },
+            { "$ref": "#/$defs/description" },
+            { "$ref": "#/$defs/description" },
+            { "$ref": "#/$defs/description" },
+            { "$ref": "#/$defs/description" },
+            { "$ref": "#/$defs/description" }
+          ],
+          "minItems": 10,
+          "maxItems": 10,
+          "items": false
+        }
+      }
+    },
+    "conflictQuestion": {
+      "type": "object",
+      "required": ["type", "instructions"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "noul" },
+        "instructions": { "$ref": "#/$defs/instructions" },
+        "criteria": {
+          "type": "object",
+          "required": ["true", "false"],
+          "additionalProperties": false,
+          "properties": {
+            "true": { "$ref": "#/$defs/description" },
+            "false": { "$ref": "#/$defs/description" }
+          }
+        }
+      }
+    }
+  }
+}

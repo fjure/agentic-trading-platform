@@ -1,0 +1,52 @@
+{
+  "model": "jev-1.13.0",
+  "state": {
+    "symbol": "SYNTHETIC",
+    "as_of_utc": "2026-10-14T09:00:00Z",
+    "observations": ["Ten admitted bars show a sustained upward move.", "Volume is consistent and inputs are fresh."]
+  },
+  "questions": {
+    "regime": {
+      "type": "choice",
+      "instructions": "Which one market regime best describes the admitted observations?",
+      "criteria": {
+        "TREND": "Sustained directional movement in the admitted window",
+        "RANGE": "Movement contained within a range in the admitted window",
+        "UNCERTAIN": "Insufficient or ambiguous regime evidence"
+      }
+    },
+    "evidence_quality": {
+      "type": "score",
+      "instructions": "How complete and internally consistent is the admitted market evidence?",
+      "criteria": [
+        "No usable evidence",
+        "Almost entirely missing",
+        "Severely incomplete",
+        "Materially incomplete",
+        "Weak and uncertain",
+        "Mixed quality",
+        "Mostly coherent",
+        "Coherent with minor gaps",
+        "Strong and coherent",
+        "Complete and internally consistent"
+      ]
+    },
+    "signal_conflict": {
+      "type": "noul",
+      "instructions": "Do the admitted market signals materially conflict?",
+      "criteria": {
+        "true": "Signals materially disagree",
+        "false": "Signals do not materially disagree"
+      }
+    },
+    "shadow_direction": {
+      "type": "choice",
+      "instructions": "Which directional classification best fits the admitted observations for shadow comparison only?",
+      "criteria": {
+        "LONG": "Evidence favors a long classification",
+        "FLAT": "Evidence favors a flat classification",
+        "ABSTAIN": "Evidence is insufficient or ambiguous"
+      }
+    }
+  }
+}

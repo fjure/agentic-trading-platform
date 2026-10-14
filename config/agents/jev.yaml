@@ -1,0 +1,57 @@
+{
+  "version": "jev-shadow.v1",
+  "model": "jev-1.13.0",
+  "prompt_version": "jev-atomic-prompt.v1",
+  "question_version": "jev-atomic-questions.v1",
+  "enabled": false,
+  "mode": "SHADOW",
+  "max_state_age_seconds": 120,
+  "decision_ttl_seconds": 5,
+  "minimum_confidence": "0.70",
+  "minimum_evidence_quality": "0.70",
+  "maximum_signal_conflict": "0.25",
+  "questions": {
+    "regime": {
+      "type": "choice",
+      "instructions": "Which one market regime best describes the admitted observations?",
+      "criteria": {
+        "TREND": "Sustained directional movement in the admitted window",
+        "RANGE": "Movement contained within a range in the admitted window",
+        "UNCERTAIN": "Insufficient or ambiguous regime evidence"
+      }
+    },
+    "evidence_quality": {
+      "type": "score",
+      "instructions": "How complete and internally consistent is the admitted market evidence?",
+      "criteria": [
+        "No usable evidence",
+        "Almost entirely missing",
+        "Severely incomplete",
+        "Materially incomplete",
+        "Weak and uncertain",
+        "Mixed quality",
+        "Mostly coherent",
+        "Coherent with minor gaps",
+        "Strong and coherent",
+        "Complete and internally consistent"
+      ]
+    },
+    "signal_conflict": {
+      "type": "noul",
+      "instructions": "Do the admitted market signals materially conflict?",
+      "criteria": {
+        "true": "Signals materially disagree",
+        "false": "Signals do not materially disagree"
+      }
+    },
+    "shadow_direction": {
+      "type": "choice",
+      "instructions": "Which directional classification best fits the admitted observations for shadow comparison only?",
+      "criteria": {
+        "LONG": "Evidence favors a long classification",
+        "FLAT": "Evidence favors a flat classification",
+        "ABSTAIN": "Evidence is insufficient or ambiguous"
+      }
+    }
+  }
+}

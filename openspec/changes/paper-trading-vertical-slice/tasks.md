@@ -142,9 +142,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
 
 ## 6. Externe Adapter nach lokalem Nachweis
 
-- [ ] 6.1 PTV-15 Jev-Adapter und Shadowevaluation; Evidenz: T-DEC-002..006/008, T-RSK-001.
+- [x] 6.1 PTV-15 Jev-Adapter und Shadowevaluation; Evidenz: T-DEC-002..006/008, T-RSK-001.
   - Requirements: REQ-DEC-002, REQ-DEC-003, REQ-DEC-004, REQ-DEC-005, REQ-DEC-006, REQ-DEC-008, REQ-RSK-001
-  - Zielpfade: `packages/decisions/jev.py`, `config/agents/jev.yaml`, `tests/contracts/test_jev.py`, `docs/runbooks/jev-evaluation.md`
+  - Zielpfade: `packages/decisions/jev.py`, `packages/decisions/replay.py`, `packages/domain/models.py`, `packages/persistence/schema.py`, `services/control_api/migrations/versions/0005_decision_usage.py`, `config/agents/jev.yaml`, `contracts/http/control-api.openapi.yaml`, `contracts/schemas/v1/decision-result.schema.json`, `contracts/providers/jev/2026-10-14/request.schema.json`, `contracts/providers/jev/2026-10-14/response.schema.json`, `contracts/providers/jev/2026-10-14/request.valid.json`, `contracts/providers/jev/2026-10-14/response.valid.json`, `contracts/providers/jev/2026-10-14/response.invalid.json`, `apps/dashboard/src/app/api/generated/control-api/`, `tests/contracts/test_jev.py`, `tests/contracts/test_jev_wire.py`, `tests/integration/test_jev_usage.py`, `tests/integration/jev_usage_support.py`, `tests/integration/test_jev_shadow.py`, `tests/integration/risk_support.py`, `tests/integration/ledger_support.py`, `docs/development/jev-wire-contract.md`, `docs/runbooks/jev-evaluation.md`, `docs/evidence/ptv-15-jev-shadow.md`
   - Abhängigkeiten: PTV-14
   - Verhalten: Offiziell abgeleiteten versionierten Wirevertrag für Choice/Score/Noul, fallback und Shadow implementieren; kein Codex-API-Key.
   - Akzeptanz: 100 Cases: akzeptierte Antworten 100% schemakonform; Pflichtfehler 100% ABSTAIN; p95 <=5s; Confidence niemals Sizing.
