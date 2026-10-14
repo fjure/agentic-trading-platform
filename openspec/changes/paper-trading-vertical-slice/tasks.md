@@ -131,9 +131,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
   - Tests: T-MKT-002, T-DEC-001, T-RSK-004/007/009/010, T-RUN-004/005, T-CTL-005
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 5.2 PTV-14 Deterministisches Replay und Vergleichsbericht; Evidenz: T-MKT-004, T-DEC-001/006/007.
+- [x] 5.2 PTV-14 Deterministisches Replay und Vergleichsbericht; Evidenz: T-MKT-004, T-DEC-001/006/007.
   - Requirements: REQ-MKT-004, REQ-DEC-001, REQ-DEC-006, REQ-DEC-007
-  - Zielpfade: `packages/decisions/replay.py`, `tests/integration/test_replay.py`, `docs/runbooks/replay.md`
+  - Zielpfade: `packages/decisions/replay.py`, `tests/integration/test_replay.py`, `docs/runbooks/replay.md`, `docs/evidence/ptv-14-replay.md`
   - Abhängigkeiten: PTV-13
   - Verhalten: Clock/IdGenerator, immutable Inputs und gecachte Providerantworten replayen; Baseline/Mockvergleich versionieren.
   - Akzeptanz: Zwei Replays gleiche fachliche Hashes und 0 Brokerzugriff; keine Zukunftsdaten.
