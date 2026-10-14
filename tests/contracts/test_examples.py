@@ -54,6 +54,35 @@ def test_market_negative_contract(mutation):
     assert not schema("market-state").is_valid(data)
 
 
+@pytest.mark.parametrize(
+    "mutation", ["live", "false-policy", "missing-request", "false-running", "extra-health"]
+)
+def test_safety_negative_contract(mutation):
+    data = example("safety-event.valid")
+    if mutation == "live":
+        data["mode"] = "LIVE"
+    elif mutation == "false-policy":
+        data["policyVersion"] = True
+    elif mutation == "missing-request":
+        data.update(action="RESUMED", safetyState="RUNNING", requestId=None)
+    elif mutation == "false-running":
+        data["safetyState"] = "RUNNING"
+    else:
+        data["healthConfirmed"] = True
+    assert not schema("safety-event").is_valid(data)
+
+
+def test_safety_example_and_envelope_cannot_confuse_request_with_release():
+    data = example("safety-event.valid")
+    assert schema("safety-event").is_valid(data)
+    assert not schema("safety-event").is_valid(example("safety-event.invalid"))
+    envelope = example("event-envelope.valid")
+    envelope.update(eventType="safety.resume_requested.v1", payload=data)
+    assert not schema("event-envelope").is_valid(envelope)
+    envelope["eventType"] = "safety.changed.v1"
+    assert schema("event-envelope").is_valid(envelope)
+
+
 @pytest.mark.parametrize("mutation", ["short", "missing-answer", "extra-order", "fake-fallback"])
 def test_decision_negative_contract(mutation):
     data = example("decision-result.valid")

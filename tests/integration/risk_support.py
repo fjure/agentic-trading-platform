@@ -391,6 +391,15 @@ def guest(run_checks=None) -> None:
 
     execution_ledger = PostgresLedger(engine=role_engine)
 
+    # Explicit synthetic bootstrap evidence for the mandatory Runtime gate.
+    # Runtime itself claims/fences a process and pauses; fixtures start RUNNING.
+    with execution_ledger.transaction() as tx:
+        tx.connection.execute(text("""
+            INSERT INTO public.execution_owners
+              (account_id,owner_id,fencing_token,claimed_at,heartbeat_at,trace_id)
+            VALUES ('paper','fixture',1,clock_timestamp(),clock_timestamp(),:trace)
+        """), {"trace": trace})
+
     if run_checks is not None:
         run_checks(ledger, execution_ledger, engine, now)
         role_engine.dispose()

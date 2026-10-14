@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/safety-event.schema.json",
+  "title": "Versioned safety control event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "accountId",
+    "action",
+    "mode",
+    "safetyState",
+    "policyVersion",
+    "reasonCode",
+    "requestId"
+  ],
+  "properties": {
+    "accountId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action": {
+      "enum": [
+        "PAUSE",
+        "KILL",
+        "RESUME_REQUESTED",
+        "RESUMED",
+        "PAPER_ACTIVATION_REQUESTED",
+        "PAPER_ACTIVATED"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "DISABLED",
+        "REPLAY",
+        "SHADOW",
+        "PAPER"
+      ]
+    },
+    "safetyState": {
+      "enum": [
+        "RUNNING",
+        "PAUSE_NEW",
+        "HALTED"
+      ]
+    },
+    "policyVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "reasonCode": {
+      "enum": [
+        "OK",
+        "PAUSED_NEW",
+        "KILL_SWITCH_ACTIVE",
+        "HEALTH_CHECK_FAILED",
+        "TEMPORARILY_UNAVAILABLE",
+        "VERSION_CONFLICT",
+        "INVALID_REQUEST"
+      ]
+    },
+    "requestId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "enum": [
+              "RESUME_REQUESTED",
+              "RESUMED",
+              "PAPER_ACTIVATION_REQUESTED",
+              "PAPER_ACTIVATED"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "enum": [
+              "PAUSE",
+              "RESUME_REQUESTED",
+              "PAPER_ACTIVATION_REQUESTED"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "safetyState": {
+            "const": "PAUSE_NEW"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "enum": [
+              "KILL"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "safetyState": {
+            "const": "HALTED"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "enum": [
+              "RESUMED",
+              "PAPER_ACTIVATED"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "safetyState": {
+            "const": "RUNNING"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "enum": [
+              "RESUME_REQUESTED",
+              "RESUMED",
+              "PAPER_ACTIVATED"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "mode": {
+            "const": "PAPER"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "const": "PAPER_ACTIVATION_REQUESTED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "mode": {
+            "enum": [
+              "DISABLED",
+              "REPLAY",
+              "SHADOW"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

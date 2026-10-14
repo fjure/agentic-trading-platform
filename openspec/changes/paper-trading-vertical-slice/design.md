@@ -83,6 +83,8 @@ Eine PostgreSQL-Transaktion sperrt Account-Budget und betroffene Positionen in f
 
 Watchdog und lokaler CLI-Kontrollpfad setzen denselben persistenten Pause-Latch ohne Jev oder Browser; DB-Ausfall/Leaseverlust blockiert Submit lokal. Kill setzt HALTED, stoppt neue Submits und initiiert best-effort Cancel offener Orders; flatten ist eine separate explizit geprüfte risikoabbauende Aktion, kein blindes Market-Order-Bündel. Reconciliation/Exitüberwachung laufen unabhängig von Jev weiter.
 
+PTV-12 konkretisiert dies für den lokalen Fake-PAPER-Pfad: private AF_UNIX-Schnittstelle im Linux-Container mit festem Account und Control-Rolle; native Windows-Ausführung bleibt geschlossen. Resume und separate PAPER-Aktivierung erzeugen nur unveränderliche, zeitlich begrenzte Requests. Ausschließlich Execution prüft Owner/Fencingtoken, aktuelle Policy und Pausegeneration, vollständiges Broker-/Ledgerinventar, Portfolio und sämtliche Instrumentdaten; diese Prüfung bestätigt den Zustandswechsel atomar mit Audit und typisiertem SafetyEvent/Outbox. Jeder erneute Pause-Latch invalidiert ältere Requests. Health allein löst keine Pause oder HALTED. Der Owner- und Heartbeatcheck erfolgt auch unmittelbar vor Submit unter denselben Accountlocks; ein beobachteter DB-Ausfall sperrt den Prozess bis zur erfolgreichen Recovery. Lokale definitive Pre-I/O-Ablehnungen tragen einen eigenen unveränderlichen Nachweis, der sie von ungewissen Brokerantworten unterscheidet. Cancel-Rückmeldungen beschreiben nur den tatsächlich konfigurierten und ausgeführten best-effort Pfad.
+
 ```mermaid
 sequenceDiagram
   participant W as Worker

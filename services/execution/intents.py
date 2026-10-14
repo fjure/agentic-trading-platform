@@ -33,6 +33,7 @@ def _audit(
     phase: str,
     reason: str,
     now,
+    outcome: str | None = None,
 ) -> None:
     tx.insert(
         m.AuditEvent(
@@ -45,7 +46,7 @@ def _audit(
             entity_version=version,
             trace_id=intent.trace_id,
             policy_version=decision.policy_version,
-            outcome=phase.upper(),
+            outcome=outcome or phase.upper(),
         )
     )
 
@@ -60,7 +61,10 @@ def _finish(
     broker_id: str | None,
     reason: str,
     now,
+    pre_io_rejected: bool = False,
 ) -> m.BrokerOrder:
+    if pre_io_rejected and (status is not m.OrderStatus.REJECTED or broker_id is not None):
+        raise SubmitDenied("INVALID_PRE_IO_PROOF")
     order = tx.get(m.BrokerOrder, _id("order", intent.id))
     if order is None or order.status is not m.OrderStatus.SUBMITTING:
         raise SubmitDenied("RECONCILE_REQUIRED")
@@ -80,6 +84,7 @@ def _finish(
         phase="submit_result",
         reason=reason,
         now=now,
+        outcome="PRE_IO_REJECTED" if pre_io_rejected else None,
     )
     if not tx.replace(updated, expected_version=order.version):
         raise SubmitDenied("ORDER_VERSION_CONFLICT")
@@ -221,6 +226,8 @@ def submit_once(
     limits: RiskLimits,
     broker: FakeBrokerAdapter,
     paper_smoke_enabled: bool = False,
+    owner_id: str,
+    fencing_token: int,
 ) -> m.BrokerOrder:
     """Submit one durable intent at most once, with explicit process-local Paper consent.
 
@@ -239,6 +246,8 @@ def submit_once(
             account_id=account_id,
             intent_id=intent_id,
             limits=limits,
+            owner_id=owner_id,
+            fencing_token=fencing_token,
         )
         order = m.BrokerOrder(
             id=_id("order", intent.id),
@@ -274,6 +283,8 @@ def submit_once(
                     account_id=account_id,
                     intent_id=intent_id,
                     limits=limits,
+                    owner_id=owner_id,
+                    fencing_token=fencing_token,
                     allow_submitting_order=True,
                 )
             )
@@ -297,6 +308,7 @@ def submit_once(
                 broker_id=None,
                 reason=exc.reason_code,
                 now=_now(tx.connection),
+                pre_io_rejected=True,
             )
             raise_after_commit = exc
         else:
@@ -311,6 +323,7 @@ def submit_once(
                     broker_id=None,
                     reason="BROKER_CAPABILITY",
                     now=_now(tx.connection),
+                    pre_io_rejected=True,
                 )
                 raise_after_commit = SubmitDenied("BROKER_CAPABILITY")
             else:
@@ -323,6 +336,8 @@ def submit_once(
                             account_id=account_id,
                             intent_id=intent_id,
                             limits=limits,
+                            owner_id=owner_id,
+                            fencing_token=fencing_token,
                             allow_submitting_order=True,
                         )
                     )
@@ -336,6 +351,7 @@ def submit_once(
                         broker_id=None,
                         reason=exc.reason_code,
                         now=_now(tx.connection),
+                        pre_io_rejected=True,
                     )
                     raise_after_commit = exc
                 else:
@@ -451,18 +467,77 @@ class ExecutionProcess:
         paper_smoke_enabled: bool = False,
     ) -> None:
         pause_after_restart(ledger=ledger, account_id=account_id)
+        from services.execution.recovery_health import claim_execution_owner
+
+        self.owner_id = str(uuid.uuid4())
+        self.fencing_token = claim_execution_owner(
+            ledger=ledger,
+            account_id=account_id,
+            owner_id=self.owner_id,
+            trace_id=uuid.uuid4().hex,
+        )
         self.ledger = ledger
         self.account_id = account_id
         self.limits = limits
         self.broker = broker
         self.paper_smoke_enabled = paper_smoke_enabled
+        self._faulted = False
 
     def submit(self, intent_id: str) -> m.BrokerOrder:
-        return submit_once(
-            ledger=self.ledger,
-            account_id=self.account_id,
-            intent_id=intent_id,
-            limits=self.limits,
-            broker=self.broker,
-            paper_smoke_enabled=self.paper_smoke_enabled,
-        )
+        from sqlalchemy.exc import SQLAlchemyError
+
+        if self._faulted:
+            raise SubmitDenied("LOCAL_EXECUTION_BLOCKED")
+        try:
+            return submit_once(
+                ledger=self.ledger,
+                account_id=self.account_id,
+                intent_id=intent_id,
+                limits=self.limits,
+                broker=self.broker,
+                paper_smoke_enabled=self.paper_smoke_enabled,
+                owner_id=self.owner_id,
+                fencing_token=self.fencing_token,
+            )
+        except SQLAlchemyError:
+            self._faulted = True
+            raise
+        except SubmitDenied as exc:
+            if exc.reason_code in {"EXECUTION_OWNER_FENCED", "EXECUTION_HEARTBEAT_STALE"}:
+                self._faulted = True
+            raise
+
+    def heartbeat(self) -> None:
+        from services.execution.recovery_health import heartbeat_execution_owner
+
+        try:
+            heartbeat_execution_owner(
+                ledger=self.ledger,
+                account_id=self.account_id,
+                owner_id=self.owner_id,
+                fencing_token=self.fencing_token,
+            )
+        except Exception:
+            self._faulted = True
+            raise
+
+    def recover(self, request_id: str) -> str:
+        from sqlalchemy.exc import SQLAlchemyError
+
+        from services.execution.recovery_health import execution_refresh_and_resume
+
+        try:
+            result = execution_refresh_and_resume(
+                ledger=self.ledger,
+                account_id=self.account_id,
+                request_id=request_id,
+                broker=self.broker,
+                owner_id=self.owner_id,
+                fencing_token=self.fencing_token,
+                limits=self.limits,
+            )
+        except SQLAlchemyError:
+            self._faulted = True
+            raise
+        self._faulted = False
+        return result

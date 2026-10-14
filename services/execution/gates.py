@@ -36,6 +36,8 @@ def evaluate_submit_gate(
     account_id: str,
     intent_id: str,
     limits: RiskLimits,
+    owner_id: str,
+    fencing_token: int,
     allow_submitting_order: bool = False,
 ):
     """Return the durable intent and fresh capability under the caller's account lock.
@@ -62,6 +64,13 @@ def evaluate_submit_gate(
         "ACCOUNT_AMBIGUOUS",
     )
     tx.lock_account(account_id)
+    from services.control_api.control import ControlDenied
+    from services.execution.recovery_health import check_runtime
+
+    try:
+        check_runtime(connection, account_id, owner_id=owner_id, fencing_token=fencing_token)
+    except ControlDenied as exc:
+        raise SubmitDenied(exc.reason_code) from None
     intent = tx.get(m.OrderIntent, intent_id)
     _require(intent is not None, "INTENT_MISSING")
     account_context = (
@@ -94,6 +103,10 @@ def evaluate_submit_gate(
         ).scalars()
     ]
     now = _now(connection)
+    try:
+        check_runtime(connection, account_id, owner_id=owner_id, fencing_token=fencing_token)
+    except ControlDenied as exc:
+        raise SubmitDenied(exc.reason_code) from None
     owner = connection.execute(
         text("SELECT account_id FROM public.order_intents WHERE id=:id"), {"id": intent_id}
     ).scalar_one()

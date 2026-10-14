@@ -77,6 +77,8 @@ def _envelope(row: dict) -> EventEnvelope:
         "risk.decided.v1": models.RiskDecision,
         "risk.reserved.v1": models.RiskReservation,
         "execution.reported.v1": models.ExecutionReport,
+        "safety.changed.v1": models.SafetyEvent,
+        "safety.resume_requested.v1": models.SafetyEvent,
     }
     return EventEnvelope(
         event_id=row["event_id"],
