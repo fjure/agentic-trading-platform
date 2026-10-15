@@ -160,9 +160,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
   - Tests: T-MKT-001/002/003/005/006/008, T-RSK-003, T-RUN-006
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 6.3 PTV-17 Alpaca-Paperadapter zertifizieren; Evidenz: T-RSK-003/008/009/010, T-RUN-002/006.
+- [x] 6.3 PTV-17 Alpaca-Paperadapter zertifizieren; Evidenz: T-RSK-003/008/009/010, T-RUN-002/006.
   - Requirements: REQ-RSK-003, REQ-RSK-008, REQ-RSK-009, REQ-RSK-010, REQ-RUN-002, REQ-RUN-006
-  - Zielpfade: `packages/brokers/alpaca_paper.py`, `tests/contracts/test_alpaca_paper.py`, `tests/recovery/test_alpaca_fixtures.py`, `docs/runbooks/paper-smoke.md`
+  - Zielpfade: `packages/brokers/alpaca_paper.py`, `tests/contracts/test_alpaca_paper.py`, `tests/recovery/test_alpaca_fixtures.py`, `docs/runbooks/paper-smoke.md`, `docs/evidence/ptv-17-alpaca-paper.md`
   - Abhängigkeiten: PTV-15, PTV-16, PTV-11
   - Verhalten: Paper-only Host/Accountguard, client-ID/query mapping, Fake-Port-Zertifizierung mit offiziellen Vendorfixtures.
   - Akzeptanz: Happy Path allein unzureichend; Timeout/unknown/partial/cancel/rate/reconnect passieren offline.
