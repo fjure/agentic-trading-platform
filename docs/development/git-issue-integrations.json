@@ -4,8 +4,8 @@
   "authorizedByUserAt": "2026-10-13",
   "bootstrapBranch": "codex/repository-bootstrap",
   "bootstrapCommit": "11a9737415911c3585248026ffbeae0c1d60ed68",
-  "verifiedImplementationMainCommit": "eab46badf9f49668a2ce9699490774269078d4ed",
-  "verifiedAt": "2026-10-16T17:05:23.754867Z",
+  "verifiedImplementationMainCommit": "b235e61b9adc1f7def1646d52a82492acc9b421e",
+  "verifiedAt": "2026-10-16T21:43:36.894039Z",
   "issueIntegrations": [
     {
       "taskId": "PTV-01",
@@ -15,7 +15,7 @@
       "mergeCommit": "24d7e378c0d2cebd8bb234868dc515c79f242e18",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-02",
@@ -25,7 +25,7 @@
       "mergeCommit": "8e40e7e0d6cdea59d5559ed282747dce5ba3ee63",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-03",
@@ -35,7 +35,7 @@
       "mergeCommit": "41815e2242d81d377be4b582d836ac6c2935575f",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-04",
@@ -45,7 +45,7 @@
       "mergeCommit": "a95039cd75d85d612f793759bd55c463e4caaf01",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-05",
@@ -55,7 +55,7 @@
       "mergeCommit": "21e5a10682c2d5d792251b3ccfe0ce0e9dd28000",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-06",
@@ -65,7 +65,7 @@
       "mergeCommit": "7945fcb622b6be9a3e8b2cf3fa132e70f1c34ea9",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-07",
@@ -75,7 +75,7 @@
       "mergeCommit": "c4b35360d70992a29dac88055ceb5312f3800df6",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-08",
@@ -85,7 +85,7 @@
       "mergeCommit": "4f1dcc1f358da20df7f69b4650166337ced87028",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-09",
@@ -95,7 +95,7 @@
       "mergeCommit": "3d90857b5e8d16cb784c9fbd56d8311a6c872350",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-10",
@@ -105,7 +105,7 @@
       "mergeCommit": "b38b9a2d655062c1df52f217dab4a51c1c5c54ce",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-11",
@@ -115,7 +115,7 @@
       "mergeCommit": "e9f889df51d458cc20c8ac26cb6d2ec71bc6b948",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-12",
@@ -125,7 +125,7 @@
       "mergeCommit": "0a838232570b7979168b85a056eae780b09c7816",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-13",
@@ -135,7 +135,7 @@
       "mergeCommit": "4eb0f1158ee9ac8dde38894dde9e1404d4890919",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-14",
@@ -145,7 +145,7 @@
       "mergeCommit": "5cbf2ace91ac8bbcce7666b0ec5d78d5b87ca342",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-15",
@@ -155,7 +155,7 @@
       "mergeCommit": "96e4b88704a7753747252f38db15516311da11a5",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-16",
@@ -165,7 +165,7 @@
       "mergeCommit": "d79e10a9c6099dd2dce3ec1afac442675c369777",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-17",
@@ -175,7 +175,7 @@
       "mergeCommit": "e3a808ec1ffeb3a1fd319f033f41c6c5e1b8b2c7",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-18",
@@ -185,7 +185,7 @@
       "mergeCommit": "dd0d69bb6976e7d621ed387b14961263cbf534bd",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     },
     {
       "taskId": "PTV-19",
@@ -195,7 +195,17 @@
       "mergeCommit": "eab46badf9f49668a2ce9699490774269078d4ed",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true,
-      "verifiedAt": "2026-10-16T17:05:23.754867Z"
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
+    },
+    {
+      "taskId": "PTV-20",
+      "issueNumber": 20,
+      "branch": "codex/ptv-20-material-supervisor",
+      "branchCommit": "b3a5ea7572e12c6bad7d01c01a4ac740e54bdbd7",
+      "mergeCommit": "b235e61b9adc1f7def1646d52a82492acc9b421e",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true,
+      "verifiedAt": "2026-10-16T21:43:36.894039Z"
     }
   ],
   "note": "Observed before this evidence document is committed; later documentation commits may advance main. No remote CI status asserted."
