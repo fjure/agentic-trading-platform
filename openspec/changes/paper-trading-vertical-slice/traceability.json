@@ -162,7 +162,7 @@
         "PTV-23"
       ],
       "testId": "T-CTL-006",
-      "testPath": "tests/e2e/test_supervisor_trace.py",
+      "testPath": "tests/e2e/supervisor.spec.ts",
       "contracts": [
         "contracts/schemas/v1/safety-event.schema.json",
         "contracts/schemas/v1/control-event.schema.json",

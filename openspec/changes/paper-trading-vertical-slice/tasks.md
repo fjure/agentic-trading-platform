@@ -189,9 +189,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
   - Tests: T-CTL-004, T-RUN-004/005
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 7.3 PTV-20 Angular-Material-Supervisor; Evidenz: T-CTL-001/004/005/006/007.
+- [x] 7.3 PTV-20 Angular-Material-Supervisor; Evidenz: T-CTL-001/004/005/006/007.
   - Requirements: REQ-CTL-001, REQ-CTL-004, REQ-CTL-005, REQ-CTL-006, REQ-CTL-007
-  - Zielpfade: `apps/dashboard/src/app/supervisor/`, `apps/dashboard/src/app/state/`, `tests/e2e/supervisor.spec.ts`, `docs/runbooks/dashboard.md`
+  - Zielpfade: `apps/dashboard/src/app/supervisor/`, `apps/dashboard/src/app/state/`, `apps/dashboard/src/app/app.ts`, `apps/dashboard/src/app/app.html`, `apps/dashboard/src/app/app.css`, `apps/dashboard/src/main.ts`, `apps/dashboard/package.json`, `apps/dashboard/package-lock.json`, `tests/e2e/`, `playwright.config.ts`, `scripts/test-dashboard.ps1`, `.github/workflows/contracts.yml`, `docs/runbooks/dashboard.md`, `docs/adr/0003-dashboard-state.md`, `docs/evidence/ptv-20-material-supervisor.md`, `openspec/changes/paper-trading-vertical-slice/test-strategy.md`, `openspec/changes/paper-trading-vertical-slice/traceability.md`, `openspec/changes/paper-trading-vertical-slice/traceability.json`
   - Abhängigkeiten: PTV-18, PTV-19
   - Verhalten: Materialansichten/Dialogs, SignalStore geteilte DTOs/Cursor/Connection/Filter, lokaler Formularstatus; strukturierte Traceansicht.
   - Akzeptanz: Alle geforderten Anzeigen und pause/resume; Disconnect stale sichtbar; Browsersecret-/persistenztest.

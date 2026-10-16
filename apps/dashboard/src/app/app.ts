@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatToolbarModule } from '@angular/material/toolbar';
+import { SupervisorComponent } from './supervisor/supervisor.component';
 
 @Component({
   selector: 'atl-root',
-  imports: [MatCardModule, MatToolbarModule],
+  imports: [SupervisorComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
