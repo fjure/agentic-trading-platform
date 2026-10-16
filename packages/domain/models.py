@@ -964,7 +964,7 @@ class SafetyEvent:
     action: str
     mode: Mode
     safety_state: SafetyState
-    policy_version: int
+    policy_version: int | None
     reason_code: str
     request_id: str | None = None
 
@@ -981,7 +981,11 @@ class SafetyEvent:
             raise ValueError("invalid safety action")
         if not isinstance(self.mode, Mode) or not isinstance(self.safety_state, SafetyState):
             raise ValueError("invalid safety state")
-        _positive_version(self.policy_version)
+        if self.policy_version is None:
+            if self.action not in {"PAUSE", "KILL"}:
+                raise ValueError("recovery event requires policy version")
+        else:
+            _positive_version(self.policy_version)
         if self.reason_code not in SAFETY_REASON_CODES:
             raise ValueError("invalid safety reason code")
         if self.request_id is not None:
@@ -1011,6 +1015,26 @@ class SafetyEvent:
 
 
 @dataclass(frozen=True, slots=True)
+class ControlEvent:
+    account_id: str
+    action: str
+    mode: Mode
+    safety_state: SafetyState
+    policy_version: int
+    reason_code: str = "OK"
+
+    def __post_init__(self) -> None:
+        _id(self.account_id)
+        if self.action not in {"MODE_CHANGED", "POLICY_CHANGED"}:
+            raise ValueError("invalid control action")
+        if not isinstance(self.mode, Mode) or not isinstance(self.safety_state, SafetyState):
+            raise ValueError("invalid control state")
+        _positive_version(self.policy_version)
+        if self.reason_code != "OK":
+            raise ValueError("invalid control reason code")
+
+
+@dataclass(frozen=True, slots=True)
 class EventEnvelope:
     event_id: str
     event_type: str
@@ -1037,6 +1061,8 @@ class EventEnvelope:
             "execution.reported.v1": ExecutionReport,
             "safety.changed.v1": SafetyEvent,
             "safety.resume_requested.v1": SafetyEvent,
+            "control.mode.changed.v1": ControlEvent,
+            "control.policy.changed.v1": ControlEvent,
         }
         if self.event_type not in expected or not isinstance(
             self.payload, expected[self.event_type]
@@ -1047,6 +1073,11 @@ class EventEnvelope:
             != (self.payload.action in {"RESUME_REQUESTED", "PAPER_ACTIVATION_REQUESTED"})
         ):
             raise ValueError("safety event type/action mismatch")
+        if isinstance(self.payload, ControlEvent) and (
+            (self.event_type == "control.mode.changed.v1")
+            != (self.payload.action == "MODE_CHANGED")
+        ):
+            raise ValueError("control event type/action mismatch")
         object.__setattr__(self, "occurred_at", utc_time(self.occurred_at))
 
 

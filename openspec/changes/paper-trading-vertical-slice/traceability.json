@@ -17,6 +17,7 @@
       "testPath": "tests/contracts/test_control_api.py",
       "contracts": [
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:activateLocalSession",
         "operation:getSupervisorSnapshot",
         "operation:streamSupervisorEvents",
@@ -42,9 +43,10 @@
         "PTV-18"
       ],
       "testId": "T-CTL-002",
-      "testPath": "tests/contracts/test_control_mutations.py",
+      "testPath": "tests/contracts/test_control_api.py",
       "contracts": [
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:activateLocalSession",
         "operation:getSupervisorSnapshot",
         "operation:streamSupervisorEvents",
@@ -70,9 +72,10 @@
         "PTV-18"
       ],
       "testId": "T-CTL-003",
-      "testPath": "tests/contracts/test_problem_responses.py",
+      "testPath": "tests/contracts/test_control_api.py",
       "contracts": [
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:activateLocalSession",
         "operation:getSupervisorSnapshot",
         "operation:streamSupervisorEvents",
@@ -101,6 +104,7 @@
       "testPath": "tests/integration/test_sse_reconnect.py",
       "contracts": [
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:activateLocalSession",
         "operation:getSupervisorSnapshot",
         "operation:streamSupervisorEvents",
@@ -129,9 +133,10 @@
         "PTV-21"
       ],
       "testId": "T-CTL-005",
-      "testPath": "tests/recovery/test_independent_kill.py",
+      "testPath": "tests/integration/test_pause_resume.py",
       "contracts": [
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:activateLocalSession",
         "operation:getSupervisorSnapshot",
         "operation:streamSupervisorEvents",
@@ -160,6 +165,7 @@
       "testPath": "tests/e2e/test_supervisor_trace.py",
       "contracts": [
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:activateLocalSession",
         "operation:getSupervisorSnapshot",
         "operation:streamSupervisorEvents",
@@ -186,9 +192,10 @@
         "PTV-21"
       ],
       "testId": "T-CTL-007",
-      "testPath": "tests/security/test_control_surface.py",
+      "testPath": "tests/security/test_control_auth.py",
       "contracts": [
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:activateLocalSession",
         "operation:getSupervisorSnapshot",
         "operation:streamSupervisorEvents",
@@ -767,6 +774,7 @@
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],
@@ -792,6 +800,7 @@
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],
@@ -814,6 +823,7 @@
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],
@@ -838,6 +848,7 @@
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],
@@ -864,6 +875,7 @@
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],
@@ -890,6 +902,7 @@
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],
@@ -913,6 +926,7 @@
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
+        "contracts/schemas/v1/control-event.schema.json",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],

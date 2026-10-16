@@ -1,0 +1,283 @@
+"""Lokaler HTTP-Transport; der kanonische Vertrag liegt unter contracts/http.
+
+Keine Brokerfactory, Credentials oder implizite Datenbankkonfiguration. Ein Launcher
+injiziert Auth und den persistenten Backendport; ohne Backend bleibt alles gesperrt.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import secrets
+from typing import Annotated, Literal, Protocol
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse, Response
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from starlette.concurrency import run_in_threadpool
+from starlette.exceptions import HTTPException
+
+from services.control_api.auth import AuthDenied, LocalAuth
+
+_KEY = re.compile(r"[A-Za-z0-9._:-]{16,128}\Z")
+_TRACE = re.compile(r"00-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})\Z")
+_CODES = frozenset(
+    {
+        "OK",
+        "ABSTAIN_MISSING_EVIDENCE",
+        "ABSTAIN_INVALID_RESPONSE",
+        "ABSTAIN_UNAVAILABLE",
+        "RISK_STALE_MARKET",
+        "RISK_SESSION_CLOSED",
+        "RISK_POLICY_INCOMPLETE",
+        "RISK_LIMIT_EXCEEDED",
+        "RISK_CAPABILITY_UNCONFIRMED",
+        "RISK_PROPOSAL_EXPIRED",
+        "RISK_RECONCILIATION_REQUIRED",
+        "MODE_NOT_PAPER",
+        "PAUSED_NEW",
+        "KILL_SWITCH_ACTIVE",
+        "HEALTH_CHECK_FAILED",
+        "BROKER_STATUS_UNKNOWN",
+        "TEMPORARILY_UNAVAILABLE",
+        "VERSION_CONFLICT",
+        "PRECONDITION_REQUIRED",
+        "IDEMPOTENCY_CONFLICT",
+        "CURSOR_EXPIRED",
+        "INVALID_REQUEST",
+    }
+)
+Fraction = Annotated[str, Field(pattern=r"^(0(\.[0-9]{1,18})?|1(\.0{1,18})?)$")]
+Stamp = Annotated[str, Field(pattern=r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$")]
+Trace = Annotated[str, Field(pattern=r"^[0-9a-f]{32}$")]
+Reason = Annotated[str, Field(min_length=1, max_length=500)]
+
+
+class DTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+
+class Activate(DTO):
+    activationCode: Annotated[str, Field(min_length=32, max_length=256)]
+
+
+class ControlReason(DTO):
+    reason: Reason
+
+
+class SetMode(ControlReason):
+    mode: Literal["DISABLED", "REPLAY", "SHADOW", "PAPER"]
+
+
+class PolicyUpdate(DTO):
+    maxPositionsPerInstrument: Annotated[int, Field(ge=1)]
+    maxOpenPositions: Annotated[int, Field(ge=1)]
+    maxPositionEquityFraction: Fraction
+    maxDailyLossFraction: Fraction
+
+
+class Policy(PolicyUpdate):
+    version: Annotated[int, Field(ge=1)]
+    simulationOnly: Literal[True]
+    effectiveAt: Stamp
+    changedAt: Stamp
+    changedBy: str
+    auditEventId: str
+
+
+class Mode(DTO):
+    mode: Literal["DISABLED", "REPLAY", "SHADOW", "PAPER"]
+    pauseNew: bool
+    killSwitch: bool
+    health: Literal["HEALTHY", "DEGRADED", "UNAVAILABLE"]
+    reconciliation: Literal["CURRENT", "PENDING", "MISMATCH"]
+    changedAt: Stamp
+    traceId: Trace
+
+
+class Backend(Protocol):
+    def read_mode(self, trace_id: str) -> dict: ...
+    def read_policy(self) -> tuple[dict, str]: ...
+    def mutate(
+        self,
+        operation: str,
+        payload: dict,
+        actor_id: str,
+        key: str,
+        trace_id: str,
+        if_match: str | None = None,
+    ) -> tuple[int, dict, dict]: ...
+
+
+def _trace(request: Request) -> str:
+    values = request.headers.getlist("traceparent")
+    match = _TRACE.fullmatch(values[0]) if len(values) == 1 else None
+    if match and match[1] != "0" * 32 and match[2] != "0" * 16:
+        return match[1]
+    return secrets.token_hex(16)
+
+
+def problem(status: int, code: str, trace_id: str) -> JSONResponse:
+    code = code if code in _CODES else "TEMPORARILY_UNAVAILABLE"
+    if not isinstance(trace_id, str) or not re.fullmatch(r"[0-9a-f]{32}", trace_id):
+        trace_id = secrets.token_hex(16)
+    slug, title = {
+        "HEALTH_CHECK_FAILED": ("control-refused", "Control action refused"),
+        "KILL_SWITCH_ACTIVE": ("control-refused", "Control action refused"),
+        "IDEMPOTENCY_CONFLICT": (
+            "idempotency-conflict",
+            "Idempotency key reused with different payload",
+        ),
+        "VERSION_CONFLICT": ("version-conflict", "Policy version conflict"),
+        "PRECONDITION_REQUIRED": ("precondition-required", "If-Match required"),
+        "TEMPORARILY_UNAVAILABLE": ("temporarily-unavailable", "Dependency unavailable"),
+    }.get(code, (code.lower().replace("_", "-"), code.replace("_", " ").capitalize()))
+    return JSONResponse(
+        {
+            "type": "https://agentic-trading-lab.invalid/problems/" + slug,
+            "title": title,
+            "status": status,
+            "code": code,
+            "traceId": trace_id,
+        },
+        status_code=status,
+        media_type="application/problem+json",
+        headers={"Retry-After": "1"} if status == 503 else None,
+    )
+
+
+def _header(request: Request, name: str) -> str | None:
+    values = request.headers.getlist(name)
+    if len(values) > 1:
+        raise AuthDenied(400, "INVALID_REQUEST")
+    return values[0] if values else None
+
+
+def _pairs(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate field")
+        result[key] = value
+    return result
+
+
+async def _body(request: Request, model: type[DTO]) -> dict:
+    body = bytearray()
+    async for chunk in request.stream():
+        body.extend(chunk)
+        if len(body) > 16384:
+            raise AuthDenied(400, "INVALID_REQUEST")
+    try:
+        data = json.loads(
+            body,
+            object_pairs_hook=_pairs,
+            parse_constant=lambda _: (_ for _ in ()).throw(ValueError()),
+        )
+        return model.model_validate(data).model_dump()
+    except (ValueError, RecursionError, ValidationError):
+        raise AuthDenied(400, "INVALID_REQUEST") from None
+
+
+def create_app(*, auth: LocalAuth | None = None, backend: Backend | None = None) -> FastAPI:
+    auth = auth if auth is not None else LocalAuth()
+    app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
+
+    @app.middleware("http")
+    async def boundary(request: Request, call_next):
+        request.state.trace_id = _trace(request)
+        try:
+            auth.guard(request, write=request.method not in {"GET", "HEAD"})
+            if request.url.path != "/api/v1/session" or request.method != "POST":
+                request.state.actor_id = auth.authenticate(request.cookies.get("atl_session", ""))
+            response = await call_next(request)
+        except AuthDenied as exc:
+            response = problem(exc.status, exc.code, request.state.trace_id)
+        except Exception:
+            response = problem(503, "TEMPORARILY_UNAVAILABLE", request.state.trace_id)
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+        response.headers.setdefault(
+            "traceparent", "00-" + request.state.trace_id + "-" + secrets.token_hex(8) + "-00"
+        )
+        return response
+
+    @app.exception_handler(HTTPException)
+    async def http_error(request: Request, exc: HTTPException):
+        return problem(exc.status_code, "INVALID_REQUEST", request.state.trace_id)
+
+    def port() -> Backend:
+        if backend is None:
+            raise AuthDenied(503, "TEMPORARILY_UNAVAILABLE")
+        return backend
+
+    def key(request: Request) -> str:
+        value = _header(request, "Idempotency-Key")
+        if value is None or not _KEY.fullmatch(value):
+            raise AuthDenied(400, "INVALID_REQUEST")
+        return value
+
+    @app.post("/api/v1/session", operation_id="activateLocalSession")
+    async def activate(request: Request):
+        idem = key(request)
+        data = await _body(request, Activate)
+        token = auth.activate(data["activationCode"], idem)
+        response = Response(status_code=204)
+        auth.set_cookie(response, token)
+        return response
+
+    @app.get("/api/v1/mode", operation_id="getMode")
+    async def get_mode(request: Request):
+        body = await run_in_threadpool(port().read_mode, request.state.trace_id)
+        return JSONResponse(Mode.model_validate(body).model_dump())
+
+    @app.get("/api/v1/risk-policy", operation_id="getRiskPolicy")
+    async def get_policy():
+        body, etag = await run_in_threadpool(port().read_policy)
+        if not re.fullmatch(r'"[A-Za-z0-9._:-]+"', etag):
+            raise ValueError("invalid internal etag")
+        return JSONResponse(Policy.model_validate(body).model_dump(), headers={"ETag": etag})
+
+    def register(path: str, method: str, operation: str, model: type[DTO]):
+        async def mutate(request: Request):
+            idem = key(request)
+            data = await _body(request, model)
+            match = _header(request, "If-Match")
+            status, body, headers = await run_in_threadpool(
+                port().mutate,
+                operation,
+                data,
+                request.state.actor_id,
+                idem,
+                request.state.trace_id,
+                match,
+            )
+            if status != 200:
+                if status not in {400, 409, 412, 428, 503}:
+                    raise ValueError("invalid internal status")
+                return problem(
+                    status,
+                    body.get("code", "TEMPORARILY_UNAVAILABLE"),
+                    body.get("traceId", request.state.trace_id),
+                )
+            result_model = Policy if operation == "updateRiskPolicy" else Mode
+            value = result_model.model_validate(body).model_dump()
+            safe_headers = {}
+            if "ETag" in headers:
+                if not re.fullmatch(r'"[A-Za-z0-9._:-]+"', headers["ETag"]):
+                    raise ValueError("invalid internal etag")
+                safe_headers["ETag"] = headers["ETag"]
+            return JSONResponse(value, headers=safe_headers)
+
+        app.add_api_route(path, mutate, methods=[method], operation_id=operation)
+
+    register("/api/v1/mode", "PUT", "setMode", SetMode)
+    register("/api/v1/control/pause", "POST", "pauseNewEntries", ControlReason)
+    register("/api/v1/control/resume", "POST", "resumeNewEntries", ControlReason)
+    register("/api/v1/control/kill", "POST", "activateKillSwitch", ControlReason)
+    register("/api/v1/risk-policy", "PUT", "updateRiskPolicy", PolicyUpdate)
+    return app
+
+
+app = create_app()

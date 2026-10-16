@@ -104,8 +104,8 @@ def main() -> None:
         fail("operationIds are missing or duplicated")
 
     schema_docs = {p.name: json.loads(p.read_text(encoding="utf-8")) for p in SCHEMAS.glob("*.schema.json")}
-    if len(schema_docs) != 9:
-        fail(f"expected 9 versioned schemas, found {len(schema_docs)}")
+    if len(schema_docs) != 10:
+        fail(f"expected 10 versioned schemas, found {len(schema_docs)}")
     registry = Registry()
     for filename, schema in schema_docs.items():
         Draft202012Validator.check_schema(schema)
@@ -209,6 +209,25 @@ def main() -> None:
         invalid["eventType"] = event_type
         if envelope_validator.is_valid(invalid):
             fail("event type/payload mismatch accepted")
+    control_validator = Draft202012Validator(
+        schema_docs["control-event.schema.json"], registry=registry, format_checker=FormatChecker()
+    )
+    control = json.loads((EXAMPLES / "control-event.valid.json").read_text(encoding="utf-8"))
+    invalid_control = json.loads(
+        (EXAMPLES / "control-event.invalid.json").read_text(encoding="utf-8")
+    )
+    if control_validator.is_valid(invalid_control):
+        fail("LIVE control event accepted")
+    control_envelope = copy.deepcopy(event)
+    control_envelope.update(eventType="control.mode.changed.v1", payload=control)
+    if not envelope_validator.is_valid(control_envelope):
+        fail("valid mode control envelope rejected")
+    control_envelope["eventType"] = "control.policy.changed.v1"
+    if envelope_validator.is_valid(control_envelope):
+        fail("control event type/action mismatch accepted")
+    control_envelope["payload"]["action"] = "POLICY_CHANGED"
+    if not envelope_validator.is_valid(control_envelope):
+        fail("valid policy control envelope rejected")
     if sample["decision-result"]["marketStateId"] != sample["market-state"]["id"]:
         fail("decision example does not reference market example")
     if sample["trade-proposal"]["decisionId"] != sample["decision-result"]["id"] or sample["trade-proposal"]["marketStateId"] != sample["market-state"]["id"]:
@@ -219,7 +238,10 @@ def main() -> None:
         fail("reservation example references a different risk decision or proposal")
 
     print(f"PASS: OAS 3.1.2, {len(operations)} operations, local refs, {len(schema_docs)} schemas, {checked} schema examples, {response_examples} OpenAPI response examples, 4 problem examples")
-    print("PASS: typed ABSTAIN example, 7 decision negatives (internal/public), 2 event type/payload negatives")
+    print(
+        "PASS: typed ABSTAIN example, 7 decision negatives (internal/public), "
+        "control LIVE/action negatives, 3 event type/payload negatives"
+    )
     print("Schema/example checks passed. Baseline gate: scripts/check-contract-breaking.py (required separately in CI).")
 
 

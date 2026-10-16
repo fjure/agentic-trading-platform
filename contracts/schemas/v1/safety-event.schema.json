@@ -44,7 +44,10 @@
       ]
     },
     "policyVersion": {
-      "type": "integer",
+      "type": [
+        "integer",
+        "null"
+      ],
       "minimum": 1
     },
     "reasonCode": {
@@ -182,6 +185,28 @@
               "REPLAY",
               "SHADOW"
             ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "not": {
+              "enum": [
+                "PAUSE",
+                "KILL"
+              ]
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1
           }
         }
       }
