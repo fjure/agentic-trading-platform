@@ -1,0 +1,126 @@
+<mat-toolbar class="topbar">
+  <span class="brand-mark" aria-hidden="true">ATL</span>
+  <span class="brand-name">Agentic Trading Lab</span>
+  <span class="topbar-spacer"></span>
+  <span class="connection-pill" [class.connected]="store.connectionStatus() === 'connected'">{{ connectionLabel() }}</span>
+</mat-toolbar>
+
+<div class="shell">
+  <aside class="sidebar" aria-label="Hauptnavigation">
+    <div class="sidebar-heading">SUPERVISION</div>
+    <nav>
+      @for (nav of navigation; track nav.view) {
+        <button mat-button type="button" [class.active]="active() === nav.view" [attr.aria-current]="active() === nav.view ? 'page' : null" (click)="select(nav.view)">{{ nav.label }}</button>
+      }
+    </nav>
+    <div class="sidebar-foot">Lokale Paper-Umgebung<br>Paper-Kontrolle</div>
+  </aside>
+
+  <main class="main">
+    <header class="page-heading">
+      <div><div class="eyebrow">OPERATIONS / SUPERVISOR</div><h1>Paper-Supervisor</h1><p>Kontrollzustand, Historie und Trace-Evidenz</p></div>
+      @if (store.authenticated()) { <button mat-stroked-button type="button" (click)="store.refresh()">Aktualisieren</button> }
+    </header>
+
+    @if (store.connectionStatus() === 'stale' || store.connectionStatus() === 'disconnected') {
+      <div class="state-banner" role="status">{{ connectionLabel() }}. Angezeigte Werte sind möglicherweise veraltet. Letzter Datenstand: {{ store.snapshot()?.asOf || 'nicht verfügbar' }}.</div>
+    }
+    @if (store.error(); as error) { <div class="error-banner" role="alert">{{ error }}</div> }
+    @if (store.pendingCommand()) {
+      <div class="state-banner" role="status">Kontrollaktion ungeklärt. Denselben Vorgang mit unverändertem Schlüssel erneut prüfen. <button mat-stroked-button type="button" (click)="store.retryPending()">Vorgang erneut prüfen</button></div>
+    }
+
+    @if (!store.authenticated()) {
+      <mat-card class="activation-card" appearance="outlined">
+        <mat-card-content>
+          <div class="eyebrow">LOKALE SITZUNG</div><h2>Supervisor aktivieren</h2>
+          <p>Den einmaligen Code aus dem vertrauenswürdigen lokalen Launcher eingeben.</p>
+          <form (submit)="$event.preventDefault(); activate()" autocomplete="off">
+            <mat-form-field appearance="outline"><mat-label>Aktivierungscode</mat-label><input matInput type="password" [formControl]="activationCode" autocomplete="off" spellcheck="false" /></mat-form-field>
+            <button mat-flat-button type="submit" [disabled]="!activationCode.value.trim()">Sitzung aktivieren</button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    } @else {
+      @if (active() === 'overview') {
+        @if (store.snapshot(); as snapshot) {
+          @if (store.mode() ?? snapshot.mode; as mode) {
+          <div class="overview-grid">
+            <mat-card class="hero-card" appearance="outlined"><mat-card-content>
+              <div class="card-kicker">BETRIEBSMODUS</div>
+              <div class="hero-line"><strong>{{ mode.mode }}</strong><span class="status-badge" [class.good]="store.connectionStatus() === 'connected' && mode.health === 'HEALTHY'" [class.bad]="mode.health === 'UNAVAILABLE'">{{ store.connectionStatus() === 'connected' ? mode.health : 'NICHT AKTUELL' }}</span></div>
+              <div class="micro-grid"><div><span>Neue Einstiege</span><b>{{ mode.pauseNew ? 'Pausiert' : 'Nicht pausiert' }}</b></div><div><span>Kill-Switch</span><b>{{ mode.killSwitch ? 'Aktiv' : 'Inaktiv' }}</b></div><div><span>Reconciliation</span><b>{{ mode.reconciliation }}</b></div><div><span>Geändert</span><b>{{ mode.changedAt }}</b></div></div>
+            </mat-card-content></mat-card>
+            <mat-card appearance="outlined"><mat-card-content><div class="card-kicker">PAPER-KONTO</div><div class="metric-value">{{ snapshot.paperAccount }}</div><div class="metric-caption">Lokaler Alias</div><div class="divider"></div><div class="card-kicker">PORTFOLIO EQUITY</div><div class="metric-value decimal">{{ snapshot.portfolioEquity }}</div><div class="metric-caption">Exakter Dezimalwert aus dem Backend</div></mat-card-content></mat-card>
+          </div>
+
+          <div class="section-grid">
+            <mat-card appearance="outlined"><mat-card-content><div class="card-kicker">VERBINDUNGEN</div><h2>Dienste</h2>
+              <div class="kv-row"><span>Broker</span><span class="status-badge" [class.good]="store.connectionStatus() === 'connected' && snapshot.connections['broker'] === 'HEALTHY'">{{ snapshot.connections['broker'] || 'nicht verfügbar' }}</span></div>
+              <div class="kv-row"><span>Marktdaten</span><span class="status-badge" [class.good]="store.connectionStatus() === 'connected' && snapshot.connections['data'] === 'HEALTHY'">{{ snapshot.connections['data'] || 'nicht verfügbar' }}</span></div>
+              <div class="kv-row"><span>Jev</span><span class="status-badge" [class.good]="store.connectionStatus() === 'connected' && snapshot.connections['jev'] === 'HEALTHY'">{{ snapshot.connections['jev'] || 'nicht verfügbar' }}</span></div>
+              <div class="kv-row"><span>Execution</span><span class="status-badge" [class.good]="store.connectionStatus() === 'connected' && snapshot.connections['execution'] === 'HEALTHY'">{{ snapshot.connections['execution'] || 'nicht verfügbar' }}</span></div>
+            </mat-card-content></mat-card>
+            <mat-card appearance="outlined"><mat-card-content><div class="card-kicker">WORKER</div><h2>Heartbeats</h2>
+              @for (worker of snapshot.workers; track worker.id) { <div class="worker-row"><div><b>{{ worker.role }}</b><small>{{ worker.id }}</small></div><div><span class="status-badge" [class.good]="store.connectionStatus() === 'connected' && worker.status === 'RUNNING'">{{ worker.status }}</span><small>{{ worker.heartbeatAt || 'nicht verfügbar' }}</small></div></div> }
+              @empty { <p class="empty-inline">Keine Worker im Snapshot.</p> }
+              <button mat-button type="button" (click)="select('runs')">Alle Worker ansehen →</button>
+            </mat-card-content></mat-card>
+          </div>
+
+          <div class="section-grid">
+            <mat-card appearance="outlined"><mat-card-content><div class="card-kicker">SICHERHEITSKONTROLLEN</div><h2>Neue Einstiege</h2><p>Änderungen werden ausschließlich vom Backend entschieden und protokolliert.</p>
+              <div class="action-stack"><button mat-stroked-button type="button" (click)="confirmAction('pause')">Neue Einstiege pausieren</button><button mat-stroked-button type="button" [disabled]="!store.canResume()" (click)="confirmAction('resume')">Fortsetzen anfordern</button><button mat-flat-button class="kill-button" type="button" (click)="confirmAction('kill')">Kill-Switch aktivieren</button></div>
+            </mat-card-content></mat-card>
+            <mat-card appearance="outlined"><mat-card-content><div class="card-kicker">RISK POLICY / NUR LESEN</div><h2>Aktive Limits</h2>
+              @if (store.policy(); as policy) {
+                <div class="kv-row"><span>Version</span><b>{{ policy.version }}</b></div><div class="kv-row"><span>Positionen pro Instrument</span><b>{{ policy.maxPositionsPerInstrument }}</b></div><div class="kv-row"><span>Offene Positionen</span><b>{{ policy.maxOpenPositions }}</b></div><div class="kv-row"><span>Positionsanteil Equity</span><b>{{ policy.maxPositionEquityFraction }}</b></div><div class="kv-row"><span>Tagesverlustanteil</span><b>{{ policy.maxDailyLossFraction }}</b></div><div class="kv-row"><span>Wirksam ab</span><b>{{ policy.effectiveAt }}</b></div>
+              } @else { <p class="empty-inline">Policy nicht verfügbar.</p> }
+            </mat-card-content></mat-card>
+          </div>
+          <div class="timestamp">Snapshot: {{ snapshot.asOf }} · Modus-Trace: {{ mode.traceId }}</div>
+          }
+        } @else { <div class="empty-state">Supervisor-Snapshot wird geladen.</div> }
+      } @else {
+        <mat-card class="history-card" appearance="outlined"><mat-card-content>
+          <div class="history-heading"><div><div class="card-kicker">HISTORIE</div><h2>{{ activeLabel() }}</h2></div><span class="count">{{ rows().length }} Einträge</span></div>
+          @if (active() === 'audit') {
+            <form class="trace-form" (submit)="$event.preventDefault(); applyTrace()"><mat-form-field appearance="outline"><mat-label>Trace-ID</mat-label><input matInput [formControl]="traceFilter" autocomplete="off" /></mat-form-field><button mat-flat-button type="submit">Trace laden</button></form>
+            @if (store.filters().traceId) { <p class="filter-note">Aktiver Trace: {{ store.filters().traceId }}</p> }
+            @if (traceLinks().length) {
+              <section class="trace-chain" aria-label="Verknüpfte Trace-Evidenz"><div class="card-kicker">TRACE-KETTE / GELADENE DATEN</div>
+                @for (group of traceLinks(); track group.label) { <h3>{{ group.label }}</h3>
+                  @for (linked of group.rows; track linked.id) {
+                    <details><summary><b>{{ linked.title }}</b> · {{ linked.status }} · {{ linked.subtitle }}</summary><dl>@for (detail of linked.fields; track detail.label) { <div><dt>{{ detail.label }}</dt><dd>{{ detail.value }}</dd></div> }</dl></details>
+                  }
+                }
+              </section>
+            }
+            @if (store.filters().traceId) {
+              @if (tracePageErrors()) { <p class="filter-note" role="status">Einige Historienseiten konnten nicht geladen werden. Trace laden versucht fehlende erste Seiten erneut.</p> }
+              @if (traceHasMore()) {
+                <div class="trace-progress"><span>Noch nicht alle Historienseiten durchsucht.</span><button mat-stroked-button type="button" [disabled]="traceSearchBusy()" (click)="continueTraceSearch()">Weitere Trace-Evidenz suchen</button></div>
+              } @else if (!traceSearchBusy() && !tracePagesLoading() && !tracePageErrors()) {
+                <p class="filter-note" role="status">Alle verfügbaren Historienseiten durchsucht.</p>
+              }
+            }
+          }
+          @if (currentPage()?.error; as pageError) { <div class="error-banner" role="alert">{{ pageError }}</div> }
+          @if (currentPage()?.loading && !rows().length) { <div class="empty-state">Einträge werden geladen.</div> }
+          @if (!currentPage()?.loading && !rows().length) { <div class="empty-state">Keine Einträge vorhanden.</div> }
+          @if (rows().length) {
+            <div class="table-scroll"><table mat-table [dataSource]="rows()" class="history-table">
+              <ng-container matColumnDef="entity"><th mat-header-cell *matHeaderCellDef>Eintrag</th><td mat-cell *matCellDef="let row"><b>{{ row.title }}</b><small>{{ row.subtitle }}</small></td></ng-container>
+              <ng-container matColumnDef="status"><th mat-header-cell *matHeaderCellDef>Status</th><td mat-cell *matCellDef="let row"><span class="status-badge" [class.good]="store.connectionStatus() === 'connected' && statusTone(row.status) === 'good'" [class.bad]="statusTone(row.status) === 'bad'">{{ row.status }}</span></td></ng-container>
+              <ng-container matColumnDef="trace"><th mat-header-cell *matHeaderCellDef>Trace-ID</th><td mat-cell *matCellDef="let row"><button mat-button type="button" class="trace-link" (click)="openTrace(row.traceId)">{{ row.traceId }}</button></td></ng-container>
+              <ng-container matColumnDef="detail"><th mat-header-cell *matHeaderCellDef>Details</th><td mat-cell *matCellDef="let row"><button mat-stroked-button type="button" [attr.aria-label]="'Details ' + row.title" [attr.aria-expanded]="expandedId() === row.id" (click)="expandedId.set(expandedId() === row.id ? null : row.id)">{{ expandedId() === row.id ? 'Schließen' : 'Details' }}</button></td></ng-container>
+              <tr mat-header-row *matHeaderRowDef="columns"></tr><tr mat-row *matRowDef="let row; columns: columns"></tr>
+            </table></div>
+            @for (row of rows(); track row.id) { @if (expandedId() === row.id) { <section class="detail-panel" [attr.aria-label]="'Details zu ' + row.title"><div class="detail-title">{{ row.title }} <span>{{ row.id }}</span></div><dl>@for (detail of row.fields; track detail.label) { <div><dt>{{ detail.label }}</dt><dd>{{ detail.value }}</dd></div> }</dl></section> } }
+          }
+          @if (currentPage()?.nextCursor) { <div class="more"><button mat-stroked-button type="button" [disabled]="currentPage()?.loading" (click)="loadMore()">Weitere laden</button></div> }
+        </mat-card-content></mat-card>
+      }
+    }
+  </main>
+</div>

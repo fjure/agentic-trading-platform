@@ -48,7 +48,7 @@ Die Pyramide hat fünf Ebenen: Unit/Property für Zahlen, Zeit und Zustandsregel
 | T-CTL-003 | Contract: `tests/contracts/test_control_api.py` | RFC 9457 und stabile Codes für Reject/Conflict/Outage/UNKNOWN; Negativ-/Fuzzfälle |
 | T-CTL-004 | Integration: `tests/integration/test_sse_cursor.py` | Snapshot-Cursor atomar; Drop/Duplikat/Ablauf: keine stille Ereignislücke |
 | T-CTL-005 | Recovery: `tests/integration/test_pause_resume.py` | Jev/UI tot: CLI/Watchdog-Pause greift; in-flight sichtbar; Reconcile läuft |
-| T-CTL-006 | E2E: `tests/e2e/test_supervisor_trace.py` | Ein Paper-Fake-Trade per Trace bis Teilfüllung/Audit vollständig sichtbar |
+| T-CTL-006 | E2E: `tests/e2e/supervisor.spec.ts` | Synthetische schema-validierte Trace-Kette mit Markt, Entscheidung/Verteilung, Vorschlag, Risiko, Teilfüllung und Audit vollständig sichtbar; echte Prozessintegration folgt PTV-21/23 |
 | T-CTL-007 | Security: `tests/security/test_control_auth.py` | Loopback/Host/Origin/CSRF, keine Browsersecrets oder Client-Riskentscheidung |
 
 ## Zusätzliche Querschnittsnachweise

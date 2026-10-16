@@ -1,13 +1,1 @@
-:host {
-  display: block;
-  min-height: 100vh;
-  background: #f4f6f8;
-  color: #1d2939;
-}
-
-.page {
-  box-sizing: border-box;
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 2rem 1.25rem;
-}
+:host { display: block; min-height: 100vh; }

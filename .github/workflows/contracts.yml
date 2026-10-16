@@ -64,3 +64,5 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Frontend frozen install failed' }
           & "$nodeRoot/npm.cmd" --prefix apps/dashboard run build
           if ($LASTEXITCODE -ne 0) { throw 'Application client compilation failed' }
+      - name: Local supervisor browser behavior
+        run: ./scripts/test-dashboard.ps1 -SkipBuild -InstallBrowser
