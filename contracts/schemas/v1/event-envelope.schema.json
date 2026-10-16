@@ -31,7 +31,9 @@
         "risk.reserved.v1",
         "execution.reported.v1",
         "safety.changed.v1",
-        "safety.resume_requested.v1"
+        "safety.resume_requested.v1",
+        "control.mode.changed.v1",
+        "control.policy.changed.v1"
       ]
     },
     "occurredAt": {
@@ -206,6 +208,36 @@
                   }
                 }
               }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"eventType": {"const": "control.mode.changed.v1"}}
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "allOf": [
+              {"$ref": "control-event.schema.json"},
+              {"properties": {"action": {"const": "MODE_CHANGED"}}}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"eventType": {"const": "control.policy.changed.v1"}}
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "allOf": [
+              {"$ref": "control-event.schema.json"},
+              {"properties": {"action": {"const": "POLICY_CHANGED"}}}
             ]
           }
         }

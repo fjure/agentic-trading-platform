@@ -1,5 +1,5 @@
 # Contract-Prüfung des ersten Paper-Changes
-Stand 2026-10-12. Apply ist freigegeben. Angular-Buildgrundlage und Domainwerte existieren; Control-API-Laufzeit folgt PTV-18. Der folgende Planungsnachweis wird in PTV-03 um ausführbare Contract-CI und einen mechanisch generierten Anwendungsclient ergänzt.
+Stand 2026-10-16. Apply ist freigegeben. PTV-18 implementiert Session, Mode/Safety und Risk-Policy-HTTP-Transport; Snapshot/History/SSE folgen PTV-19. Der folgende Planungsnachweis wird in PTV-03 um ausführbare Contract-CI und einen mechanisch generierten Anwendungsclient ergänzt.
 
 ## Apply PTV-03: Contract-CI
 
@@ -13,7 +13,7 @@ Anwendungsclient: `apps/dashboard/src/app/api/generated/control-api/`, 65 mechan
 
 - OpenSpec: `openspec/changes/paper-trading-vertical-slice/specs/` mit `REQ-CTL-001` bis `REQ-CTL-007`, `REQ-RSK-*`, `REQ-DEC-*`, `REQ-MKT-*` und `REQ-RUN-*`.
 - HTTP: `contracts/http/control-api.openapi.yaml`, OpenAPI 3.1.2, 18 Operationen unter `/api/v1`.
-- Intern: neun Draft-2020-12-Schemas in `contracts/schemas/v1/` (inklusive gemeinsamer Skalar-Definitionen und SafetyEvent aus PTV-12) und Beispiele in `contracts/examples/v1/`.
+- Intern: zehn Draft-2020-12-Schemas in `contracts/schemas/v1/` (inklusive gemeinsamer Skalar-Definitionen, SafetyEvent aus PTV-12 und ControlEvent aus PTV-18) und Beispiele in `contracts/examples/v1/`.
 - ADR: `docs/adr/0002-openapi.md` erläutert Versionswahl, Sicherheitsgrenzen und AsyncAPI-Schwelle.
 
 `MarketState`, `DecisionResult`, `TradeProposal`, `RiskDecision`, `RiskReservation`, `ExecutionReport` und der Outbox-Umschlag sind jeweils versioniert. Der Umschlag enthält `eventId`, versionierten `eventType`, `occurredAt`, `aggregateId`, `aggregateVersion`, `traceId` und `payload`. Provider-Rohdaten, Secretwerte und Chain-of-Thought sind nicht Teil der öffentlichen DTOs. RFC-9457-Problemantworten benutzen einen stabilen internen `code`.
@@ -46,3 +46,7 @@ Empirisch gefundene Generatorgrenze: `oneOf` mit `type: null` erzeugte unaufgel�
 Die beiden Clientkopien unter `.tooling/contracts/generated-a/` und `generated-b/` sind ignorierte Prüfartefakte und dürfen nicht manuell bearbeitet oder als Anwendungscode eingecheckt werden. Die erste Contract-Version besitzt im Basisbranch keinen Vorgänger; deshalb gibt es keinen aussagefähigen Breaking-Change-Diff. Ein späteres CI-Gate muss gegenüber dem dann vorhandenen Basisvertrag einen semantischen Breaking-Change-Vergleich erzwingen. FastAPI-Verhalten, schema-basierte Negativ- und Fuzztests, Auth-/Origin-/CSRF-Verhalten, SSE-Reconnect unter Laufzeitstörungen sowie Runtime-Drift können erst in einem autorisierten Implementierungsdurchlauf geprüft werden. Ihr Nichtvorliegen wird hier nicht als bestandene Laufzeitprüfung ausgegeben.
 
 Der Control-Vertrag hat absichtlich keinen Order-Submit-Endpunkt. Änderungen an Risk-Policy oder Konfiguration erfordern ein ETag/If-Match-Versionsgate; alle Schreibaktionen erfordern `Idempotency-Key`. Die lokale Sitzung entsteht über einen einmaligen Launcher-Code im Same-Origin-Formular; der Code ist kein Broker-Credential und wird nicht geloggt oder in URLs übertragen. Ein Browser-EventSource nutzt ausschließlich die lokale HttpOnly-Session und sendet keine Secrets in Queryparametern. Ein abgelaufener Cursor liefert 410 `CURSOR_EXPIRED`, worauf ein neuer atomarer Snapshot folgt.
+
+## Apply PTV-18: HTTP-Transport und ergänzte Verträge
+
+Stabile 400/401/503-Problemantworten sind auf allen Operationen explizit; acht implementierte Session-/Mode-/Safety-/Policy-Operationen verwenden ausschließlich interne DTOs. Oasdiff1.33.0 gegen main814ef736 zeigt keine Breaking Changes. Redocly2.62.1 besteht; zehn Schemas und alle Beispiele valide. ControlEvent ergänzt actiongebundene Outbox-Typen; SafetyEvent erlaubt fehlende Policy ausschließlich bei Notfall-Pause/Kill. Generierter Client wurde mechanisch aktualisiert, beide65-Dateien-Generationen und vollständiger Anwendungsbaum bytegleich; TypeScript und Produktionsbuild werden mit der Task-Evidenz verifiziert. Vollständige Laufzeit-/Reviewevidenz: docs/evidence/ptv-18-control-api.md.

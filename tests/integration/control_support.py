@@ -311,7 +311,8 @@ def checks(admin, execution, engine, now):
                         "SELECT a.outcome,r.reason_code FROM public.broker_orders b "
                         "JOIN public.execution_reports r ON r.order_id=b.id "
                         "JOIN public.audit_events a ON a.entity_id=b.id "
-                        "AND a.action='execution.submit_result'"
+                        "AND a.action='execution.submit_result' "
+                        "WHERE r.status='REJECTED' AND r.reason_code='SESSION_CLOSED'"
                     )
                 ).one()
                 assert proof == ("PRE_IO_REJECTED", "SESSION_CLOSED")

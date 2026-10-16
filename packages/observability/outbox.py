@@ -79,6 +79,8 @@ def _envelope(row: dict) -> EventEnvelope:
         "execution.reported.v1": models.ExecutionReport,
         "safety.changed.v1": models.SafetyEvent,
         "safety.resume_requested.v1": models.SafetyEvent,
+        "control.mode.changed.v1": models.ControlEvent,
+        "control.policy.changed.v1": models.ControlEvent,
     }
     return EventEnvelope(
         event_id=row["event_id"],

@@ -171,9 +171,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
 
 ## 7. Control API und Dashboard
 
-- [ ] 7.1 PTV-18 FastAPI-Kontrolladapter und Sessions; Evidenz: T-CTL-001/002/003/005/007.
+- [x] 7.1 PTV-18 FastAPI-Kontrolladapter und Sessions; Evidenz: T-CTL-001/002/003/005/007.
   - Requirements: REQ-CTL-001, REQ-CTL-002, REQ-CTL-003, REQ-CTL-005, REQ-CTL-007
-  - Zielpfade: `services/control_api/app.py`, `services/control_api/auth.py`, `tests/contracts/test_control_api.py`, `tests/security/test_control_auth.py`
+  - Zielpfade: `services/control_api/app.py`, `services/control_api/auth.py`, `services/control_api/backend.py`, `services/control_api/migrations/versions/0006_control_http.py`, `tests/contracts/test_control_api.py`, `tests/security/test_control_auth.py`, `tests/integration/control_http_support.py`, `tests/integration/test_control_http.py`, `tests/integration/control_support.py`, `packages/domain/models.py`, `packages/observability/outbox.py`, `contracts/schemas/v1/control-event.schema.json`, `contracts/schemas/v1/event-envelope.schema.json`, `contracts/schemas/v1/safety-event.schema.json`, `contracts/examples/v1/control-event.valid.json`, `contracts/examples/v1/control-event.invalid.json`, `tests/contracts/test_control_events.py`, `scripts/validate-contracts.py`, `scripts/validate-plan.py`, `openspec/changes/paper-trading-vertical-slice/test-strategy.md`, `openspec/changes/paper-trading-vertical-slice/traceability.md`, `openspec/changes/paper-trading-vertical-slice/traceability.json`, `contracts/http/control-api.openapi.yaml`, `apps/dashboard/src/app/api/generated/control-api`, `docs/runbooks/local-operation.md`, `docs/evidence/ptv-18-control-api.md`
   - Abhängigkeiten: PTV-03, PTV-12
   - Verhalten: Contract-first HTTPadapter, lokale Sessions/Origin/Hostguard, Problemcodes, Idempotenz und ETags implementieren.
   - Akzeptanz: Schema-negative/Fuzzfälle, Replaykeys und 412/428 prüfen; keine Order-submitroute.

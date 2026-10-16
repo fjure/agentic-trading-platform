@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/control-event.schema.json",
+  "title": "Versioned mode and policy control event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "accountId",
+    "action",
+    "mode",
+    "safetyState",
+    "policyVersion",
+    "reasonCode"
+  ],
+  "properties": {
+    "accountId": {"type": "string", "minLength": 1},
+    "action": {"enum": ["MODE_CHANGED", "POLICY_CHANGED"]},
+    "mode": {"enum": ["DISABLED", "REPLAY", "SHADOW", "PAPER"]},
+    "safetyState": {"enum": ["RUNNING", "PAUSE_NEW", "HALTED"]},
+    "policyVersion": {"type": "integer", "minimum": 1},
+    "reasonCode": {"const": "OK"}
+  }
+}

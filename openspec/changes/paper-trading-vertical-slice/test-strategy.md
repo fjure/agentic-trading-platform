@@ -44,12 +44,12 @@ Die Pyramide hat fünf Ebenen: Unit/Property für Zahlen, Zeit und Zustandsregel
 | T-RUN-006 | Security: `tests/security/test_secret_boundaries.py` | Paper-Key nur Execution; Promptinjection löst 0 Tools/Installationen aus |
 | T-RUN-007 | Integration: `tests/integration/test_health_fail_closed.py` | Datenstillstand, DB/Broker/Jev-Ausfall separat sichtbar; neue Einstiege gesperrt |
 | T-CTL-001 | Contract: `tests/contracts/test_control_api.py` | OpenAPI-Beispiele, Decimalstrings, UTC, interne DTOs; keine Vendorpayloads |
-| T-CTL-002 | Contract: `tests/contracts/test_control_mutations.py` | Idempotency-Key/Payloadhash, 412/428, traceparent; Wiederholung ohne Zweitwirkung |
-| T-CTL-003 | Contract: `tests/contracts/test_problem_responses.py` | RFC 9457 und stabile Codes für Reject/Conflict/Outage/UNKNOWN; Negativ-/Fuzzfälle |
+| T-CTL-002 | Contract: `tests/contracts/test_control_api.py` | Idempotency-Key/Payloadhash, 412/428, traceparent; Wiederholung ohne Zweitwirkung |
+| T-CTL-003 | Contract: `tests/contracts/test_control_api.py` | RFC 9457 und stabile Codes für Reject/Conflict/Outage/UNKNOWN; Negativ-/Fuzzfälle |
 | T-CTL-004 | Integration: `tests/integration/test_sse_reconnect.py` | Snapshot-Cursor atomar; Drop/Duplikat/Ablauf: keine stille Ereignislücke |
-| T-CTL-005 | Recovery: `tests/recovery/test_independent_kill.py` | Jev/UI tot: CLI/Watchdog-Pause greift; in-flight sichtbar; Reconcile läuft |
+| T-CTL-005 | Recovery: `tests/integration/test_pause_resume.py` | Jev/UI tot: CLI/Watchdog-Pause greift; in-flight sichtbar; Reconcile läuft |
 | T-CTL-006 | E2E: `tests/e2e/test_supervisor_trace.py` | Ein Paper-Fake-Trade per Trace bis Teilfüllung/Audit vollständig sichtbar |
-| T-CTL-007 | Security: `tests/security/test_control_surface.py` | Loopback/Host/Origin/CSRF, keine Browsersecrets oder Client-Riskentscheidung |
+| T-CTL-007 | Security: `tests/security/test_control_auth.py` | Loopback/Host/Origin/CSRF, keine Browsersecrets oder Client-Riskentscheidung |
 
 ## Zusätzliche Querschnittsnachweise
 
@@ -64,3 +64,5 @@ Die Pyramide hat fünf Ebenen: Unit/Property für Zahlen, Zeit und Zustandsregel
 ## Abnahme-Evidenz
 
 Ein späterer Apply liefert Testreport mit Fixture-/Policy-/Contractversionen, Exitcode, Timestamp UTC, anonymisierter Trace-ID und Link auf redigierte Logs. Blockierend sind jede Doppelorder, jede stille SSE-Lücke, jede Budgetüberschreitung, jedes Secret-Canary-Leck, ein erreichbarer LIVE-Pfad, fehlende Riskreferenz, verlorene Fills, fehlende Reconciliation vor Retry und jeder Vertrag- oder Clientdrift. Erst nach vollständiger Runtime-Evidenz darf die Implementierung als sicher zertifiziert werden.
+
+PTV-18 ergänzt tatsächliche HTTP-/Sitzungstests sowie `tests/integration/test_control_http.py` (durable Replaybelege, ETags, eingeschränkte Rolle, Parallelität, transaktionaler Rollback und Initialisierung ohne Policy). `tests/contracts/test_control_events.py` prüft typisierte Control-Ereignisse und fehlende Policy-Metadaten ausschließlich für Notfall-Latches. Ausführungsevidenz wird separat in docs/evidence/ptv-18-control-api.md aufgezeichnet; die generierte Matrix bleibt die Testzuordnung, kein pauschaler Runtime-Pass.
