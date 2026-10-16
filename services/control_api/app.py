@@ -18,6 +18,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
 
 from services.control_api.auth import AuthDenied, LocalAuth
+from services.control_api.cursors import CursorExpired
 
 _KEY = re.compile(r"[A-Za-z0-9._:-]{16,128}\Z")
 _TRACE = re.compile(r"00-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})\Z")
@@ -179,7 +180,13 @@ async def _body(request: Request, model: type[DTO]) -> dict:
         raise AuthDenied(400, "INVALID_REQUEST") from None
 
 
-def create_app(*, auth: LocalAuth | None = None, backend: Backend | None = None) -> FastAPI:
+def create_app(
+    *,
+    auth: LocalAuth | None = None,
+    backend: Backend | None = None,
+    supervisor=None,
+    events=None,
+) -> FastAPI:
     auth = auth if auth is not None else LocalAuth()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
 
@@ -206,6 +213,10 @@ def create_app(*, auth: LocalAuth | None = None, backend: Backend | None = None)
     @app.exception_handler(HTTPException)
     async def http_error(request: Request, exc: HTTPException):
         return problem(exc.status_code, "INVALID_REQUEST", request.state.trace_id)
+
+    @app.exception_handler(CursorExpired)
+    async def cursor_error(request: Request, _exc: CursorExpired):
+        return problem(410, "CURSOR_EXPIRED", request.state.trace_id)
 
     def port() -> Backend:
         if backend is None:
@@ -277,6 +288,90 @@ def create_app(*, auth: LocalAuth | None = None, backend: Backend | None = None)
     register("/api/v1/control/resume", "POST", "resumeNewEntries", ControlReason)
     register("/api/v1/control/kill", "POST", "activateKillSwitch", ControlReason)
     register("/api/v1/risk-policy", "PUT", "updateRiskPolicy", PolicyUpdate)
+
+    def query(request: Request, name: str) -> str | None:
+        values = request.query_params.getlist(name)
+        if len(values) > 1:
+            raise AuthDenied(400)
+        return values[0] if values else None
+
+    def read_port():
+        if supervisor is None:
+            raise AuthDenied(503, "TEMPORARILY_UNAVAILABLE")
+        return supervisor
+
+    @app.get("/api/v1/snapshot", operation_id="getSupervisorSnapshot")
+    async def snapshot(request: Request):
+        body = await run_in_threadpool(read_port().snapshot, request.state.trace_id)
+        return JSONResponse(body)
+
+    @app.get("/api/v1/events", operation_id="streamSupervisorEvents")
+    async def stream(request: Request):
+        from fastapi.responses import StreamingResponse
+
+        from services.control_api.streaming import event_stream, frame
+
+        if events is None:
+            raise AuthDenied(503, "TEMPORARILY_UNAVAILABLE")
+        header = _header(request, "Last-Event-ID")
+        supplied = query(request, "cursor")
+        selected = header if header is not None else supplied
+        if selected is not None and not 1 <= len(selected) <= 256:
+            raise AuthDenied(400)
+        prepared = await run_in_threadpool(events.prepare, selected)
+        initial = await run_in_threadpool(events.poll, prepared)
+        # Validate framing before opening HTTP 200; no header injection or NaN.
+        for item in initial[0]:
+            frame(item)
+        return StreamingResponse(
+            event_stream(
+                request,
+                events,
+                prepared,
+                initial,
+                auth,
+                request.cookies.get("atl_session", ""),
+                request.state.trace_id,
+            ),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-store"},
+        )
+
+    def register_history(resource: str, operation: str):
+        async def page(request: Request):
+            supplied = query(request, "cursor")
+            if supplied is not None and not 1 <= len(supplied) <= 256:
+                raise AuthDenied(400)
+            raw_limit = query(request, "limit")
+            if raw_limit is not None and (
+                not re.fullmatch(r"[0-9]{1,3}", raw_limit) or not 1 <= int(raw_limit) <= 200
+            ):
+                raise AuthDenied(400)
+            trace_filter = query(request, "traceId") if resource == "audit" else None
+            if trace_filter is not None and not re.fullmatch(r"[0-9a-f]{32}", trace_filter):
+                raise AuthDenied(400)
+            body = await run_in_threadpool(
+                read_port().page,
+                resource,
+                supplied,
+                int(raw_limit) if raw_limit is not None else 50,
+                trace_filter,
+            )
+            return JSONResponse(body)
+
+        app.add_api_route("/api/v1/" + resource, page, methods=["GET"], operation_id=operation)
+
+    for resource, operation in (
+        ("market-states", "listMarketStates"),
+        ("decisions", "listDecisions"),
+        ("proposals", "listProposals"),
+        ("risk-decisions", "listRiskDecisions"),
+        ("orders", "listOrders"),
+        ("audit", "listAuditEvents"),
+        ("runs", "listAgentRuns"),
+        ("costs", "listApiCosts"),
+    ):
+        register_history(resource, operation)
     return app
 
 

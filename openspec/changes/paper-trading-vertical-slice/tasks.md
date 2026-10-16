@@ -180,9 +180,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
   - Tests: T-CTL-001/002/003/005/007
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 7.2 PTV-19 Snapshot, Cursor und SSE; Evidenz: T-CTL-004, T-RUN-004/005.
+- [x] 7.2 PTV-19 Snapshot, Cursor und SSE; Evidenz: T-CTL-004, T-RUN-004/005.
   - Requirements: REQ-CTL-004, REQ-RUN-004, REQ-RUN-005
-  - Zielpfade: `services/control_api/snapshot.py`, `services/control_api/events.py`, `tests/integration/test_sse_cursor.py`
+  - Zielpfade: `services/control_api/snapshot.py`, `services/control_api/events.py`, `services/control_api/cursors.py`, `services/control_api/streaming.py`, `services/control_api/projections.py`, `services/control_api/app.py`, `services/control_api/migrations/versions/0007_supervisor_cursors.py`, `tests/integration/test_sse_cursor.py`, `tests/integration/supervisor_support.py`, `tests/contracts/test_supervisor_events.py`, `tests/contracts/test_supervisor_projections.py`, `tests/contracts/test_supervisor_transport.py`, `docs/evidence/ptv-19-snapshot-sse.md`, `docs/runbooks/local-operation.md`, `openspec/changes/paper-trading-vertical-slice/test-strategy.md`, `openspec/changes/paper-trading-vertical-slice/traceability.md`, `openspec/changes/paper-trading-vertical-slice/traceability.json`
   - Abhängigkeiten: PTV-05, PTV-18
   - Verhalten: Commitgeordnete Events, konsistenter Snapshotcursor, heartbeat/Last-Event-ID/410/reset-required.
   - Akzeptanz: Reconnect verliert keine Events; abgelaufener Cursor explizit; parallel Commit ohne stille Lücke.
