@@ -101,7 +101,7 @@
         "PTV-20"
       ],
       "testId": "T-CTL-004",
-      "testPath": "tests/integration/test_sse_reconnect.py",
+      "testPath": "tests/integration/test_sse_cursor.py",
       "contracts": [
         "contracts/schemas/v1/safety-event.schema.json",
         "contracts/schemas/v1/control-event.schema.json",
