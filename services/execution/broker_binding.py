@@ -394,13 +394,48 @@ class AlpacaExecutionBinding:
             {"intent": intent.id},
         ).scalar_one_or_none()
         _require(owner == self._account_id, "ACCOUNT_MISMATCH")
+        self._validate_context(tx, intent.instrument_id, expected_capability, now)
+
+    def validate_recovery(self, tx, *, now: datetime) -> int:
+        """Fresh dual-provider proof for every configured instrument under the gate."""
+        c = tx.connection
+        _require(
+            c.execute(text("SELECT current_user")).scalar_one() == "atl_execution",
+            "EXECUTION_ROLE_REQUIRED",
+        )
+        _require(self.restored, "BINDING_RESTORE_REQUIRED")
+        tx.lock_account(self._account_id)
+        instruments = (
+            c.execute(
+                text("""
+            SELECT instrument_id FROM public.risk_instrument_context
+            WHERE account_id=:a ORDER BY instrument_id FOR UPDATE
+        """),
+                {"a": self._account_id},
+            )
+            .scalars()
+            .all()
+        )
+        _require(bool(instruments), "BINDING_CONTEXT_CHANGED")
+        for instrument_id in instruments:
+            try:
+                capability = self._broker.capabilities(instrument_id)
+            except Exception:
+                raise SubmitDenied("BINDING_PROOF_UNAVAILABLE") from None
+            self._validate_context(tx, instrument_id, capability, now)
+        return len(instruments)
+
+    def _validate_context(
+        self, tx, instrument_id: str, expected_capability: m.BrokerCapabilities, now: datetime
+    ) -> None:
+        c = tx.connection
         context = (
             c.execute(
                 text("""
             SELECT * FROM public.risk_instrument_context
             WHERE account_id=:account AND instrument_id=:instrument FOR UPDATE
         """),
-                {"account": self._account_id, "instrument": intent.instrument_id},
+                {"account": self._account_id, "instrument": instrument_id},
             )
             .mappings()
             .one_or_none()
@@ -408,7 +443,7 @@ class AlpacaExecutionBinding:
         _require(
             context is not None
             and context["broker_id"] == "alpaca-paper"
-            and context["capability_version"] == intent.capability_version
+            and context["capability_version"] == expected_capability.version
             and context["valid_until"] > now,
             "BINDING_CONTEXT_CHANGED",
         )
@@ -421,7 +456,7 @@ class AlpacaExecutionBinding:
         """),
                 {
                     "account": self._account_id,
-                    "instrument": intent.instrument_id,
+                    "instrument": instrument_id,
                     "version": context["version"],
                 },
             )
@@ -441,10 +476,10 @@ class AlpacaExecutionBinding:
             SELECT provider_asset_id FROM public.broker_asset_bindings
             WHERE account_id=:account AND instrument_id=:instrument
         """),
-            {"account": self._account_id, "instrument": intent.instrument_id},
+            {"account": self._account_id, "instrument": instrument_id},
         ).scalar_one_or_none()
         _require(account_pin is not None and asset_pin is not None, "BINDING_PIN_MISSING")
-        market, source, trading, trade = self._proofs(intent.instrument_id)
+        market, source, trading, trade = self._proofs(instrument_id)
         final_now = _utc(c.execute(text("SELECT clock_timestamp()")).scalar_one())
         _require(
             market.valid_until > final_now
@@ -454,7 +489,7 @@ class AlpacaExecutionBinding:
         )
         _require(
             trading == expected_capability
-            and trading.version == intent.capability_version
+            and trading.version == expected_capability.version
             and source.capability_version == proof["source_capability_version"]
             and trade.capability_version == proof["trading_capability_version"]
             and str(account_pin)

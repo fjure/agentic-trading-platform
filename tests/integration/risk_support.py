@@ -95,7 +95,7 @@ def host(*, guest_path: Path | None = None, guest_args: tuple[str, ...] = ()) ->
         _admin(f"DROP ROLE {role};")
 
 
-def guest(run_checks=None) -> None:
+def guest(run_checks=None, *, uppercase_instruments: bool = False) -> None:
     from alembic import command
     from alembic.config import Config
     from sqlalchemy import create_engine, event, text
@@ -123,11 +123,16 @@ def guest(run_checks=None) -> None:
         config.attributes["connection"] = connection
         command.upgrade(config, "head")
     now = datetime.now(UTC).replace(microsecond=0)
+    first_instrument, second_instrument = (
+        ("SPY", "QQQ") if uppercase_instruments else ("spy", "qqq")
+    )
     trace = "a" * 32
-    instrument = m.Instrument("spy", m.Market.US_EQUITY, "SPY", "EQUITY", "USD", 1, "XNYS")
+    instrument = m.Instrument(
+        first_instrument, m.Market.US_EQUITY, "SPY", "EQUITY", "USD", 1, "XNYS"
+    )
     bar = m.MarketBar(
         "bar",
-        "spy",
+        first_instrument,
         now - timedelta(minutes=15),
         now,
         Decimal("100"),
@@ -140,13 +145,13 @@ def guest(run_checks=None) -> None:
         now,
         m.Quality.VALID,
     )
-    evidence = m.EvidenceBundle("ev", "spy", ("bar",), now, (), m.Quality.VALID)
-    position = m.Position("pos", "spy", "USD", Decimal("0"), None, Decimal("0"), 1)
+    evidence = m.EvidenceBundle("ev", first_instrument, ("bar",), now, (), m.Quality.VALID)
+    position = m.Position("pos", first_instrument, "USD", Decimal("0"), None, Decimal("0"), 1)
     portfolio = m.PortfolioSnapshot(
         "pf",
         "USD",
         Decimal("2000"),
-        Decimal("100.01"),
+        Decimal("2000") if uppercase_instruments else Decimal("100.01"),
         Decimal("0"),
         now,
         1,
@@ -155,7 +160,7 @@ def guest(run_checks=None) -> None:
     )
     state = m.MarketState(
         "ms",
-        "spy",
+        first_instrument,
         m.Market.US_EQUITY,
         bar,
         evidence,
@@ -261,19 +266,20 @@ def guest(run_checks=None) -> None:
                     INSERT INTO public.positions
                       (id,instrument_id,currency,quantity,average_price,
                        realized_pnl,ledger_version,account_id)
-                    VALUES ('pos','spy','USD',0,NULL,0,1,'paper')
-                """)
+                    VALUES ('pos',:instrument,'USD',0,NULL,0,1,'paper')
+                """),
+                    {"instrument": first_instrument},
                 )
             else:
                 tx.insert(item)
-        instrument2 = replace(instrument, id="qqq", broker_symbol="QQQ")
-        bar2 = replace(bar, id="bar2", instrument_id="qqq")
-        evidence2 = replace(evidence, id="ev2", instrument_id="qqq", sources=("bar2",))
-        position2 = replace(position, id="pos2", instrument_id="qqq")
+        instrument2 = replace(instrument, id=second_instrument, broker_symbol="QQQ")
+        bar2 = replace(bar, id="bar2", instrument_id=second_instrument)
+        evidence2 = replace(evidence, id="ev2", instrument_id=second_instrument, sources=("bar2",))
+        position2 = replace(position, id="pos2", instrument_id=second_instrument)
         state2 = replace(
             state,
             id="ms2",
-            instrument_id="qqq",
+            instrument_id=second_instrument,
             bar=bar2,
             evidence=evidence2,
             position=position2,
@@ -299,12 +305,13 @@ def guest(run_checks=None) -> None:
             INSERT INTO public.positions
               (id,instrument_id,currency,quantity,average_price,
                realized_pnl,ledger_version,account_id)
-            VALUES ('pos2','qqq','USD',0,NULL,0,1,'paper')
-        """)
+            VALUES ('pos2',:instrument,'USD',0,NULL,0,1,'paper')
+        """),
+            {"instrument": second_instrument},
         )
         tx.insert(state2)
         tx.insert(decision2)
-        for item in ("paper", "paper:spy", "paper:qqq"):
+        for item in ("paper", f"paper:{first_instrument}", f"paper:{second_instrument}"):
             tx.insert(
                 m.AuditEvent(
                     id="audit-context-" + item,
@@ -339,10 +346,10 @@ def guest(run_checks=None) -> None:
                paper_confirmed,regular_session_confirmed,market_order_confirmed,
                limit_order_confirmed,fractional_confirmed,quantity_step,price_tick,
                session_open,session_version,session_valid_until,valid_until,actor_id,trace_id)
-            VALUES ('paper','spy',1,1,'fake',true,true,true,true,false,1,0.01,
+            VALUES ('paper',:instrument,1,1,'fake',true,true,true,true,false,1,0.01,
                     true,'fixture-session',:until,:until,'fixture',:trace)
         """),
-            {"until": now + timedelta(minutes=5), "trace": trace},
+            {"until": now + timedelta(minutes=5), "trace": trace, "instrument": first_instrument},
         )
         tx.connection.execute(
             text("""
@@ -351,10 +358,10 @@ def guest(run_checks=None) -> None:
                paper_confirmed,regular_session_confirmed,market_order_confirmed,
                limit_order_confirmed,fractional_confirmed,quantity_step,price_tick,
                session_open,session_version,session_valid_until,valid_until,actor_id,trace_id)
-            VALUES ('paper','qqq',1,1,'fake',true,true,true,true,false,1,0.01,
+            VALUES ('paper',:instrument,1,1,'fake',true,true,true,true,false,1,0.01,
                     true,'fixture-session',:until,:until,'fixture',:trace)
         """),
-            {"until": now + timedelta(minutes=5), "trace": trace},
+            {"until": now + timedelta(minutes=5), "trace": trace, "instrument": second_instrument},
         )
         for index in range(100):
             second = index % 2 == 1
@@ -362,7 +369,7 @@ def guest(run_checks=None) -> None:
                 f"p-{index}",
                 "dec2" if second else "dec",
                 "ms2" if second else "ms",
-                "qqq" if second else "spy",
+                second_instrument if second else first_instrument,
                 m.Target.LONG,
                 Decimal("1"),
                 now,
@@ -395,11 +402,14 @@ def guest(run_checks=None) -> None:
     # Explicit synthetic bootstrap evidence for the mandatory Runtime gate.
     # Runtime itself claims/fences a process and pauses; fixtures start RUNNING.
     with execution_ledger.transaction() as tx:
-        tx.connection.execute(text("""
+        tx.connection.execute(
+            text("""
             INSERT INTO public.execution_owners
               (account_id,owner_id,fencing_token,claimed_at,heartbeat_at,trace_id)
             VALUES ('paper','fixture',1,clock_timestamp(),clock_timestamp(),:trace)
-        """), {"trace": trace})
+        """),
+            {"trace": trace},
+        )
 
     if run_checks is not None:
         run_checks(ledger, execution_ledger, engine, now)

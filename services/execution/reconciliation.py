@@ -121,6 +121,7 @@ def _fail(
     account_id: str,
     reason: str,
     now,
+    adapter: str = "fake",
 ) -> m.BrokerOrder:
     decision = tx.get(m.RiskDecision, reservation.risk_decision_id)
     policy_version = decision.policy_version if decision else None
@@ -148,7 +149,7 @@ def _fail(
             now=now,
             policy_version=policy_version,
         )
-        tx.insert(report, adapter="fake")
+        tx.insert(report, adapter=adapter)
         persist(
             tx.connection,
             m.EventEnvelope(
@@ -853,3 +854,10 @@ def reconcile_order(
                 policy_version=decision.policy_version,
             )
         return new_order
+
+
+def reconcile_paper_account(**kwargs):
+    """Lazy account-wide Paper entry point; the exact Fake order path stays unchanged."""
+    from services.execution.paper_reconciliation import reconcile_paper_account as reconcile
+
+    return reconcile(**kwargs)
