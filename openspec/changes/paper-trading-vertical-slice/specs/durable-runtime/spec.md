@@ -18,6 +18,12 @@ Aufträge und fachliche Ereignisse MUST stabile Identitäten und Eindeutigkeitsg
 #### Scenario: T-RUN-002 Doppelte Zustellung
 GIVEN dasselbe Brokerereignis trifft zweimal ein WHEN beide Zustellungen verarbeitet werden THEN wird seine wirtschaftliche Wirkung genau einmal gebucht.
 
+#### Scenario: T-RUN-024 Account- und Capabilitybindung
+GIVEN Markt- und Tradingbelege betreffen unterschiedliche Konten, Assets, Sitzungen oder Capabilityversionen WHEN Execution sie als Risikokontext veröffentlichen oder unmittelbar vor Submit prüfen soll THEN wird der Vorgang ohne Brokerübermittlung abgewiesen und ausschließlich ein stabiler nicht sensitiver Grund auditiert.
+
+#### Scenario: T-RUN-025 Persistente Activities-Wiederholung
+GIVEN eine bereits gebuchte FILL- oder Gebührenbeobachtung wird nach Neustart erneut oder in anderer Reihenfolge geliefert WHEN sie auf das SQL-Ledger angewendet wird THEN entstehen keine doppelten Cash-/Positionsänderungen und jeder bestätigte Effekt bleibt mit seinem unveränderlichen Beleg und Trace verknüpft.
+
 ### Requirement: REQ-RUN-003 Wiederaufnehmbare Jobs
 Hintergrundarbeit SHALL dauerhaft mit Lease, Heartbeat, begrenzten Wiederholungen und Dead-Letter-Zustand verwaltet werden. Ein abgelaufenes Lease MAY nur nach Prüfung des bestehenden Arbeits- und Brokerzustands übernommen werden.
 

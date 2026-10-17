@@ -1,4 +1,4 @@
-"""One-shot, Fake-only Paper submit with a durable pre-I/O state."""
+"""One-shot Paper submit with a durable pre-I/O state."""
 
 from __future__ import annotations
 
@@ -8,15 +8,99 @@ from decimal import Decimal
 
 from sqlalchemy import text
 
+from packages.brokers.alpaca_paper import AlpacaPaperBrokerAdapter
 from packages.brokers.fake import FakeBrokerAdapter
 from packages.domain import models as m
 from packages.observability.outbox import persist
 from packages.persistence.ledger import PostgresLedger
 from packages.risk.engine import RiskLimits
+from services.execution.broker_binding import AlpacaExecutionBinding
 from services.execution.gates import SubmitDenied, _now, evaluate_submit_gate
 
 _NAMESPACE = uuid.UUID("96e94135-3853-4f6f-90eb-99e38802bb28")
-_ADAPTER = "fake"
+
+
+def _adapter_id(
+    ledger: PostgresLedger,
+    account_id: str,
+    broker: FakeBrokerAdapter | AlpacaPaperBrokerAdapter,
+    binding: AlpacaExecutionBinding | None,
+) -> str:
+    if type(broker) is FakeBrokerAdapter and binding is None:
+        return "fake"
+    if (
+        type(broker) is AlpacaPaperBrokerAdapter
+        and type(binding) is AlpacaExecutionBinding
+        and binding.ledger is ledger
+        and binding.account_id == account_id
+        and binding.broker is broker
+        and binding.restored
+    ):
+        return "alpaca-paper"
+    raise SubmitDenied("BROKER_BOUNDARY")
+
+
+def _assert_owner(tx, account_id: str, owner_id: str, fencing_token: int) -> None:
+    from services.control_api.control import ControlDenied
+    from services.execution.recovery_health import check_runtime
+
+    try:
+        check_runtime(tx.connection, account_id, owner_id=owner_id, fencing_token=fencing_token)
+    except ControlDenied as exc:
+        raise SubmitDenied(exc.reason_code) from None
+
+
+def _reject_before_io(
+    tx,
+    *,
+    account_id: str,
+    intent_id: str,
+    owner_id: str,
+    fencing_token: int,
+    reason: str,
+    adapter_id: str,
+) -> m.BrokerOrder:
+    if tx.connection.execute(text("SELECT current_user")).scalar_one() != "atl_execution":
+        raise SubmitDenied("EXECUTION_ROLE_REQUIRED")
+    tx.lock_account(account_id)
+    _assert_owner(tx, account_id, owner_id, fencing_token)
+    ownership = (
+        tx.connection.execute(
+            text("""
+            SELECT i.account_id,b.adapter FROM public.order_intents i
+            JOIN public.broker_orders b ON b.intent_id=i.id WHERE i.id=:id
+        """),
+            {"id": intent_id},
+        )
+        .mappings()
+        .one_or_none()
+    )
+    if (
+        ownership is None
+        or ownership["account_id"] != account_id
+        or ownership["adapter"] != adapter_id
+    ):
+        raise SubmitDenied("RECONCILE_REQUIRED")
+    intent = tx.get(m.OrderIntent, intent_id)
+    order = tx.get(m.BrokerOrder, _id("order", intent_id))
+    if intent is None or order is None:
+        raise SubmitDenied("RECONCILE_REQUIRED")
+    decision = tx.get(m.RiskDecision, intent.risk_decision_id)
+    reservation = tx.get(m.RiskReservation, decision.reservation_id) if decision else None
+    if reservation is None:
+        raise SubmitDenied("RECONCILE_REQUIRED")
+    return _finish(
+        tx,
+        intent=intent,
+        decision=decision,
+        reservation=reservation,
+        status=m.OrderStatus.REJECTED,
+        broker_id=None,
+        reason=reason,
+        now=_now(tx.connection),
+        adapter_id=adapter_id,
+        pre_io_rejected=True,
+    )
 
 
 def _id(kind: str, intent_id: str) -> str:
@@ -61,6 +145,7 @@ def _finish(
     broker_id: str | None,
     reason: str,
     now,
+    adapter_id: str,
     pre_io_rejected: bool = False,
 ) -> m.BrokerOrder:
     if pre_io_rejected and (status is not m.OrderStatus.REJECTED or broker_id is not None):
@@ -157,6 +242,7 @@ def _finish(
         reconciliation=(
             m.Reconciliation.PENDING
             if status is m.OrderStatus.UNKNOWN
+            or (adapter_id == "alpaca-paper" and not pre_io_rejected)
             else m.Reconciliation.CURRENT
         ),
         occurred_at=now,
@@ -174,7 +260,7 @@ def _finish(
         reason=reason,
         now=now,
     )
-    tx.insert(report, adapter=_ADAPTER)
+    tx.insert(report, adapter=adapter_id)
     persist(
         tx.connection,
         m.EventEnvelope(
@@ -191,7 +277,11 @@ def _finish(
 
 
 def _capability_matches(
-    broker: FakeBrokerAdapter, intent: m.OrderIntent, expected: m.BrokerCapabilities
+    broker: FakeBrokerAdapter,
+    intent: m.OrderIntent,
+    expected: m.BrokerCapabilities,
+    *,
+    regular_session: bool,
 ) -> bool:
     try:
         actual = broker.capabilities(intent.instrument_id)
@@ -200,14 +290,14 @@ def _capability_matches(
     if not isinstance(actual, m.BrokerCapabilities):
         return False
     return (
-        actual.broker_id == expected.broker_id == _ADAPTER
+        actual.broker_id == expected.broker_id == "fake"
         and actual.instrument_id == intent.instrument_id
         and actual.version == expected.version == intent.capability_version
         and actual.paper is m.Capability.CONFIRMED
         and actual.permits(
             order_type=intent.order_type,
             fractional=intent.quantity != intent.quantity.to_integral_value(),
-            regular_session=True,
+            regular_session=regular_session,
         )
         and actual.quantity_step == expected.quantity_step
         and actual.price_tick == expected.price_tick
@@ -224,7 +314,8 @@ def submit_once(
     account_id: str,
     intent_id: str,
     limits: RiskLimits,
-    broker: FakeBrokerAdapter,
+    broker: FakeBrokerAdapter | AlpacaPaperBrokerAdapter,
+    binding: AlpacaExecutionBinding | None = None,
     paper_smoke_enabled: bool = False,
     owner_id: str,
     fencing_token: int,
@@ -238,17 +329,19 @@ def submit_once(
     """
     if paper_smoke_enabled is not True:
         raise SubmitDenied("PAPER_SMOKE_DISABLED")
-    if type(broker) is not FakeBrokerAdapter:
-        raise SubmitDenied("BROKER_BOUNDARY")
+    adapter_id = _adapter_id(ledger, account_id, broker, binding)
     with ledger.transaction() as tx:
-        intent, _proposal, decision, _reservation, _capability, now = evaluate_submit_gate(
+        intent, _proposal, decision, _reservation, capability, now = evaluate_submit_gate(
             tx=tx,
             account_id=account_id,
             intent_id=intent_id,
             limits=limits,
             owner_id=owner_id,
             fencing_token=fencing_token,
+            expected_broker_id=adapter_id,
         )
+        if binding is not None:
+            binding.validate_submit(tx, intent, capability, now)
         order = m.BrokerOrder(
             id=_id("order", intent.id),
             intent_id=intent.id,
@@ -271,7 +364,7 @@ def submit_once(
             reason="GATE_APPROVED",
             now=now,
         )
-        tx.insert(order, adapter=_ADAPTER)
+        tx.insert(order, adapter=adapter_id)
         report = m.ExecutionReport(
             id=_id("report:SUBMITTING", intent.id),
             order_id=order.id,
@@ -294,7 +387,7 @@ def submit_once(
             reason="GATE_APPROVED",
             now=now,
         )
-        tx.insert(report, adapter=_ADAPTER)
+        tx.insert(report, adapter=adapter_id)
         persist(
             tx.connection,
             m.EventEnvelope(
@@ -312,7 +405,30 @@ def submit_once(
     # between transactions. Recheck everything after acquiring every lock.
     with ledger.transaction() as tx:
         try:
-            intent, _proposal, decision, reservation, capability, _now_checked = (
+            intent, proposal, decision, reservation, capability, now = evaluate_submit_gate(
+                tx=tx,
+                account_id=account_id,
+                intent_id=intent_id,
+                limits=limits,
+                owner_id=owner_id,
+                fencing_token=fencing_token,
+                allow_submitting_order=True,
+                expected_broker_id=adapter_id,
+            )
+            if binding is not None:
+                binding.validate_submit(tx, intent, capability, now)
+            else:
+                state = tx.get(m.MarketState, proposal.market_state_id)
+                if not _capability_matches(
+                    broker,
+                    intent,
+                    capability,
+                    regular_session=state.market is m.Market.US_EQUITY,
+                ):
+                    raise SubmitDenied("BROKER_CAPABILITY")
+            # Capability/proof reads can block. Recheck all SQL gates and owner
+            # immediately before the sole broker submit call.
+            intent, _proposal, decision, reservation, _capability, _now_checked = (
                 evaluate_submit_gate(
                     tx=tx,
                     account_id=account_id,
@@ -321,112 +437,61 @@ def submit_once(
                     owner_id=owner_id,
                     fencing_token=fencing_token,
                     allow_submitting_order=True,
+                    expected_broker_id=adapter_id,
                 )
             )
         except SubmitDenied as exc:
-            # An invalid role cannot write an outcome. For a legitimate Execution
-            # caller, no broker I/O has occurred, so rejection can release budget.
-            if exc.reason_code == "EXECUTION_ROLE_REQUIRED":
-                raise
-            persisted_intent = tx.get(m.OrderIntent, intent_id)
-            persisted_order = tx.get(m.BrokerOrder, _id("order", intent_id))
-            if persisted_intent is None or persisted_order is None:
-                raise
-            persisted_decision = tx.get(m.RiskDecision, persisted_intent.risk_decision_id)
-            persisted_reservation = tx.get(m.RiskReservation, persisted_decision.reservation_id)
-            _finish(
+            # A stale or fenced process cannot declare that no broker I/O
+            # occurred on behalf of the current owner. Leave SUBMITTING durable.
+            result = _reject_before_io(
                 tx,
-                intent=persisted_intent,
-                decision=persisted_decision,
-                reservation=persisted_reservation,
-                status=m.OrderStatus.REJECTED,
-                broker_id=None,
+                account_id=account_id,
+                intent_id=intent_id,
+                owner_id=owner_id,
+                fencing_token=fencing_token,
                 reason=exc.reason_code,
-                now=_now(tx.connection),
-                pre_io_rejected=True,
+                adapter_id=adapter_id,
             )
             raise_after_commit = exc
         else:
             raise_after_commit = None
-            if not _capability_matches(broker, intent, capability):
+            try:
+                response = broker.submit(intent)
+            except Exception:
+                # Any ordinary error may have happened after acceptance.
                 result = _finish(
                     tx,
                     intent=intent,
                     decision=decision,
                     reservation=reservation,
-                    status=m.OrderStatus.REJECTED,
+                    status=m.OrderStatus.UNKNOWN,
                     broker_id=None,
-                    reason="BROKER_CAPABILITY",
+                    reason="SUBMIT_UNCERTAIN",
                     now=_now(tx.connection),
-                    pre_io_rejected=True,
+                    adapter_id=adapter_id,
                 )
-                raise_after_commit = SubmitDenied("BROKER_CAPABILITY")
             else:
-                # The read-only adapter capability lookup may itself block.
-                # Refresh DB time and every gate again immediately before submit.
-                try:
-                    intent, _proposal, decision, reservation, _capability, _now_checked = (
-                        evaluate_submit_gate(
-                            tx=tx,
-                            account_id=account_id,
-                            intent_id=intent_id,
-                            limits=limits,
-                            owner_id=owner_id,
-                            fencing_token=fencing_token,
-                            allow_submitting_order=True,
-                        )
-                    )
-                except SubmitDenied as exc:
-                    result = _finish(
-                        tx,
-                        intent=intent,
-                        decision=decision,
-                        reservation=reservation,
-                        status=m.OrderStatus.REJECTED,
-                        broker_id=None,
-                        reason=exc.reason_code,
-                        now=_now(tx.connection),
-                        pre_io_rejected=True,
-                    )
-                    raise_after_commit = exc
-                else:
-                    try:
-                        response = broker.submit(intent)
-                    except Exception:
-                        # Any ordinary error may have happened after acceptance.
-                        result = _finish(
-                            tx,
-                            intent=intent,
-                            decision=decision,
-                            reservation=reservation,
-                            status=m.OrderStatus.UNKNOWN,
-                            broker_id=None,
-                            reason="SUBMIT_UNCERTAIN",
-                            now=_now(tx.connection),
-                        )
-                    else:
-                        accepted = (
-                            isinstance(response, m.BrokerOrder)
-                            and response.intent_id == intent.id
-                            and response.client_order_id == intent.client_order_id
-                            and response.trace_id == intent.trace_id
-                            and response.requested_quantity == intent.quantity
-                            and response.filled_quantity == 0
-                            and response.broker_order_id is not None
-                            and response.status is m.OrderStatus.ACKNOWLEDGED
-                        )
-                        result = _finish(
-                            tx,
-                            intent=intent,
-                            decision=decision,
-                            reservation=reservation,
-                            status=(
-                                m.OrderStatus.ACKNOWLEDGED if accepted else m.OrderStatus.UNKNOWN
-                            ),
-                            broker_id=response.broker_order_id if accepted else None,
-                            reason="ACKNOWLEDGED" if accepted else "SUBMIT_UNCERTAIN",
-                            now=_now(tx.connection),
-                        )
+                accepted = (
+                    isinstance(response, m.BrokerOrder)
+                    and response.intent_id == intent.id
+                    and response.client_order_id == intent.client_order_id
+                    and response.trace_id == intent.trace_id
+                    and response.requested_quantity == intent.quantity
+                    and response.filled_quantity == 0
+                    and response.broker_order_id is not None
+                    and response.status is m.OrderStatus.ACKNOWLEDGED
+                )
+                result = _finish(
+                    tx,
+                    intent=intent,
+                    decision=decision,
+                    reservation=reservation,
+                    status=m.OrderStatus.ACKNOWLEDGED if accepted else m.OrderStatus.UNKNOWN,
+                    broker_id=response.broker_order_id if accepted else None,
+                    reason="ACKNOWLEDGED" if accepted else "SUBMIT_UNCERTAIN",
+                    now=_now(tx.connection),
+                    adapter_id=adapter_id,
+                )
     if raise_after_commit is not None:
         raise raise_after_commit
     return result
@@ -498,9 +563,21 @@ class ExecutionProcess:
         ledger: PostgresLedger,
         account_id: str,
         limits: RiskLimits,
-        broker: FakeBrokerAdapter,
+        broker: FakeBrokerAdapter | AlpacaPaperBrokerAdapter,
+        binding: AlpacaExecutionBinding | None = None,
         paper_smoke_enabled: bool = False,
     ) -> None:
+        if type(broker) is FakeBrokerAdapter:
+            if binding is not None:
+                raise SubmitDenied("BROKER_BOUNDARY")
+        elif not (
+            type(broker) is AlpacaPaperBrokerAdapter
+            and type(binding) is AlpacaExecutionBinding
+            and binding.ledger is ledger
+            and binding.account_id == account_id
+            and binding.broker is broker
+        ):
+            raise SubmitDenied("BROKER_BOUNDARY")
         pause_after_restart(ledger=ledger, account_id=account_id)
         from services.execution.recovery_health import claim_execution_owner
 
@@ -515,8 +592,20 @@ class ExecutionProcess:
         self.account_id = account_id
         self.limits = limits
         self.broker = broker
+        self.binding = binding
         self.paper_smoke_enabled = paper_smoke_enabled
         self._faulted = False
+        if binding is not None:
+            from services.execution.broker_recovery import restore_alpaca_attempts
+
+            restore_alpaca_attempts(
+                ledger=ledger,
+                account_id=account_id,
+                broker=broker,
+                binding=binding,
+                owner_id=self.owner_id,
+                fencing_token=self.fencing_token,
+            )
 
     def submit(self, intent_id: str) -> m.BrokerOrder:
         from sqlalchemy.exc import SQLAlchemyError
@@ -530,6 +619,7 @@ class ExecutionProcess:
                 intent_id=intent_id,
                 limits=self.limits,
                 broker=self.broker,
+                binding=self.binding,
                 paper_smoke_enabled=self.paper_smoke_enabled,
                 owner_id=self.owner_id,
                 fencing_token=self.fencing_token,
@@ -560,6 +650,9 @@ class ExecutionProcess:
         from sqlalchemy.exc import SQLAlchemyError
 
         from services.execution.recovery_health import execution_refresh_and_resume
+
+        if type(self.broker) is AlpacaPaperBrokerAdapter:
+            raise SubmitDenied("ALPACA_RECOVERY_PENDING")
 
         try:
             result = execution_refresh_and_resume(

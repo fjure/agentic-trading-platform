@@ -60,6 +60,12 @@ Nach Submit-Timeout oder unklarem Brokerstatus MUST die Order UNKNOWN und ihre R
 #### Scenario: T-RSK-009 Timeout nach Submit
 GIVEN ein Submit endet ohne bestätigten Brokerstatus WHEN derselbe Auftrag erneut verarbeitet wird THEN erfolgt zuerst Reconciliation und kein blinder Zweit-Submit.
 
+#### Scenario: T-RSK-024 Dauerhafter Paper-Versuch nach Neustart
+GIVEN ein konto- und capabilitygebundener Alpaca-Paper-Intent wurde vor I/O als SUBMITTING bestätigt WHEN Execution nach Prozessabbruch mit demselben SQL-Ledger neu startet und die Orderabfrage 404 oder UNKNOWN liefert THEN bleibt der Versuch als möglicherweise gesendet gebunden, die Reservierung gehalten und jeder zweite POST gesperrt.
+
+#### Scenario: T-RSK-025 Fehlender Gebühren- oder FILL-Beleg
+GIVEN eine Teilfüllung oder Stornierung mit unvollständigen beziehungsweise widersprüchlichen paginierten Activities-/Gebührenbelegen WHEN Reconciliation den Zustand bewertet THEN werden nur eindeutig belegte Deltas idempotent gebucht und Pause/Recovery bleiben bis zur vollständigen Kontoabstimmung geschlossen; fehlende Gebühren werden nicht als null angenommen.
+
 ### Requirement: REQ-RSK-010 Orderzustände und Rennen
 Das Orderledger SHALL CREATED, RISK_RESERVED, SUBMITTING, ACKNOWLEDGED, PARTIALLY_FILLED, FILLED, REJECTED, CANCEL_PENDING, CANCELED und UNKNOWN unterscheiden. Doppelte oder ungeordnete Ereignisse sowie Cancel/Fill-Rennen MUST idempotent zu einem nachvollziehbaren Zustand führen.
 

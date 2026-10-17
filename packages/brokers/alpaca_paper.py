@@ -21,6 +21,7 @@ from zoneinfo import ZoneInfo
 import httpx
 
 from packages.brokers.fake import CapabilityError, IdempotencyConflict
+from packages.brokers.proofs import BindingProof
 from packages.domain.models import (
     BrokerCapabilities,
     BrokerOrder,
@@ -177,6 +178,7 @@ class AlpacaPaperBrokerAdapter:
         self._reports: dict[str, list[ExecutionReport]] = {}
         self._attempted = set(attempted_client_ids)
         self._capabilities: dict[str, tuple[BrokerCapabilities, datetime, datetime, datetime]] = {}
+        self._binding_proofs: dict[str, BindingProof] = {}
         for intent in restored_intents:
             self.bind_intent(intent, attempted=intent.client_order_id in self._attempted)
 
@@ -464,11 +466,27 @@ class AlpacaPaperBrokerAdapter:
         )
         self._capabilities[instrument_id] = (cap, self._now(), clock_time, session_end)
         self._fresh_proof(instrument_id)
+        self._binding_proofs[instrument_id] = BindingProof(
+            provider_account_id=str(account["id"]),
+            provider_asset_id=str(asset["id"]),
+            instrument_id=instrument_id,
+            session_start=session_start,
+            session_end=session_end,
+            observed_at=self._now(),
+            provider_time=clock_time,
+            capability_version=version,
+        )
         return cap
 
     @_locked
     def capabilities(self, instrument_id: str) -> BrokerCapabilities:
         return self._capability(instrument_id)
+
+    @_locked
+    def binding_proof(self, instrument_id: str) -> tuple[BrokerCapabilities, BindingProof]:
+        """Fresh read-only Trading proof, including the pinned provider identities."""
+        capability = self._capability(instrument_id)
+        return capability, self._binding_proofs[instrument_id]
 
     @_locked
     def bind_intent(self, intent: OrderIntent, *, attempted: bool = True) -> None:
