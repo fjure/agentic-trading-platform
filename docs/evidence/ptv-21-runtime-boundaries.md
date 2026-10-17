@@ -30,6 +30,25 @@ Der einmalige Provisionierungscontainer erhält CHOWN/FOWNER ausschließlich zur
 
 Die ersten Entwicklungsläufe fanden fehlende laufende PostgreSQL-Voraussetzung, zwei fehlerhafte Test-ALTERs gegen die aktuelle statt die separate Admin-Datenbank und unlesbare root-eigene Secretdateien. Diese Ursachen wurden korrigiert und gezielt beziehungsweise vollständig erneut geprüft. Die erste18-Operationen-Assertion wurde auf den kanonischen20-Operationen-Vertrag aktualisiert. Ein Windows-Mehrfachrename-Test traf Dateisperren; derselbe relevante60-Schreibzugriffe-Test wurde auf der tatsächlichen Linux-tmpfs-Plattform ausgeführt. Keine Risk-, Broker- oder Authgates wurden für grüne Tests gelockert. Der Credential-Musterscan erkannte einen langen synthetischen Testliteral; der Dummy wurde verkürzt, der Scanner unverändert beibehalten.
 
+Reproduktion im Repository-Root mit zuvor gebautem Fake-Testimage und gestartetem Lab; temporäre PostgreSQL-Testdatenbanken werden ausschließlich UUID-begrenzt erzeugt und entfernt:
+
+```powershell
+./scripts/start-local-lab.ps1
+docker compose -f infra/compose/compose.yaml --profile fake build build-smoke
+.venv/Scripts/python.exe -m pytest tests/unit tests/contracts tests/security/test_market_gateway.py tests/security/test_secrets.py tests/security/test_host_transport.py tests/security/test_control_auth.py -q
+.venv/Scripts/python.exe -m pytest tests/integration/test_failures.py tests/integration/test_ledger.py tests/security/test_execution_isolation.py -q
+$env:PTV21_DOCKER = '1'
+try {
+  .venv/Scripts/python.exe -m pytest tests/security/test_secrets.py tests/security/test_host_transport.py -q
+} finally { Remove-Item Env:PTV21_DOCKER }
+./scripts/check-angular-client.ps1
+.venv/Scripts/python.exe scripts/check-contract-breaking.py --base-ref c456cd823b6bb11a91d339f57319d00138f61cae
+.venv/Scripts/python.exe scripts/validate-contracts.py
+.venv/Scripts/python.exe scripts/validate-plan.py
+.venv/Scripts/python.exe scripts/scan-source-secrets.py
+./scripts/openspec.ps1 validate paper-trading-vertical-slice --strict
+```
+
 ## Safetyreview
 
 | Invariante | Evidenz | Ergebnis |
@@ -46,4 +65,4 @@ Begrenzte unabhängige Infra-/Runtime-/Telemetriepakete mit klaren Dateizuständ
 
 Die SDK-Transitive `opentelemetry-semantic-conventions==0.66b1` ist upstream vorgeschrieben und ausdrücklich als solche bewertet; der Graph wird nicht als ausschließlich stabil bezeichnet. Angular meldet die bestehenden Bundle-/Style-Warnschwellen, der Produktionsbuild bleibt unter den Fehlerschwellen. Eine bestehende Starlette/HTTPX-Deprecationwarnung ist dokumentiert. Keine echte Anbieterqualität, Kontoberechtigung, Gebührenkategorie oder Handelsfreigabe wird aus diesen Offline-Prüfungen abgeleitet.
 
-Task/Issue-Read-back und Gitintegration werden im selben Durchlauf nach diesen Nachweisen abgeschlossen; ihre Commitzuordnung steht anschließend in `docs/development/git-issue-integrations.json`.
+Task/Issue-Read-back im selben Durchlauf abgeschlossen: Issue#21 completed,25Mappings vollständig verifiziert, identische Wiederholung0Writes. OpenSpec23/25. Issuebranch `codex/ptv-21-deployment-boundaries` mit Commit `7cf0427f3179ac64206853b9920155f6cac24e81` gepusht; regulärer Merge-main `bb8d0a230116c7a6f3a44dadbef1759c24f75c4c` gepusht und remote zurückgelesen. Identische Implementierungsbäume,23Remote-Issue-Branches und ihre Ancestry verifiziert; Zuordnung in `docs/development/git-issue-integrations.json`. [Contracts-CI39076739619](https://github.com/fjure/agentic-trading-platform/actions/runs/39076739619) ist tatsächlich success. Weitere reine Evidenzcommits dürfen main fortführen.
