@@ -1,0 +1,4 @@
+{
+  "status": "DEGRADED",
+  "checks": {"DATABASE": "HEALTHY", "DECISION": "UNAVAILABLE"}
+}

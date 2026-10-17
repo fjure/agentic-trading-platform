@@ -96,6 +96,14 @@ class Mode(DTO):
     traceId: Trace
 
 
+class RuntimeHealth(DTO):
+    status: Literal["HEALTHY", "DEGRADED", "UNAVAILABLE"]
+    checks: dict[
+        Literal["DATABASE", "BROKER", "MARKET", "DECISION", "EXECUTION", "WATCHDOG"],
+        Literal["HEALTHY", "DEGRADED", "UNAVAILABLE"],
+    ] = Field(min_length=1)
+
+
 class Backend(Protocol):
     def read_mode(self, trace_id: str) -> dict: ...
     def read_policy(self) -> tuple[dict, str]: ...
@@ -186,6 +194,8 @@ def create_app(
     backend: Backend | None = None,
     supervisor=None,
     events=None,
+    health=None,
+    delivery_observer=None,
 ) -> FastAPI:
     auth = auth if auth is not None else LocalAuth()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
@@ -195,7 +205,12 @@ def create_app(
         request.state.trace_id = _trace(request)
         try:
             auth.guard(request, write=request.method not in {"GET", "HEAD"})
-            if request.url.path != "/api/v1/session" or request.method != "POST":
+            operational_probe = (
+                request.method == "GET" and request.url.path in {"/health", "/ready"}
+            )
+            if not operational_probe and (
+                request.url.path != "/api/v1/session" or request.method != "POST"
+            ):
                 request.state.actor_id = auth.authenticate(request.cookies.get("atl_session", ""))
             response = await call_next(request)
         except AuthDenied as exc:
@@ -222,6 +237,28 @@ def create_app(
         if backend is None:
             raise AuthDenied(503, "TEMPORARILY_UNAVAILABLE")
         return backend
+
+    async def health_value() -> dict:
+        try:
+            value = await run_in_threadpool(health) if health is not None else {}
+            result = RuntimeHealth.model_validate(value).model_dump()
+            if "DATABASE" not in result["checks"]:
+                raise ValueError
+            return result
+        except Exception:
+            return {"status": "UNAVAILABLE", "checks": {"DATABASE": "UNAVAILABLE"}}
+
+    @app.get("/health", operation_id="getRuntimeHealth")
+    async def runtime_health():
+        value = await health_value()
+        # This endpoint proves process liveness, never a trading permission.
+        return {"status": "HEALTHY", "checks": value["checks"]}
+
+    @app.get("/ready", operation_id="getRuntimeReadiness")
+    async def runtime_readiness():
+        value = await health_value()
+        ready = value["checks"]["DATABASE"] == "HEALTHY"
+        return JSONResponse(value, status_code=200 if ready else 503)
 
     def key(request: Request) -> str:
         value = _header(request, "Idempotency-Key")
@@ -332,6 +369,7 @@ def create_app(
                 auth,
                 request.cookies.get("atl_session", ""),
                 request.state.trace_id,
+                delivery_observer=delivery_observer,
             ),
             media_type="text/event-stream",
             headers={"Cache-Control": "no-store"},

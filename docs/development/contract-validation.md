@@ -1,4 +1,6 @@
 # Contract-Prüfung des ersten Paper-Changes
+
+PTV-21,2026-10-18: maßgeblicher aktueller Vertrag20Operationen (18fachliche `/api/v1` plus exakt GET `/health` und GET `/ready`),11Draft-2020-12-Schemas und zehn interne gültige Beispiele;13OpenAPIbeispiele. Health ohne Sitzung, mit unveränderten Peer-/Server-/Host-/Origin-Grenzen. Readiness hängt ausschließlich von der Kontroll-DB ab; Jevdown blockiert keine Pause. Pinned Validator/Redocly bestanden; oasdiff1.33.0 gegen echten Basissha `c456cd823b6bb11a91d339f57319d00138f61cae`: semantic-diff-passed. Neuer Vertrags-SHA256 `8e9c9011765aaabc53631ada0713e61a817008003d3b6d2c9ccdca2192c9dbdf`. Zwei vollständig bytegleiche67-Dateien-Generierungen, erneuter Driftcheck, TypeScript und tatsächlicher Angular22.2.2-Produktionsbuild bestanden. Der Client wurde ausschließlich über `scripts/check-angular-client.ps1 -WriteClient` erzeugt. Historische Zähler darunter beschreiben den damaligen Stand.
 Stand 2026-10-16. Apply ist freigegeben. PTV-18 implementiert Session, Mode/Safety und Risk-Policy-HTTP-Transport; Snapshot/History/SSE folgen PTV-19. Der folgende Planungsnachweis wird in PTV-03 um ausführbare Contract-CI und einen mechanisch generierten Anwendungsclient ergänzt.
 
 ## Apply PTV-03: Contract-CI

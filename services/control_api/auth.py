@@ -55,6 +55,8 @@ class LocalAuth:
         self,
         origin: str = "http://127.0.0.1:8000",
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+        *,
+        transport_origin: str | None = None,
     ) -> None:
         parsed = urlsplit(origin)
         if (
@@ -85,6 +87,11 @@ class LocalAuth:
         self.host = f"{canonical_host}:{port}"
         self.port = port
         self.secure_cookie = parsed.scheme == "https"
+        # A fixed local deployment bridge may use another private loopback port.
+        # Public Host/Origin and peer validation remain independent of headers.
+        transport = LocalAuth(transport_origin) if transport_origin is not None else None
+        self.transport_port = transport.port if transport is not None else port
+        self.transport_scheme = transport.scheme if transport is not None else parsed.scheme
         self._clock = clock
         self._lock = threading.RLock()
         self._code_hash: bytes | None = None
@@ -217,8 +224,8 @@ class LocalAuth:
             raise AuthDenied(400) from exc
         if (
             not local_socket.is_loopback
-            or server[1] != self.port
-            or request.scope.get("scheme") != self.scheme
+            or server[1] != self.transport_port
+            or request.scope.get("scheme") != self.transport_scheme
         ):
             raise AuthDenied(400)
         origins = by_name.get("origin", ())

@@ -54,13 +54,15 @@ def collect():
         "MKT": ["MarketState", "listMarketStates"],
         "DEC": ["DecisionResult", "listDecisions"],
         "RSK": ["RiskDecision", "RiskReservation", "ExecutionReport", "listRiskDecisions", "listOrders"],
-        "RUN": ["EventEnvelope", "SafetyEvent", "ControlEvent", "listAuditEvents", "listAgentRuns"],
+        "RUN": ["EventEnvelope", "SafetyEvent", "ControlEvent", "RuntimeHealth",
+                "getRuntimeHealth", "getRuntimeReadiness", "listAuditEvents", "listAgentRuns"],
         "CTL": ["SafetyEvent", "ControlEvent", "activateLocalSession", "getSupervisorSnapshot", "streamSupervisorEvents", "getMode", "setMode",
                 "pauseNewEntries", "resumeNewEntries", "activateKillSwitch", "getRiskPolicy",
                 "updateRiskPolicy", "listApiCosts"],
     }
     schemas = {"MarketState":"market-state", "DecisionResult":"decision-result",
                "RiskDecision":"risk-decision", "RiskReservation":"risk-reservation",
+               "RuntimeHealth":"runtime-health",
                "SafetyEvent":"safety-event", "ControlEvent":"control-event", "ExecutionReport":"execution-report", "EventEnvelope":"event-envelope"}
     decisions = {"MKT":["D-02","D-03"], "DEC":["D-02","D-07"],
                  "RSK":["D-04","D-05"], "RUN":["D-01","D-06","D-09"], "CTL":["D-08"]}

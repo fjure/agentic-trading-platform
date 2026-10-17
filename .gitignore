@@ -2,6 +2,7 @@
 .tooling/config/
 .tooling/output/
 .tooling/*pytest-tmp*/
+.tooling/pytest-runtime*/
 .playwright-mcp/
 .env
 .env.*

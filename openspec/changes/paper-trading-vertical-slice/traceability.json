@@ -785,6 +785,9 @@
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
         "contracts/schemas/v1/control-event.schema.json",
+        "contracts/schemas/v1/runtime-health.schema.json",
+        "operation:getRuntimeHealth",
+        "operation:getRuntimeReadiness",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],
@@ -813,6 +816,9 @@
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
         "contracts/schemas/v1/control-event.schema.json",
+        "contracts/schemas/v1/runtime-health.schema.json",
+        "operation:getRuntimeHealth",
+        "operation:getRuntimeReadiness",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],
@@ -836,6 +842,9 @@
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
         "contracts/schemas/v1/control-event.schema.json",
+        "contracts/schemas/v1/runtime-health.schema.json",
+        "operation:getRuntimeHealth",
+        "operation:getRuntimeReadiness",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],
@@ -861,6 +870,9 @@
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
         "contracts/schemas/v1/control-event.schema.json",
+        "contracts/schemas/v1/runtime-health.schema.json",
+        "operation:getRuntimeHealth",
+        "operation:getRuntimeReadiness",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],
@@ -890,6 +902,9 @@
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
         "contracts/schemas/v1/control-event.schema.json",
+        "contracts/schemas/v1/runtime-health.schema.json",
+        "operation:getRuntimeHealth",
+        "operation:getRuntimeReadiness",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],
@@ -918,6 +933,9 @@
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
         "contracts/schemas/v1/control-event.schema.json",
+        "contracts/schemas/v1/runtime-health.schema.json",
+        "operation:getRuntimeHealth",
+        "operation:getRuntimeReadiness",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],
@@ -943,6 +961,9 @@
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
         "contracts/schemas/v1/control-event.schema.json",
+        "contracts/schemas/v1/runtime-health.schema.json",
+        "operation:getRuntimeHealth",
+        "operation:getRuntimeReadiness",
         "operation:listAuditEvents",
         "operation:listAgentRuns"
       ],

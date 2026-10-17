@@ -153,7 +153,10 @@ class AlpacaPaperBrokerAdapter:
         attempted_client_ids: frozenset[str] = frozenset(),
         cash_cushion_fraction: Decimal = Decimal("0.01"),
         reconciliation_fee_profile: str | None = None,
+        egress_proxy: bool = False,
     ) -> None:
+        if type(egress_proxy) is not bool or (egress_proxy and transport is not None):
+            raise ValueError("invalid egress proxy configuration")
         if type(paper_enabled) is not bool or type(enable_crypto) is not bool:
             raise ValueError("invalid enable flag")
         from packages.brokers.alpaca_activities import EQUITY_ZERO_FEE_PROFILE
@@ -183,7 +186,11 @@ class AlpacaPaperBrokerAdapter:
             context.prec = 80
             self._cash_buffer = Decimal("1") + cushion
         self._client = httpx.Client(
-            transport=transport, timeout=httpx.Timeout(5.0), follow_redirects=False, trust_env=False
+            transport=transport,
+            proxy="http://execution-egress:8080" if egress_proxy else None,
+            timeout=httpx.Timeout(5.0),
+            follow_redirects=False,
+            trust_env=False,
         )
         self._lock = threading.RLock()
         self._intents: dict[str, OrderIntent] = {}

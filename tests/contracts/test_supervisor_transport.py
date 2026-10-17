@@ -18,7 +18,7 @@ NEXT = "c_" + "B" * 43
 TRACE = "b" * 32
 
 
-def test_all_eighteen_runtime_operations_match_canonical_contract():
+def test_all_twenty_runtime_operations_match_canonical_contract():
     actual = {
         (route.path, method.lower(), route.operation_id)
         for route in create_app().routes
@@ -29,7 +29,7 @@ def test_all_eighteen_runtime_operations_match_canonical_contract():
         for path, methods in OAS["paths"].items()
         for method, operation in methods.items()
     }
-    assert actual == expected and len(actual) == 18
+    assert actual == expected and len(actual) == 20
 
 
 def event():
@@ -255,6 +255,36 @@ def test_midstream_gap_reset_heartbeat_and_revocation():
         )
         with pytest.raises(StopAsyncIteration):
             await anext(revoked)
+
+    asyncio.run(run())
+
+
+def test_sse_observation_runs_after_actual_yield_and_cannot_break_delivery():
+    class Request:
+        async def is_disconnected(self):
+            return False
+
+    async def run():
+        calls = []
+
+        def observe(moment):
+            calls.append(moment)
+            raise RuntimeError("synthetic-observer-canary")
+
+        async def no_wait(_seconds):
+            await asyncio.sleep(0)
+
+        auth = LocalAuth()
+        token = auth.activate(auth.issue_activation_code(), "observed-stream-0001")
+        stream = event_stream(
+            Request(), Feed(fail=True), TOKEN, ([event()], NEXT), auth, token, TRACE,
+            sleep=no_wait, delivery_observer=observe,
+        )
+        assert await anext(stream) == frame(event())
+        assert calls == []  # The generator has yielded, send has not resumed it yet.
+        assert (await anext(stream)).startswith(b"event: reset-required")
+        assert len(calls) == 1 and calls[0].tzinfo is not None
+        await stream.aclose()
 
     asyncio.run(run())
 

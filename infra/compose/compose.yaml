@@ -1,8 +1,32 @@
 name: agentic-trading-lab-dev
+x-runtime: &runtime
+  profiles: [lab, paper]
+  build:
+    context: ../..
+    dockerfile: infra/containers/Dockerfile
+  user: "10001:10001"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  tmpfs: [/tmp, "/run/control:uid=10001,gid=10001,mode=0700"]
+  init: true
+  restart: "no"
+  healthcheck:
+    test: [CMD, python, -m, services.runtime, health]
+    interval: 5s
+    timeout: 3s
+    start_period: 20s
+    retries: 6
+  depends_on:
+    postgres:
+      condition: service_healthy
+  configs:
+    - source: runtime_config
+      target: /run/config/runtime.json
 services:
   postgres:
     image: postgres:18.6-trixie@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336
-    profiles: [fake]
+    profiles: [fake, lab, paper]
     user: postgres
     read_only: true
     cap_drop: [ALL]
@@ -15,7 +39,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
     ports: ["127.0.0.1:55432:5432"]
-    networks: [local]
+    networks: [local, execution_db, worker_db, control_db, watchdog_db]
     healthcheck:
       test: [CMD-SHELL, "pg_isready -U lab_migration -d lab"]
       interval: 3s
@@ -38,11 +62,61 @@ services:
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     tmpfs: [/tmp]
+  execution:
+    <<: *runtime
+    command: [python, -m, services.runtime, execution]
+    networks: [execution_db]
+    secrets:
+      - source: execution_database
+        target: database
+  worker:
+    <<: *runtime
+    command: [python, -m, services.runtime, worker]
+    networks: [worker_db]
+    secrets:
+      - source: worker_database
+        target: database
+  control-api:
+    <<: *runtime
+    command: [python, -m, services.runtime, api]
+    networks: [control_db]
+    ports: ["127.0.0.1:8000:8000"]
+    volumes:
+      - ../../apps/dashboard/dist/dashboard/browser:/opt/lab/dashboard:ro
+    secrets:
+      - source: control_database
+        target: database
+  watchdog:
+    <<: *runtime
+    command: [python, -m, services.runtime, watchdog]
+    networks: [watchdog_db]
+    secrets:
+      - source: watchdog_database
+        target: database
 networks:
   local:
+    internal: true
+  execution_db:
+    internal: true
+  worker_db:
+    internal: true
+  control_db:
+    internal: true
+  watchdog_db:
     internal: true
 volumes:
   postgres_data:
 secrets:
   postgres_password:
     file: ../../.tooling/application/secrets/postgres-password
+  execution_database:
+    file: ../../.tooling/application/runtime/execution.json
+  worker_database:
+    file: ../../.tooling/application/runtime/worker.json
+  control_database:
+    file: ../../.tooling/application/runtime/control.json
+  watchdog_database:
+    file: ../../.tooling/application/runtime/watchdog.json
+configs:
+  runtime_config:
+    file: ../../.tooling/application/runtime/runtime.json

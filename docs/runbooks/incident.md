@@ -1,5 +1,9 @@
 # Sicherheits- und Betriebsincident
 
+PTV-21: Im dauerhaften Lab läuft der private Kontrollserver im **Control-API-Container** auf `/run/control/control.sock`, mit Control-Rolle und ohne Anbieterzugang. Die beiden Pause-/Kill-Aufrufe samt Composepräfix stehen in `local-operation.md`. Die darunter gezeigten direkten Python-Aufrufe gelten nur innerhalb des passenden Linux-Containers; der frühere Beispielpfad `/run/trading/control.sock` ist kein aktueller Deploymentpfad. Execution reagiert unabhängig vom Worker/Jev, Watchdog unabhängig von Browser/API-HTTP. Ein beobachteter DB-Ausfall latcht Execution lokal; nach Rückkehr wird PAUSE_NEW dauerhaft gesetzt, und nur eine neue erfolgreiche explizite Recovery kann den Latch lösen. Wiederholte Ticks verändern diese Pausegeneration nicht selbst. UNKNOWN sowie Paper-Reconciliation mit ready=false bleiben nicht verfügbar und halten das Budget.
+
+Docker-Health bedeutet Prozess-/DB-Bereitschaft, keine Markt- oder Orderfreigabe. Default-Fake ohne aktuelle Marktdaten ist erwartbar pausiert. Bei UI-Transportausfall den privaten Containerkontrollpfad verwenden. Der Windows-STDIO-Helfer erweitert keine Dienstnetze; `start-local-lab.ps1 -Stop` beendet nur den eigenen verifizierten Helfer und die vier Rollen. Keine fremden Pythonprozesse oder Docker-Volumes entfernen. Bei Startfehlern nur feste Fehlercodes und Rechte-/Healthbooleans weitergeben; private Dateien und Aktivierungscodes nicht auslesen.
+
 Der lokale Fake-PAPER-Kontrollpfad ist implementiert. Priorität haben Stoppen neuer Risiken, Erhalten des Ledgers und beweisbare Reconciliation. Dieser Nachweis umfasst keinen externen Brokeradapter oder produktiven Betrieb.
 
 ## Erkennen und Eingrenzen

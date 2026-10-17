@@ -1,8 +1,10 @@
 # Codex-Tooling: Bootstrap-Status
 
-Stand: 2026-10-17 (Europe/Berlin); ursprüngliche Quellenprüfung 2026-10-12. **Definition of Ready erfüllt; Apply gesondert freigegeben, 22/25 Tasks abgeschlossen.**
+Stand: 2026-10-18 (Europe/Berlin); ursprüngliche Quellenprüfung 2026-10-12. **Definition of Ready erfüllt; Apply gesondert freigegeben, 23/25 Tasks abgeschlossen.**
 
 ## Aktueller Apply-Stand
+
+PTV-21 abgeschlossen: vier getrennte dauerhaft laufende Fake-/DISABLED-Dienste mit geprüften Rollen/Secretmounts/Egress, privaten CLI-/Aktivierungssockets, unabhängiger Ausfallbehandlung und manueller OTel-Instrumentierung.557lokaleTests, neun verschiedenePG-Szenarien, sieben Ledger-/Isolationstests, neun Deployment-/Hostprüfungen (davon vier tatsächliche Deploymentfälle) und ein zusätzlicher tatsächlicher Gastcleanupfall bestanden. Strict/Traceability/20HTTPops/11Schemas/67-Dateien-Client/Angularbuild und begrenzter unabhängiger Safetyabschlussreview grün. Keine echten Anbieterrequests, Orders oder Aktivierungscodes. Das Dashboard ist tatsächlich über127.0.0.1:8000 erreichbar: Docker29.6.2 veröffentlicht ausschließlich interne Netzports hier nicht; der feste Windows-STDIO-Launcherpfad erhält die Dienstisolation. Start/Stop/Neustart und0600-Telemetrieartefakt geprüft. SDK1.45.1 mit ausdrücklich bewerteter Upstream-Transitive0.66b1, pip-audit0bekannte Schwachstellen. Evidenz: docs/evidence/ptv-21-runtime-boundaries.md. Issue-/Gitintegration wird im selben Durchlauf verifiziert; erst deren anschließend dokumentierte Remote-SHAs bestätigen den Push. PTV-22/23 bleiben offen.
 
 PTV-25 Gitintegration am 2026-10-17: Issuebranch codex/ptv-25-paper-reconciliation, Commit 30b2e1d157fc9b46e1036698d9509e756be40b1b; regulärer Merge-main ddce16e651a8586b3ecb506b8d53041dd94cdf13. Remote-SHAs und Ancestry aller 22 integrierten Issue-Branches (PTV-01..20 plus PTV-24/25) verifiziert. Issue #25 completed, vollständiger 25-Issue-Read-back und Wiederholung mit null Writes bestanden. Die CI des Implementierungsmerges läuft zum Dokumentationszeitpunkt; ihr Erfolg wird hier noch nicht behauptet. Spätere reine Evidenzcommits dürfen main weiterführen; Zuordnung in docs/development/git-issue-integrations.json.
 

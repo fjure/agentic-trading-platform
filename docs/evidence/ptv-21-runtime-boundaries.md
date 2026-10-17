@@ -1,0 +1,49 @@
+# PTV-21: lokale Laufzeit- und Deploymentgrenzen
+
+Stand2026-10-18; Change `paper-trading-vertical-slice`, Issue#21, Branch `codex/ptv-21-deployment-boundaries`. Ausschließlich lokales Fake-/Offline-Lab; keine Anbieterrequests, Orders oder echten Broker-/Jev-Credentials. LIVE ist kein gültiger Modus. Der menschliche Paper-Smoke gehört PTV-22, die abschließende paketübergreifende Zertifizierung PTV-23.
+
+## Verhalten und Grenzen
+
+Vier dauerhafte Prozesse mit getrennten internen PostgreSQL-Netzen und verifizierten SET-ROLE-Verbindungen. Jeder Login ist NOINHERIT mit genau einer SET-fähigen, nicht administrativen Gruppenmitgliedschaft. Runtimecontainer: UID10001, read-only, cap_drop ALL, no-new-privileges, private tmpfs-Kontrollsockets; kein Docker-Socket. Additive Migration0010 erlaubt Execution ausschließlich INSERT auf drei normalisierte Markttabellen. Die eingefrorene erste Migration bleibt unverändert.
+
+Default Fake/Mock ist DISABLED/PAUSE_NEW, ohne aktuelle Markt-, Session- oder Brokerbeweise. Die technische Simulationsstartbasis10000USD bleibt STALE/PENDING. Execution führt Heartbeat, Marktbeobachtung, Reconciliation, explizite Recovery, deterministische Reservation/Submitgates und Outbox unabhängig vom Decisionworker aus. DB-Verlust latcht lokal und nach Rückkehr dauerhaft Pause; wiederholte Ticks invalidieren eine neue Recovery nicht selbst. Alte Owner und Workerleases dürfen keine Wirkung mehr bestätigen. UNKNOWN und Paperreceipt ready=false melden keine falsche Brokerbereitschaft. Worker besitzt keine Brokercredentials oder Submitfähigkeit.
+
+Paper ist ein separater ungestarteter Override. Alpaca wird ausschließlich Execution, Jev ausschließlich Worker zugeordnet. Feste HTTPS-CONNECT-Proxys prüfen Host,443, öffentliche DNS-Ziele, gepinnte Zieladresse, identisches TLS-SNI und ECH-Ablehnung. SDKs verwenden ausschließlich feste Proxyadressen, Zertifikatsprüfung, trust_env=false und keine Redirects. Die Proxygrenze entschlüsselt keine TLS-Nutzdaten und behauptet keine HTTP-Hostprüfung innerhalb TLS. Tatsächliche frische bid/ask-Quotes liefern den Decimalspread; fehlende Quote, Zukunftszeit oder ungültige Preise sperren den Laufzeitpfad. Das Gebührenprofil bleibt ausdrücklich optional und muss vom Operator passend bestätigt werden; unbekannte Gebühren werden nie zu null geraten.
+
+Die kanonische API bindet Containerloopback8001; die feste Frontendbrücke8000 erhält öffentlichen Host/Origin und vertraut keinen Forwarded-Headern. Docker29.6.2/Desktop4.84 veröffentlicht hier keine Ports von ausschließlich internen Netzen. Ein normaler Bridge-Probekontainer bestätigte dagegen die tatsächliche Portveröffentlichung. Der Launcher verwendet deshalb einen festen Windows-Loopback-/Docker-STDIO-Tunnel ohne zusätzliches Dienstnetz. Maximal16 Verbindungen,60s Inaktivität, keine HTTP-/Cookie-/Code-Logs. Der Stopppfad prüft PID, exakten Pythonpfad und Startzeit. Der eigene Helfer wird vor jeder Container-Portreservierung freigegeben. Kein globaler Docker-/MCP-Konfigurationswechsel.
+
+Der einmalige Provisionierungscontainer erhält CHOWN/FOWNER ausschließlich zur Besitzzuweisung der vier erzeugten privaten Dateien; Runtime erhält diese Capabilities nicht. Windows-ACLs werden vor Schreiben begrenzt und nachher geprüft; Linuxdateien sind10001:10001/0600. Bestehende private Dateien werden weder ausgelesen noch automatisch rotiert. Partielle Provisionierungsdrift bleibt geschlossen. PostgreSQL-Volumen und bestehende Entwicklungsdatenbanken wurden erhalten. Start, wiederholte Provisionierung, Stop mit freigegebenem Loopback und erneuter Start bestanden.
+
+## Ausgeführte Prüfungen
+
+| Nachweis | Ergebnis |
+|---|---|
+| Unit/Contracts und betroffene lokale Sicherheitsprüfungen |Final557passed/5.76s; sechs Umgebungs-Skips separat abgedeckt: fünf echte Docker-/Hostfälle einschließlich Abbruchprobe und Linux-tmpfs-Parallelität. Der kürzere synthetische Proxy-Testwert zusätzlich10passed/0.37s, unveränderte Produktionsdateien.|
+| Neun verschiedene neue PostgreSQL-Szenarien | Vollständige acht Fälle189.83s bestanden; zusätzlicher Linux-Statusparallelitätsfall24.63s bestanden. Jevdown/Leaseablauf, Datenstillstand, Brokerdisconnect mit angenommener Fakeorder, Ownerverlust, tatsächliche Verbindungsverweigerung einer UUID-Testdatenbank, Sticky-Recovery,31s-Watchdog und SQL-Metriken mit Execution-/Control-Rolle.|
+| Bestehende Migration/Backup-Restore und Executionisolation |7passed/123.91s; tatsächliche PostgreSQL18-Rollen und unveränderte V1-Migration.|
+| Container-/Windows-Hostpaket |9passed/29.96s nach finalem Build/Stop/Start: fünf lokale Konfigurations-/Byteprüfungen und vier tatsächliche Deploymentfälle (Mounts/Benutzer/Rechte/Rollen-TCP-Isolation; positiv erreichbare temporäre Bridge-Gegenprobe mit gesperrtem direktem Role-Egress; synthetisches Alpaca-Canary nur Execution; Dashboard/Health/Readiness/Auth-/Host-/Origin-/Forwarded-Grenzen).|
+| Gastprozess-Cleanup |Zusätzlicher echter TCP-Abbruchfall1passed/10.68s: Nullbaseline, positiver fest definierter Gastprozesszähler, unvollständiger Request, TCP-RST, danach wieder null. Ausschließlich exakte Modulargumente gezählt, keine Prozessumgebungen oder Credentials gelesen. Binäre Half-Close-Probe bestanden.|
+| Manuelle OTel-Instrumentierung |Stabile API/SDK1.45.1, keine Autoinstrumentierung/Umgebungsdetektoren/Netzwerkexporter. Tatsächliches Containerartefakt: Rolle execution, sieben Metrikreihen,32Spans,0600 und checkedAt vorhanden. D09-Metriken aus Read-only-SQL und wirklichem serverseitigem SSE-yield; fehlende Belege UNKNOWN. Exportfehler beeinflussen keine Sicherheitsaktion.|
+| Contracts und Client |OAS3.1.2,20Operationen,11Schemas, zehn interne/13öffentliche Beispiele; Validator/Redocly2.62.1 bestanden. oasdiff1.33.0 gegen c456cd823b6bb11a91d339f57319d00138f61cae: semantic-diff-passed, SHA2568e9c9011765aaabc53631ada0713e61a817008003d3b6d2c9ccdca2192c9dbdf. OpenAPI Generator7.26.0: zwei67-Dateien-Läufe bytegleich, vorhandener Client identisch, TypeScript und Angular22.2.2-Produktionsbuild bestanden.|
+| Tatsächlicher Browser |Ausgelieferte Anwendung zeigt die Sitzungsaktivierung. Nach deaktiviertem Critical-CSS-Inlining keine CSP-Verstöße; genau erwartete401für Snapshot ohne Sitzung. Kein Aktivierungscode erzeugt.|
+| Abhängigkeiten und statische Gates |uv0.13.0 frozen, Python3.13.6/3.13.16, PostgreSQL18.6, Compose5.3.1, Engine29.6.2. pip-audit2.10.1 keine bekannten Schwachstellen; npm ci audit0. Ruff, Diffcheck, OpenSpec1.14.1 strict,40Requirements/25LeafTasks/Traceability und redigierter Source-Musterscan bestanden.|
+
+Die ersten Entwicklungsläufe fanden fehlende laufende PostgreSQL-Voraussetzung, zwei fehlerhafte Test-ALTERs gegen die aktuelle statt die separate Admin-Datenbank und unlesbare root-eigene Secretdateien. Diese Ursachen wurden korrigiert und gezielt beziehungsweise vollständig erneut geprüft. Die erste18-Operationen-Assertion wurde auf den kanonischen20-Operationen-Vertrag aktualisiert. Ein Windows-Mehrfachrename-Test traf Dateisperren; derselbe relevante60-Schreibzugriffe-Test wurde auf der tatsächlichen Linux-tmpfs-Plattform ausgeführt. Keine Risk-, Broker- oder Authgates wurden für grüne Tests gelockert. Der Credential-Musterscan erkannte einen langen synthetischen Testliteral; der Dummy wurde verkürzt, der Scanner unverändert beibehalten.
+
+## Safetyreview
+
+| Invariante | Evidenz | Ergebnis |
+|---|---|---|
+| Agenten-/Brokerisolation und LIVE unerreichbar |Echte Rollen-/Mount-/Egressproben, feste SDKhosts, RuntimeConfignegative und bestehende Isolationstests|PASS im Offline-Scope|
+| Deterministische Gates/Decimal/UTC |Bestehende Risk-/Executiondomäne unverändert; tatsächliche Daten-/Owner-/Lease-/DB-Ausfalltests und Quotevalidierung|PASS|
+| DISABLED und unsicherer Restart pausiert |Echter Launcherstart ohne Credentials, STALE/PENDING-Basis, Sticky-DB-/explizite Recoveryfälle|PASS|
+| Unabhängige Pause/Kill/Reconciliation |Control-Rolle/privater Socket, Jevdown plus Pause/Reconcile, Watchdog31s, HALTED-Gate und kein Submit bei Fehlern|PASS|
+| UNKNOWN hält Risiko, kein blinder Retry |Angenommene Fakeorder plus Brokerdisconnect: unverändert genau eine Annahme und HELD_UNKNOWN; bestehende Ledger-/Isolationsregressionen|PASS|
+| Secrets/Redaction/privates lokales UI |Canaries, tatsächliche Secretpfade und ACLs, no-env OTel, Host/Origin/Forwardednegative und explizite TTY-Aktivierung|PASS|
+| Audit/Referenzen/atomare Wirkung |Unveränderte Ledger-/Risk-/Recoveryverträge, fenced Workertransaktion und tatsächliche Migration/Restoretests|PASS|
+
+Begrenzte unabhängige Infra-/Runtime-/Telemetriepakete mit klaren Dateizuständigkeiten und Hauptagentintegration. Reviews fanden den durch generischen DB-Preflight übersprungenen Sticky-Latch, selbstinvalidierende Pausegeneration und falsche Brokerhealth bei UNKNOWN/ready=false; alle behoben. Nach Nutzungslimit der ersten Subagenten führte ein frischer, begrenzt beauftragter unabhängiger Reviewer den neuen Hosttransport, Provisionierung, Telemetrie und Nachträge read-only nach. Kein bestätigter verbleibenderP1/P2; der zunächst unbelegte Gastcleanup ist durch die tatsächliche Abbruchprobe geschlossen. Kein pauschaler vollständiger Repositoryreview behauptet.
+
+Die SDK-Transitive `opentelemetry-semantic-conventions==0.66b1` ist upstream vorgeschrieben und ausdrücklich als solche bewertet; der Graph wird nicht als ausschließlich stabil bezeichnet. Angular meldet die bestehenden Bundle-/Style-Warnschwellen, der Produktionsbuild bleibt unter den Fehlerschwellen. Eine bestehende Starlette/HTTPX-Deprecationwarnung ist dokumentiert. Keine echte Anbieterqualität, Kontoberechtigung, Gebührenkategorie oder Handelsfreigabe wird aus diesen Offline-Prüfungen abgeleitet.
+
+Task/Issue-Read-back und Gitintegration werden im selben Durchlauf nach diesen Nachweisen abgeschlossen; ihre Commitzuordnung steht anschließend in `docs/development/git-issue-integrations.json`.

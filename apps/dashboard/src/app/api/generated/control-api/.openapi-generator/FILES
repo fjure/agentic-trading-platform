@@ -53,6 +53,8 @@ model/riskDecisionPage.ts
 model/riskPolicy.ts
 model/riskPolicyUpdate.ts
 model/runPage.ts
+model/runtimeHealth.ts
+model/runtimeHealthChecks.ts
 model/setModeRequest.ts
 model/supervisorEvent.ts
 model/supervisorSnapshot.ts

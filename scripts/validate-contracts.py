@@ -84,8 +84,12 @@ def main() -> None:
 
     operations: list[str] = []
     for path, path_item in document["paths"].items():
-        if not path.startswith("/api/v1/"):
+        if not path.startswith("/api/v1/") and path not in {"/health", "/ready"}:
             fail(f"path outside /api/v1: {path}")
+        if path in {"/health", "/ready"} and (
+            set(path_item) != {"get"} or path_item["get"].get("security") != []
+        ):
+            fail("health exceptions must be unauthenticated GET operations only")
         if re.search(r"orders?/(submit|place|send)", path, re.I):
             fail(f"broker submit route is forbidden: {path}")
         for method, operation in path_item.items():
@@ -104,8 +108,8 @@ def main() -> None:
         fail("operationIds are missing or duplicated")
 
     schema_docs = {p.name: json.loads(p.read_text(encoding="utf-8")) for p in SCHEMAS.glob("*.schema.json")}
-    if len(schema_docs) != 10:
-        fail(f"expected 10 versioned schemas, found {len(schema_docs)}")
+    if len(schema_docs) != 11:
+        fail(f"expected 11 versioned schemas, found {len(schema_docs)}")
     registry = Registry()
     for filename, schema in schema_docs.items():
         Draft202012Validator.check_schema(schema)
@@ -126,6 +130,14 @@ def main() -> None:
             fail(f"required-field drift between {filename} and OpenAPI {component}")
         if set(internal["properties"]) - {"schemaVersion"} != set(public["properties"]):
             fail(f"property drift between {filename} and OpenAPI {component}")
+    internal_health = {
+        key: value for key, value in schema_docs["runtime-health.schema.json"].items()
+        if key not in {"$schema", "$id", "title"}
+    }
+    if internal_health != document["components"]["schemas"]["RuntimeHealth"]:
+        fail("runtime health schema/OpenAPI mirror drift")
+    if not {"/health", "/ready"}.issubset(document["paths"]):
+        fail("required health/readiness operations missing")
     if schema_docs["common.schema.json"]["$defs"]["decimal"]["pattern"] != document["components"]["schemas"]["Decimal"]["pattern"]:
         fail("decimal lexical pattern drift")
     if schema_docs["common.schema.json"]["$defs"]["fraction"]["pattern"] != document["components"]["schemas"]["Fraction"]["pattern"]:

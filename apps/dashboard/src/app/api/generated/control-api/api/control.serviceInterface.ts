@@ -15,6 +15,7 @@ import { ActivateSessionRequest } from '../model/models';
 import { ControlReason } from '../model/models';
 import { ModeState } from '../model/models';
 import { Problem } from '../model/models';
+import { RuntimeHealth } from '../model/models';
 import { SetModeRequest } from '../model/models';
 
 
@@ -53,6 +54,20 @@ export interface ControlServiceInterface {
      * @param traceparent W3C Trace Context; absent or invalid input is replaced by a server trace.
      */
     getMode(traceparent?: string, extraHttpRequestParams?: any): Observable<ModeState>;
+
+    /**
+     * Read local process liveness and sanitized dependency checks
+     * No session required. Actual transport and peer must be loopback; canonical public Host and optional Origin remain mandatory boundaries and forwarding headers are rejected. A live process returns HEALTHY even when a dependency is unavailable. This never grants trading permission.
+     * @endpoint get /health
+     */
+    getRuntimeHealth(extraHttpRequestParams?: any): Observable<RuntimeHealth>;
+
+    /**
+     * Read local database readiness and sanitized dependency checks
+     * Same strict loopback and Host/Origin boundaries as /health, without a session. HTTP 200 depends only on DATABASE being HEALTHY; optional decision or market failures cannot disable safety controls or reconciliation. Readiness never grants trading permission.
+     * @endpoint get /ready
+     */
+    getRuntimeReadiness(extraHttpRequestParams?: any): Observable<RuntimeHealth>;
 
     /**
      * Immediately block new entries independent of decision or dashboard health

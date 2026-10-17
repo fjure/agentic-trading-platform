@@ -22,6 +22,57 @@ tags:
 - name: History
   description: Paginated audit and trading history.
 paths:
+  /health:
+    get:
+      tags: [Control]
+      operationId: getRuntimeHealth
+      security: []
+      summary: Read local process liveness and sanitized dependency checks
+      description: No session required. Actual transport and peer must be loopback; canonical public
+        Host and optional Origin remain mandatory boundaries and forwarding headers are rejected.
+        A live process returns HEALTHY even when a dependency is unavailable. This never grants trading permission.
+      responses:
+        '200':
+          description: Process is alive; dependency checks may be unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuntimeHealth'
+              example:
+                status: HEALTHY
+                checks: {DATABASE: UNAVAILABLE}
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+  /ready:
+    get:
+      tags: [Control]
+      operationId: getRuntimeReadiness
+      security: []
+      summary: Read local database readiness and sanitized dependency checks
+      description: Same strict loopback and Host/Origin boundaries as /health, without a session.
+        HTTP 200 depends only on DATABASE being HEALTHY; optional decision or market failures cannot
+        disable safety controls or reconciliation. Readiness never grants trading permission.
+      responses:
+        '200':
+          description: Database is ready; other dependency checks may remain degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuntimeHealth'
+              example:
+                status: DEGRADED
+                checks: {DATABASE: HEALTHY, DECISION: UNAVAILABLE}
+        '503':
+          description: Database readiness unavailable; contains only bounded health codes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuntimeHealth'
+              example:
+                status: UNAVAILABLE
+                checks: {DATABASE: UNAVAILABLE}
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
   /api/v1/session:
     post:
       tags:
@@ -720,6 +771,37 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    RuntimeHealth:
+      type: object
+      additionalProperties: false
+      required: [status, checks]
+      properties:
+        status:
+          type: string
+          enum: [HEALTHY, DEGRADED, UNAVAILABLE]
+        checks:
+          type: object
+          additionalProperties: false
+          required: [DATABASE]
+          properties:
+            DATABASE:
+              type: string
+              enum: [HEALTHY, DEGRADED, UNAVAILABLE]
+            BROKER:
+              type: string
+              enum: [HEALTHY, DEGRADED, UNAVAILABLE]
+            MARKET:
+              type: string
+              enum: [HEALTHY, DEGRADED, UNAVAILABLE]
+            DECISION:
+              type: string
+              enum: [HEALTHY, DEGRADED, UNAVAILABLE]
+            EXECUTION:
+              type: string
+              enum: [HEALTHY, DEGRADED, UNAVAILABLE]
+            WATCHDOG:
+              type: string
+              enum: [HEALTHY, DEGRADED, UNAVAILABLE]
     Cursor:
       type: string
       minLength: 1

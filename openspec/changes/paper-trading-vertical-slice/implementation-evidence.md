@@ -1,5 +1,9 @@
 # Implementierungsstand und Evidenz
 
+## PTV-21 Deploymentgrenzen-Abschluss 2026-10-18
+
+PTV-21:557lokaleTests bestanden5.76s; sechs Umgebungs-Skips durch echte Docker-/Host-/Linuxfälle separat abgedeckt. Neun verschiedene neue PostgreSQL-Szenarien bestanden (acht im Gesamtlauf189.83s, Linuxstatusparallelität24.63s), sieben Migration/Restore-/Executionisolationstests123.91s, Deployment-/Hostpaket neunTests29.96s (fünf lokale Konfigurations-/Byteprüfungen plus vier tatsächliche Deploymentfälle) und zusätzlicher tatsächlicher Clientabbruch-/Gastcleanupfall10.68s bestanden. Vier getrennte dauerhaft laufende Rollen, private kontrollierte Provisionierung, interner Egress, feste HTTPS-Proxys im separaten ungestarteten Paper-Override, frischer tatsächlicher Decimalquotespread, OTel/Health/SSElag und unabhängige Pause/Reconciliation/Watchdog umgesetzt. Docker-internal-Portpublishing mit festem Windows-Loopback-/STDIO-Tunnel ohne Dienstnetzerweiterung gelöst; Start/Stop/Neustart und sichtbares lokales Aktivierungsformular geprüft, kein Aktivierungscode erzeugt. Unabhängiger begrenzter Abschlussreview samt behobenen Findings; keine verbleibenden bestätigtenP1/P2. Ruff, OpenSpec strict,40REQ/25Tasks/Traceability,20HTTPops/11Schemas/Beispiele, echter oasdiff und zweimal bytegleicher67-Dateien-Client/TypeScript/Angularbuild bestanden. pip-audit keine bekannten Schwachstellen, Sourcecanaryscan0Findings. Keine echten Broker-/Jev-Requests, Orders oder Credentials. Umfang, Warnungen und genaue Kommandos: docs/evidence/ptv-21-runtime-boundaries.md und docs/runbooks/local-operation.md. PTV-22/23 bleiben offen.
+
 ## PTV-11 Reconciliation-Abschluss
 
 Issue#11 completed; vollständiger23Issue-Read-back ohneDrift, Wiederholung0Writes. Branch5d572f3f gepusht; Merge-main e9f889df gepusht. ElfRemoteIssueBranches mitSHA/Ancestry bestätigt. NeuereCI wirdgesondert gelesen, keinpauschalerErfolgsnachweis.

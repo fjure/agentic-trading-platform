@@ -1,0 +1,60 @@
+# Explicit operator-only override. Missing operator-owned secret files fail closed.
+services:
+  execution:
+    environment:
+      HTTPS_PROXY: http://execution-egress:8080
+      HTTP_PROXY: http://execution-egress:8080
+      NO_PROXY: postgres,127.0.0.1,localhost
+    networks: [execution_egress]
+    secrets:
+      - source: alpaca_credentials
+        target: alpaca
+  worker:
+    environment:
+      HTTPS_PROXY: http://worker-egress:8080
+      HTTP_PROXY: http://worker-egress:8080
+      NO_PROXY: postgres,127.0.0.1,localhost
+    networks: [worker_egress]
+    secrets:
+      - source: jev_credentials
+        target: jev
+  execution-egress:
+    profiles: [paper]
+    build:
+      context: ../..
+      dockerfile: infra/containers/Dockerfile
+    command: [python, -m, services.runtime.egress, execution]
+    user: "10001:10001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: [/tmp]
+    init: true
+    restart: "no"
+    networks: [execution_egress, execution_outbound]
+  worker-egress:
+    profiles: [paper]
+    build:
+      context: ../..
+      dockerfile: infra/containers/Dockerfile
+    command: [python, -m, services.runtime.egress, worker]
+    user: "10001:10001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: [/tmp]
+    init: true
+    restart: "no"
+    networks: [worker_egress, worker_outbound]
+networks:
+  execution_egress:
+    internal: true
+  worker_egress:
+    internal: true
+  execution_outbound: {}
+  worker_outbound: {}
+secrets:
+  alpaca_credentials:
+    file: ../../.tooling/application/runtime/alpaca.json
+  jev_credentials:
+    file: ../../.tooling/application/runtime/jev.json

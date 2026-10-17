@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/runtime-health.schema.json",
+  "title": "RuntimeHealth v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "checks"],
+  "properties": {
+    "status": {"type": "string", "enum": ["HEALTHY", "DEGRADED", "UNAVAILABLE"]},
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["DATABASE"],
+      "properties": {
+        "DATABASE": {"type": "string", "enum": ["HEALTHY", "DEGRADED", "UNAVAILABLE"]},
+        "BROKER": {"type": "string", "enum": ["HEALTHY", "DEGRADED", "UNAVAILABLE"]},
+        "MARKET": {"type": "string", "enum": ["HEALTHY", "DEGRADED", "UNAVAILABLE"]},
+        "DECISION": {"type": "string", "enum": ["HEALTHY", "DEGRADED", "UNAVAILABLE"]},
+        "EXECUTION": {"type": "string", "enum": ["HEALTHY", "DEGRADED", "UNAVAILABLE"]},
+        "WATCHDOG": {"type": "string", "enum": ["HEALTHY", "DEGRADED", "UNAVAILABLE"]}
+      }
+    }
+  }
+}

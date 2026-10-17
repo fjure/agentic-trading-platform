@@ -122,7 +122,9 @@ class MarketGateway:
         self._leases: dict[str, _EvidenceLease] = {}
         self._refresh_lock = Lock()
 
-    def read(self, instrument_id: str, session_id: str) -> WorkerMarketFeed:
+    def read(
+        self, instrument_id: str, session_id: str, *, require_spread: bool = False,
+    ) -> WorkerMarketFeed:
         with self._refresh_lock:
             if instrument_id not in {"SPY", "QQQ", "BTC/USD"}:
                 raise MarketDataError("UNKNOWN_INSTRUMENT")
@@ -130,7 +132,18 @@ class MarketGateway:
             # Invalidate before I/O: a failed refresh cannot revive prior permission.
             generation = lease.invalidate()
             try:
-                snapshot = self._provider.snapshot(instrument_id, session_id)
+                if type(require_spread) is not bool:
+                    raise MarketDataError("INVALID_REQUEST")
+                snapshot = (
+                    self._provider.snapshot(instrument_id, session_id, require_spread=True)
+                    if require_spread is True
+                    else self._provider.snapshot(instrument_id, session_id)
+                )
+                if require_spread and (
+                    snapshot.spread is None or snapshot.quote_provider_time is None
+                    or snapshot.quote_observed_at is None
+                ):
+                    raise MarketDataError("INVALID_QUOTE")
                 if snapshot.instrument.id != instrument_id:
                     raise MarketDataError("INVALID_RESPONSE")
                 _require_current(snapshot, self._clock)
