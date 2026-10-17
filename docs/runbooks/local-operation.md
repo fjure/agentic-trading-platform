@@ -29,7 +29,9 @@ Redigierte lokale OTel-/Health-Evidenz liegt je Dienst im flüchtigen `/tmp/runt
 
 `infra/compose/compose.paper.yaml` ist eine getrennte, ausschließlich manuell gewählte Erweiterung: Alpaca nur Execution, Jev nur Worker, feste getrennte HTTPS-Proxys. Sie startet nicht durch dieses Runbook oder die normale CI. Kein echtes Credential wurde für PTV-21 verwendet. Der menschliche Paper-Smoke und seine ausdrücklichen Vorbedingungen gehören PTV-22.
 
-Apply ist freigegeben. Der lokale Fake-Durchstich verbindet Marktnormalisierung, Mock-Entscheidung, Planner, deterministisches Risk-Gate, Execution, Fill-Reconciliation und persistierte Portfolio-/Audit-/Outboxevidenz. Er ist als isolierter Integrationstest ausführbar; dauerhafte Dienste und externe Paperadapter benötigen ihre gesonderten Tasks und Prüfungen. Produktions- und LIVE-Endpunkte sind ausgeschlossen. Maßgeblich sind `REQ-RSK-001..010`, `REQ-RUN-001..007`, `REQ-CTL-001..007` und Design D-01/D-04/D-06/D-08.
+## Frühere isolierte Prüfgrundlage
+
+Der lokale Fake-Durchstich verbindet Marktnormalisierung, Mock-Entscheidung, Planner, deterministisches Risk-Gate, Execution, Fill-Reconciliation und persistierte Portfolio-/Audit-/Outboxevidenz. Er ist weiterhin als isolierter Integrationstest ausführbar. Dauerhafte lokale Dienste sind inzwischen durch PTV-21 oben beschrieben; echte Paperberechtigungen benötigen weiterhin den getrennten menschlichen Nachweis. Produktions- und LIVE-Endpunkte sind ausgeschlossen. Maßgeblich sind `REQ-RSK-001..010`, `REQ-RUN-001..007`, `REQ-CTL-001..007` und Design D-01/D-04/D-06/D-08.
 
 ## Vollständiger lokaler Fake-Durchstich (PTV-13)
 
