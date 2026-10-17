@@ -5,18 +5,27 @@ from __future__ import annotations
 import json
 import re
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, timedelta
 from decimal import Decimal, localcontext
 
 from sqlalchemy import text
 
+from packages.brokers.alpaca_paper import AlpacaPaperBrokerAdapter
 from packages.brokers.fake import FakeBrokerAdapter
 from packages.brokers.reports import event_hash, normalized_report
 from packages.domain import models as m
 from packages.persistence.ledger import PostgresLedger
 from packages.risk.engine import RiskLimits
 from services.control_api.control import ControlDenied, _now, _require, _role
+from services.execution.broker_binding import AlpacaExecutionBinding
+from services.execution.gates import SubmitDenied
 from services.execution.reconciliation import _source
+
+
+@dataclass(frozen=True, slots=True)
+class _RecoveryDenied:
+    reason_code: str
 
 
 def claim_execution_owner(
@@ -367,22 +376,29 @@ def execution_refresh_and_resume(
     ledger: PostgresLedger,
     account_id: str,
     request_id: str,
-    broker: FakeBrokerAdapter,
+    broker: FakeBrokerAdapter | AlpacaPaperBrokerAdapter,
+    binding: AlpacaExecutionBinding | None = None,
     owner_id: str,
     fencing_token: int,
     limits: RiskLimits | None = None,
 ) -> str:
     """Record stable recovery denials after rolling back any partial evidence."""
     try:
-        return _execution_refresh_and_resume(
+        result = _execution_refresh_and_resume(
             ledger=ledger,
             account_id=account_id,
             request_id=request_id,
             broker=broker,
+            binding=binding,
             owner_id=owner_id,
             fencing_token=fencing_token,
             limits=limits,
         )
+        if not isinstance(result, str):
+            # A failed Paper receipt commits confirmed economic deltas and pause
+            # before the caller receives the stable resume denial.
+            raise ControlDenied(result.reason_code)
+        return result
     except ControlDenied as exc:
         try:
             with ledger.transaction() as tx:
@@ -425,17 +441,31 @@ def _execution_refresh_and_resume(
     ledger: PostgresLedger,
     account_id: str,
     request_id: str,
-    broker: FakeBrokerAdapter,
+    broker: FakeBrokerAdapter | AlpacaPaperBrokerAdapter,
+    binding: AlpacaExecutionBinding | None = None,
     owner_id: str,
     fencing_token: int,
     limits: RiskLimits | None = None,
-) -> str:
+) -> str | _RecoveryDenied:
     """Prove broker/ledger/data health and atomically refresh the portfolio and latch.
 
     Broker reads occur while the same account gate used by submit remains locked.
     The caller cannot supply a health boolean or a portfolio amount.
     """
-    _require(type(broker) is FakeBrokerAdapter, "FAKE_BROKER_REQUIRED")
+    paper = type(broker) is AlpacaPaperBrokerAdapter
+    _require(type(broker) is FakeBrokerAdapter or paper, "BROKER_BOUNDARY")
+    _require(
+        (not paper and binding is None)
+        or (
+            paper
+            and type(binding) is AlpacaExecutionBinding
+            and binding.ledger is ledger
+            and binding.account_id == account_id
+            and binding.broker is broker
+            and binding.restored
+        ),
+        "BROKER_BOUNDARY",
+    )
     limits = limits or RiskLimits()
     with ledger.transaction() as tx:
         c = tx.connection
@@ -534,222 +564,325 @@ def _execution_refresh_and_resume(
             ).scalar_one(),
             "JOBS_UNRESOLVED",
         )
-        _require(
-            not c.execute(
-                text("""
-            SELECT EXISTS(SELECT 1 FROM public.broker_orders
-              WHERE status IN ('UNKNOWN','SUBMITTING'))
-        """)
-            ).scalar_one(),
-            "ORDERS_UNRESOLVED",
-        )
-        _require(
-            not c.execute(
-                text("""
-            SELECT EXISTS(SELECT 1 FROM public.risk_reservations
-              WHERE state='HELD_UNKNOWN')
-        """)
-            ).scalar_one(),
-            "RESERVATION_UNRESOLVED",
-        )
-        _require(
-            not c.execute(
-                text("""
-            SELECT EXISTS(SELECT 1 FROM public.safety_health_evidence WHERE request_id=:r)
-        """),
-                {"r": request_id},
-            ).scalar_one(),
-            "RESUME_REQUEST_CONSUMED",
-        )
-        order_count = _verified_broker_orders(tx, account_id, broker)
-        exposure, position_count = _verified_positions(tx, account_id, broker, now, limits)
-        # Broker calls can block. Recheck all time-bound evidence with a new DB clock
-        # before writing RUNNING, while the account/context/position locks remain held.
-        now = _now(c)
-        check_runtime(c, account_id, owner_id=owner_id, fencing_token=fencing_token)
-        _require(
-            now < request["expires_at"] and context["valid_until"] > now, "HEALTH_EVIDENCE_EXPIRED"
-        )
-        _require(
-            not c.execute(
-                text("""
-            SELECT EXISTS(SELECT 1 FROM public.risk_instrument_context
-              WHERE account_id=:a AND
-                (valid_until<=:now OR session_valid_until<=:now OR NOT session_open))
-        """),
-                {"a": account_id, "now": now},
-            ).scalar_one(),
-            "CAPABILITY_OR_SESSION_STALE",
-        )
-        _require(
-            not c.execute(
-                text("""
-            SELECT EXISTS(
-              SELECT 1 FROM public.risk_instrument_context i
-              LEFT JOIN LATERAL (
-                SELECT available_at FROM public.market_bars
-                WHERE instrument_id=i.instrument_id
-                ORDER BY available_at DESC,id DESC LIMIT 1
-              ) b ON true
-              WHERE i.account_id=:a AND
-                (b.available_at IS NULL OR b.available_at>:now OR
-                 b.available_at<:min_time))
-        """),
-                {
-                    "a": account_id,
-                    "now": now,
-                    "min_time": now - timedelta(seconds=limits.market_max_age_seconds),
-                },
-            ).scalar_one(),
-            "MARKET_DATA_STALE",
-        )
-        old = tx.get(m.PortfolioSnapshot, context["portfolio_snapshot_id"])
-        _require(
-            old is not None
-            and old.currency == account["currency"]
-            and old.ledger_version == context["portfolio_version"] == account["ledger_version"],
-            "PORTFOLIO_BASIS_MISMATCH",
-        )
-        with localcontext() as ctx:
-            ctx.prec = 80
-            # The fixture can have starting equity outside its modeled cash and
-            # holdings. Reconciliation has checked every cash-affecting broker
-            # report; keep that pre-existing baseline while repricing holdings.
-            baseline = _exact(old.equity - old.cash - old.exposure)
-            equity = _exact(old.cash + exposure + baseline)
-        _require(equity >= 0, "PORTFOLIO_EQUITY_INVALID")
-        next_version = old.ledger_version + 1
-        snapshot = m.PortfolioSnapshot(
-            id=str(uuid.uuid4()),
-            currency=old.currency,
-            equity=equity,
-            cash=old.cash,
-            exposure=exposure,
-            as_of=now,
-            ledger_version=next_version,
-            quality=m.Quality.VALID,
-            reconciliation=m.Reconciliation.CURRENT,
-        )
-        trace = request["trace_id"]
-        tx.insert(
-            m.AuditEvent(
-                str(uuid.uuid4()),
-                now,
-                "execution-recovery",
-                "safety.portfolio_refresh",
-                ("BROKER_RECONCILED",),
-                snapshot.id,
-                next_version,
-                trace,
-                policy["version"],
-                "CURRENT",
+        receipt = None
+        if paper:
+            from services.execution.paper_reconciliation import reconcile_paper_account_tx
+
+            receipt = reconcile_paper_account_tx(
+                tx,
+                ledger=ledger,
+                account_id=account_id,
+                broker=broker,
+                binding=binding,
+                owner_id=owner_id,
+                fencing_token=fencing_token,
+                now=now,
+                trace_id=request["trace_id"],
             )
-        )
-        tx.insert(snapshot)
-        tx.insert(
-            m.AuditEvent(
-                str(uuid.uuid4()),
-                now,
-                "execution-recovery",
-                "safety.account_refresh",
-                ("BROKER_RECONCILED",),
-                account_id,
-                next_version,
-                trace,
-                policy["version"],
-                "CURRENT",
+            if not receipt.ready:
+                return _RecoveryDenied(receipt.reason_code)
+            # The explicit request was checked against the original pause generation.
+            # Only our account-locked reconciliation may advance these versions here.
+            context = (
+                c.execute(
+                    text("""
+                SELECT * FROM public.risk_account_context WHERE account_id=:a FOR UPDATE
+            """),
+                    {"a": account_id},
+                )
+                .mappings()
+                .one()
             )
-        )
-        c.execute(
-            text("UPDATE public.accounts SET ledger_version=:v WHERE id=:a"),
-            {"v": next_version, "a": account_id},
-        )
-        evidence_id = str(uuid.uuid4())
-        c.execute(
-            text("""
-            INSERT INTO public.safety_health_evidence
-              (id,request_id,account_id,checked_at,expires_at,owner_id,fencing_token,
-               policy_version,context_version,portfolio_snapshot_id,
-               broker_order_count,broker_position_count,actor_id,trace_id)
-            VALUES (:id,:r,:a,:now,:expiry,:o,:f,:p,:v,:s,:orders,:positions,
-                    'execution-recovery',:t)
-        """),
-            {
-                "id": evidence_id,
-                "r": request_id,
-                "a": account_id,
-                "now": now,
-                "expiry": now + timedelta(seconds=10),
-                "o": owner_id,
-                "f": fencing_token,
-                "p": policy["version"],
-                "v": context["version"],
-                "s": snapshot.id,
-                "orders": order_count,
-                "positions": position_count,
-                "t": trace,
-            },
-        )
-        version = context["version"] + 1
-        tx.insert(
-            m.AuditEvent(
-                str(uuid.uuid4()),
-                now,
-                "execution-recovery",
-                "safety.activate_paper"
-                if request["operation"] == "ACTIVATE_PAPER"
-                else "safety.resume",
-                ("BROKER_RECONCILED",),
-                account_id,
-                version,
-                trace,
-                policy["version"],
-                "RUNNING",
+            account = (
+                c.execute(
+                    text("""
+                SELECT currency,ledger_version FROM public.accounts WHERE id=:a FOR UPDATE
+            """),
+                    {"a": account_id},
+                )
+                .mappings()
+                .one()
             )
-        )
-        c.execute(
-            text("""
-            UPDATE public.risk_account_context SET version=:v,
-              portfolio_snapshot_id=:s,portfolio_version=:pv,
-              mode='PAPER',safety_state='RUNNING',reconciliation_current=true,
-              actor_id='execution-recovery',trace_id=:t
-            WHERE account_id=:a AND version=:old AND safety_state='PAUSE_NEW'
-        """),
-            {
-                "v": version,
-                "s": snapshot.id,
-                "pv": next_version,
-                "t": trace,
-                "a": account_id,
-                "old": context["version"],
-            },
-        )
-        c.execute(
-            text("""
-            INSERT INTO public.outbox_events
-              (event_id,event_type,occurred_at,aggregate_id,aggregate_version,
-               trace_id,schema_version,payload)
-            VALUES (:id,'safety.changed.v1',:now,:a,:v,:t,1,CAST(:payload AS jsonb))
-        """),
-            {
-                "id": str(uuid.uuid4()),
-                "now": now,
-                "a": account_id,
-                "v": version,
-                "t": trace,
-                "payload": json.dumps(
+            _require(
+                context["safety_state"] == "PAUSE_NEW"
+                and receipt.account_id == account_id
+                and receipt.owner_id == owner_id
+                and receipt.fencing_token == fencing_token
+                and receipt.context_version == context["version"]
+                and receipt.portfolio_snapshot_id == context["portfolio_snapshot_id"]
+                and receipt.portfolio_version == context["portfolio_version"],
+                "PAPER_RECEIPT_MISMATCH",
+            )
+        try:
+            with c.begin_nested():
+                _require(
+                    not c.execute(
+                        text("""
+                    SELECT EXISTS(SELECT 1 FROM public.broker_orders
+                      WHERE status IN ('UNKNOWN','SUBMITTING'))
+                """)
+                    ).scalar_one(),
+                    "ORDERS_UNRESOLVED",
+                )
+                _require(
+                    not c.execute(
+                        text("""
+                    SELECT EXISTS(SELECT 1 FROM public.risk_reservations
+                      WHERE state='HELD_UNKNOWN')
+                """)
+                    ).scalar_one(),
+                    "RESERVATION_UNRESOLVED",
+                )
+                _require(
+                    not c.execute(
+                        text("""
+                    SELECT EXISTS(SELECT 1 FROM public.safety_health_evidence WHERE request_id=:r)
+                """),
+                        {"r": request_id},
+                    ).scalar_one(),
+                    "RESUME_REQUEST_CONSUMED",
+                )
+                if paper:
+                    try:
+                        binding.validate_recovery(tx, now=_now(c))
+                    except SubmitDenied as exc:
+                        raise ControlDenied(exc.reason_code) from None
+                    verified = tx.get(m.PortfolioSnapshot, receipt.portfolio_snapshot_id)
+                    _require(
+                        verified is not None
+                        and verified.quality is m.Quality.VALID
+                        and verified.reconciliation is m.Reconciliation.CURRENT,
+                        "PAPER_RECEIPT_MISMATCH",
+                    )
+                    exposure = verified.exposure
+                    order_count = c.execute(
+                        text("""
+                        SELECT count(*) FROM public.broker_orders b
+                        JOIN public.order_intents i ON i.id=b.intent_id
+                        WHERE i.account_id=:a AND b.adapter='alpaca-paper'
+                    """),
+                        {"a": account_id},
+                    ).scalar_one()
+                    position_count = c.execute(
+                        text("""
+                        SELECT count(*) FROM public.positions WHERE account_id=:a AND quantity<>0
+                    """),
+                        {"a": account_id},
+                    ).scalar_one()
+                else:
+                    order_count = _verified_broker_orders(tx, account_id, broker)
+                    exposure, position_count = _verified_positions(
+                        tx, account_id, broker, now, limits
+                    )
+                # Broker calls can block. Recheck all time-bound evidence with a new DB clock
+                # before writing RUNNING, while the account/context/position locks remain held.
+                now = _now(c)
+                check_runtime(c, account_id, owner_id=owner_id, fencing_token=fencing_token)
+                _require(
+                    now < request["expires_at"] and context["valid_until"] > now,
+                    "HEALTH_EVIDENCE_EXPIRED",
+                )
+                _require(
+                    context["day_start_at"].astimezone(UTC)
+                    == now.replace(hour=0, minute=0, second=0, microsecond=0),
+                    "ACCOUNT_CONTEXT_STALE",
+                )
+                _require(
+                    not c.execute(
+                        text("""
+                    SELECT EXISTS(SELECT 1 FROM public.risk_instrument_context
+                      WHERE account_id=:a AND
+                        (valid_until<=:now OR session_valid_until<=:now OR NOT session_open))
+                """),
+                        {"a": account_id, "now": now},
+                    ).scalar_one(),
+                    "CAPABILITY_OR_SESSION_STALE",
+                )
+                _require(
+                    not c.execute(
+                        text("""
+                    SELECT EXISTS(
+                      SELECT 1 FROM public.risk_instrument_context i
+                      LEFT JOIN LATERAL (
+                        SELECT available_at FROM public.market_bars
+                        WHERE instrument_id=i.instrument_id
+                        ORDER BY available_at DESC,id DESC LIMIT 1
+                      ) b ON true
+                      WHERE i.account_id=:a AND
+                        (b.available_at IS NULL OR b.available_at>:now OR
+                         b.available_at<:min_time))
+                """),
+                        {
+                            "a": account_id,
+                            "now": now,
+                            "min_time": now - timedelta(seconds=limits.market_max_age_seconds),
+                        },
+                    ).scalar_one(),
+                    "MARKET_DATA_STALE",
+                )
+                if paper:
+                    _require(
+                        receipt.observed_at <= now
+                        and now - receipt.observed_at < timedelta(seconds=10),
+                        "HEALTH_EVIDENCE_EXPIRED",
+                    )
+                old = tx.get(m.PortfolioSnapshot, context["portfolio_snapshot_id"])
+                _require(
+                    old is not None
+                    and old.currency == account["currency"]
+                    and old.ledger_version
+                    == context["portfolio_version"]
+                    == account["ledger_version"],
+                    "PORTFOLIO_BASIS_MISMATCH",
+                )
+                with localcontext() as ctx:
+                    ctx.prec = 80
+                    # The fixture can have starting equity outside its modeled cash and
+                    # holdings. Reconciliation has checked every cash-affecting broker
+                    # report; keep that pre-existing baseline while repricing holdings.
+                    baseline = _exact(old.equity - old.cash - old.exposure)
+                    _require(not paper or baseline == 0, "PAPER_ACCOUNT_MISMATCH")
+                    equity = _exact(old.cash + exposure + baseline)
+                _require(equity >= 0, "PORTFOLIO_EQUITY_INVALID")
+                next_version = old.ledger_version + 1
+                snapshot = m.PortfolioSnapshot(
+                    id=str(uuid.uuid4()),
+                    currency=old.currency,
+                    equity=equity,
+                    cash=old.cash,
+                    exposure=exposure,
+                    as_of=now,
+                    ledger_version=next_version,
+                    quality=m.Quality.VALID,
+                    reconciliation=m.Reconciliation.CURRENT,
+                )
+                trace = request["trace_id"]
+                tx.insert(
+                    m.AuditEvent(
+                        str(uuid.uuid4()),
+                        now,
+                        "execution-recovery",
+                        "safety.portfolio_refresh",
+                        ("BROKER_RECONCILED",),
+                        snapshot.id,
+                        next_version,
+                        trace,
+                        policy["version"],
+                        "CURRENT",
+                    )
+                )
+                tx.insert(snapshot)
+                tx.insert(
+                    m.AuditEvent(
+                        str(uuid.uuid4()),
+                        now,
+                        "execution-recovery",
+                        "safety.account_refresh",
+                        ("BROKER_RECONCILED",),
+                        account_id,
+                        next_version,
+                        trace,
+                        policy["version"],
+                        "CURRENT",
+                    )
+                )
+                c.execute(
+                    text("UPDATE public.accounts SET ledger_version=:v WHERE id=:a"),
+                    {"v": next_version, "a": account_id},
+                )
+                evidence_id = str(uuid.uuid4())
+                c.execute(
+                    text("""
+                    INSERT INTO public.safety_health_evidence
+                      (id,request_id,account_id,checked_at,expires_at,owner_id,fencing_token,
+                       policy_version,context_version,portfolio_snapshot_id,
+                       broker_order_count,broker_position_count,actor_id,trace_id)
+                    VALUES (:id,:r,:a,:now,:expiry,:o,:f,:p,:v,:s,:orders,:positions,
+                            'execution-recovery',:t)
+                """),
                     {
-                        "account_id": account_id,
-                        "action": "PAPER_ACTIVATED"
+                        "id": evidence_id,
+                        "r": request_id,
+                        "a": account_id,
+                        "now": now,
+                        "expiry": now + timedelta(seconds=10),
+                        "o": owner_id,
+                        "f": fencing_token,
+                        "p": policy["version"],
+                        "v": context["version"],
+                        "s": snapshot.id,
+                        "orders": order_count,
+                        "positions": position_count,
+                        "t": trace,
+                    },
+                )
+                version = context["version"] + 1
+                tx.insert(
+                    m.AuditEvent(
+                        str(uuid.uuid4()),
+                        now,
+                        "execution-recovery",
+                        "safety.activate_paper"
                         if request["operation"] == "ACTIVATE_PAPER"
-                        else "RESUMED",
-                        "mode": "PAPER",
-                        "safety_state": "RUNNING",
-                        "policy_version": policy["version"],
-                        "reason_code": "OK",
-                        "request_id": request_id,
-                    }
-                ),
-            },
-        )
-        return snapshot.id
+                        else "safety.resume",
+                        ("BROKER_RECONCILED",),
+                        account_id,
+                        version,
+                        trace,
+                        policy["version"],
+                        "RUNNING",
+                    )
+                )
+                c.execute(
+                    text("""
+                    UPDATE public.risk_account_context SET version=:v,
+                      portfolio_snapshot_id=:s,portfolio_version=:pv,
+                      mode='PAPER',safety_state='RUNNING',reconciliation_current=true,
+                      actor_id='execution-recovery',trace_id=:t
+                    WHERE account_id=:a AND version=:old AND safety_state='PAUSE_NEW'
+                """),
+                    {
+                        "v": version,
+                        "s": snapshot.id,
+                        "pv": next_version,
+                        "t": trace,
+                        "a": account_id,
+                        "old": context["version"],
+                    },
+                )
+                c.execute(
+                    text("""
+                    INSERT INTO public.outbox_events
+                      (event_id,event_type,occurred_at,aggregate_id,aggregate_version,
+                       trace_id,schema_version,payload)
+                    VALUES (:id,'safety.changed.v1',:now,:a,:v,:t,1,CAST(:payload AS jsonb))
+                """),
+                    {
+                        "id": str(uuid.uuid4()),
+                        "now": now,
+                        "a": account_id,
+                        "v": version,
+                        "t": trace,
+                        "payload": json.dumps(
+                            {
+                                "account_id": account_id,
+                                "action": "PAPER_ACTIVATED"
+                                if request["operation"] == "ACTIVATE_PAPER"
+                                else "RESUMED",
+                                "mode": "PAPER",
+                                "safety_state": "RUNNING",
+                                "policy_version": policy["version"],
+                                "reason_code": "OK",
+                                "request_id": request_id,
+                            }
+                        ),
+                    },
+                )
+                return snapshot.id
+        except ControlDenied as exc:
+            if paper:
+                # Accounting may survive a failed data/session check, never loss
+                # of the owner's authority during the protected transaction.
+                check_runtime(c, account_id, owner_id=owner_id, fencing_token=fencing_token)
+                return _RecoveryDenied(exc.reason_code)
+            raise

@@ -342,6 +342,11 @@ def submit_once(
         )
         if binding is not None:
             binding.validate_submit(tx, intent, capability, now)
+            from services.execution.paper_reconciliation import ensure_paper_baseline
+
+            ensure_paper_baseline(
+                tx, account_id=account_id, binding=binding, now=now, trace_id=intent.trace_id
+            )
         order = m.BrokerOrder(
             id=_id("order", intent.id),
             intent_id=intent.id,
@@ -365,6 +370,18 @@ def submit_once(
             now=now,
         )
         tx.insert(order, adapter=adapter_id)
+        if binding is not None:
+            from services.execution.paper_reconciliation import ensure_paper_order_basis
+
+            ensure_paper_order_basis(
+                tx,
+                account_id=account_id,
+                order=order,
+                intent=intent,
+                reservation=_reservation,
+                now=now,
+                trace_id=intent.trace_id,
+            )
         report = m.ExecutionReport(
             id=_id("report:SUBMITTING", intent.id),
             order_id=order.id,
@@ -646,13 +663,31 @@ class ExecutionProcess:
             self._faulted = True
             raise
 
+    def reconcile(self):
+        """Refresh durable Paper evidence independently of Jev and operator resume."""
+        from sqlalchemy.exc import SQLAlchemyError
+
+        from services.execution.paper_reconciliation import reconcile_paper_account
+
+        if type(self.broker) is not AlpacaPaperBrokerAdapter:
+            raise SubmitDenied("ALPACA_PAPER_REQUIRED")
+        try:
+            return reconcile_paper_account(
+                ledger=self.ledger,
+                account_id=self.account_id,
+                broker=self.broker,
+                binding=self.binding,
+                owner_id=self.owner_id,
+                fencing_token=self.fencing_token,
+            )
+        except SQLAlchemyError:
+            self._faulted = True
+            raise
+
     def recover(self, request_id: str) -> str:
         from sqlalchemy.exc import SQLAlchemyError
 
         from services.execution.recovery_health import execution_refresh_and_resume
-
-        if type(self.broker) is AlpacaPaperBrokerAdapter:
-            raise SubmitDenied("ALPACA_RECOVERY_PENDING")
 
         try:
             result = execution_refresh_and_resume(
@@ -660,6 +695,7 @@ class ExecutionProcess:
                 account_id=self.account_id,
                 request_id=request_id,
                 broker=self.broker,
+                binding=self.binding,
                 owner_id=self.owner_id,
                 fencing_token=self.fencing_token,
                 limits=self.limits,

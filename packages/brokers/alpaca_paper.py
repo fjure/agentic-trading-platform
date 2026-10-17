@@ -14,7 +14,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation, localcontext
 from functools import wraps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -35,6 +35,9 @@ from packages.domain.models import (
     utc_time,
 )
 from packages.domain.ports import Clock, IdGenerator
+
+if TYPE_CHECKING:
+    from packages.brokers.alpaca_activities import AlpacaReconciliationEvidence
 
 _HOST = "https://paper-api.alpaca.markets"
 _MAX_BODY = 1_000_000
@@ -149,9 +152,20 @@ class AlpacaPaperBrokerAdapter:
         restored_intents: tuple[OrderIntent, ...] = (),
         attempted_client_ids: frozenset[str] = frozenset(),
         cash_cushion_fraction: Decimal = Decimal("0.01"),
+        reconciliation_fee_profile: str | None = None,
     ) -> None:
         if type(paper_enabled) is not bool or type(enable_crypto) is not bool:
             raise ValueError("invalid enable flag")
+        from packages.brokers.alpaca_activities import EQUITY_ZERO_FEE_PROFILE
+
+        # Explicit operator selection attests to a self-directed retail cash
+        # Paper account; account responses do not establish this fee category.
+        if reconciliation_fee_profile is not None and (
+            not isinstance(reconciliation_fee_profile, str)
+            or reconciliation_fee_profile != EQUITY_ZERO_FEE_PROFILE
+        ):
+            raise ValueError("unknown reconciliation fee profile")
+        self._reconciliation_fee_profile = reconciliation_fee_profile
         if transport is not None and type(transport) is not httpx.MockTransport:
             raise ValueError("only exact MockTransport is accepted")
         if expected_account_id is not None:
@@ -185,6 +199,10 @@ class AlpacaPaperBrokerAdapter:
     def close(self) -> None:
         self._client.close()
 
+    @property
+    def reconciliation_fee_profile(self) -> str | None:
+        return self._reconciliation_fee_profile
+
     def _now(self) -> datetime:
         try:
             return utc_time(self._clock.now())
@@ -209,12 +227,14 @@ class AlpacaPaperBrokerAdapter:
             "/v2/positions/SPY",
             "/v2/positions/QQQ",
             "/v2/positions/BTCUSD",
+            "/v2/positions",
+            "/v2/account/activities",
             "/v2/orders:by_client_order_id",
             "/v2/orders",
         }
         order_id_route = re.fullmatch(r"/v2/orders/[0-9a-f-]{36}", path)
         allowed = (
-            (method == "GET" and (path in static - {"/v2/orders"} or order_id_route))
+            (method == "GET" and (path in static or order_id_route))
             or (method == "POST" and path == "/v2/orders")
             or (method == "DELETE" and order_id_route is not None)
         )
@@ -303,9 +323,7 @@ class AlpacaPaperBrokerAdapter:
             raise AlpacaPaperError("UNAVAILABLE")
         return data
 
-    def _account(
-        self, *, crypto: bool = False, require_trading: bool = True
-    ) -> dict[str, object]:
+    def _account(self, *, crypto: bool = False, require_trading: bool = True) -> dict[str, object]:
         account = self._get("/v2/account")
         if not isinstance(account, dict):
             raise AlpacaPaperError("INVALID_RESPONSE")
@@ -349,8 +367,12 @@ class AlpacaPaperBrokerAdapter:
             closing = time.fromisoformat(entry["close"])
         except (KeyError, TypeError, ValueError):
             raise AlpacaPaperError("INVALID_RESPONSE") from None
-        if (opening != time(9, 30) or not opening < closing <= time(16)
-                or opening.tzinfo is not None or closing.tzinfo is not None):
+        if (
+            opening != time(9, 30)
+            or not opening < closing <= time(16)
+            or opening.tzinfo is not None
+            or closing.tzinfo is not None
+        ):
             raise AlpacaPaperError("INVALID_RESPONSE")
         return (
             datetime.combine(day, opening, _EASTERN).astimezone(UTC),
@@ -363,9 +385,12 @@ class AlpacaPaperBrokerAdapter:
             raise AlpacaPaperError("STALE_CLOCK")
         _, received, broker_time, session_end = proof
         now = self._now()
-        if (now < received or now - received >= _MAX_AGE
-                or not -timedelta(seconds=5) <= now - broker_time < _MAX_AGE
-                or now >= session_end):
+        if (
+            now < received
+            or now - received >= _MAX_AGE
+            or not -timedelta(seconds=5) <= now - broker_time < _MAX_AGE
+            or now >= session_end
+        ):
             raise AlpacaPaperError("STALE_CLOCK")
 
     def _asset(self, instrument_id: str) -> dict[str, object]:
@@ -439,7 +464,8 @@ class AlpacaPaperBrokerAdapter:
                 decimal_string(quantity_step),
                 decimal_string(price_tick),
                 _canonical_decimal(_decimal(asset.get("min_order_size"), positive=True))
-                if crypto else "whole-or-market-fractional",
+                if crypto
+                else "whole-or-market-fractional",
                 "continuous" if crypto else str(clock["is_open"]),
                 session_start.isoformat(),
                 session_end.isoformat(),
@@ -821,6 +847,13 @@ class AlpacaPaperBrokerAdapter:
     @_locked
     def reports(self, client_order_id: str) -> tuple[ExecutionReport, ...]:
         return tuple(self._reports.get(client_order_id, ()))
+
+    @_locked
+    def reconciliation_evidence(self, *, after: datetime) -> AlpacaReconciliationEvidence:
+        """Collect exhaustive read-only account evidence, or fail closed."""
+        from packages.brokers.alpaca_activities import collect_evidence
+
+        return collect_evidence(self, after=after)
 
     @_locked
     def cancel(self, client_order_id: str) -> BrokerOrder | None:

@@ -1,6 +1,6 @@
 # Definition of Ready und Prüfevidenz
 
-Aktualisierung2026-10-17: Apply ist seit dem späteren Nutzerauftrag gesondert freigegeben. Die ausdrücklich bestätigte Erweiterung um PTV-24/25 wurde vor PTV-21 eingeordnet;25LeafTasks und25eindeutige Issues sind mit vollständigem Read-back synchronisiert. PTV-01..20 und PTV-24 sind abgeschlossen (21/25); PTV-25 und PTV-21..23 bleiben offen. Die nachstehende DoR-Tabelle dokumentiert den historischen Bootstrapstand und behauptet keine aktuelle Runtime-Zertifizierung.
+Aktualisierung2026-10-17: Apply ist seit dem späteren Nutzerauftrag gesondert freigegeben. Die ausdrücklich bestätigte Erweiterung um PTV-24/25 wurde vor PTV-21 eingeordnet;25LeafTasks und25eindeutige Issues sind mit vollständigem Read-back synchronisiert. PTV-01..20 und PTV-24/25 sind abgeschlossen (22/25); PTV-21..23 bleiben offen. Die vollständige Paper-Prozess-/Deploymentfreigabe bleibt bis zu deren Evidenz geschlossen. Die nachstehende DoR-Tabelle dokumentiert den historischen Bootstrapstand und behauptet keine aktuelle Runtime-Zertifizierung.
 
 Historischer Stand 2026-10-12, letzter GitHub-Read-back 16:50:15 UTC. **Definition of Ready für die Implementierungsplanung erfüllt.** Der damalige Auftrag endete nach Spezifikation und Synchronisierung; Anwendung benötigte einen eigenen ausdrücklichen Apply-Auftrag. Runtime-Zertifizierung folgte nach Umsetzung. Damals waren alle23 Anwendungstasks offen.
 

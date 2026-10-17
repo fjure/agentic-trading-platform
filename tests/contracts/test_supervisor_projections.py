@@ -163,6 +163,67 @@ def test_private_provider_binding_audit_has_safe_public_projection(action):
     assert denied["reasonCode"] == "RISK_CAPABILITY_UNCONFIRMED"
 
 
+@pytest.mark.parametrize(
+    "phase",
+    [
+        "baseline",
+        "receipt",
+        "position",
+        "portfolio",
+        "account",
+        "activity",
+        "order",
+        "order_basis",
+        "report",
+        "reservation",
+    ],
+)
+def test_paper_accounting_audit_projects_without_private_activity_or_provider_ids(phase):
+    public = project_resource(
+        "audit",
+        {
+            "id": "audit-paper",
+            "occurred_at": NOW,
+            "actor_id": "execution-reconciliation",
+            "action": f"execution.paper_{phase}",
+            "reason_codes": ("PAPER_ACTIVITY_BOOKED",),
+            "outcome": "PAPER_ACTIVITY_BOOKED",
+            "trace_id": TRACE,
+            "activity_id": "private-canary::activity",
+            "provider_account_id": "private-canary",
+            "fee_authority_profile": "private-canary",
+        },
+    )
+    assert public["actor"] == "execution" and public["reasonCode"] == "OK"
+    assert public["outcome"] == "OBSERVED" and "private-canary" not in str(public)
+
+
+@pytest.mark.parametrize(
+    "reason",
+    [
+        "PAPER_FEE_AUTHORITY_UNKNOWN",
+        "BROKER_ACTIVITY_IDENTITY_DRIFT",
+        "FILL_LIMIT_PRICE_MISMATCH",
+        "CRYPTO_FEE_QUANTITY_MISMATCH",
+    ],
+)
+def test_paper_denial_projects_as_reconciliation_required(reason):
+    public = project_resource(
+        "audit",
+        {
+            "id": "audit-denial",
+            "occurred_at": NOW,
+            "actor_id": "execution-recovery",
+            "action": "safety.resume_denied",
+            "reason_codes": (reason,),
+            "outcome": "DENIED",
+            "trace_id": TRACE,
+        },
+    )
+    assert public["outcome"] == "REFUSED"
+    assert public["reasonCode"] == "RISK_RECONCILIATION_REQUIRED"
+
+
 def test_market_evidence_replaces_free_form_source_labels():
     bar = m.MarketBar(
         "bar-1",

@@ -418,7 +418,7 @@ def checks(ledger, execution_ledger, engine, now):
         )
     if scenario != "activation":
         # Explicit synthetic fixture authority for testing the low-level submit
-        # substrate. Production recovery remains blocked until PTV-25; this is
+        # substrate. Recovery requires complete account evidence; this is
         # not a claim that provider metadata establishes inventory reconciliation.
         with ledger.transaction() as tx:
             version = (
@@ -467,12 +467,15 @@ def checks(ledger, execution_ledger, engine, now):
             raise AssertionError("restart allowed ordinary Alpaca submit")
         try:
             process.recover("synthetic-request")
-        except SubmitDenied as exc:
-            assert exc.reason_code == "ALPACA_RECOVERY_PENDING"
+        except Exception as exc:
+            from services.control_api.control import ControlDenied
+
+            assert type(exc) is ControlDenied
+            assert exc.reason_code == "RESUME_REQUEST_MISSING_OR_EXPIRED"
         else:
-            raise AssertionError("PTV-25 recovery gate opened")
+            raise AssertionError("recovery opened without an operator request")
         assert trading_server.count("POST", "/v2/orders") == 0
-        print("PASS activation: first binding and restart remain paused pending PTV-25")
+        print("PASS activation: first binding and restart remain paused without a valid request")
         return
     risk, intent_id = reserve_btc()
     with engine.connect() as observer:

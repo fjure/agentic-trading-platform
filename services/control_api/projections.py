@@ -138,6 +138,48 @@ for _code in {
 }:
     _REASON_ALIASES[_code] = "HEALTH_CHECK_FAILED"
 _REASON_ALIASES["SUBMIT_UNCERTAIN"] = "BROKER_STATUS_UNKNOWN"
+for _code in {
+    "PAPER_BASELINE_MISSING",
+    "PAPER_ACCOUNT_MISMATCH",
+    "PAPER_RECEIPT_MISMATCH",
+    "PAPER_EVIDENCE_STALE_OR_INCOMPLETE",
+    "PAPER_EVIDENCE_UNAVAILABLE",
+    "PAPER_FEE_AUTHORITY_UNKNOWN",
+    "PAPER_FEE_PROFILE_CHANGED",
+    "PAPER_ORDER_ADAPTER_MISMATCH",
+    "BROKER_ACTIVITY_HISTORY_INCOMPLETE",
+    "BROKER_ACTIVITY_IDENTITY_DRIFT",
+    "BROKER_ORDER_AMBIGUOUS",
+    "EXTERNAL_ORDER_MISMATCH",
+    "EXTERNAL_FILL_MISMATCH",
+    "EXTERNAL_POSITION_MISMATCH",
+    "FILL_IDENTITY_MISMATCH",
+    "FILL_HISTORY_INCOMPLETE",
+    "FILL_LIMIT_PRICE_MISMATCH",
+    "RESERVATION_ORIGINAL_BASIS_MISSING",
+    "RESERVATION_ORIGINAL_BASIS_MISMATCH",
+    "CRYPTO_FEE_EVIDENCE_INVALID",
+    "CRYPTO_FEE_QUANTITY_MISMATCH",
+    "FEE_EVIDENCE_INVALID",
+    "UNSUPPORTED_ACCOUNT_ACTIVITY",
+    "PORTFOLIO_LEDGER_DRIFT",
+    "POSITION_LEDGER_DRIFT",
+    "POSITION_BASELINE_MISMATCH",
+    "POSITION_ACCOUNT_MISMATCH",
+    "POSITION_COST_BASIS_MISMATCH",
+    "CASH_ACCOUNT_MISMATCH",
+    "EQUITY_ACCOUNT_MISMATCH",
+    "TERMINAL_STATUS_CORRECTION",
+    "RECONCILIATION_LINK_MISSING",
+}:
+    _REASON_ALIASES[_code] = "RISK_RECONCILIATION_REQUIRED"
+for _code in {
+    "PAPER_BASELINE_FROZEN",
+    "PAPER_ORIGINAL_BASIS_FROZEN",
+    "PAPER_ACTIVITY_BOOKED",
+    "PAPER_RECONCILED",
+}:
+    _REASON_ALIASES[_code] = "OK"
 _ACTIONS = frozenset(
     {
         "decision.persist",
@@ -160,6 +202,16 @@ _ACTIONS = frozenset(
         "control.mode_set",
         "control.risk_policy_updated",
         "execution.unsafe_restart",
+        "execution.paper_baseline",
+        "execution.paper_receipt",
+        "execution.paper_position",
+        "execution.paper_portfolio",
+        "execution.paper_account",
+        "execution.paper_activity",
+        "execution.paper_order",
+        "execution.paper_order_basis",
+        "execution.paper_report",
+        "execution.paper_reservation",
         "execution.submit_result",
         "execution.reservation_result",
         "execution.pause_unknown",
