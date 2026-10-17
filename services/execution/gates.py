@@ -39,6 +39,7 @@ def evaluate_submit_gate(
     owner_id: str,
     fencing_token: int,
     allow_submitting_order: bool = False,
+    expected_broker_id: str = "fake",
 ):
     """Return the durable intent and fresh capability under the caller's account lock.
 
@@ -146,9 +147,14 @@ def evaluate_submit_gate(
         <= timedelta(seconds=limits.decision_ttl_seconds),
         "DECISION_TTL",
     )
-    existing_order = connection.execute(
-        text("SELECT status FROM public.broker_orders WHERE intent_id=:id"), {"id": intent.id}
-    ).scalar_one_or_none()
+    existing_order = (
+        connection.execute(
+            text("SELECT status,adapter FROM public.broker_orders WHERE intent_id=:id"),
+            {"id": intent.id},
+        )
+        .mappings()
+        .one_or_none()
+    )
     unresolved_other = connection.execute(
         text("""
             SELECT EXISTS(
@@ -162,7 +168,13 @@ def evaluate_submit_gate(
     ).scalar_one()
     _require(not unresolved_other, "UNRESOLVED_SUBMIT")
     _require(
-        existing_order == "SUBMITTING" if allow_submitting_order else existing_order is None,
+        (
+            existing_order is not None
+            and existing_order["status"] == "SUBMITTING"
+            and existing_order["adapter"] == expected_broker_id
+        )
+        if allow_submitting_order
+        else existing_order is None,
         "RECONCILE_REQUIRED",
     )
     for table in ("positions", "risk_reservations", "order_intents"):
@@ -201,7 +213,7 @@ def evaluate_submit_gate(
     _require(
         instrument_context["valid_until"] > now
         and instrument_context["capability_version"] == intent.capability_version
-        and instrument_context["broker_id"] == "fake",
+        and instrument_context["broker_id"] == expected_broker_id,
         "CAPABILITY_CHANGED",
     )
     snapshot = tx.get(m.PortfolioSnapshot, account_context["portfolio_snapshot_id"])

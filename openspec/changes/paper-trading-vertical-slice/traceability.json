@@ -577,7 +577,8 @@
         "PTV-08",
         "PTV-09",
         "PTV-16",
-        "PTV-17"
+        "PTV-17",
+        "PTV-24"
       ],
       "testId": "T-RSK-003",
       "testPath": "tests/contracts/test_broker_capabilities.py",
@@ -600,7 +601,8 @@
       "tasks": [
         "PTV-09",
         "PTV-10",
-        "PTV-13"
+        "PTV-13",
+        "PTV-24"
       ],
       "testId": "T-RSK-004",
       "testPath": "tests/unit/test_risk_decision.py",
@@ -622,7 +624,8 @@
       ],
       "tasks": [
         "PTV-09",
-        "PTV-10"
+        "PTV-10",
+        "PTV-24"
       ],
       "testId": "T-RSK-005",
       "testPath": "tests/recovery/test_submit_gate.py",
@@ -667,6 +670,7 @@
         "PTV-04",
         "PTV-09",
         "PTV-13",
+        "PTV-24",
         "PTV-23"
       ],
       "testId": "T-RSK-007",
@@ -691,6 +695,7 @@
         "PTV-08",
         "PTV-10",
         "PTV-17",
+        "PTV-24",
         "PTV-21",
         "PTV-22"
       ],
@@ -717,6 +722,8 @@
         "PTV-11",
         "PTV-13",
         "PTV-17",
+        "PTV-24",
+        "PTV-25",
         "PTV-22",
         "PTV-23"
       ],
@@ -743,6 +750,7 @@
         "PTV-11",
         "PTV-13",
         "PTV-17",
+        "PTV-25",
         "PTV-22"
       ],
       "testId": "T-RSK-010",
@@ -767,7 +775,9 @@
       "tasks": [
         "PTV-02",
         "PTV-04",
-        "PTV-11"
+        "PTV-11",
+        "PTV-24",
+        "PTV-25"
       ],
       "testId": "T-RUN-001",
       "testPath": "tests/integration/test_ledger_restore.py",
@@ -793,7 +803,9 @@
         "PTV-05",
         "PTV-08",
         "PTV-11",
-        "PTV-17"
+        "PTV-17",
+        "PTV-24",
+        "PTV-25"
       ],
       "testId": "T-RUN-002",
       "testPath": "tests/recovery/test_duplicate_events.py",
@@ -867,6 +879,8 @@
         "PTV-12",
         "PTV-13",
         "PTV-19",
+        "PTV-24",
+        "PTV-25",
         "PTV-21",
         "PTV-22"
       ],
@@ -894,6 +908,7 @@
         "PTV-10",
         "PTV-16",
         "PTV-17",
+        "PTV-24",
         "PTV-21",
         "PTV-23"
       ],
@@ -919,6 +934,7 @@
       "tasks": [
         "PTV-01",
         "PTV-12",
+        "PTV-25",
         "PTV-21"
       ],
       "testId": "T-RUN-007",

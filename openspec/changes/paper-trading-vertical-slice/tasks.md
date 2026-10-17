@@ -1,6 +1,6 @@
 # Tasks
 
-Der Planungsdurchlauf ist abgeschlossen; Apply wurde gesondert freigegeben. Dauerhafte IDs PTV-01..PTV-23; Checkboxnummern dienen nur der OpenSpec-Struktur. Quellen/Versionen: technology-baseline.md. Gemeinsame Definition of Done: Verhalten und paketzugehörige Tests bestanden, Dokumentation/Contracts aktuell, secretfreie Evidenz gespeichert, Safetyreview soweit betroffen, GitHub-Sync im selben Durchlauf verifiziert. Kein Taskabschluss durch bloße Issueänderung. Ausgeführte Prüfungen stehen in implementation-evidence.md.
+Der Planungsdurchlauf ist abgeschlossen; Apply wurde gesondert freigegeben. Dauerhafte IDs PTV-01..PTV-25; Checkboxnummern dienen nur der OpenSpec-Struktur. Die am 2026-10-17 ausdrücklich freigegebenen PTV-24/25 schließen die SQL-Paperintegrationslücke vor PTV-21, ohne bestehende IDs umzunummerieren. Quellen/Versionen: technology-baseline.md. Gemeinsame Definition of Done: Verhalten und paketzugehörige Tests bestanden, Dokumentation/Contracts aktuell, secretfreie Evidenz gespeichert, Safetyreview soweit betroffen, GitHub-Sync im selben Durchlauf verifiziert. Kein Taskabschluss durch bloße Issueänderung. Ausgeführte Prüfungen stehen in implementation-evidence.md.
 
 Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 und PTV-08 getrennt arbeiten; nach PTV-14 PTV-15 und PTV-16; PTV-18 parallel zu externen Adaptern. Gemeinsame Contract-, Compose- oder Runbookdateien nur seriell durch Integrator. Größenrahmen eine Arbeitssitzung pro Leaf; bei notwendiger Aufteilung erst OpenSpec und Issue-Mapping gemeinsam ändern.
 
@@ -200,16 +200,34 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
 
 ## 8. Grenzen und abschließende Integration
 
-- [ ] 8.1 PTV-21 Deploymentgrenzen und Failure-Injection; Evidenz: T-RUN-003/005/006/007, T-RSK-001/008, T-CTL-005/007.
+- [x] 8.1 PTV-24 Dauerhafte Alpaca-Executionbindung; Evidenz: T-RSK-024, T-RUN-024 und bestehende Fake-Regressionen.
+  - Requirements: REQ-RSK-003, REQ-RSK-004, REQ-RSK-005, REQ-RSK-007, REQ-RSK-008, REQ-RSK-009, REQ-RUN-001, REQ-RUN-002, REQ-RUN-005, REQ-RUN-006
+  - Zielpfade: `services/execution/intents.py`, `services/execution/gates.py`, `services/execution/broker_binding.py`, `services/execution/broker_recovery.py`, `services/control_api/migrations/versions/0008_broker_binding.py`, `services/control_api/projections.py`, `packages/brokers/proofs.py`, `packages/brokers/alpaca_paper.py`, `packages/brokers/alpaca_market_data.py`, `packages/risk/engine.py`, `packages/risk/reservations.py`, `tests/integration/test_alpaca_execution.py`, `tests/integration/alpaca_execution_support.py`, `tests/unit/test_broker_binding.py`, `tests/contracts/test_supervisor_projections.py`, `docs/evidence/ptv-24-alpaca-execution.md`, `scripts/extend-integration-plan-gh.py`, `tests/unit/test_issue_plan_extension.py`, `docs/runbooks/paper-smoke.md`
+  - Abhängigkeiten: PTV-16, PTV-17
+  - Verhalten: Execution-eigene Konto-/Asset-/Session-/Capabilitybindung, auditierte Kontextveröffentlichung und SQL-SUBMITTING vor I/O; Wiederherstellung möglicher Versuche ohne erneuten POST; Markt-/Brokerbelege besitzen eine gemeinsame geprüfte Capabilityversion.
+  - Akzeptanz: Konto-/Asset-/Versions-/Frischeabweichung sendet null POST; Timeout/Crash/unklarer 404 hält Reservierung und Pause; PostgreSQL-Restore sendet keinen zweiten POST; Fake-Verhalten bleibt valide; Alpaca-Aktivierung bleibt bis PTV-25 geschlossen.
+  - Tests: T-RSK-024, T-RUN-024; Offline-MockTransport plus tatsächliche PostgreSQL-Rollen-, Crash-, Timeout-, Fencing- und Fake-Regressionstests, keine echten Brokerrequests.
+  - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
+
+- [ ] 8.2 PTV-25 Verbindliche Paper-Reconciliation und Gebührenbelege; Evidenz: T-RSK-025, T-RUN-025.
+  - Requirements: REQ-RSK-009, REQ-RSK-010, REQ-RUN-001, REQ-RUN-002, REQ-RUN-005, REQ-RUN-007
+  - Zielpfade: `packages/brokers/alpaca_paper.py`, `packages/brokers/alpaca_activities.py`, `services/execution/reconciliation.py`, `services/execution/recovery_health.py`, `services/control_api/migrations/versions/0009_paper_reconciliation.py`, `tests/integration/test_alpaca_reconciliation.py`, `tests/integration/alpaca_reconciliation_support.py`, `tests/contracts/test_alpaca_activities.py`, `docs/evidence/ptv-25-paper-reconciliation.md`
+  - Abhängigkeiten: PTV-24
+  - Verhalten: Vollständige paginierte FILL-/Order-/Position-/Kontobelege, persistente idempotente Teilfüll-/Cash-/Gebührenbuchung sowie konto- und capabilitygebundene Recovery; fehlende Gebührenautorität bleibt explizit unbekannt.
+  - Akzeptanz: Keine erfundene Nullgebühr oder vorzeitige Reservierungsfreigabe; doppelte/ungeordnete Fills und Cancelrennen buchen genau ihre bestätigten Deltas; unvollständige oder widersprüchliche Activities/Fees halten Pause/Reconciliation; erfolgreiche vollständige Offlinebelege erlauben den geprüften Alpaca-Recoverypfad.
+  - Tests: T-RSK-025, T-RUN-025; paginierte Offline-Adapterverträge und tatsächliche PostgreSQL-Neustart-/Fill-/Gebühren-/Mismatch-Szenarien.
+  - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
+
+- [ ] 8.3 PTV-21 Deploymentgrenzen und Failure-Injection; Evidenz: T-RUN-003/005/006/007, T-RSK-001/008, T-CTL-005/007.
   - Requirements: REQ-RUN-003, REQ-RUN-005, REQ-RUN-006, REQ-RUN-007, REQ-RSK-001, REQ-RSK-008, REQ-CTL-005, REQ-CTL-007
-  - Zielpfade: `infra/compose/compose.yaml`, `packages/observability/telemetry.py`, `tests/security/test_secrets.py`, `tests/integration/test_failures.py`, `docs/runbooks/incident.md`
-  - Abhängigkeiten: PTV-17, PTV-20
+  - Zielpfade: `infra/compose/compose.yaml`, `infra/containers/Dockerfile`, `services/runtime/`, `services/control_api/app.py`, `packages/observability/telemetry.py`, `scripts/start-local-lab.ps1`, `tests/security/test_secrets.py`, `tests/integration/test_failures.py`, `docs/runbooks/incident.md`
+  - Abhängigkeiten: PTV-17, PTV-20, PTV-25
   - Verhalten: Execution-only mounts/Egress/Rollen, Redactioncanaries, pinned dependencies, OTel/Health und DB/Jev/Alpaca/Dataausfälle prüfen.
   - Akzeptanz: 0 synthetische Secrets außerhalb Execution; Jevdown lässt Pause/Reconcile laufen; keine LIVEroute.
   - Tests: T-RUN-003/005/006/007, T-RSK-001/008, T-CTL-005/007
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 8.2 PTV-22 Opt-in Paper-Smoke vorbereiten; Evidenz: T-RSK-008/009/010, T-RUN-005.
+- [ ] 8.4 PTV-22 Opt-in Paper-Smoke vorbereiten; Evidenz: T-RSK-008/009/010, T-RUN-005.
   - Requirements: REQ-RSK-008, REQ-RSK-009, REQ-RSK-010, REQ-RUN-005
   - Zielpfade: `tests/paper/test_smoke.py`, `docs/runbooks/paper-smoke.md`
   - Abhängigkeiten: PTV-17, PTV-21
@@ -218,7 +236,7 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
   - Tests: T-RSK-008/009/010, T-RUN-005
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 8.3 PTV-23 Abschließende Integrationsverifikation; Evidenz: Vollständige Testmatrix + OpenSpec strict + github-issue-sync.
+- [ ] 8.5 PTV-23 Abschließende Integrationsverifikation; Evidenz: Vollständige Testmatrix + OpenSpec strict + github-issue-sync.
   - Requirements: REQ-MKT-001, REQ-DEC-007, REQ-RSK-007, REQ-RSK-009, REQ-RUN-006, REQ-CTL-006
   - Zielpfade: `tests/integration/test_acceptance.py`, `openspec/changes/paper-trading-vertical-slice/readiness.md`, `docs/development/github-issue-sync.json`
   - Abhängigkeiten: PTV-13, PTV-14, PTV-15, PTV-16, PTV-17, PTV-18, PTV-19, PTV-20, PTV-21, PTV-22

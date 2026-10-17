@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
+from packages.brokers.proofs import BindingProof
 from packages.domain.models import (
     BrokerCapabilities,
     Capability,
@@ -68,6 +69,16 @@ class MarketSnapshot:
     session_start: datetime
     session_end: datetime
     capability_version: int
+
+
+@dataclass(frozen=True, slots=True)
+class MarketBindingView:
+    """Private metadata view; provider identities live only in BindingProof."""
+
+    instrument: Instrument
+    source_capabilities: SourceCapabilities
+    capability_version: int
+    valid_until: datetime
 
 
 def _pairs(items: list[tuple[str, object]]) -> dict[str, object]:
@@ -281,6 +292,34 @@ class AlpacaMarketDataProvider:
         _canonical_uuid(asset.get("id"))
         return asset
 
+    def _source_version(
+        self, instrument: Instrument, account: dict[str, object],
+        asset: dict[str, object], session_start: datetime, session_end: datetime,
+    ) -> int:
+        metadata = "|".join(
+            (
+                instrument.id,
+                str(account["id"]),
+                str(account["status"]),
+                str(account["currency"]),
+                str(account.get("crypto_status")),
+                str(asset["status"]),
+                str(asset["tradable"]),
+                str(asset.get("fractionable")),
+                str(asset["id"]),
+                decimal_string(instrument.quantity_step)
+                if instrument.quantity_step is not None else "unknown",
+                decimal_string(instrument.price_tick)
+                if instrument.price_tick is not None else "unknown",
+                session_start.isoformat(),
+                session_end.isoformat(),
+                self._feed,
+            )
+        )
+        return (
+            int.from_bytes(hashlib.sha256(metadata.encode()).digest()[:4], "big") % 2147483647 + 1
+        )
+
     def _account(self, crypto: bool) -> dict[str, object]:
         account = self._get(_PAPER, "/v2/account")
         if not isinstance(account, dict):
@@ -424,7 +463,7 @@ class AlpacaMarketDataProvider:
             raise MarketDataError("BAR_GAP_OR_ORDER")
         return tuple(normalized)
 
-    def snapshot(self, instrument_id: str, session_id: str) -> MarketSnapshot:
+    def _capture(self, instrument_id: str, session_id: str) -> tuple[MarketSnapshot, BindingProof]:
         if not self._enabled:
             raise MarketDataError("DISABLED")
         instrument = self._instrument(instrument_id, self._enable_crypto)
@@ -489,27 +528,7 @@ class AlpacaMarketDataProvider:
             raise MarketDataError("STALE_CLOCK")
         if final_time - bars[-1].end_at >= _MAX_AGE or final_time >= session_end:
             raise MarketDataError("STALE_DATA")
-        metadata = "|".join(
-            (
-                instrument.id,
-                account["id"],
-                account["status"],
-                account["currency"],
-                str(account.get("crypto_status")),
-                asset["status"],
-                str(asset["tradable"]),
-                str(asset.get("fractionable")),
-                asset["id"],
-                decimal_string(quantity_step) if quantity_step is not None else "unknown",
-                decimal_string(price_tick) if price_tick is not None else "unknown",
-                session_start.isoformat(),
-                session_end.isoformat(),
-                self._feed,
-            )
-        )
-        version = (
-            int.from_bytes(hashlib.sha256(metadata.encode()).digest()[:4], "big") % 2147483647 + 1
-        )
+        version = self._source_version(instrument, account, asset, session_start, session_end)
         source = SourceCapabilities(
             "alpaca-market-data:crypto-us" if crypto else f"alpaca-market-data:{self._feed}",
             instrument.id,
@@ -532,7 +551,7 @@ class AlpacaMarketDataProvider:
             quantity_step=quantity_step,
             price_tick=price_tick,
         )
-        return MarketSnapshot(
+        snapshot = MarketSnapshot(
             instrument,
             source,
             broker,
@@ -550,6 +569,89 @@ class AlpacaMarketDataProvider:
             session_end,
             version,
         )
+        return snapshot, BindingProof(
+            provider_account_id=str(account["id"]),
+            provider_asset_id=str(asset["id"]),
+            instrument_id=instrument.id,
+            session_start=session_start,
+            session_end=session_end,
+            observed_at=final_time,
+            provider_time=clock_time,
+            capability_version=version,
+        )
+
+    def snapshot(self, instrument_id: str, session_id: str) -> MarketSnapshot:
+        snapshot, _proof = self._capture(instrument_id, session_id)
+        return snapshot
+
+    def binding_proof(self, instrument_id: str) -> tuple[MarketBindingView, BindingProof]:
+        """Fresh account, asset and session proof without requesting market bars."""
+        if not self._enabled:
+            raise MarketDataError("DISABLED")
+        instrument = self._instrument(instrument_id, self._enable_crypto)
+        capture_start = self._now()
+        crypto = instrument.market is Market.CRYPTO
+        day = capture_start.date() if crypto else capture_start.astimezone(_EASTERN).date()
+        account = self._account(crypto)
+        first_proof_at = self._now()
+        assets_payload = (
+            self._get(_PAPER, "/v2/assets", {"status": "active", "asset_class": "crypto"})
+            if crypto else [self._get(_PAPER, f"/v2/assets/{instrument.broker_symbol}")]
+        )
+        asset = self._asset(
+            assets_payload, instrument.broker_symbol, "crypto" if crypto else "us_equity"
+        )
+        instrument = replace(
+            instrument,
+            quantity_step=_asset_increment(asset, "min_trade_increment"),
+            price_tick=_asset_increment(asset, "price_increment"),
+        )
+        broker_clock = self._get(_PAPER, "/v2/clock")
+        clock_received_at = self._now()
+        if not isinstance(broker_clock, dict) or type(broker_clock.get("is_open")) is not bool:
+            raise MarketDataError("INVALID_RESPONSE")
+        clock_time = _timestamp(broker_clock.get("timestamp"))
+        if not -timedelta(seconds=5) <= clock_received_at - clock_time <= _MAX_AGE:
+            raise MarketDataError("STALE_CLOCK")
+        session_start, session_end = self._session(day, capture_start, crypto)
+        if not session_start <= capture_start < session_end:
+            raise MarketDataError("SESSION_CLOSED")
+        if not session_start <= clock_time < session_end:
+            raise MarketDataError("STALE_CLOCK")
+        if not crypto and broker_clock["is_open"] is not True:
+            raise MarketDataError("SESSION_CLOSED")
+        final_time = self._now()
+        if (final_time < capture_start or final_time < first_proof_at
+                or final_time - first_proof_at >= _MAX_AGE
+                or final_time - clock_time >= _MAX_AGE
+                or final_time >= session_end):
+            raise MarketDataError("STALE_CLOCK")
+        version = self._source_version(instrument, account, asset, session_start, session_end)
+        source = SourceCapabilities(
+            "alpaca-market-data:crypto-us" if crypto else f"alpaca-market-data:{self._feed}",
+            instrument.id, ("PT15M",), 120,
+            news=Capability.UNAVAILABLE,
+            papers=Capability.UNAVAILABLE,
+            history=Capability.CONFIRMED,
+        )
+        view = MarketBindingView(
+            instrument=instrument,
+            source_capabilities=source,
+            capability_version=version,
+            valid_until=min(final_time + _MAX_AGE, first_proof_at + _MAX_AGE,
+                            clock_time + _MAX_AGE, session_end),
+        )
+        proof = BindingProof(
+            provider_account_id=str(account["id"]),
+            provider_asset_id=str(asset["id"]),
+            instrument_id=instrument.id,
+            session_start=session_start,
+            session_end=session_end,
+            observed_at=final_time,
+            provider_time=clock_time,
+            capability_version=version,
+        )
+        return view, proof
 
     def capabilities(self, instrument_id: str) -> SourceCapabilities:
         now = self._now()

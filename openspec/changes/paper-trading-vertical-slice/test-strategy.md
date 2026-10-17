@@ -53,6 +53,15 @@ Die Pyramide hat fünf Ebenen: Unit/Property für Zahlen, Zeit und Zustandsregel
 
 ## Zusätzliche Querschnittsnachweise
 
+Freigegebene SQL-Paperintegration vom 2026-10-17, vor PTV-21:
+
+| Nachweis | Zielpfad | Akzeptanz |
+|---|---|---|
+| T-RSK-024 / T-RUN-024 | `tests/integration/test_alpaca_execution.py`, `tests/unit/test_broker_binding.py` | Tatsächlicher SQL-SUBMITTING-Commit vor MockTransport-I/O, Konto/Asset/Capability/Session/Fencing, Restore nach Crash und UNKNOWN/404 ohne zweiten POST, gehaltene Reservierung, Fake-Regressionsparität |
+| T-RSK-025 / T-RUN-025 | `tests/integration/test_alpaca_reconciliation.py`, `tests/contracts/test_alpaca_activities.py` | Vollständige Pagination, Teilfill/Cancel/Restart/Dubletten, gebundene Gebührenautorität, keine unbekannte Nullgebühr, keine vorzeitige Budgetfreigabe; vollständige Bestands-/Kontobelege vor Recovery |
+
+Normale CI und Agentenprüfungen bleiben vollständig offline bezüglich Brokern/Jev. Ein lokales HTTPX-MockTransport-Szenario ist keine echte Paperorder. Die späteren Deploymentchecks benötigen getrennte Prozesse und tatsächliche Rollen-/Mount-/Egress-Negativtests; vorhandene Klassenprüfungen ersetzen diese nicht.
+
 - **Verträge:** `tests/contracts/test_openapi_examples.py`, `test_json_schema_examples.py`, `test_generated_client_drift.py` und `test_breaking_change.py` validieren/linten OpenAPI und Schemas, erzeugen den Angular-Client reproduzierbar und vergleichen gegen eine reale Baseline. Beim Initialvertrag wird die fehlende Main-Baseline ausdrücklich als Initialzustand dokumentiert. Negativ- und Fuzztests prüfen ungültige Dezimalstrings, Zeitstempel, Enumerationen, Missing Fields und Größenlimits. Ein ungültiges Beispiel oder Clientdrift blockiert die spätere Abnahme.
 - **Jev-Evaluation:** `tests/evaluation/test_decision_dataset.py` nutzt mindestens 100 feste Fälle einschließlich stale, widersprüchlich und unvollständig. Akzeptierte Antworten erfüllen das Schema zu 100 %; Pflichtfehler führen zu 100 % Enthaltung. Berichtet werden Abstention-Rate, Kalibrierung gegen Eignungslabels, p95-Latenz, Kosten und Stabilität über drei Läufe. Confidence ist keine Gewinnwahrscheinlichkeit; Paper-P&L allein ist kein Freigabekriterium.
 - **Brokerzertifizierung:** `tests/contracts/test_broker_adapter.py` prüft FakeBroker und später den Paper-Adapter gegen dieselben Fähigkeiten und Fehlerfälle: Timeout, Rate Limit, Partial Fill, Cancel/Fill, UNKNOWN, Reconnect, Reconciliation. Ein erfolgreicher Happy Path reicht nicht.

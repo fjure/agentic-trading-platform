@@ -9,6 +9,7 @@ from pathlib import Path
 
 from packages.domain.models import (
     BrokerCapabilities,
+    Market,
     Mode,
     Quality,
     SafetyState,
@@ -118,6 +119,7 @@ class RiskFacts:
     open_exit_quantity: Decimal
     held_quantity: Decimal
     reconciliation_current: bool
+    market: Market = Market.US_EQUITY
 
     def __post_init__(self) -> None:
         for name in ("now", "session_valid_until", "market_available_at"):
@@ -164,6 +166,8 @@ class RiskFacts:
             raise ValueError("negative position count")
         if type(self.session_open) is not bool or type(self.reconciliation_current) is not bool:
             raise ValueError("session and reconciliation must be explicit booleans")
+        if not isinstance(self.market, Market):
+            raise ValueError("market must be explicit")
 
 
 def evaluate(proposal: TradeProposal, facts: RiskFacts, limits: RiskLimits) -> tuple[str, ...]:
@@ -199,7 +203,9 @@ def evaluate(proposal: TradeProposal, facts: RiskFacts, limits: RiskLimits) -> t
     deny(
         facts.capability.instrument_id != proposal.instrument_id
         or not facts.capability.permits(
-            order_type=order_type, fractional=fractional, regular_session=True
+            order_type=order_type,
+            fractional=fractional,
+            regular_session=facts.market is Market.US_EQUITY,
         ),
         "BROKER_CAPABILITY",
     )

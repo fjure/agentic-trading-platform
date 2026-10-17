@@ -325,25 +325,34 @@ def _fresh_facts(
             ),
             Decimal("0"),
         )
+        # Alpaca's SQL context is published from a complete Trading capability.
+        # A false Alpaca bit therefore means UNAVAILABLE; legacy Fake contexts
+        # retain UNKNOWN for their unconfirmed bits.
+        unconfirmed = (
+            m.Capability.UNAVAILABLE
+            if instrument_context["broker_id"] == "alpaca-paper"
+            else m.Capability.UNKNOWN
+        )
         capability = m.BrokerCapabilities(
             broker_id=instrument_context["broker_id"],
             instrument_id=proposal.instrument_id,
             version=instrument_context["capability_version"],
-            paper=m.Capability.CONFIRMED
-            if instrument_context["paper_confirmed"]
-            else m.Capability.UNKNOWN,
+            paper=m.Capability.CONFIRMED if instrument_context["paper_confirmed"] else unconfirmed,
             regular_session=m.Capability.CONFIRMED
             if instrument_context["regular_session_confirmed"]
-            else m.Capability.UNKNOWN,
+            else unconfirmed,
+            continuous_session=m.Capability.CONFIRMED
+            if instrument_context.get("continuous_session_confirmed", False)
+            else unconfirmed,
             fractional=m.Capability.CONFIRMED
             if instrument_context["fractional_confirmed"]
-            else m.Capability.UNKNOWN,
+            else unconfirmed,
             market_order=m.Capability.CONFIRMED
             if instrument_context["market_order_confirmed"]
-            else m.Capability.UNKNOWN,
+            else unconfirmed,
             limit_order=m.Capability.CONFIRMED
             if instrument_context["limit_order_confirmed"]
-            else m.Capability.UNKNOWN,
+            else unconfirmed,
             quantity_step=instrument_context["quantity_step"],
             price_tick=instrument_context["price_tick"],
         )
@@ -375,6 +384,7 @@ def _fresh_facts(
             open_exit_quantity=open_exit,
             held_quantity=held.get(proposal.instrument_id, Decimal("0")),
             reconciliation_current=account_context["reconciliation_current"],
+            market=state.market,
         )
         return (), facts
 

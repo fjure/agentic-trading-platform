@@ -131,6 +131,38 @@ def test_audit_maps_actual_outcomes_without_exposing_actor_identity():
         project_resource("audit", {**base, "outcome": "provider free text"})
 
 
+@pytest.mark.parametrize(
+    "action", ["binding.account", "binding.asset", "binding.proof", "binding.context"]
+)
+def test_private_provider_binding_audit_has_safe_public_projection(action):
+    record = {
+        "id": "binding-audit",
+        "occurred_at": NOW,
+        "actor_id": "execution-broker-binding",
+        "action": action,
+        "reason_codes": ("PROVIDER_PROOF_CONFIRMED",),
+        "outcome": "CONFIRMED",
+        "trace_id": TRACE,
+        "provider_account_id": "private-provider-canary",
+        "provider_asset_id": "private-asset-canary",
+    }
+    public = project_resource("audit", record)
+    assert public["actor"] == "execution"
+    assert public["outcome"] == "OBSERVED" and public["reasonCode"] == "OK"
+    assert "private-" not in str(public)
+    denied = project_resource(
+        "audit",
+        {
+            **record,
+            "action": "execution.submit_result",
+            "reason_codes": ("BINDING_PROOF_STALE",),
+            "outcome": "PRE_IO_REJECTED",
+        },
+    )
+    assert denied["outcome"] == "REFUSED"
+    assert denied["reasonCode"] == "RISK_CAPABILITY_UNCONFIRMED"
+
+
 def test_market_evidence_replaces_free_form_source_labels():
     bar = m.MarketBar(
         "bar-1",

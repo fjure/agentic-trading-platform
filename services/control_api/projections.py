@@ -79,7 +79,26 @@ _REASON_ALIASES = {
     "TARGET_UNSUPPORTED": "RISK_CAPABILITY_UNCONFIRMED",
     "PROPOSAL_TTL": "RISK_PROPOSAL_EXPIRED",
     "SPREAD": "RISK_STALE_MARKET",
+    "PROVIDER_PROOF_CONFIRMED": "OK",
 }
+for _code in {
+    "BINDING_CAPABILITY_INVALID",
+    "BINDING_CONTEXT_CHANGED",
+    "BINDING_INTENT_INVALID",
+    "BINDING_PIN_MISSING",
+    "BINDING_PROOF_CHANGED",
+    "BINDING_PROOF_INVALID",
+    "BINDING_PROOF_MISMATCH",
+    "BINDING_PROOF_MISSING",
+    "BINDING_PROOF_STALE",
+    "BINDING_PROOF_UNAVAILABLE",
+    "BINDING_TIME_INVALID",
+    "BROKER_ADAPTER_UNSUPPORTED",
+    "BROKER_BOUNDARY",
+    "PROVIDER_ACCOUNT_CHANGED",
+    "PROVIDER_ASSET_CHANGED",
+}:
+    _REASON_ALIASES[_code] = "RISK_CAPABILITY_UNCONFIRMED"
 _FEATURES = frozenset({"last_close", "previous_close", "window_volume", "return", "momentum"})
 for _code in {
     "BROKER_UNAVAILABLE_OR_MISMATCH",
@@ -126,6 +145,10 @@ _ACTIONS = frozenset(
         "risk.decide",
         "risk.reserve",
         "intent.create",
+        "binding.account",
+        "binding.asset",
+        "binding.proof",
+        "binding.context",
         "safety.latch",
         "safety.resume_requested",
         "safety.paper_activation_requested",
@@ -386,6 +409,7 @@ def _audit(value: object) -> dict:
         "execution-submit": "execution",
         "execution-reconciliation": "execution",
         "execution-recovery": "execution",
+        "execution-broker-binding": "execution",
         "operator": "local-operator",
     }.get(
         actor,
@@ -394,6 +418,8 @@ def _audit(value: object) -> dict:
         else "redacted-actor",
     )
     raw_outcome = _optional(value, "outcome")
+    if action.startswith("binding.") and raw_outcome == "CONFIRMED":
+        raw_outcome = "OBSERVED"
     outcomes = {
         "ACCEPTED": "ACCEPTED",
         "APPROVED": "ACCEPTED",

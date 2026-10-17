@@ -1,5 +1,9 @@
 # Opt-in Paper-Smoke (später)
 
+## PTV-24: SQL-Substrat, noch keine Betriebsfreigabe
+
+Stand2026-10-17: Die dauerhafte Alpaca-Executionbindung besitzt private Konto-/Asset-/Sessionbelege und eine kanonische Trading-Capabilityversion. Vor I/O wird SUBMITTING dauerhaft geschrieben; Restore behandelt vorhandene Versuche auch bei 404 als möglicherweise gesendet. Erste Bindung oder geänderte Provider-/Capabilitybelege setzen die bisherige Recoveryautorität atomar außer Kraft. Selbst ein ACK bleibt mit PENDING und unbekannten Gebühren sichtbar. Der normale Alpaca-Prozess bleibt pausiert und verweigert Recovery mit ALPACA_RECOVERY_PENDING, bis PTV-25 vollständige Inventar-/Activities-/Gebührenautorität belegt. PTV-21 liefert danach die echte Prozessverdrahtung. Keine Fake-Testfreigabe und kein temporäres Journal ersetzt diese Voraussetzungen. Alle bisherigen PTV-24-Requests erreichten ausschließlich synthetischen MockTransport.
+
 ## PTV-17: lokaler Adaptervertrag
 
 Stand 2026-10-15; offizielle Quellenprüfung 2026-10-14. Der Adapter unter `packages/brokers/alpaca_paper.py` wird ausschließlich mit synthetischen Werten und HTTPX MockTransport geprüft. POST-/DELETE-Operationen dieser Tests erreichen nur den lokalen Handler. Dies ist keine Erlaubnis für Codex, echte Paper-Requests oder Orders auszuführen.
