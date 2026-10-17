@@ -32,6 +32,8 @@ export * from './riskDecisionPage';
 export * from './riskPolicy';
 export * from './riskPolicyUpdate';
 export * from './runPage';
+export * from './runtimeHealth';
+export * from './runtimeHealthChecks';
 export * from './setModeRequest';
 export * from './supervisorEvent';
 export * from './supervisorSnapshot';

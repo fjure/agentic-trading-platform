@@ -7,6 +7,7 @@ import json
 import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import suppress
+from datetime import datetime
 from typing import Annotated
 
 from pydantic import Field
@@ -49,6 +50,7 @@ async def event_stream(
     monotonic: Callable[[], float] = time.monotonic,
     heartbeat_seconds: float = 15,
     poll_seconds: float = 1,
+    delivery_observer: Callable | None = None,
 ) -> AsyncIterator[bytes]:
     """Gaps reset explicitly; dependency failure or revoked session closes the stream."""
     batch, cursor = initial
@@ -65,6 +67,14 @@ async def event_stream(
                         auth.authenticate(token)
                         encoded = frame(item)
                         yield encoded
+                        if delivery_observer is not None:
+                            # Server-side yield age, not browser acknowledgement.
+                            # Observability failures cannot close a valid stream.
+                            with suppress(Exception):
+                                stamp = item["occurredAt"].replace("Z", "+00:00")
+                                delivery_observer(
+                                    datetime.fromisoformat(stamp)
+                                )
                         last_frame = monotonic()
                         await sleep(0)
                 elif monotonic() - last_frame >= heartbeat_seconds:

@@ -297,7 +297,10 @@ class JevDecisionEngine:
         config: JevConfig | None = None,
         transport: httpx.BaseTransport | None = None,
         monotonic_ns: Callable[[], int] = time.monotonic_ns,
+        egress_proxy: bool = False,
     ) -> None:
+        if type(egress_proxy) is not bool or (egress_proxy and transport is not None):
+            raise ValueError("invalid egress proxy configuration")
         self.clock = clock
         self.ids = ids
         self.config = config if config is not None else load_config()
@@ -314,6 +317,7 @@ class JevDecisionEngine:
             raise ValueError("invalid injected Jev credential")
         self._api_key = api_key
         self._transport = transport
+        self._egress_proxy = egress_proxy
         self._monotonic_ns = monotonic_ns
         self._usage: OrderedDict[str, JevUsage] = OrderedDict()
         self._usage_lock = Lock()
@@ -375,6 +379,7 @@ class JevDecisionEngine:
         try:
             with httpx.Client(
                 transport=self._transport,
+                proxy="http://worker-egress:8080" if self._egress_proxy else None,
                 verify=True,
                 trust_env=False,
                 follow_redirects=False,

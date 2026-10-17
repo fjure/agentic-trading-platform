@@ -1,5 +1,34 @@
 # Lokaler Betrieb
 
+## Dauerhafte lokale Dienste (PTV-21)
+
+`./scripts/start-local-lab.ps1` baut die gepinnten Images und das Angular-Dashboard, migriert die separate lokale Datenbank `lab_runtime` und startet Execution, Worker, Control-API und Watchdog. Default ist Fake/Mock mit DISABLED/PAUSE_NEW. Die technische Startbasis von10000USD ist ausdrücklich STALE/PENDING; es entstehen dadurch keine aktuellen Broker-, Session- oder Marktnachweise. Bestehende Datenbanken/Volumes und vorhandene Rollensecrets werden weder gelöscht noch gedreht. `-SkipBuild` verwendet ausschließlich bereits gebaute lokale Images; nach Quelländerungen zuerst vollständig bauen. `-ProvisionOnly` startet keine Laufzeitrollen.
+
+Der Launcher prüft und begrenzt Windows-Datei-ACLs vor privaten Schreibvorgängen. Der einmalige Provisionierungscontainer besitzt ausschließlich zusätzlich CHOWN/FOWNER für die vier exakten erzeugten Dateien; ihre Linux-Besitzrechte sind10001:10001/0600. Dienste selbst bleiben non-root, read-only, cap_drop ALL und erhalten genau ihren eigenen NOINHERIT-Login. Der Adminzugang wird ausschließlich einmalig an die Provisionierung gemountet. Private Dateien unter `.tooling/application/` niemals auslesen, kopieren oder ins Ticket übernehmen.
+
+Das Dashboard liegt auf `http://127.0.0.1:8000`. `/health` prüft Liveness, `/ready` die Datenbank des Kontrollpfads; beide erlauben keine Orders. Docker Desktop veröffentlicht bei ausschließlich internen Netzen hier keinen Hostport. Der Launcher verwendet deshalb bei Bedarf einen festen lokalen STDIO-Tunnel über `docker compose exec -T control-api`; pro Verbindung ist ausschließlich das eigene Container-Loopbackfrontend erreichbar. Die vier Dienstnetze bleiben intern. Maximal16 Verbindungen,60s ohne Aktivität, keine HTTP-/Cookie-/Code-Logs. Start/Stop prüfen den eigenen Helfer anhand PID, Pythonpfad und Startzeit. `./scripts/start-local-lab.ps1 -Stop` stoppt genau diesen Helfer und die vier Rollen, erhält PostgreSQL und alle Volumes. Ein erneuter Start ersetzt den eigenen Helfer vor der Docker-Portreservierung.
+
+Ein Operator fordert einen fünf Minuten gültigen Einmalcode ausschließlich in seiner privaten interaktiven Konsole an:
+
+```powershell
+docker compose -f infra/compose/compose.yaml --profile lab exec control-api python -m services.runtime activate
+```
+
+Der Agent führt diesen Aufruf nicht aus. Kein Code entsteht automatisch beim Start. Der Code gehört nur in das lokale Aktivierungsformular, niemals in Chat, URL, Log oder Screenshot. Eine Sitzung aktiviert keinen Handelsmodus.
+
+Der unabhängige Kontrollsocket befindet sich im **Control-API-Container**, fest unter `/run/control/control.sock`:
+
+```powershell
+docker compose -f infra/compose/compose.yaml --profile lab exec -T control-api python -m services.execution.control_socket --socket /run/control/control.sock pause
+docker compose -f infra/compose/compose.yaml --profile lab exec -T control-api python -m services.execution.control_socket --socket /run/control/control.sock kill
+```
+
+Resume und activate-paper bleiben ausdrücklich angeforderte Recoveryaufträge mit aktueller Policyversion, vollständigen Executionprüfungen und explizitem Paperflag. Das Fake-Lab erfindet keine Session oder Preise und gibt dadurch keinen Trade frei. HALTED wird nicht automatisch aufgehoben.
+
+Redigierte lokale OTel-/Health-Evidenz liegt je Dienst im flüchtigen `/tmp/runtime-telemetry.json` (0600). Sie enthält feste Komponenten/Reasoncodes, Zahlen, UTC und maximal256 Spans; keine Nutzpayloads oder Anbieterexporter. `checkedAt` und UNKNOWN/DEGRADED immer beachten. SSElag misst Eventzeit bis zur serverseitigen Ausgabe, keine Browserbestätigung. Metriken sind keine Risk-Freigabe.
+
+`infra/compose/compose.paper.yaml` ist eine getrennte, ausschließlich manuell gewählte Erweiterung: Alpaca nur Execution, Jev nur Worker, feste getrennte HTTPS-Proxys. Sie startet nicht durch dieses Runbook oder die normale CI. Kein echtes Credential wurde für PTV-21 verwendet. Der menschliche Paper-Smoke und seine ausdrücklichen Vorbedingungen gehören PTV-22.
+
 Apply ist freigegeben. Der lokale Fake-Durchstich verbindet Marktnormalisierung, Mock-Entscheidung, Planner, deterministisches Risk-Gate, Execution, Fill-Reconciliation und persistierte Portfolio-/Audit-/Outboxevidenz. Er ist als isolierter Integrationstest ausführbar; dauerhafte Dienste und externe Paperadapter benötigen ihre gesonderten Tasks und Prüfungen. Produktions- und LIVE-Endpunkte sind ausgeschlossen. Maßgeblich sind `REQ-RSK-001..010`, `REQ-RUN-001..007`, `REQ-CTL-001..007` und Design D-01/D-04/D-06/D-08.
 
 ## Vollständiger lokaler Fake-Durchstich (PTV-13)

@@ -6,7 +6,7 @@ import hashlib
 import json
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime, time, timedelta
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, localcontext
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -45,7 +45,10 @@ _ROUTES = {
             "/v2/calendar",
         }
     ),
-    _DATA: frozenset({"/v2/stocks/bars", "/v1beta3/crypto/us/bars"}),
+    _DATA: frozenset({
+        "/v2/stocks/bars", "/v1beta3/crypto/us/bars",
+        "/v2/stocks/quotes/latest", "/v1beta3/crypto/us/latest/quotes",
+    }),
 }
 
 
@@ -69,6 +72,9 @@ class MarketSnapshot:
     session_start: datetime
     session_end: datetime
     capability_version: int
+    spread: Decimal | None = None
+    quote_provider_time: datetime | None = None
+    quote_observed_at: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,13 +179,16 @@ class AlpacaMarketDataProvider:
         enable_crypto: bool = False,
         feed: str = "iex",
         transport: httpx.BaseTransport | None = None,
+        egress_proxy: bool = False,
     ) -> None:
         if feed not in {"iex", "sip"}:
             raise ValueError("unsupported Alpaca stock feed")
-        if type(enabled) is not bool or type(enable_crypto) is not bool:
+        if any(type(flag) is not bool for flag in (enabled, enable_crypto, egress_proxy)):
             raise ValueError("invalid enable flag")
         if transport is not None and type(transport) is not httpx.MockTransport:
             raise ValueError("only exact MockTransport is accepted for injected transport")
+        if egress_proxy and transport is not None:
+            raise ValueError("proxy cannot be combined with injected transport")
         self._clock = clock
         self._ids = ids
         self._api_key = api_key
@@ -189,7 +198,8 @@ class AlpacaMarketDataProvider:
         self._feed = feed
         # trust_env=False prevents proxy or CA overrides. The normal transport verifies TLS.
         self._client = httpx.Client(
-            transport=transport, timeout=httpx.Timeout(5.0), follow_redirects=False, trust_env=False
+            transport=transport, timeout=httpx.Timeout(5.0), follow_redirects=False,
+            trust_env=False, proxy="http://execution-egress:8080" if egress_proxy else None,
         )
 
     def close(self) -> None:
@@ -463,7 +473,45 @@ class AlpacaMarketDataProvider:
             raise MarketDataError("BAR_GAP_OR_ORDER")
         return tuple(normalized)
 
-    def _capture(self, instrument_id: str, session_id: str) -> tuple[MarketSnapshot, BindingProof]:
+    def _quote(self, instrument: Instrument) -> tuple[Decimal, datetime, datetime]:
+        crypto = instrument.market is Market.CRYPTO
+        params = {"symbols": instrument.broker_symbol}
+        if not crypto:
+            params["feed"] = self._feed
+        payload = self._get(
+            _DATA,
+            "/v1beta3/crypto/us/latest/quotes" if crypto else "/v2/stocks/quotes/latest",
+            params,
+        )
+        observed_at = self._now()
+        if not isinstance(payload, dict) or not isinstance(payload.get("quotes"), dict):
+            raise MarketDataError("INVALID_QUOTE")
+        quotes = payload["quotes"]
+        if set(quotes) != {instrument.broker_symbol}:
+            raise MarketDataError("INVALID_QUOTE")
+        quote = quotes[instrument.broker_symbol]
+        if not isinstance(quote, dict):
+            raise MarketDataError("INVALID_QUOTE")
+        try:
+            bid = decimal_value(quote.get("bp"))
+            ask = decimal_value(quote.get("ap"))
+            provider_time = _timestamp(quote.get("t"))
+        except ValueError:
+            raise MarketDataError("INVALID_QUOTE") from None
+        if bid <= 0 or ask < bid:
+            raise MarketDataError("INVALID_QUOTE")
+        if not timedelta() <= observed_at - provider_time < _MAX_AGE:
+            raise MarketDataError("STALE_QUOTE")
+        with localcontext() as context:
+            context.prec = 38
+            spread = ask - bid
+        return spread, provider_time, observed_at
+
+    def _capture(
+        self, instrument_id: str, session_id: str, *, require_spread: bool = False,
+    ) -> tuple[MarketSnapshot, BindingProof]:
+        if type(require_spread) is not bool:
+            raise MarketDataError("INVALID_REQUEST")
         if not self._enabled:
             raise MarketDataError("DISABLED")
         instrument = self._instrument(instrument_id, self._enable_crypto)
@@ -517,6 +565,9 @@ class AlpacaMarketDataProvider:
             session_start,
             session_end,
         )
+        spread = quote_time = quote_observed_at = None
+        if require_spread:
+            spread, quote_time, quote_observed_at = self._quote(instrument)
         final_time = self._now()
         if (
             final_time < capture_start
@@ -528,6 +579,12 @@ class AlpacaMarketDataProvider:
             raise MarketDataError("STALE_CLOCK")
         if final_time - bars[-1].end_at >= _MAX_AGE or final_time >= session_end:
             raise MarketDataError("STALE_DATA")
+        if require_spread and (
+            quote_observed_at < capture_start
+            or final_time < quote_observed_at
+            or final_time - quote_time >= _MAX_AGE
+        ):
+            raise MarketDataError("STALE_QUOTE")
         version = self._source_version(instrument, account, asset, session_start, session_end)
         source = SourceCapabilities(
             "alpaca-market-data:crypto-us" if crypto else f"alpaca-market-data:{self._feed}",
@@ -563,11 +620,15 @@ class AlpacaMarketDataProvider:
                 clock_time + _MAX_AGE,
                 bars[-1].end_at + _MAX_AGE,
                 session_end,
+                quote_time + _MAX_AGE if quote_time is not None else session_end,
             ),
             True,
             session_start,
             session_end,
             version,
+            spread,
+            quote_time,
+            quote_observed_at,
         )
         return snapshot, BindingProof(
             provider_account_id=str(account["id"]),
@@ -580,8 +641,10 @@ class AlpacaMarketDataProvider:
             capability_version=version,
         )
 
-    def snapshot(self, instrument_id: str, session_id: str) -> MarketSnapshot:
-        snapshot, _proof = self._capture(instrument_id, session_id)
+    def snapshot(
+        self, instrument_id: str, session_id: str, *, require_spread: bool = False,
+    ) -> MarketSnapshot:
+        snapshot, _proof = self._capture(instrument_id, session_id, require_spread=require_spread)
         return snapshot
 
     def binding_proof(self, instrument_id: str) -> tuple[MarketBindingView, BindingProof]:
