@@ -1,6 +1,6 @@
 # PTV-25: Verbindliche Paper-Reconciliation
 
-Prüfstand 2026-10-17. Requirements REQ-RSK-009/010 und REQ-RUN-001/002/005/007; Szenarien T-RSK-025/T-RUN-025. Ausschließlich lokale MockTransport-Provider und tatsächliches isoliertes PostgreSQL; keine echten Broker-/Jev-Requests, Credentials oder Orders. Alle Pflichtprüfungen dieses Offline-Pakets bestanden; Gitintegration folgt dem verifizierten Issue-Sync.
+Prüfstand 2026-10-17. Requirements REQ-RSK-009/010 und REQ-RUN-001/002/005/007; Szenarien T-RSK-025/T-RUN-025. Ausschließlich lokale MockTransport-Provider und tatsächliches isoliertes PostgreSQL; keine echten Broker-/Jev-Requests, Credentials oder Orders. Alle Pflichtprüfungen dieses Offline-Pakets bestanden; Gitintegration und Issue-Sync sind verifiziert, siehe Gitnachweis.
 
 ## Verhalten und Autorität
 
@@ -41,3 +41,7 @@ Der synthetische Aktienkalender verschiebt ausschließlich in Tests die Venue-Ze
 
 
 OpenSpec strict, 40 Requirements/25 eindeutige LeafTasks, Ruff und Quellscan (352 Dateien, null Credentialmuster) bestanden. PostgreSQL-Neufälle: Aktivierung/Resume, Teilstorno/später Fill, Terminalregression nach neuem Prozess, Ownerablauf nach Buchung, doppelte/ungeordnete Activities/Restart, fehlendes beziehungsweise geändertes Gebührenprofil, FEE/späte FEE, fehlende Seite/FILL, Crash, sofortiger ACK-Teilfill, Resume-Ablehnung nach bestätigtem Fill, Limitpreiswiderspruch sowie fremde Orders, Konto-/Positions-/Cashmismatch, Timeout und private Rechte/Audit. Der PostgreSQL-Testdienst wurde anschließend gezielt gestoppt. Issue #25 abgeschlossen; vollständiger 25-Issue-Read-back und Wiederholung mit null Writes bestanden. OpenSpec bestätigt 22/25 abgeschlossene Tasks, drei verbleiben.
+
+## Gitnachweis
+
+PTV-25 Gitintegration am 2026-10-17: Issuebranch codex/ptv-25-paper-reconciliation, Commit 30b2e1d157fc9b46e1036698d9509e756be40b1b; regulärer Merge-main ddce16e651a8586b3ecb506b8d53041dd94cdf13. Remote-SHAs und Ancestry aller 22 integrierten Issue-Branches (PTV-01..20 plus PTV-24/25) verifiziert. Issue #25 completed, vollständiger 25-Issue-Read-back und Wiederholung mit null Writes bestanden. Die CI des Implementierungsmerges läuft zum Dokumentationszeitpunkt; ihr Erfolg wird hier noch nicht behauptet. Spätere reine Evidenzcommits dürfen main weiterführen; Zuordnung in docs/development/git-issue-integrations.json.
