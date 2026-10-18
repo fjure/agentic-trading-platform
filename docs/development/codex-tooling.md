@@ -1,8 +1,10 @@
 # Codex-Tooling: Bootstrap-Status
 
-Stand: 2026-10-18 (Europe/Berlin); ursprüngliche Quellenprüfung 2026-10-12. **Definition of Ready erfüllt; Apply gesondert freigegeben, 23/25 Tasks abgeschlossen.**
+Stand: 2026-10-18 (Europe/Berlin); ursprüngliche Quellenprüfung 2026-10-12. **Definition of Ready erfüllt; Apply gesondert freigegeben, 24/25 Tasks abgeschlossen.**
 
 ## Aktueller Apply-Stand
+
+PTV-22 abgeschlossen: getrennte menschliche Einmal-CLIs für Worker/Execution, DB-geschützte lauf-/state-/limitgebundene Freigabe, Vor-Konfigurations-/TTYguards, normale deterministische Risk-/Submitgates für genau einen LIMIT-BUY, einmaliger auditiert dauerhafter Cancelpfad, UNKNOWN-Hold beziehungsweise bestätigtes CANCELED/RELEASED und Pause/Outboxcleanup. Rohbar-/Recoverykreis ohne Gateausnahme behoben.621 lokale Regressionen mit sechs ausgewiesenen früheren Umgebungsskips, abschließend62 Operator-/Requestfälle sowie sechs unterschiedliche tatsächliche Offline-PostgreSQL-Szenarien bestanden; unabhängiger begrenzter Safetyabschlussreview ohne offene bestätigteP1/P2. Ruff, strictOpenSpec,40REQ25Tasks, Contractvalidierung/oasdiff und Quellencredentialscan bestanden. Issue#22 completed, vollständiger25-Issue-Read-back und Wiederholung0Writes verifiziert. Gitintegration wird nach tatsächlichem Push/Merge gesondert nachgeführt. Keine echten Providerrequests/Orders oder Credentials; menschlicher Paper-/UI-Check bleibt unverifiziert. Evidenz: docs/evidence/ptv-22-paper-smoke.md. PTV-23 bleibt offen.
 
 PTV-21 Gitintegration am2026-10-18: Issuebranch `codex/ptv-21-deployment-boundaries`, Commit `7cf0427f3179ac64206853b9920155f6cac24e81`; regulärer Merge-main `bb8d0a230116c7a6f3a44dadbef1759c24f75c4c`. Remote-SHAs und Ancestry aller23integrierten Issue-Branches (PTV-01..21 plus PTV-24/25) verifiziert; Merge- und Issuebaum identisch. Issue#21 completed, vollständiger25-Issue-Read-back und Wiederholung mit0Writes bestanden. Contracts-CI39076739619 für den Implementierungsmerge ist tatsächlich success: https://github.com/fjure/agentic-trading-platform/actions/runs/39076739619. Spätere reine Evidenzcommits dürfen main weiterführen; maßgebliche Zuordnung: docs/development/git-issue-integrations.json.
 

@@ -1,57 +1,84 @@
-# Opt-in Paper-Smoke (später)
+# Menschlicher Opt-in Paper-Smoke
 
-## PTV-24: SQL-Substrat, noch keine Betriebsfreigabe
+Stand2026-10-18, PTV-22. Ausschließlich ein menschlicher lokaler Operator startet diesen Ablauf in privaten interaktiven Terminals. Entwicklungsagenten führen weder die folgenden Befehle mit Anbieterkonfiguration noch echte Providerrequests oder Orders aus. CI prüft nur Offlinefixtures. Ein tatsächlicher Paperlauf wurde nicht ausgeführt; die technische Vorbereitung dieses Tasks wird separat bewertet. LIVE bleibt gesperrt.
 
-Stand2026-10-17: Die dauerhafte Alpaca-Executionbindung besitzt private Konto-/Asset-/Sessionbelege und eine kanonische Trading-Capabilityversion. Vor I/O wird SUBMITTING dauerhaft geschrieben; Restore behandelt vorhandene Versuche auch bei 404 als möglicherweise gesendet. Erste Bindung oder geänderte Provider-/Capabilitybelege setzen die bisherige Recoveryautorität atomar außer Kraft. Selbst ein ACK bleibt mit PENDING und unbekannten Gebühren sichtbar. Der normale Alpaca-Prozess bleibt pausiert und verweigert Recovery mit ALPACA_RECOVERY_PENDING, bis PTV-25 vollständige Inventar-/Activities-/Gebührenautorität belegt. PTV-21 liefert danach die echte Prozessverdrahtung. Keine Fake-Testfreigabe und kein temporäres Journal ersetzt diese Voraussetzungen. Alle bisherigen PTV-24-Requests erreichten ausschließlich synthetischen MockTransport.
+## Vorbedingungen
 
-## PTV-17: lokaler Adaptervertrag
+PTV-17/24/25 zertifizieren Adapter, dauerhafte Konto-/Capabilitybindung und vollständige Order-/Activities-/Gebühren-Reconciliation offline. PTV-21 stellt getrennte Rollen, Mounts, Kontrollsockets und feste Egress-Proxys bereit. Dieser Ablauf ersetzt diese Nachweise nicht; technische Evidenz: `docs/evidence/ptv-22-paper-smoke.md`.
 
-Stand 2026-10-15; offizielle Quellenprüfung 2026-10-14. Der Adapter unter `packages/brokers/alpaca_paper.py` wird ausschließlich mit synthetischen Werten und HTTPX MockTransport geprüft. POST-/DELETE-Operationen dieser Tests erreichen nur den lokalen Handler. Dies ist keine Erlaubnis für Codex, echte Paper-Requests oder Orders auszuführen.
+- Dediziertes Paper-only-Konto, USD, Retail-Cashprofil, keine Positionen, unbekannten/offenen Orders, Jobs oder Reservierungen. Die eingefrorene finanzielle Ledgerstartbasis muss exakt zur Brokerbasis passen. Das Fake-Lab startet technisch mit10000USD, Alpaca standardmäßig mit100000USD: das ist kein austauschbarer Brokerbeleg. Bei Abweichung abbrechen; kein automatisches Rebase, keine Löschung bestehender Volumes/Orders/Ledger. Eine passende dedizierte saubere Labor-/Paperbasis richtet der Mensch vorher ein.
+- Ausgangszustand `DISABLED`/`PAUSE_NEW`, positive aktuelle Policyversion, bestätigte SPY-/QQQ-Capabilities, frische geschlossene15-Minuten-Kerzen/Quotes, reguläre New-York-Sitzung. Außerhalb des Frischefensters abbrechen; keine Zeit-/Frischegates umgehen.
+- Operator bestätigt das unveränderliche Profil `alpaca-paper-us-retail-equity-zero-v1`: selbstverwaltetes individuelles Retail-Cashkonto, US-Aktien/USD, keine Partner-/Elite-/Non-Retail-Provisionen, kein Krypto. Unbekannte oder widersprüchliche FEE/CFEE sperren den Abschluss. Der1%-Cashpuffer ist kein Gebührenbeleg.
+- Private `.tooling/application/runtime/alpaca.json` ausschließlich durch den Operator einrichten: genau `api_key`, `api_secret`, `expected_account_id`, restriktive Ownerrechte/Linux0600; Mount nur Execution. Keine Werte in CLI, Chat, Browser oder Logs. Keine freie Base-URL. Öffentliche Kontoidentität im Ablauf ausschließlich als vom Menschen vorab lokal berechneter SHA256-Fingerprint.
+- Alle Migrationen einschließlich0011 vorher anwenden. `scripts/start-local-lab.ps1 -ProvisionOnly` ist ein vorheriger Fake-/DISABLED-Schritt mit vorhandenen Mount-/ACL-Prüfungen, migriert vorwärts und überschreibt keine bestehende finanzielle Basis. Erst danach öffentliche Runtimekonfiguration einstellen. Der Launcher verweigert absichtlich einen Paperstart.
 
-Primärquellen: [Orderanfrage](https://docs.alpaca.markets/us/reference/postorder), [Client-ID-Abfrage](https://docs.alpaca.markets/us/reference/getorderbyclientorderid), [Storno](https://docs.alpaca.markets/us/reference/deleteorderbyorderid-1), [Orderregeln](https://docs.alpaca.markets/us/docs/orders-at-alpaca), [Fractional](https://docs.alpaca.markets/us/docs/fractional-trading), [Crypto](https://docs.alpaca.markets/us/docs/crypto-orders) und [Activities](https://docs.alpaca.markets/us/docs/account-activities). Context7 lieferte `/websites/alpaca_markets_us`; die konkreten Endpunkte wurden zusätzlich direkt geprüft. Bestehendes HTTPX 0.28.1 und Trading-API v2; keine neue SDK-Abhängigkeit.
+Öffentliche `.tooling/application/runtime/runtime.json` für diesen Ablauf:
 
-Der lokale Requestvertrag verwendet ausschließlich den festen Paperhost, Mengen-/Preisstrings, Client-ID, einfache Market-/Limitorders, DAY für Aktien und GTC für BTC/USD. Extended Hours, Brackets, Shorts, Notionalorders und fremde Instrumente sind gesperrt. DELETE 204 bedeutet nur angenommene Stornoanfrage; erst ein späterer Statusabruf kann CANCELED/FILLED belegen. Timeout,429 und andere unklare Antworten halten die Client-ID für Recovery zurück; es erfolgt kein automatischer zweiter POST. Interne Orderidentität und Broker-UUID bleiben getrennt.
-
-Das konservative Profil erlaubt BUY nur als begrenzte Limitorder, SELL Market/Limit nur gegen bestätigte verfügbare Long-Menge. BUY Market wird wegen fehlender Preisobergrenze im OrderIntent abgewiesen. Die Quellen widersprechen sich bei fractional Limit teilweise; dieses Profil nimmt die engere Kombination fractional MARKET/DAY und erlaubt damit ausschließlich fractional SELL. Crypto benötigt bestätigte Mindestmenge und Inkremente, zusätzliche Aktivierung sowie ein aktives Crypto-Konto. Diese Einschränkungen sind Teil des Adapterprofils; generische Capabilityflags garantieren keine beliebige Kombination aus Seite, Ordertyp und Bruchstückmenge.
-
-Die zusätzliche Cashreserve ist ein expliziter Decimal-Konfigurationswert `cash_cushion_fraction` (Default 0.01, gültig größer 0 bis einschließlich 1) und fließt in die Capabilityversion ein. Sie ist ein konservativer Puffer, kein bestätigter Gebührenbetrag. Aktien benötigen Kalender-/Clockbelege und eine letzte Prüfung der Frist und regulären Sitzung unmittelbar vor POST. Auch Status-/Stornoaufrufe prüfen die Kontoidentität frisch. Eine reine Einstiegssperre des richtigen Kontos soll dessen bestehende Orders weiterhin lesbar und stornierbar lassen.
-
-Vor jedem Submit muss Execution den unveränderlichen Intent und den möglichen Sendeversuch dauerhaft speichern. Nach Neustart werden beide mit `restored_intents` und `attempted_client_ids` wiederhergestellt; `bind_intent(..., attempted=True)` ist ebenfalls ein reiner Leserecoverypfad. Der Adapter ist kein dauerhaftes Ledger. Selbst eine 404 erlaubt für eine bereits versuchte Client-ID keinen neuen POST. Ein lokaler Dateijournaltest belegt diesen Wiederanlaufvertrag mit synthetischem Zustand, keine produktive DB-Integration.
-
-Statusabfragen liefern kumulative Ausführungsdaten. Ein Order-GET besitzt keinen autoritativen Gesamtgebührenbeleg: `fee=None` und `Reconciliation.PENDING` bleiben erhalten. Solche Reports dürfen weder Reservierungsfreigabe noch einen abgeglichenen Cashbestand behaupten. Activities-/Gebührenzuordnung und sämtliche dauerhaften Execution-/Account-/Pausegates sind vor einer realen Paperfreigabe zusätzlich zu integrieren und zu prüfen. Die vorhandenen SQL-Submit-/Reconciliationpfade sind weiterhin Fake-only. Dieser offene Integrationspunkt blockiert den späteren Operator-Smoke und die abschließende Gesamtverifikation; ein bestandener lokaler Adaptertest ersetzt ihn nicht.
-
-PTV-16 und PTV-17 besitzen unterschiedliche Capabilityprofile und Versionsdigests. Beim späteren Anschließen an Risk/Execution dürfen diese Versionen nicht als austauschbar behandelt werden; Konto-, Asset-, Daten- und Sitzungsbelege müssen ausdrücklich gemeinsam gebunden werden. Lokale Brokerporttests belegen diese paketübergreifende Integration noch nicht.
-
-```powershell
-.venv/Scripts/python.exe -m pytest tests/contracts/test_alpaca_paper.py tests/contracts/test_fake_broker.py tests/recovery/test_alpaca_fixtures.py -q
+```json
+{
+  "mode": "DISABLED",
+  "broker_provider": "alpaca-paper",
+  "decision_provider": "mock",
+  "account_id": "paper",
+  "instruments": ["SPY", "QQQ"],
+  "origin": "http://127.0.0.1:8000",
+  "paper_enabled": true,
+  "reconciliation_fee_profile": "alpaca-paper-us-retail-equity-zero-v1"
+}
 ```
 
-Der Paper-Smoke ist eine **spätere menschlich freizugebende Prüfung**, kein Teil normaler CI und keine Aufforderung, jetzt eine Order zu senden. Er darf erst nach lokalem Fake-Durchstich, Brokeradapter-Zertifizierung, vollständiger Runtime-Sicherheitsprüfung und ausdrücklich bereitgestelltem Paper-Konto stattfinden. Nur ein verifizierter Paper-Endpunkt und ein Paper-only-Konto sind zulässig; LIVE bleibt technisch blockiert.
+Konfiguration allein aktiviert keinen Handel. Normale Execution und Worker vorher stoppen; Control API, Watchdog und Postgres bleiben unabhängig. Kein normaler Queueconsumer darf parallel laufen. Die folgenden PowerShellbefehle sind ausschließlich vom Menschen auszuführen; öffentliche Platzhalter vorher ersetzen.
 
-## Vorbedingungen und harte Abbruchregeln
+```powershell
+docker compose -f infra/compose/compose.yaml --profile lab stop execution worker
+docker compose -f infra/compose/compose.yaml --profile lab build execution worker control-api watchdog
+docker compose -f infra/compose/compose.yaml -f infra/compose/compose.paper.yaml --profile paper up -d postgres control-api watchdog execution-egress
+```
 
-1. Menschlicher Operator bestätigt Testfenster und minimales Simulationsbudget. Explizites Paper-Flag, Konto-ID-Fingerprint und fest eingebaute Paper-Host-Allowlist werden vor dem Start geprüft; fehlen sie, erfolgt **null Netzwerk-Submit**. Eine übergebene freie Base-URL ist unzulässig.
-2. Execution besitzt allein die restriktiv gemounteten Paper-Credentials. Kein Key in CLI-Argument, Terminalhistorie, Browser, Prompt, Testreport oder Log. Agent, Control API und Dashboard besitzen weder Broker-Submit-Port noch Credentials.
-3. System ist vor Aktivierung `DISABLED`/`PAUSE_NEW`. Health, Datenfrische, Session, Capabilities, Policy, verfügbare Equity und vollständige Reconciliation müssen grün sein. Unbekannte Brokerorder, Ledgerdrift oder unbestätigte Asset-/Orderfähigkeit bricht den Smoke ab.
-4. Der spätere Test wird nur durch eine eigens implementierte, überprüfte Opt-in-Schnittstelle gestartet. **Geplanter Befehlsplatzhalter, derzeit nicht ausführbar:** `tradingctl paper-smoke --paper-only --operator-confirmed`. Die tatsächliche CLI muss zusätzlich eine interaktive oder gleichwertig nachweisbare Bestätigung und feste Minimalgrenzen haben. Niemals Codex, MCP oder Agenten für Brokerorders einsetzen.
+Der Execution-Proxy erreicht nur feste offizielle Data-/Paperhosts. Der Worker-Einmalpfad verwendet die Basiskonfiguration ohne Jev-Key oder Worker-Egress. Fehlende private Datei, falsche SQL-Rolle oder fehlende Migration beendet den Ablauf; keine Rechte erweitern.
 
-## Geplanter Ablauf
+## Einmaliger Ablauf in drei privaten Terminals
 
-1. Einen kleinen, innerhalb der bestätigten Fähigkeit zulässigen LONG/FLAT-Vorschlag aus frischer abgeschlossener Kerze erzeugen. Die deterministische RiskDecision samt Reservation, Intent, `clientOrderId`, Trace-ID und Audit vor Submit prüfen.
-2. Execution übermittelt höchstens eine minimale Paper-Order. Den Brokerstatus und Teilfüllungen beobachten; bei Timeout sofort `UNKNOWN`, Reservierung halten und `recovery.md` anwenden. Kein blinder Retry.
-3. Falls offen und zulässig, Storno anfordern; andernfalls definitiven Fill festhalten. Cancel/Fill-Rennen werden über kumulative Fills und Broker-Reconciliation aufgelöst. Keine automatische Flatten-Marketorder.
-4. `PAUSE_NEW` setzen, vollständige Reconciliation durchführen und Ledger, Position, Reservierung, Outbox, SSE, Dashboard und Trace-Audit vergleichen. Test endet nur mit eindeutigem Status oder ausdrücklich offenem UNKNOWN-Incident.
+1. TerminalA: neue kanonische UUID für genau diesen Lauf wählen. Limitpreis ausdrücklich vom Menschen festlegen; keine aus Kerzen erfundene Quote und kein automatisch erhöhter Preis. Menge genau ein ganzer SPY- oder QQQ-Anteil, BUY/LIMIT. `max-notional` höchstens1000USD und mindestens `1 × limit-price ×1.01`; normale Portfolio-/Riskgrenzen gelten zusätzlich. Unterhalb eines zulässigen ganzen Anteils abbrechen, kein Fractional-/Market-Fallback. Technische Simulationsgrenzen, keine Handelsempfehlung.
 
-## Abnahmekriterien und Evidenz
+```powershell
+docker compose -f infra/compose/compose.yaml -f infra/compose/compose.paper.yaml --profile paper run --rm --no-deps --entrypoint python execution -m services.execution.paper_smoke --paper-only --operator-confirmed --run-id RUN_UUID --account-fingerprint ACCOUNT_SHA256 --instrument SPY --limit-price LIMIT_DECIMAL --max-notional BUDGET_DECIMAL
+```
 
-Höchstens eine brokerseitige Order je Intent; keine reale Orderadresse; keine Broker-Credentials außerhalb Execution; alle Werte als Decimal/UTC; eine lückenlose Trace-Kette von MarketState bis Report; keine doppelte Fillbuchung; kein Secret-Canary in Log/API/UI; nach Test keine ungeklärte neue Freigabe. Report enthält nur redigierte Konto- und Orderkennungen, Hostklassifikation `paper`, Policy-/Contractversion, UTC-Zeiten, Status und Reconciliationergebnis. Jeder fehlgeschlagene Guard oder unbekannte Brokerstatus beendet weitere Submits und hält PAPER pausiert.
+TTY nicht mit `-T` abschalten oder Eingaben pipen. Flags, Zahlen, Fingerprint und Linux-Vordergrundterminal werden vor privaten Konfigurationszugriffen geprüft. Phrase `PAPER RUN_UUID` persönlich eintippen. Der dauerhafte Startbeleg sperrt dieselbe Run-ID auch nach Abbruch. Execution vergleicht den Fingerprint vor Providerkontakt mit der privat konfigurierten Konto-ID; der Adapter bestätigt zusätzlich die tatsächliche Kontoidentität am festen Paperhost. Verifizierte Rohbars dürfen bei geschlossener Latch gespeichert werden; ein freigegebener MarketState entsteht erst nach Recovery.
 
-## PTV-25: Verbindliche Paper-Reconciliation
+2. TerminalB: erst wenn TerminalA dies verlangt, frischen lokalen Aktivierungsrequest mit der aktuellen Policyversion auslösen:
 
-Execution stellt `ExecutionProcess.reconcile()` unabhängig von Jev bereit. Es liest ausschließlich den fest verdrahteten Paperhost, vollständige Orders, paginierte Activities, Positionen und Konto. Wiederanlauf stellt zuerst alle dauerhaft möglicherweise versuchten IDs wieder her. Fehlende Orders, unklare 404, widersprüchliche Identitäten, fehlende Seiten oder FILL-Belege sind keine Nichtübermittlungsbeweise; kein zweiter POST. Vorbestehende Alpaca-Versuche ohne eingefrorene finanzielle Basis werden nicht nachträglich als sicher initialisiert.
+```powershell
+docker compose -f infra/compose/compose.yaml --profile lab exec control-api python -m services.execution.control_socket --socket /run/control/control.sock activate-paper --policy-version POLICY_VERSION
+```
 
-Finanzielle Startbasis, Gebührenprofil und ursprüngliche Reservierungsbeträge sind unveränderlich. Private Execution-Tabellen halten normalisierte Belege, Signaturen und bestätigte Geld-/Mengendeltas; Worker, Control und Watchdog besitzen keine Leserechte. Ein wiederholter Beleg verändert Cash und Positionen nicht erneut. Bestätigte Fills werden auch bei unbekannten Gebühren gebucht; ungeklärtes Restrisiko bleibt gehalten. Datumsgenaue FEE/CFEE bekommen weder eine erfundene Ausführungsuhrzeit noch eine willkürliche Orderzuordnung. Eine spätere Resume-Ablehnung wegen Markt-/Sessionfehlern erhält bestätigte Buchungen, gibt den Handel aber nicht frei. Verlust von Owner-/Fencingautorität bricht die gesamte unbestätigte Transaktion ab.
+Die zurückgegebene `request_id` in TerminalA eingeben. Der Prüfrequest ist kein Erfolgsbeleg. Execution verarbeitet nur diese nach Laufbeginn entstandene, noch gültige ACTIVATE_PAPER-Anfrage mit normalen Policy-/Pausegenerations-, Owner-/Fencing-, Markt-/Sitzungs-/Konto-/Portfoliogates. HALTED wird nicht entsperrt. Beim Warten erneuert Execution den Ownerheartbeat; es fordert selbst keine Aktivierung an.
 
-Standardmäßig bleibt die Gebührenautorität unbekannt. Das explizite Profil `alpaca-paper-us-retail-equity-zero-v1` gilt ausschließlich für die lokale Simulation selbstverwalteter individueller Retail-Cashkonten mit US-Aktien und USD, ohne Partner-, Non-Retail- oder Elite-Provisionsmodell. Der Operator muss die passende Kontoklasse prüfen; diese Eigenschaft wird nicht aus einem Symbol oder einem leeren Activitiesabruf hergeleitet. Grundlage: [Alpaca-Kommissionsbedingungen](https://alpaca.markets/support/commission-clearing-fees) und [nicht simulierte regulatorische Papergebühren](https://docs.alpaca.markets/us/docs/paper-trading). Beobachtete FEE/CFEE widersprechen der Nullgebührenannahme und sperren die Freigabe. Kryptogebühren werden über [Activities](https://docs.alpaca.markets/us/docs/crypto-fees) ausgewiesen, begründen aber ohne vollständige Gebührenautorität keine Kryptoaktivierung. Ein nachträglicher Profilwechsel wird abgewiesen.
+3. TerminalA zeigt öffentliche `market_state_id` und `request_sha256`. TerminalC startet den getrennten Worker für genau diesen State mit denselben Laufparametern:
 
-Reconciliation allein setzt RUNNING nicht. Ein frischer lokaler ACTIVATE_PAPER-/RESUME-Request benötigt zusätzlich aktuelle Policy, Pausegeneration, Owner/Fencing, vollständige konto- und capabilitygebundene Belege, frische Marktdaten und bestätigte Sitzung unter demselben Accountlock. HALTED bleibt gesperrt. Diese Nachweise verwenden ausschließlich Offlinefixtures und lokales PostgreSQL; Prozessverdrahtung, Mount-/Egress-Isolation und Ausfallbetrieb folgen PTV-21. Agenten führen keine echten Paperorders aus.
+```powershell
+docker compose -f infra/compose/compose.yaml --profile lab run --rm --no-deps --entrypoint python worker -m services.worker.paper_smoke_plan --paper-only --operator-confirmed --run-id RUN_UUID --account-fingerprint ACCOUNT_SHA256 --instrument SPY --limit-price LIMIT_DECIMAL --max-notional BUDGET_DECIMAL --market-state-id MARKET_STATE_ID
+```
+
+`PLAN RUN_UUID` persönlich bestätigen. Worker bekommt nur seinen DB-Mount. Ein auf DB-Ebene Execution vorbehaltener Auditbeleg bindet State, Run, Instrument, Limit und Budget für120Sekunden; Worker sieht nur dessen begrenzte öffentliche Projektion. Der vorhandene Mock-/Baselinepfad beurteilt echte normalisierte Beobachtungen. FLAT/ABSTAIN erzeugt keinen LONG-Vorschlag: dann abbrechen. Ein LIMIT-Vorschlag wird vor Persistenz endgültig gebildet, niemals später verändert. Ausschließlich die ausgegebene deterministische Proposal-ID in TerminalA eingeben. Abgelaufene Autorität oder Markt-/Decision-/Proposal-/Risk-TTLs werden nicht verlängert.
+
+Execution reserviert normales Riskbudget und übermittelt genau diesen Intent einmal; weder `tick()` noch normale Proposal-/Intentqueues werden ausgeführt. Anschließend PAUSE_NEW, auch bei Ctrl-C, EOF oder Fehler. Kein automatisches Wiederholen, Repricing, Resume, Marketorder oder Flatten.
+
+## Cancel, Abschluss und Incident
+
+Begrenzte Status-/Activities-/Positions-/Kontoprüfungen folgen. Eine bekannte offene Order erhält höchstens einen vor DELETE dauerhaft auditierten Cancelversuch. `204` bestätigt nur die angenommene Anfrage; CANCEL_PENDING ist kein Abschluss. Kumulative Fills und vollständige Reconciliation lösen Fill-/Cancelrennen. Unbekannte Gebühren, Teilbelege, Widerspruch, Timeout oder fehlende Autorität führen zu `UNKNOWN` und gehaltener Reservierung, niemals erneutem POST. Eine bestätigte Position wird nicht automatisch glattgestellt.
+
+Nur belegtes FILLED/CANCELED/REJECTED mit vollständiger Reconciliation ist terminal; der Lauf bleibt pausiert. Ein begrenzter Outboxpublisher stellt Ereignisse dem vorhandenen Snapshot-/SSE-Pfad bereit. Für den Browservergleich die lokale UI separat nach Betriebsrunbook zugänglich machen; fehlender UI-Transport ist kein bestandener Sichtvergleich.
+
+Menschlicher Report: UTC-Zeiten, Run-/Trace-ID, redigierte Konto-/Orderkennung, Paperhostklassifikation, Policy-/Capability-/Contractversion, Limit/Budget, Proposal→Risk→Reservation→Intent→Order→Report, Cancelbeleg, gebuchte Mengen/Cash/Gebühren, Reservierungsrest, Reconciliation, Pausezustand und Outbox-/SSE-/Dashboardvergleich. Keine privaten Payloads/Schlüssel. Fehlende Evidenz markieren. Ungeklärte Orders bleiben Incident nach `recovery.md`; nicht einfach mit neuer Run-ID fortfahren.
+
+## Technische Prüfung und Quellen
+
+```powershell
+.venv/Scripts/python.exe -m pytest tests/paper/test_smoke.py tests/unit/test_paper_smoke_plan.py tests/integration/test_paper_smoke.py -q
+```
+
+Nur synthetische MockTransports und UUID-isolierte PostgreSQL-Datenbanken, kein echter Paperlauf. Historische Integrationsblocker in PTV-17/24/25 gelten nach deren späterem Abschluss nicht mehr; deren Evidenz bleibt getrennt von realer Providerverifikation.
+
+Offizielle Primärquellen am2026-10-18 erneut geprüft, Context7 `/websites/alpaca_markets_us` und direkte Dokumentationsseiten: [Paper Trading](https://docs.alpaca.markets/us/docs/paper-trading), [Cancel204/422](https://docs.alpaca.markets/us/reference/deleteorderbyorderid-1), [Orders](https://docs.alpaca.markets/us/docs/orders-at-alpaca), [Activities](https://docs.alpaca.markets/us/docs/account-activities), [Retailkommissionen](https://alpaca.markets/support/commission-clearing-fees). Paper nutzt eigene Schlüssel und simulierte Ausführungen; Markteinfluss, Queueposition, Latenzslippage, regulatorische Gebühren und Dividenden sind kein nachgewiesenes reales Verhalten. APIv2, vorhandenes HTTPX0.28.1, keine neue SDK-Abhängigkeit. Fehlende/widersprüchliche Providerautorität bleibt geschlossen.

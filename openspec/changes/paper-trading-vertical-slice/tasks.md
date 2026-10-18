@@ -227,9 +227,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
   - Tests: T-RUN-003/005/006/007, T-RSK-001/008, T-CTL-005/007
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 8.4 PTV-22 Opt-in Paper-Smoke vorbereiten; Evidenz: T-RSK-008/009/010, T-RUN-005.
+- [x] 8.4 PTV-22 Opt-in Paper-Smoke vorbereiten; Evidenz: T-RSK-008/009/010, T-RUN-005.
   - Requirements: REQ-RSK-008, REQ-RSK-009, REQ-RSK-010, REQ-RUN-005
-  - Zielpfade: `tests/paper/test_smoke.py`, `docs/runbooks/paper-smoke.md`
+  - Zielpfade: `packages/domain/paper_smoke.py`, `services/execution/paper_smoke.py`, `services/worker/paper_smoke_plan.py`, `services/runtime/execution.py`, `services/control_api/migrations/versions/0011_paper_smoke_authority.py`, `tests/paper/test_smoke.py`, `tests/unit/test_paper_smoke_plan.py`, `tests/integration/test_paper_smoke.py`, `tests/integration/paper_smoke_support.py`, `tests/integration/risk_support.py`, `docs/runbooks/paper-smoke.md`, `docs/evidence/ptv-22-paper-smoke.md`
   - Abhängigkeiten: PTV-17, PTV-21
   - Verhalten: Explizite menschliche Paperfreigabe, bestätigtes Paperkonto/Host und minimaler Order/Cancel/Fill-Auditpfad; normale CI offline.
   - Akzeptanz: Ohne ausdrückliches Paperflag Abbruch vor Kontakt; Agenten führen keine Orders aus; dokumentierter Operatorcheck.
