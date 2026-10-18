@@ -1,5 +1,7 @@
 # Lokaler Betrieb
 
+Für Einrichtung, Anmeldung und den ersten Funktionstest zuerst die [README im Repository-Root](../../README.md) verwenden. Maßgeblicher aktueller Betriebsweg ist der folgende Abschnitt „Dauerhafte lokale Dienste“. Die weiter unten ausdrücklich als frühere Prüfgrundlage eingeordneten Planungs-/PTV-Zwischenstände sind historische Evidenz; dortige Angaben wie „Launcher folgt später“ oder „derzeit nicht ausführbar“ beschreiben den damaligen Stand. Aktuelle Gesamtabnahme: [PTV-23](../evidence/ptv-23-final-acceptance.md).
+
 ## Dauerhafte lokale Dienste (PTV-21)
 
 `./scripts/start-local-lab.ps1` baut die gepinnten Images und das Angular-Dashboard, migriert die separate lokale Datenbank `lab_runtime` und startet Execution, Worker, Control-API und Watchdog. Default ist Fake/Mock mit DISABLED/PAUSE_NEW. Die technische Startbasis von10000USD ist ausdrücklich STALE/PENDING; es entstehen dadurch keine aktuellen Broker-, Session- oder Marktnachweise. Bestehende Datenbanken/Volumes und vorhandene Rollensecrets werden weder gelöscht noch gedreht. `-SkipBuild` verwendet ausschließlich bereits gebaute lokale Images; nach Quelländerungen zuerst vollständig bauen. `-ProvisionOnly` startet keine Laufzeitrollen.
