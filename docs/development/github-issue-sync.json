@@ -5,6 +5,7 @@
   "changeId": "paper-trading-vertical-slice",
   "status": "synchronized-read-back-verified",
   "syncSummary": {
+    "scope": "historical initial 23-task bootstrap; current completion and read-back counts are applicationProgress and lastSyncRun",
     "created": 23,
     "updated": 0,
     "unchangedOnSecondPass": 23,
@@ -41,8 +42,8 @@
     "status": "not-used",
     "reason": "No milestone read/create tool in the 15-tool allowlist; change label used."
   },
-  "lastReadBackAt": "2026-10-18T08:07:38.547233Z",
-  "lastRepositoryReadAt": "2026-10-18T08:07:38.547233Z",
+  "lastReadBackAt": "2026-10-18T08:09:48.257335Z",
+  "lastRepositoryReadAt": "2026-10-18T08:09:48.257335Z",
   "localValidation": {
     "openSpecStrict": "passed-no-issues",
     "requirements": 40,
@@ -66,7 +67,7 @@
       "issueNumber": 1,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/1",
       "contentHash": "092627bfc7cdea1bbd18d966b8e93558a772c25631b5733daeeefa2345e4cc0b",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [],
       "state": "closed",
       "completionEvidence": "openspec/changes/paper-trading-vertical-slice/implementation-evidence.md"
@@ -76,7 +77,7 @@
       "issueNumber": 2,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/2",
       "contentHash": "9ea530a830ef3cee8aa23d4263dfaf42d6b7b0d01c7133381f9e7d226b86c08e",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-01",
@@ -92,7 +93,7 @@
       "issueNumber": 3,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/3",
       "contentHash": "3674c841d803e5b0fe47cd79fe2065c26f07556162e6910b7f5cb94866923e32",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-01",
@@ -113,7 +114,7 @@
       "issueNumber": 4,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/4",
       "contentHash": "ac07c30e90d7d910598158559f976288592b0949b167cfb03c40f46f83b25e91",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-02",
@@ -134,7 +135,7 @@
       "issueNumber": 5,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/5",
       "contentHash": "ab5bef2210a0d6b0f018a90c30b58b3eeb19b67916178442478b8108aea80146",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-04",
@@ -150,7 +151,7 @@
       "issueNumber": 6,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/6",
       "contentHash": "218cc2d1b0369db005f739ac6bceb67ff7841946ded6b7d0d64e6ad2e9fc5f92",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-02",
@@ -171,7 +172,7 @@
       "issueNumber": 7,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/7",
       "contentHash": "4d536c81a378bc4179355968e623b30f639a89bfbaae46b5db69320c9f6110c7",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-02",
@@ -197,7 +198,7 @@
       "issueNumber": 8,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/8",
       "contentHash": "969917e517a2cf21c8cd8f73bf590d603f083a79ed954a25a9bfafa6309f49e0",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-02",
@@ -213,7 +214,7 @@
       "issueNumber": 9,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/9",
       "contentHash": "c19e6c9372d9c6f2820120598549fbf781eebccdb1c382e424feed2772a85abe",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-04",
@@ -239,7 +240,7 @@
       "issueNumber": 10,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/10",
       "contentHash": "884c0e4685a5720eecd12be2834cae9ac9564754102c608bf2710d8f1da0cbb0",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-05",
@@ -265,7 +266,7 @@
       "issueNumber": 11,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/11",
       "contentHash": "b33d539e2ac88efe8efcb79fdbeb5a507d779f73cc98b60c080d34ef597430bc",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-10",
@@ -281,7 +282,7 @@
       "issueNumber": 12,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/12",
       "contentHash": "4ac969bf35e0716c835b3c296c9b02b49d2f0e378e71b833d9fd353ce8d2d211",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-10",
@@ -302,7 +303,7 @@
       "issueNumber": 13,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/13",
       "contentHash": "53addec5094c18e8cac4917127fab2fa4e811f011b77483e9dd879437c812db0",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-05",
@@ -343,7 +344,7 @@
       "issueNumber": 14,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/14",
       "contentHash": "2c2915e523412e92e15b984034f260172e200a9e978f54292a46bf428961d1c1",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-13",
@@ -359,7 +360,7 @@
       "issueNumber": 15,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/15",
       "contentHash": "dd350f06e9c8641e0be79e50a386a2bc017221f2e55fcea41f9f4f57924f1a5d",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-14",
@@ -375,7 +376,7 @@
       "issueNumber": 16,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/16",
       "contentHash": "920d250b3b191a3d8c2d6e482a71f3dd03b659b2b6f2ecee8974538165c8e005",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-14",
@@ -391,7 +392,7 @@
       "issueNumber": 17,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/17",
       "contentHash": "00314c50e9ed2f1b062974fd2b2d4c44a8b4b11dec90f29e375fe50182dd9beb",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-15",
@@ -417,7 +418,7 @@
       "issueNumber": 18,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/18",
       "contentHash": "3ad5ddb9db1ee23ceddf3711b8ee08ca897f1c912ed30ea1c3a175e07e2a33bd",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-03",
@@ -438,7 +439,7 @@
       "issueNumber": 19,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/19",
       "contentHash": "1c8b46857a0b59b6ec3ce6463d25280014469b88ce73a5cca8b6c98fa64186d8",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-05",
@@ -459,7 +460,7 @@
       "issueNumber": 20,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/20",
       "contentHash": "012ada739a2fd65348b664d158289eef0cca4683ad24654d03f793fc8b82f5ee",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-18",
@@ -480,7 +481,7 @@
       "issueNumber": 21,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/21",
       "contentHash": "453b76d2c753b32e61dd3caf6fdbc3717c14ca2a79942be144c6bbd7e5e2bc0a",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-17",
@@ -506,7 +507,7 @@
       "issueNumber": 22,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/22",
       "contentHash": "eb13b890fc549bfcd32699bc1a130d7b5578739729356505ef2d7c4936b8a43e",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-17",
@@ -527,7 +528,7 @@
       "issueNumber": 23,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/23",
       "contentHash": "2ec13e2a54a56a9a63d41cd07bf4ab9aa3fead9ef515643bbddf9fd57c9abe09",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-13",
@@ -588,7 +589,7 @@
       "issueNumber": 24,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/24",
       "contentHash": "e136f61b090b8db82129b3275018f2bb1ada6e5984309723f220c44262e31b34",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-16",
@@ -609,7 +610,7 @@
       "issueNumber": 25,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/25",
       "contentHash": "d5344a90d8bcf58f16ad856613c75a12a4b26db8b136112e5f0cc09d43f6cb34",
-      "syncedAt": "2026-10-18T08:07:38.547233Z",
+      "syncedAt": "2026-10-18T08:09:48.257335Z",
       "dependsOn": [
         {
           "taskId": "PTV-24",
@@ -631,7 +632,7 @@
     "duplicates": 0,
     "closed": 25,
     "open": 0,
-    "readBackAt": "2026-10-18T08:07:38.547233Z"
+    "readBackAt": "2026-10-18T08:09:48.257335Z"
   },
   "applicationProgress": {
     "complete": 25,
@@ -646,9 +647,9 @@
     "mergeIntoMain": true,
     "forcePush": false,
     "remoteIntegrationVerified": true,
-    "verifiedAt": "2026-10-18T07:42:58.062483Z",
+    "verifiedAt": "2026-10-18T08:09:02.623606Z",
     "evidencePath": "docs/development/git-issue-integrations.json",
-    "verifiedImplementationMainCommit": "ecddaae574fcc6465af4b9abeb296f11d52842fd",
+    "verifiedImplementationMainCommit": "27e09474413a40282ed66a9200fdac6b81dc084c",
     "integratedTaskIds": [
       "PTV-01",
       "PTV-02",
@@ -673,7 +674,8 @@
       "PTV-24",
       "PTV-25",
       "PTV-21",
-      "PTV-22"
+      "PTV-22",
+      "PTV-23"
     ]
   },
   "activeSyncTransport": "github-cli",
@@ -682,7 +684,7 @@
     "authenticatedLogin": "fjure",
     "authorizedByUserAt": "2026-10-13",
     "repository": "fjure/agentic-trading-platform",
-    "verifiedAt": "2026-10-18T08:07:38.547233Z",
+    "verifiedAt": "2026-10-18T08:09:48.257335Z",
     "issueWriteReadBackVerified": true,
     "readChecks": {
       "issues": 25
