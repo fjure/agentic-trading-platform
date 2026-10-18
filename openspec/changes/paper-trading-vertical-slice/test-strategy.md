@@ -4,49 +4,49 @@ PTV-21 ergänzt die bestehenden Test-IDs um reale Deploymentnachweise: T-RUN-003
 
 ## Status und Gates
 
-Dies ist ein **Testplan**, kein Ausführungsbericht. In diesem Planungsdurchlauf existiert keine Anwendung; alle unten genannten Testdateien sind künftige Zielpfade. Die Definition of Ready verlangt valide Specs, Verträge, Beispiele und vollständige Zuordnung. Die spätere Runtime-Zertifizierung verlangt zusätzlich grüne Tests, Recovery-Evidenz und eine unabhängige Sicherheitsprüfung. Kein Test darf einen Live-Endpunkt erreichen. Normale CI nutzt ausschließlich MockDecisionEngine, Replay und FakeBroker. Ein echter Paper-Smoke ist optional, menschlich ausgelöst und aus normaler CI ausgeschlossen.
+Dies ist eine **Testzuordnung**, kein pauschaler Ausführungsbericht. PTV-23 hat die historischen Planpfade am2026-10-18 auf die tatsächlich implementierten, teils zusammengefassten Testdateien abgeglichen. Konkrete Ausführungsergebnisse und Grenzen stehen in docs/evidence/ptv-23-final-acceptance.md und den dort verlinkten Tasknachweisen. Der verbleibende generierte testStatus planned-not-executed beschreibt ausschließlich den statischen Validator und wird nicht zu einem erfundenen Runtime-PASS umgeschrieben. Die Definition of Ready verlangt valide Specs, Verträge, Beispiele und vollständige Zuordnung. Die spätere Runtime-Zertifizierung verlangt zusätzlich grüne Tests, Recovery-Evidenz und eine unabhängige Sicherheitsprüfung. Kein Test darf einen Live-Endpunkt erreichen. Normale CI nutzt ausschließlich MockDecisionEngine, Replay und FakeBroker. Ein echter Paper-Smoke ist optional, menschlich ausgelöst und aus normaler CI ausgeschlossen.
 
 Die Pyramide hat fünf Ebenen: Unit/Property für Zahlen, Zeit und Zustandsregeln; Contract/Schema für API, Events und Adapter; Integration für Transaktionen, Jobs und Dashboard; Recovery/Failure Injection für Prozess- und Dienstausfälle; Security für Prozessrechte, Secrets und lokale Kontrollgrenzen. Jeder Test speichert Requirement-ID, Fixture-/Konfigversion und Ergebnis in der CI-Evidenz. Die Zuordnung unten ist vollständig für die 40 Spec-Szenarien.
 
 ## Requirement-Test-Matrix
 
-| Test-ID | Ebene und künftiger konkreter Testpfad | Messbarer Kernnachweis |
+| Test-ID | Ebene und implementierter Testpfad | Messbarer Kernnachweis |
 |---|---|---|
-| T-MKT-001 | Contract: `tests/contracts/test_market_data_contract.py` | Fremdes Instrument/Intervall: 0 angenommene Bars |
-| T-MKT-002 | Unit: `tests/unit/test_market_bars.py` | Offene/korrigierte Bar: 0 still mutierte Inputs |
-| T-MKT-003 | Property: `tests/property/test_decimal_time.py` | NaN/Infinity/Überlauf/Skalenverlust abgelehnt; UTC round-trip |
-| T-MKT-004 | Property: `tests/property/test_availability.py` | Für jeden Input gilt `availableAt <= asOf` und Barende `<= asOf` |
-| T-MKT-005 | Unit: `tests/unit/test_market_quality.py` | Lücke/Duplikat/Widerspruch ergibt keine freigabefähige Entscheidung |
-| T-MKT-006 | Unit: `tests/unit/test_market_sessions.py` | Feiertag, Halbtag und beide DST-Wechsel: Aktien zu, Krypto nach bestätigter Capability offen |
-| T-MKT-007 | Contract: `tests/contracts/test_evidence_schema.py` | Neutrales Bündel enthält Herkunft/Konflikt, keine Orderfelder |
-| T-MKT-008 | Contract: `tests/contracts/test_market_capabilities.py` | Unbestätigte Intervalle/Assets/News sind nicht verfügbar |
-| T-DEC-001 | Integration: `tests/integration/test_decision_inputs.py` | Korrektur erzeugt neuen Hash; alter Input bytegleich |
-| T-DEC-002 | Contract: `tests/contracts/test_decision_schema.py` | SHORT/unerlaubte Choice wird zu keiner Proposal-Freigabe |
-| T-DEC-003 | Contract: `tests/contracts/test_jev_mapping.py` | Choice/Score/Noul/Confidence getrennt; Sizingfeld ohne Wirkung |
-| T-DEC-004 | Unit: `tests/unit/test_decision_fallback.py` | Timeout, Schemafehler, fehlendes Feld, stale, niedrige Confidence: 100 % ABSTAIN |
-| T-DEC-005 | Contract: `tests/contracts/test_atomic_questions.py` | Mehrdeutige Antwort abgelehnt; getrennte Frageversionen |
-| T-DEC-006 | Integration: `tests/integration/test_decision_versions.py` | Modell/Prompt/Frage/Inputhash/Verteilung/Trace/TTL erhalten |
-| T-DEC-007 | Recovery: `tests/recovery/test_replay.py` | Mock/Baseline bei identischen Inputs bytegleich; 0 Broker-Submits |
-| T-DEC-008 | Contract: `tests/contracts/test_decision_capabilities.py` | Nicht unterstützter Input/Ausfall führt zu ABSTAIN |
-| T-RSK-001 | Unit: `tests/unit/test_modes.py` | DISABLED-Default; LIVE-Config abgelehnt; REPLAY/SHADOW: 0 Submits |
-| T-RSK-002 | Recovery: `tests/recovery/test_unsafe_restart.py` | Restart bleibt PAUSE_NEW bis Health und Reconciliation grün |
-| T-RSK-003 | Contract: `tests/contracts/test_broker_capabilities.py` | Short/Hebel/unbestätigte Orderart/Fractional/Session abgelehnt |
-| T-RSK-004 | Unit: `tests/unit/test_risk_decision.py` | Gleicher Snapshot/Policy ergibt gleiche Decision; Pflichtlücke fail-closed |
-| T-RSK-005 | Recovery: `tests/recovery/test_submit_gate.py` | TTL-, Policy-, Pause-, Session- oder Datenwechsel vor Submit: 0 Submits |
-| T-RSK-006 | Property: `tests/property/test_risk_limits.py` | Grenzwerte 1 Position/Asset, 2 gesamt, 10 % Notional, 1 % Tagesverlust; exakte Decimalgrenzen |
-| T-RSK-007 | Integration: `tests/integration/test_parallel_reservations.py` | Zwei konkurrierende, zusammen zu große Vorschläge: höchstens 1 Erfolg; Budget nie negativ |
+| T-MKT-001 | Contract: `tests/unit/test_market_state.py` | Fremdes Instrument/Intervall: 0 angenommene Bars |
+| T-MKT-002 | Unit: `tests/unit/test_market_state.py` | Offene/korrigierte Bar: 0 still mutierte Inputs |
+| T-MKT-003 | Property: `tests/property/test_decimal.py` | NaN/Infinity/Überlauf/Skalenverlust abgelehnt; UTC round-trip |
+| T-MKT-004 | Property: `tests/unit/test_market_state.py` | Für jeden Input gilt `availableAt <= asOf` und Barende `<= asOf` |
+| T-MKT-005 | Unit: `tests/unit/test_market_state.py` | Lücke/Duplikat/Widerspruch ergibt keine freigabefähige Entscheidung |
+| T-MKT-006 | Unit: `tests/contracts/test_alpaca_market.py` | Feiertag, Halbtag und beide DST-Wechsel: Aktien zu, Krypto nach bestätigter Capability offen |
+| T-MKT-007 | Contract: `tests/unit/test_market_state.py` | Neutrales Bündel enthält Herkunft/Konflikt, keine Orderfelder |
+| T-MKT-008 | Contract: `tests/contracts/test_alpaca_market.py` | Unbestätigte Intervalle/Assets/News sind nicht verfügbar |
+| T-DEC-001 | Integration: `tests/unit/test_decision.py` | Korrektur erzeugt neuen Hash; alter Input bytegleich |
+| T-DEC-002 | Contract: `tests/contracts/test_jev.py` | SHORT/unerlaubte Choice wird zu keiner Proposal-Freigabe |
+| T-DEC-003 | Contract: `tests/contracts/test_jev_wire.py` | Choice/Score/Noul/Confidence getrennt; Sizingfeld ohne Wirkung |
+| T-DEC-004 | Unit: `tests/contracts/test_jev.py` | Timeout, Schemafehler, fehlendes Feld, stale, niedrige Confidence: 100 % ABSTAIN |
+| T-DEC-005 | Contract: `tests/contracts/test_jev_wire.py` | Mehrdeutige Antwort abgelehnt; getrennte Frageversionen |
+| T-DEC-006 | Integration: `tests/unit/test_decision.py` | Modell/Prompt/Frage/Inputhash/Verteilung/Trace/TTL erhalten |
+| T-DEC-007 | Recovery: `tests/integration/test_replay.py` | Mock/Baseline bei identischen Inputs bytegleich; 0 Broker-Submits |
+| T-DEC-008 | Contract: `tests/contracts/test_jev.py` | Nicht unterstützter Input/Ausfall führt zu ABSTAIN |
+| T-RSK-001 | Unit: `tests/security/test_execution_isolation.py` | DISABLED-Default; LIVE-Config abgelehnt; REPLAY/SHADOW: 0 Submits |
+| T-RSK-002 | Recovery: `tests/integration/test_pause_resume.py` | Restart bleibt PAUSE_NEW bis Health und Reconciliation grün |
+| T-RSK-003 | Contract: `tests/contracts/test_alpaca_paper.py` | Short/Hebel/unbestätigte Orderart/Fractional/Session abgelehnt |
+| T-RSK-004 | Unit: `tests/property/test_risk.py` | Gleicher Snapshot/Policy ergibt gleiche Decision; Pflichtlücke fail-closed |
+| T-RSK-005 | Recovery: `tests/recovery/test_submit_crash.py` | TTL-, Policy-, Pause-, Session- oder Datenwechsel vor Submit: 0 Submits |
+| T-RSK-006 | Property: `tests/property/test_risk.py` | Grenzwerte 1 Position/Asset, 2 gesamt, 10 % Notional, 1 % Tagesverlust; exakte Decimalgrenzen |
+| T-RSK-007 | Integration: `tests/integration/test_risk_races.py` | Zwei konkurrierende, zusammen zu große Vorschläge: höchstens 1 Erfolg; Budget nie negativ |
 | T-RSK-008 | Security: `tests/security/test_execution_isolation.py` | Agent/API/Watchdog ohne Submit-Port/Key; Paper-Smoke ohne Opt-in: 0 Requests |
-| T-RSK-009 | Recovery: `tests/recovery/test_unknown_reconcile.py` | Timeout/Crash: 1 stabile clientOrderId, Reservation gehalten, 0 Blind-Retries |
-| T-RSK-010 | Property: `tests/property/test_order_state_machine.py` | Alle Übergänge; Teilfüllung/Cancel-Fill in beiden Reihenfolgen, Fillmenge monoton, nie doppelt |
-| T-RUN-001 | Integration: `tests/integration/test_ledger_restore.py` | Nach DB-Restart vollständige Proposal→Risk→Intent→Report-Kette |
-| T-RUN-002 | Recovery: `tests/recovery/test_duplicate_events.py` | Doppelte/ungeordnete Events: genau 1 wirtschaftliches Delta |
-| T-RUN-003 | Integration: `tests/integration/test_job_leases.py` | Leaseverlust/Fencing: alter Worker 0 Commits; Retrylimit/Dead Letter sichtbar |
-| T-RUN-004 | Recovery: `tests/recovery/test_outbox_crash.py` | Crash vor Publish: Event nach Restart vorhanden, Consumerwirkung einmalig |
-| T-RUN-005 | Security: `tests/security/test_audit_redaction.py` | Jede Mutation hat Trace/Akteur/Reason/UTC; keine Canaries in Audit/Logs |
-| T-RUN-006 | Security: `tests/security/test_secret_boundaries.py` | Paper-Key nur Execution; Promptinjection löst 0 Tools/Installationen aus |
-| T-RUN-007 | Integration: `tests/integration/test_health_fail_closed.py` | Datenstillstand, DB/Broker/Jev-Ausfall separat sichtbar; neue Einstiege gesperrt |
+| T-RSK-009 | Recovery: `tests/recovery/test_submit_crash.py` | Timeout/Crash: 1 stabile clientOrderId, Reservation gehalten, 0 Blind-Retries |
+| T-RSK-010 | Property: `tests/recovery/test_reconciliation.py` | Alle Übergänge; Teilfüllung/Cancel-Fill in beiden Reihenfolgen, Fillmenge monoton, nie doppelt |
+| T-RUN-001 | Integration: `tests/integration/test_ledger.py` | Nach DB-Restart vollständige Proposal→Risk→Intent→Report-Kette |
+| T-RUN-002 | Recovery: `tests/recovery/test_reconciliation.py` | Doppelte/ungeordnete Events: genau 1 wirtschaftliches Delta |
+| T-RUN-003 | Integration: `tests/integration/test_jobs_outbox.py` | Leaseverlust/Fencing: alter Worker 0 Commits; Retrylimit/Dead Letter sichtbar |
+| T-RUN-004 | Recovery: `tests/integration/test_jobs_outbox.py` | Crash vor Publish: Event nach Restart vorhanden, Consumerwirkung einmalig |
+| T-RUN-005 | Security: `tests/integration/test_acceptance.py` | Jede Mutation hat Trace/Akteur/Reason/UTC; keine Canaries in Audit/Logs |
+| T-RUN-006 | Security: `tests/integration/test_acceptance.py` | Paper-Key nur Execution; Promptinjection löst 0 Tools/Installationen aus |
+| T-RUN-007 | Integration: `tests/integration/test_failures.py` | Datenstillstand, DB/Broker/Jev-Ausfall separat sichtbar; neue Einstiege gesperrt |
 | T-CTL-001 | Contract: `tests/contracts/test_control_api.py` | OpenAPI-Beispiele, Decimalstrings, UTC, interne DTOs; keine Vendorpayloads |
-| T-CTL-002 | Contract: `tests/contracts/test_control_api.py` | Idempotency-Key/Payloadhash, 412/428, traceparent; Wiederholung ohne Zweitwirkung |
+| T-CTL-002 | Contract: `tests/integration/test_control_http.py` | Idempotency-Key/Payloadhash, 412/428, traceparent; Wiederholung ohne Zweitwirkung |
 | T-CTL-003 | Contract: `tests/contracts/test_control_api.py` | RFC 9457 und stabile Codes für Reject/Conflict/Outage/UNKNOWN; Negativ-/Fuzzfälle |
 | T-CTL-004 | Integration: `tests/integration/test_sse_cursor.py` | Snapshot-Cursor atomar; Drop/Duplikat/Ablauf: keine stille Ereignislücke |
 | T-CTL-005 | Recovery: `tests/integration/test_pause_resume.py` | Jev/UI tot: CLI/Watchdog-Pause greift; in-flight sichtbar; Reconcile läuft |
