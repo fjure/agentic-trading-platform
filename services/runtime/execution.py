@@ -90,6 +90,12 @@ class ExecutionRuntime:
             feed = self.gateway.read(instrument, session, require_spread=True)
             self.binding.publish(instrument, uuid.uuid4().hex)
             with self.ledger.transaction() as tx:
+                # Recovery needs fresh verified bars while the safety latch is
+                # still closed. Persisting observations never authorizes trading
+                # or creates a MarketState from an unreconciled portfolio.
+                for bar in feed.snapshot.bars:
+                    if tx.get(type(bar), bar.id) is None:
+                        tx.insert(bar)
                 snapshot_id = tx.connection.execute(
                     text("""
                     SELECT portfolio_snapshot_id FROM public.risk_account_context
@@ -123,7 +129,7 @@ class ExecutionRuntime:
                     position=position,
                     trace_id=uuid.uuid4().hex,
                 )
-                for entity in (*feed.snapshot.bars, state.evidence, state):
+                for entity in (state.evidence, state):
                     if tx.get(type(entity), entity.id) is None:
                         tx.insert(entity)
                 persist(

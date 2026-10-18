@@ -14,10 +14,24 @@ from decimal import Decimal
 from pathlib import Path
 
 
-def host(*, guest_path: Path | None = None, guest_args: tuple[str, ...] = ()) -> str:
+def host(
+    *,
+    guest_path: Path | None = None,
+    guest_args: tuple[str, ...] = (),
+    support_paths: tuple[Path, ...] = (),
+) -> str:
     from tests.integration.ledger_support import GROUPS, _admin
 
     root = Path(__file__).resolve().parents[2]
+    fixtures = []
+    for support_path in support_paths:
+        support_path = support_path.resolve()
+        if not support_path.is_file() or not (
+            (support_path.is_relative_to(root / "tests") and support_path.suffix == ".py")
+            or support_path == root / "config/markets/paper.yaml"
+        ):
+            raise ValueError("support fixture must be a test Python file or Paper market config")
+        fixtures.append(support_path)
     suffix = uuid.uuid4().hex[:20]
     database = f"atl_risk_{suffix}"
     role = f"atl_risk_{suffix}"
@@ -64,6 +78,11 @@ def host(*, guest_path: Path | None = None, guest_args: tuple[str, ...] = ()) ->
             raise ValueError("guest test must be inside repository tests")
         command.extend(
             ("--mount", f"type=bind,source={guest_path},target=/opt/lab/test_guest.py,readonly")
+        )
+    for support_path in fixtures:
+        relative = support_path.relative_to(root).as_posix()
+        command.extend(
+            ("--mount", f"type=bind,source={support_path},target=/opt/lab/{relative},readonly")
         )
     command.extend(
         (
