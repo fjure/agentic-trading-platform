@@ -1,5 +1,7 @@
 # Proposal
 
+Historischer Bootstrapentwurf mit anschließend gesondert freigegebener Apply-Phase. Die ursprünglichen Aussagen „Jetzt entstehen nur Planung“ und „Kein Commit oder Push“ beschreiben den ersten Durchlauf; der Nutzerauftrag vom2026-10-13 autorisiert inzwischen geprüfte Issue-Branches und reguläre main-Integration nach AGENTS.md. Aktueller Implementierungs-/Abnahmestand: `implementation-evidence.md`, `readiness.md` und `docs/evidence/ptv-23-final-acceptance.md`. Der ursprüngliche fachliche Umfang und alle Trading-/Secretgrenzen bleiben erhalten.
+
 ## Why
 
 Das Greenfield-Projekt benötigt einen prüfbaren ersten Datenfluss von normalisierten Marktdaten über Entscheidung und deterministische Risikoprüfung bis zur Paper-Ausführung und Supervisoransicht. Ein vollständig lokaler Fake-Durchstich muss Sicherheits- und Recoverygrenzen beweisen, bevor externe Adapter hinzukommen.

@@ -43,7 +43,7 @@
         "PTV-18"
       ],
       "testId": "T-CTL-002",
-      "testPath": "tests/contracts/test_control_api.py",
+      "testPath": "tests/integration/test_control_http.py",
       "contracts": [
         "contracts/schemas/v1/safety-event.schema.json",
         "contracts/schemas/v1/control-event.schema.json",
@@ -223,7 +223,7 @@
         "PTV-14"
       ],
       "testId": "T-DEC-001",
-      "testPath": "tests/integration/test_decision_inputs.py",
+      "testPath": "tests/unit/test_decision.py",
       "contracts": [
         "contracts/schemas/v1/decision-result.schema.json",
         "operation:listDecisions"
@@ -242,7 +242,7 @@
         "PTV-15"
       ],
       "testId": "T-DEC-002",
-      "testPath": "tests/contracts/test_decision_schema.py",
+      "testPath": "tests/contracts/test_jev.py",
       "contracts": [
         "contracts/schemas/v1/decision-result.schema.json",
         "operation:listDecisions"
@@ -260,7 +260,7 @@
         "PTV-15"
       ],
       "testId": "T-DEC-003",
-      "testPath": "tests/contracts/test_jev_mapping.py",
+      "testPath": "tests/contracts/test_jev_wire.py",
       "contracts": [
         "contracts/schemas/v1/decision-result.schema.json",
         "operation:listDecisions"
@@ -279,7 +279,7 @@
         "PTV-15"
       ],
       "testId": "T-DEC-004",
-      "testPath": "tests/unit/test_decision_fallback.py",
+      "testPath": "tests/contracts/test_jev.py",
       "contracts": [
         "contracts/schemas/v1/decision-result.schema.json",
         "operation:listDecisions"
@@ -297,7 +297,7 @@
         "PTV-15"
       ],
       "testId": "T-DEC-005",
-      "testPath": "tests/contracts/test_atomic_questions.py",
+      "testPath": "tests/contracts/test_jev_wire.py",
       "contracts": [
         "contracts/schemas/v1/decision-result.schema.json",
         "operation:listDecisions"
@@ -317,7 +317,7 @@
         "PTV-15"
       ],
       "testId": "T-DEC-006",
-      "testPath": "tests/integration/test_decision_versions.py",
+      "testPath": "tests/unit/test_decision.py",
       "contracts": [
         "contracts/schemas/v1/decision-result.schema.json",
         "operation:listDecisions"
@@ -336,7 +336,7 @@
         "PTV-23"
       ],
       "testId": "T-DEC-007",
-      "testPath": "tests/recovery/test_replay.py",
+      "testPath": "tests/integration/test_replay.py",
       "contracts": [
         "contracts/schemas/v1/decision-result.schema.json",
         "operation:listDecisions"
@@ -356,7 +356,7 @@
         "PTV-15"
       ],
       "testId": "T-DEC-008",
-      "testPath": "tests/contracts/test_decision_capabilities.py",
+      "testPath": "tests/contracts/test_jev.py",
       "contracts": [
         "contracts/schemas/v1/decision-result.schema.json",
         "operation:listDecisions"
@@ -377,7 +377,7 @@
         "PTV-23"
       ],
       "testId": "T-MKT-001",
-      "testPath": "tests/contracts/test_market_data_contract.py",
+      "testPath": "tests/unit/test_market_state.py",
       "contracts": [
         "contracts/schemas/v1/market-state.schema.json",
         "operation:listMarketStates"
@@ -397,7 +397,7 @@
         "PTV-16"
       ],
       "testId": "T-MKT-002",
-      "testPath": "tests/unit/test_market_bars.py",
+      "testPath": "tests/unit/test_market_state.py",
       "contracts": [
         "contracts/schemas/v1/market-state.schema.json",
         "operation:listMarketStates"
@@ -417,7 +417,7 @@
         "PTV-16"
       ],
       "testId": "T-MKT-003",
-      "testPath": "tests/property/test_decimal_time.py",
+      "testPath": "tests/property/test_decimal.py",
       "contracts": [
         "contracts/schemas/v1/market-state.schema.json",
         "operation:listMarketStates"
@@ -436,7 +436,7 @@
         "PTV-14"
       ],
       "testId": "T-MKT-004",
-      "testPath": "tests/property/test_availability.py",
+      "testPath": "tests/unit/test_market_state.py",
       "contracts": [
         "contracts/schemas/v1/market-state.schema.json",
         "operation:listMarketStates"
@@ -455,7 +455,7 @@
         "PTV-16"
       ],
       "testId": "T-MKT-005",
-      "testPath": "tests/unit/test_market_quality.py",
+      "testPath": "tests/unit/test_market_state.py",
       "contracts": [
         "contracts/schemas/v1/market-state.schema.json",
         "operation:listMarketStates"
@@ -474,7 +474,7 @@
         "PTV-16"
       ],
       "testId": "T-MKT-006",
-      "testPath": "tests/unit/test_market_sessions.py",
+      "testPath": "tests/contracts/test_alpaca_market.py",
       "contracts": [
         "contracts/schemas/v1/market-state.schema.json",
         "operation:listMarketStates"
@@ -492,7 +492,7 @@
         "PTV-06"
       ],
       "testId": "T-MKT-007",
-      "testPath": "tests/contracts/test_evidence_schema.py",
+      "testPath": "tests/unit/test_market_state.py",
       "contracts": [
         "contracts/schemas/v1/market-state.schema.json",
         "operation:listMarketStates"
@@ -512,7 +512,7 @@
         "PTV-16"
       ],
       "testId": "T-MKT-008",
-      "testPath": "tests/contracts/test_market_capabilities.py",
+      "testPath": "tests/contracts/test_alpaca_market.py",
       "contracts": [
         "contracts/schemas/v1/market-state.schema.json",
         "operation:listMarketStates"
@@ -533,7 +533,7 @@
         "PTV-21"
       ],
       "testId": "T-RSK-001",
-      "testPath": "tests/unit/test_modes.py",
+      "testPath": "tests/security/test_execution_isolation.py",
       "contracts": [
         "contracts/schemas/v1/risk-decision.schema.json",
         "contracts/schemas/v1/risk-reservation.schema.json",
@@ -555,7 +555,7 @@
         "PTV-12"
       ],
       "testId": "T-RSK-002",
-      "testPath": "tests/recovery/test_unsafe_restart.py",
+      "testPath": "tests/integration/test_pause_resume.py",
       "contracts": [
         "contracts/schemas/v1/risk-decision.schema.json",
         "contracts/schemas/v1/risk-reservation.schema.json",
@@ -581,7 +581,7 @@
         "PTV-24"
       ],
       "testId": "T-RSK-003",
-      "testPath": "tests/contracts/test_broker_capabilities.py",
+      "testPath": "tests/contracts/test_alpaca_paper.py",
       "contracts": [
         "contracts/schemas/v1/risk-decision.schema.json",
         "contracts/schemas/v1/risk-reservation.schema.json",
@@ -605,7 +605,7 @@
         "PTV-24"
       ],
       "testId": "T-RSK-004",
-      "testPath": "tests/unit/test_risk_decision.py",
+      "testPath": "tests/property/test_risk.py",
       "contracts": [
         "contracts/schemas/v1/risk-decision.schema.json",
         "contracts/schemas/v1/risk-reservation.schema.json",
@@ -628,7 +628,7 @@
         "PTV-24"
       ],
       "testId": "T-RSK-005",
-      "testPath": "tests/recovery/test_submit_gate.py",
+      "testPath": "tests/recovery/test_submit_crash.py",
       "contracts": [
         "contracts/schemas/v1/risk-decision.schema.json",
         "contracts/schemas/v1/risk-reservation.schema.json",
@@ -649,7 +649,7 @@
         "PTV-09"
       ],
       "testId": "T-RSK-006",
-      "testPath": "tests/property/test_risk_limits.py",
+      "testPath": "tests/property/test_risk.py",
       "contracts": [
         "contracts/schemas/v1/risk-decision.schema.json",
         "contracts/schemas/v1/risk-reservation.schema.json",
@@ -674,7 +674,7 @@
         "PTV-23"
       ],
       "testId": "T-RSK-007",
-      "testPath": "tests/integration/test_parallel_reservations.py",
+      "testPath": "tests/integration/test_risk_races.py",
       "contracts": [
         "contracts/schemas/v1/risk-decision.schema.json",
         "contracts/schemas/v1/risk-reservation.schema.json",
@@ -728,7 +728,7 @@
         "PTV-23"
       ],
       "testId": "T-RSK-009",
-      "testPath": "tests/recovery/test_unknown_reconcile.py",
+      "testPath": "tests/recovery/test_submit_crash.py",
       "contracts": [
         "contracts/schemas/v1/risk-decision.schema.json",
         "contracts/schemas/v1/risk-reservation.schema.json",
@@ -754,7 +754,7 @@
         "PTV-22"
       ],
       "testId": "T-RSK-010",
-      "testPath": "tests/property/test_order_state_machine.py",
+      "testPath": "tests/recovery/test_reconciliation.py",
       "contracts": [
         "contracts/schemas/v1/risk-decision.schema.json",
         "contracts/schemas/v1/risk-reservation.schema.json",
@@ -780,7 +780,7 @@
         "PTV-25"
       ],
       "testId": "T-RUN-001",
-      "testPath": "tests/integration/test_ledger_restore.py",
+      "testPath": "tests/integration/test_ledger.py",
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
@@ -811,7 +811,7 @@
         "PTV-25"
       ],
       "testId": "T-RUN-002",
-      "testPath": "tests/recovery/test_duplicate_events.py",
+      "testPath": "tests/recovery/test_reconciliation.py",
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
@@ -837,7 +837,7 @@
         "PTV-21"
       ],
       "testId": "T-RUN-003",
-      "testPath": "tests/integration/test_job_leases.py",
+      "testPath": "tests/integration/test_jobs_outbox.py",
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
@@ -865,7 +865,7 @@
         "PTV-19"
       ],
       "testId": "T-RUN-004",
-      "testPath": "tests/recovery/test_outbox_crash.py",
+      "testPath": "tests/integration/test_jobs_outbox.py",
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
@@ -897,7 +897,7 @@
         "PTV-22"
       ],
       "testId": "T-RUN-005",
-      "testPath": "tests/security/test_audit_redaction.py",
+      "testPath": "tests/integration/test_acceptance.py",
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
@@ -928,7 +928,7 @@
         "PTV-23"
       ],
       "testId": "T-RUN-006",
-      "testPath": "tests/security/test_secret_boundaries.py",
+      "testPath": "tests/integration/test_acceptance.py",
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",
@@ -956,7 +956,7 @@
         "PTV-21"
       ],
       "testId": "T-RUN-007",
-      "testPath": "tests/integration/test_health_fail_closed.py",
+      "testPath": "tests/integration/test_failures.py",
       "contracts": [
         "contracts/schemas/v1/event-envelope.schema.json",
         "contracts/schemas/v1/safety-event.schema.json",

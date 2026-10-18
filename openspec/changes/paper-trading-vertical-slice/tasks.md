@@ -236,9 +236,9 @@ Parallelität: nach abgeschlossenen Domain-/Persistenzverträgen dürfen PTV-06 
   - Tests: T-RSK-008/009/010, T-RUN-005
   - Abschluss: gemeinsame Definition of Done erfüllt; Taskcheckbox und zugehöriges Issue im selben Stand; überprüfbare Resultate im Task-Audit.
 
-- [ ] 8.5 PTV-23 Abschließende Integrationsverifikation; Evidenz: Vollständige Testmatrix + OpenSpec strict + github-issue-sync.
+- [x] 8.5 PTV-23 Abschließende Integrationsverifikation; Evidenz: Vollständige Testmatrix + OpenSpec strict + github-issue-sync.
   - Requirements: REQ-MKT-001, REQ-DEC-007, REQ-RSK-007, REQ-RSK-009, REQ-RUN-006, REQ-CTL-006
-  - Zielpfade: `tests/integration/test_acceptance.py`, `openspec/changes/paper-trading-vertical-slice/readiness.md`, `docs/development/github-issue-sync.json`
+  - Zielpfade: `tests/integration/test_acceptance.py`, `services/control_api/projections.py`, `tests/contracts/test_supervisor_projections.py`, `openspec/changes/paper-trading-vertical-slice/proposal.md`, `openspec/changes/paper-trading-vertical-slice/design.md`, `openspec/changes/paper-trading-vertical-slice/readiness.md`, `openspec/changes/paper-trading-vertical-slice/implementation-evidence.md`, `openspec/changes/paper-trading-vertical-slice/test-strategy.md`, `openspec/changes/paper-trading-vertical-slice/traceability.json`, `openspec/changes/paper-trading-vertical-slice/traceability.md`, `docs/evidence/ptv-23-final-acceptance.md`, `docs/development/github-issue-sync.json`, `docs/development/git-issue-integrations.json`, `docs/development/codex-tooling.md`
   - Abhängigkeiten: PTV-13, PTV-14, PTV-15, PTV-16, PTV-17, PTV-18, PTV-19, PTV-20, PTV-21, PTV-22
   - Verhalten: Paketübergreifende Akzeptanz, Contractdrift/Traceability/Recovery und Safety-Zertifizierung; Taskstatus/Issues abgleichen.
   - Akzeptanz: Alle Pflichtchecks samt Issue-Readback vollständig; menschlicher Papercheck separat ehrlich klassifiziert.

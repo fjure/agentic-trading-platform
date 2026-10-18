@@ -1,5 +1,24 @@
 # Definition of Ready und Prüfevidenz
 
+## Maßgeblicher Implementierungsabschluss 2026-10-18
+
+Die nachstehenden Bootstrap-/Zwischenstände sind historisch. Apply wurde gesondert autorisiert; inzwischen sind **25/25 Tasks umgesetzt und im lokalen Fake-/offline Paper-vorbereiteten Umfang geprüft**. Der ursprüngliche DoR ist damit weiterhin erfüllt, aber keine pauschale Provider- oder LIVE-Freigabe. Vollständige aktuelle Abnahme: `docs/evidence/ptv-23-final-acceptance.md`; einzelne Taskreports: `implementation-evidence.md` und `docs/evidence/`.
+
+| Aktuelles Gate | Ergebnis |
+|---|---|
+| Specs/Tasks/Traceability |40 Requirements/44 Szenarien,25 eindeutige Leaf-Tasks, vorhandene implementierte Testpfade, strict valide; statische Matrix bleibt vom Laufzeitreport getrennt|
+| Lokale vollständige Matrix |698passed/78.71s; sechs Skips durch10 tatsächliche Deployment-/Hostfälle40.08s und Linuxparallelität23.68s gesondert abgedeckt|
+| Neue tatsächliche Paketabnahme |Fake-Markt→Decision→Proposal→Risk→ein Submit→Teil-/Endfill→Ledger/Portfolio→Ownerrecovery→authentifizierte HTTP-Snapshots/Historien/Audit→Pause;371Contract-/PGfälle zusammen28.13s|
+| Dauerhaftigkeit/Schema |Migration0011/Backup-Restore/Jobs/Outbox3passed76.77s; frühere wirtschaftliche Crash-/Cancel-/UNKNOWN-/Gebührenmatrizen separat belegt|
+| HTTP/Client/UI |20 Operationen/11 Schemas/Beispiele, echte semantische Baseline ohneDrift, gepinnterGenerator zweimal67bytegleicheDateien/TypeScript, Angularbuild und18Playwrightfälle21.7s|
+| Safety/Secrets |Unabhängiger begrenzter Verify-/Safetyreview ohne bestätigteCRITICAL/P1/P2; keine LIVEfähigkeit, keine Brokerorders durch Agenten, Decimal/UTC, atomare Gates/UNKNOWN/Pause, Source393Dateien0Treffer, Python-/Dashboardaudit0bekannte Schwachstellen|
+| Laufendes Fake-Lab |Vier getrennte Dienste plusPostgres gesund; aktueller APIquellstand, Schema0011, Auditfeed tatsächlich lesbar, DISABLED/PAUSE_NEW; keine Provideraktivierung|
+| Task-Issues und Git |Ausschließlich fjure/agentic-trading-platform, idempotenter25-Issue-Read-back und reguläre Issuebranch-/main-Integration; beobachtete SHAs/Zeiten in `docs/development/github-issue-sync.json` und `git-issue-integrations.json`|
+
+**Separat unverifiziert:** tatsächliche Providerqualität/Entitlements, menschlicher Paperlauf samt dessen Anbieter-/Browservergleich. Die Abnahme verwendet echte PostgreSQL-/ASGI-Komponenten und eine separate synthetische Browserstufe; kein einzelner Browserlauf gegen die temporäre Testdatenbank wird behauptet. Bekannte nichtblockierende Toolwarnungen sind im Gesamtbericht benannt. Keine vollständige reale Paper-Betriebs- oder Performancefreigabe.
+
+Alle verpflichtenden Checks innerhalb des definierten lokalen Abnahmeumfangs sind belegt. Deltas bleiben bis zu einem ausdrücklichen Folgeauftrag aktiv; weder Main-Spec-Sync noch Archivierung wurden vorgenommen. Der frühere Abschnitt „Nächster Auftrag“ unten beschreibt ausschließlich den damaligen Bootstrapstand.
+
 Aktualisierung2026-10-18: PTV-21 ist nach tatsächlichen Deployment-, Windows-Transport-, SQL-Ausfall-, Contract- und unabhängigen Safetyprüfungen abgeschlossen;23/25Tasks. Die folgende frühere22/25-Aktualisierung ist historisch. Der Fake-Default bleibt DISABLED/PAUSE_NEW und hat keine echten Anbietercredentials. PTV-22 (menschliches Opt-in-Smoke vorbereiten) und PTV-23 (abschließende Integrationsverifikation) bleiben offen; keine vollständige Paper-Betriebsfreigabe aus DoR ableiten. Evidenz: docs/evidence/ptv-21-runtime-boundaries.md.
 
 Aktualisierung2026-10-17: Apply ist seit dem späteren Nutzerauftrag gesondert freigegeben. Die ausdrücklich bestätigte Erweiterung um PTV-24/25 wurde vor PTV-21 eingeordnet;25LeafTasks und25eindeutige Issues sind mit vollständigem Read-back synchronisiert. PTV-01..20 und PTV-24/25 sind abgeschlossen (22/25); PTV-21..23 bleiben offen. Die vollständige Paper-Prozess-/Deploymentfreigabe bleibt bis zu deren Evidenz geschlossen. Die nachstehende DoR-Tabelle dokumentiert den historischen Bootstrapstand und behauptet keine aktuelle Runtime-Zertifizierung.

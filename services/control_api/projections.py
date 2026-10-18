@@ -80,6 +80,9 @@ _REASON_ALIASES = {
     "PROPOSAL_TTL": "RISK_PROPOSAL_EXPIRED",
     "SPREAD": "RISK_STALE_MARKET",
     "PROVIDER_PROOF_CONFIRMED": "OK",
+    "BROKER_RECONCILED": "OK",
+    "ACKNOWLEDGED": "OK",
+    "SIMULATION_BOOTSTRAP": "MODE_NOT_PAPER",
 }
 for _code in {
     "BINDING_CAPABILITY_INVALID",
@@ -182,6 +185,8 @@ for _code in {
     _REASON_ALIASES[_code] = "OK"
 _ACTIONS = frozenset(
     {
+        "runtime.initialize",
+        "risk.policy.initialize",
         "decision.persist",
         "proposal.persist",
         "risk.decide",
@@ -394,6 +399,16 @@ def _decision(value: object) -> dict:
 
 
 def _proposal(value: object) -> dict:
+    raw_reasons = tuple(_get(value, "rationale_codes"))
+    # Planner persists its mandatory semantic reason first, followed by private
+    # configuration/provenance identifiers. Never publish those identifiers or
+    # invent a successful reason for an unrecognized primary reason.
+    reasons = [_reason(raw_reasons[0])] if raw_reasons else []
+    for raw in raw_reasons[1:]:
+        code = _text(raw)
+        code = _REASON_ALIASES.get(code, code)
+        if code in _REASONS and code not in reasons:
+            reasons.append(code)
     return {
         "id": _get(value, "id"),
         "decisionId": _get(value, "decision_id"),
@@ -401,7 +416,7 @@ def _proposal(value: object) -> dict:
         "instrument": _get(value, "instrument_id"),
         "target": _text(_get(value, "target")),
         "quantity": _decimal(_get(value, "quantity")),
-        "rationaleCodes": [_reason(x) for x in _get(value, "rationale_codes")],
+        "rationaleCodes": reasons,
         "createdAt": _time(_get(value, "created_at")),
         "validUntil": _time(_get(value, "valid_until")),
         "traceId": _get(value, "trace_id"),
@@ -504,10 +519,13 @@ def _audit(value: object) -> dict:
         "MISMATCH": "OBSERVED",
         "REPORT": "OBSERVED",
         "SUBMITTING_REPORT": "OBSERVED",
+        "SUBMIT_RESULT": "OBSERVED",
         "RESERVATION_RESULT": "OBSERVED",
         "PAUSE_UNKNOWN": "OBSERVED",
     }
-    if raw_outcome is None and action in {"decision.persist", "proposal.persist"}:
+    if raw_outcome is None and action in {
+        "decision.persist", "proposal.persist", "runtime.initialize", "risk.policy.initialize"
+    }:
         raw_outcome = "OBSERVED"
     if (
         raw_outcome not in outcomes

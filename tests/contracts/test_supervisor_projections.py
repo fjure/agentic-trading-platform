@@ -12,6 +12,73 @@ NOW = datetime(2026, 10, 16, 12, tzinfo=UTC)
 TRACE = "a" * 32
 
 
+@pytest.mark.parametrize("planner_version", [
+    "runtime-planner-v1", "paper-smoke-limit.v1", "ptv13-fixed-one-v1", "private-canary"
+])
+def test_proposal_keeps_canonical_reasons_without_exposing_planner_provenance(planner_version):
+    proposal = m.TradeProposal(
+        "proposal-1", "decision-1", "state-1", "SPY", m.Target.LONG, Decimal("1"),
+        NOW, NOW + timedelta(seconds=30), TRACE,
+        ("BASELINE_SIGNAL", planner_version, "PAPER_SMOKE_LIMIT", "OK"),
+    )
+    public = project_resource("proposals", proposal)
+    assert public["rationaleCodes"] == ["OK"]
+    assert planner_version not in repr(public)
+    assert proposal.rationale_codes[1] == planner_version
+
+
+def test_proposal_does_not_invent_a_successful_primary_reason():
+    proposal = m.TradeProposal(
+        "proposal-1", "decision-1", "state-1", "SPY", m.Target.LONG, Decimal("1"),
+        NOW, NOW + timedelta(seconds=30), TRACE, ("private-canary", "OK"),
+    )
+    with pytest.raises(LookupError, match="reason code unavailable"):
+        project_resource("proposals", proposal)
+
+
+@pytest.mark.parametrize("action,reason,outcome,expected_outcome", [
+    ("safety.portfolio_refresh", "BROKER_RECONCILED", "CURRENT", "OBSERVED"),
+    ("safety.account_refresh", "BROKER_RECONCILED", "CURRENT", "OBSERVED"),
+    ("safety.resume", "BROKER_RECONCILED", "RUNNING", "ACCEPTED"),
+    ("execution.submit_result", "ACKNOWLEDGED", "ACKNOWLEDGED", "OBSERVED"),
+    ("execution.submit_result", "ACKNOWLEDGED", "SUBMIT_RESULT", "OBSERVED"),
+    ("execution.submit_result", "SUBMIT_UNCERTAIN", "SUBMIT_RESULT", "OBSERVED"),
+    ("execution.report", "ACKNOWLEDGED", "ACKNOWLEDGED", "OBSERVED"),
+])
+def test_confirmed_recovery_and_ack_audits_have_canonical_public_reasons(
+    action, reason, outcome, expected_outcome,
+):
+    public = project_resource("audit", {
+        "id": "audit-recovery", "occurred_at": NOW, "actor_id": "execution-recovery",
+        "action": action, "reason_codes": (reason,), "outcome": outcome,
+        "trace_id": TRACE, "private_payload": "private-canary",
+    })
+    expected_reason = "BROKER_STATUS_UNKNOWN" if reason == "SUBMIT_UNCERTAIN" else "OK"
+    assert public["reasonCode"] == expected_reason
+    assert public["outcome"] == expected_outcome
+    assert "private-canary" not in repr(public)
+
+
+@pytest.mark.parametrize("action", ["runtime.initialize", "risk.policy.initialize"])
+def test_disabled_fake_bootstrap_audit_is_observed_without_invented_trading_authority(action):
+    public = project_resource("audit", {
+        "id": "initial-audit", "occurred_at": NOW, "actor_id": "local-fake-provisioner",
+        "action": action, "reason_codes": ("SIMULATION_BOOTSTRAP",), "outcome": None,
+        "trace_id": TRACE,
+    })
+    assert public["reasonCode"] == "MODE_NOT_PAPER"
+    assert public["outcome"] == "OBSERVED"
+
+
+def test_unknown_private_audit_metadata_is_still_not_published():
+    with pytest.raises(LookupError, match="audit action unavailable"):
+        project_resource("audit", {
+            "id": "unknown-audit", "occurred_at": NOW, "actor_id": "execution",
+            "action": "private-canary", "reason_codes": ("OK",), "outcome": "OBSERVED",
+            "trace_id": TRACE,
+        })
+
+
 def test_order_projection_discards_broker_and_secret_fields():
     public = project_resource(
         "orders",
