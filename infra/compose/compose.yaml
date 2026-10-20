@@ -39,7 +39,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
     ports: ["127.0.0.1:55432:5432"]
-    networks: [local, execution_db, worker_db, control_db, watchdog_db]
+    networks: [local, execution_db, worker_db, control_db, watchdog_db, demo_db]
     healthcheck:
       test: [CMD-SHELL, "pg_isready -U lab_migration -d lab"]
       interval: 3s
@@ -79,7 +79,7 @@ services:
   control-api:
     <<: *runtime
     command: [python, -m, services.runtime, api]
-    networks: [control_db]
+    networks: [control_db, demo_control]
     ports: ["127.0.0.1:8000:8000"]
     volumes:
       - ../../apps/dashboard/dist/dashboard/browser:/opt/lab/dashboard:ro
@@ -93,6 +93,21 @@ services:
     secrets:
       - source: watchdog_database
         target: database
+  demo:
+    <<: *runtime
+    command: [python, -m, services.demo]
+    networks: [demo_control, demo_db]
+    configs: []
+    secrets:
+      - source: demo_database
+        target: demo_database
+    healthcheck:
+      test: [CMD, python, -c, "import httpx; r=httpx.Client(trust_env=False).get('http://127.0.0.1:8010/health'); r.raise_for_status()"]
+      interval: 5s
+      timeout: 3s
+      start_period: 20s
+      retries: 6
+
 networks:
   local:
     internal: true
@@ -103,6 +118,10 @@ networks:
   control_db:
     internal: true
   watchdog_db:
+    internal: true
+  demo_db:
+    internal: true
+  demo_control:
     internal: true
 volumes:
   postgres_data:
@@ -117,6 +136,8 @@ secrets:
     file: ../../.tooling/application/runtime/control.json
   watchdog_database:
     file: ../../.tooling/application/runtime/watchdog.json
+  demo_database:
+    file: ../../.tooling/application/runtime/demo.json
 configs:
   runtime_config:
     file: ../../.tooling/application/runtime/runtime.json

@@ -20,12 +20,17 @@ $directoryAcl.SetAccessRuleProtection($true, $false)
 foreach ($rule in @($directoryAcl.Access)) { $directoryAcl.RemoveAccessRuleSpecific($rule) }
 $directoryAcl.AddAccessRule([System.Security.AccessControl.FileSystemAccessRule]::new(
     $identity, 'FullControl', 'ContainerInherit,ObjectInherit', 'None', 'Allow'))
-[System.IO.FileSystemAclExtensions]::SetAccessControl(
-    [System.IO.DirectoryInfo]::new($secretDir), $directoryAcl)
+if ($PSVersionTable.PSEdition -eq 'Desktop') {
+    [IO.DirectoryInfo]::new($secretDir).SetAccessControl($directoryAcl)
+} else {
+    [System.IO.FileSystemAclExtensions]::SetAccessControl(
+        [IO.DirectoryInfo]::new($secretDir), $directoryAcl)
+}
 $secretFile = Join-Path $secretDir 'postgres-password'
 if (-not (Test-Path -LiteralPath $secretFile)) {
     $randomBytes = New-Object byte[] 48
-    [System.Security.Cryptography.RandomNumberGenerator]::Fill($randomBytes)
+    $random = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    try { $random.GetBytes($randomBytes) } finally { $random.Dispose() }
     [System.IO.File]::WriteAllText($secretFile, [Convert]::ToBase64String($randomBytes))
 }
 # Replace the file DACL even on an existing installation, without reading the secret.
@@ -34,8 +39,12 @@ $fileAcl.SetAccessRuleProtection($true, $false)
 foreach ($rule in @($fileAcl.Access)) { $fileAcl.RemoveAccessRuleSpecific($rule) }
 $fileAcl.AddAccessRule([System.Security.AccessControl.FileSystemAccessRule]::new(
     $identity, 'FullControl', 'Allow'))
-[System.IO.FileSystemAclExtensions]::SetAccessControl(
-    [System.IO.FileInfo]::new($secretFile), $fileAcl)
+if ($PSVersionTable.PSEdition -eq 'Desktop') {
+    [IO.FileInfo]::new($secretFile).SetAccessControl($fileAcl)
+} else {
+    [System.IO.FileSystemAclExtensions]::SetAccessControl(
+        [IO.FileInfo]::new($secretFile), $fileAcl)
+}
 foreach ($privatePath in @($secretDir, $secretFile)) {
     $verifiedAcl = Get-Acl -LiteralPath $privatePath
     if (-not $verifiedAcl.AreAccessRulesProtected -or $verifiedAcl.Access.Count -ne 1) {

@@ -251,6 +251,10 @@ def provision(initial_cash: Decimal):
         connection.execute("REVOKE ALL ON DATABASE lab_runtime FROM PUBLIC")
         _private_logins(connection, SECRET_ROOT)
     engine.dispose()
+    from services.runtime.provision_demo import initialize_provider_volumes, provision_demo
+
+    provision_demo(common, SECRET_ROOT)
+    initialize_provider_volumes()
 
 
 def main(argv=None):

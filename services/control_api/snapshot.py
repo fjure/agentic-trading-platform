@@ -204,6 +204,31 @@ class SnapshotReader:
             ).scalar_one_or_none()
             if equity is None:
                 raise LookupError("portfolio unavailable")
+            cash = connection.execute(
+                text("""SELECT p.cash FROM public.risk_account_context c
+                    JOIN public.portfolio_snapshots p ON p.id=c.portfolio_snapshot_id
+                    WHERE c.account_id=:account"""),
+                {"account": self.account_id},
+            ).scalar_one()
+            position_rows = connection.execute(
+                text("""SELECT i.broker_symbol AS symbol,p.quantity,p.average_price
+                    FROM public.positions p
+                    JOIN public.instruments i ON i.id=p.instrument_id
+                    WHERE p.account_id=:account ORDER BY i.broker_symbol,p.id"""),
+                {"account": self.account_id},
+            ).all()
+            positions = [
+                {
+                    "instrument": row.symbol,
+                    "quantity": models.decimal_string(row.quantity),
+                    **(
+                        {"averagePrice": models.decimal_string(row.average_price)}
+                        if row.average_price is not None
+                        else {}
+                    ),
+                }
+                for row in position_rows
+            ]
             run_ids = (
                 connection.execute(
                     text("""
@@ -244,6 +269,8 @@ class SnapshotReader:
                 "paperAccount": self.account_alias,
                 "connections": {"execution": mode["health"]},
                 "portfolioEquity": models.decimal_string(equity),
+                "portfolioCash": models.decimal_string(cash),
+                "positions": positions,
                 "workers": workers,
                 "recentOrders": orders,
             }

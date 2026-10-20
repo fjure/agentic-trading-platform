@@ -30,11 +30,15 @@ function Set-PrivateAcl([string]$Path, [bool]$Directory) {
         $rule = [System.Security.AccessControl.FileSystemAccessRule]::new(
             $identity, 'FullControl', 'ContainerInherit,ObjectInherit', 'None', 'Allow')
         $acl.AddAccessRule($rule)
-        [System.IO.FileSystemAclExtensions]::SetAccessControl([IO.DirectoryInfo]::new($Path), $acl)
     } else {
         $acl.AddAccessRule([System.Security.AccessControl.FileSystemAccessRule]::new(
             $identity, 'FullControl', 'Allow'))
-        [System.IO.FileSystemAclExtensions]::SetAccessControl([IO.FileInfo]::new($Path), $acl)
+    }
+    # .NET Framework exposes an instance method; modern .NET an extension.
+    if ($PSVersionTable.PSEdition -eq 'Desktop') {
+        $entry.SetAccessControl($acl)
+    } else {
+        [System.IO.FileSystemAclExtensions]::SetAccessControl($entry, $acl)
     }
     $verified = Get-Acl -LiteralPath $Path
     if (-not $verified.AreAccessRulesProtected -or $verified.Access.Count -ne 1 -or
@@ -71,7 +75,7 @@ $previousPath = $env:PATH
 try {
     if ($Stop) {
         Stop-LocalBridge
-        & docker compose -f $composePath --profile lab stop execution worker control-api watchdog
+        & docker compose -f $composePath --profile lab stop execution worker control-api watchdog demo
         if ($LASTEXITCODE -ne 0) { throw 'Local role shutdown failed.' }
         return
     }
@@ -82,7 +86,7 @@ try {
     Set-PrivateAcl $postgresSecret $false
     New-Item -ItemType Directory -Force -Path $runtimeDir | Out-Null
     Set-PrivateAcl $runtimeDir $true
-    foreach ($name in @('execution.json', 'worker.json', 'control.json', 'watchdog.json')) {
+    foreach ($name in @('execution.json', 'worker.json', 'control.json', 'watchdog.json', 'demo.json')) {
         $privateFile = Join-Path $runtimeDir $name
         if (Test-Path -LiteralPath $privateFile) { Set-PrivateAcl $privateFile $false }
     }
@@ -112,7 +116,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Locked dashboard dependency installation failed.' }
         & (Join-Path $nodeRoot 'npm.cmd') --prefix apps/dashboard run build
         if ($LASTEXITCODE -ne 0) { throw 'Dashboard production build failed.' }
-        & docker compose -f $composePath --profile lab build execution worker control-api watchdog
+        & docker compose -f $composePath --profile lab build execution worker control-api watchdog demo
         if ($LASTEXITCODE -ne 0) { throw 'Frozen runtime image build failed.' }
     }
     # Use the tag just built, rather than a stale created container's image ID.
@@ -124,7 +128,7 @@ try {
         --mount "type=bind,source=$postgresSecret,target=/run/secrets/postgres_password,readonly" `
         --entrypoint python $image -m services.runtime.provision --initial-cash $InitialCash
     if ($LASTEXITCODE -ne 0) { throw 'Local runtime provisioning failed; diagnostic output is redacted.' }
-    foreach ($name in @('execution.json', 'worker.json', 'control.json', 'watchdog.json')) {
+    foreach ($name in @('execution.json', 'worker.json', 'control.json', 'watchdog.json', 'demo.json')) {
         Set-PrivateAcl (Join-Path $runtimeDir $name) $false
     }
     if (-not $ProvisionOnly) {
@@ -134,11 +138,11 @@ try {
         # Release only this launcher's verified helper before Docker Desktop
         # attempts to reserve the same loopback port during container recreation.
         Stop-LocalBridge
-        & docker compose -f $composePath --profile lab up -d --wait --wait-timeout 60 execution worker control-api watchdog
+        & docker compose -f $composePath --profile lab up -d --wait --wait-timeout 60 execution worker control-api watchdog demo
         if ($LASTEXITCODE -ne 0) { throw 'Local runtime startup failed.' }
         $reachable = $false
         try {
-            $probe = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/ready' -TimeoutSec 3
+            $probe = Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8000/ready' -TimeoutSec 3
             $reachable = $probe.StatusCode -eq 200
         } catch { }
         if (-not $reachable) {
@@ -155,7 +159,7 @@ try {
             Set-PrivateAcl $bridgeRecord $false
             for ($attempt = 0; $attempt -lt 6; $attempt++) {
                 try {
-                    $probe = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/ready' -TimeoutSec 10
+                    $probe = Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8000/ready' -TimeoutSec 10
                     $reachable = $probe.StatusCode -eq 200
                 } catch { }
                 if ($reachable) { break }
