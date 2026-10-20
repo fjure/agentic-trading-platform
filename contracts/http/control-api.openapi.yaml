@@ -21,6 +21,8 @@ tags:
   description: Versioned simulation limits.
 - name: History
   description: Paginated audit and trading history.
+- name: Paper
+  description: Isolated Alpaca paper workflow, without credentials or direct broker access.
 paths:
   /health:
     get:
@@ -955,6 +957,536 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/TradingProfileUpdateRequest'
+  /api/v1/paper/status:
+    get:
+      tags:
+      - Paper
+      operationId: getPaperStatus
+      summary: Read isolated public paper state without provider I/O
+      description: REQ-APW-002/005/006/007/010; APW-01. Authenticated loopback, exact same Origin and CSRF boundaries
+        apply. Public fields are strict allowlists; no credentials or provider payloads. This endpoint reads only
+        the isolated public projection.
+      parameters:
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Public state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperStatus'
+              example:
+                namespace: alpaca-paper
+                environment: PAPER
+                setupState: SAVED
+                operatingState: PAUSED
+                entryGateOpen: false
+                credentialGeneration: 1
+                accountGeneration: 0
+                accountLabel: null
+                currency: USD
+                verifiedAt: null
+                reconciledAt: null
+                observedAt: '2026-10-20T10:00:00Z'
+                marketDataFeed: UNVERIFIED
+                providerVerification: UNVERIFIED
+                blockers:
+                - CONNECTION_NOT_VERIFIED
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+        '400':
+          description: Invalid bounded input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Local session required
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Origin or CSRF refused
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '404':
+          description: Public resource not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Temporarily unavailable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+  /api/v1/paper/operations/{operationId}:
+    get:
+      tags:
+      - Paper
+      operationId: getPaperOperation
+      summary: Read the actual durable command outcome
+      description: REQ-APW-002/005/006/007/010; APW-01. Authenticated loopback, exact same Origin and CSRF boundaries
+        apply. Public fields are strict allowlists; no credentials or provider payloads. This endpoint reads only
+        the isolated public projection.
+      parameters:
+      - $ref: '#/components/parameters/Traceparent'
+      - name: operationId
+        in: path
+        required: true
+        schema: &id001
+          type: string
+          format: uuid
+          maxLength: 36
+      responses:
+        '200':
+          description: Public state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperOperation'
+              example:
+                operationId: 12345678-1234-4234-8234-123456789012
+                operationType: VERIFY_CONNECTION
+                status: ACCEPTED
+                idempotencyKey: synthetic-paper-verify-01
+                acceptedGeneration: 1
+                acceptedAt: '2026-10-20T10:00:00Z'
+                updatedAt: '2026-10-20T10:00:00Z'
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+        '400':
+          description: Invalid bounded input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Local session required
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Origin or CSRF refused
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '404':
+          description: Public resource not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Temporarily unavailable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+  /api/v1/paper/verify-connection:
+    post:
+      tags:
+      - Paper
+      operationId: verifyPaperConnection
+      summary: Request read-only Execution-owned account verification
+      description: REQ-APW-002/005/006/007/010; APW-01. Authenticated loopback, exact same Origin and CSRF boundaries
+        apply. Public fields are strict allowlists; no credentials or provider payloads. 202 confirms durable command
+        acceptance only. Same actor/key/body replays the same operation; a different body returns IDEMPOTENCY_CONFLICT.
+        START is fenced again before execution and expires at expiresAt. No GET performs provider I/O.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '202':
+          description: Durably accepted; actual success must be polled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperOperation'
+              example:
+                operationId: 12345678-1234-4234-8234-123456789012
+                operationType: VERIFY_CONNECTION
+                status: ACCEPTED
+                idempotencyKey: synthetic-paper-verify-01
+                acceptedGeneration: 1
+                acceptedAt: '2026-10-20T10:00:00Z'
+                updatedAt: '2026-10-20T10:00:00Z'
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+        '400':
+          description: Invalid bounded input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Local session required
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Origin or CSRF refused
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '409':
+          description: Conflict or safe refusal
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Temporarily unavailable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaperVerifyRequest'
+  /api/v1/paper/prepare-ledger:
+    post:
+      tags:
+      - Paper
+      operationId: preparePaperLedger
+      summary: Request one-time immutable paper basis preparation
+      description: REQ-APW-002/005/006/007/010; APW-01. Authenticated loopback, exact same Origin and CSRF boundaries
+        apply. Public fields are strict allowlists; no credentials or provider payloads. 202 confirms durable command
+        acceptance only. Same actor/key/body replays the same operation; a different body returns IDEMPOTENCY_CONFLICT.
+        START is fenced again before execution and expires at expiresAt. No GET performs provider I/O.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '202':
+          description: Durably accepted; actual success must be polled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperOperation'
+              example:
+                operationId: 12345678-1234-4234-8234-123456789012
+                operationType: PREPARE_LEDGER
+                status: ACCEPTED
+                idempotencyKey: synthetic-paper-verify-01
+                acceptedGeneration: 1
+                acceptedAt: '2026-10-20T10:00:00Z'
+                updatedAt: '2026-10-20T10:00:00Z'
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+        '400':
+          description: Invalid bounded input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Local session required
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Origin or CSRF refused
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '409':
+          description: Conflict or safe refusal
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Temporarily unavailable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaperPrepareRequest'
+  /api/v1/paper/start:
+    post:
+      tags:
+      - Paper
+      operationId: startPaperWorkflow
+      summary: Explicitly request generation-bound paper activation
+      description: REQ-APW-002/005/006/007/010; APW-01. Authenticated loopback, exact same Origin and CSRF boundaries
+        apply. Public fields are strict allowlists; no credentials or provider payloads. 202 confirms durable command
+        acceptance only. Same actor/key/body replays the same operation; a different body returns IDEMPOTENCY_CONFLICT.
+        START is fenced again before execution and expires at expiresAt. No GET performs provider I/O.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '202':
+          description: Durably accepted; actual success must be polled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperOperation'
+              example:
+                operationId: 12345678-1234-4234-8234-123456789012
+                operationType: START
+                status: ACCEPTED
+                idempotencyKey: synthetic-paper-verify-01
+                acceptedGeneration: 1
+                acceptedAt: '2026-10-20T10:00:00Z'
+                updatedAt: '2026-10-20T10:00:00Z'
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+        '400':
+          description: Invalid bounded input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Local session required
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Origin or CSRF refused
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '409':
+          description: Conflict or safe refusal
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Temporarily unavailable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaperStartRequest'
+  /api/v1/paper/control:
+    post:
+      tags:
+      - Paper
+      operationId: controlPaperWorkflow
+      summary: Pause, stop or kill isolated paper operation
+      description: REQ-APW-002/005/006/007/010; APW-01. Authenticated loopback, exact same Origin and CSRF boundaries
+        apply. Public fields are strict allowlists; no credentials or provider payloads. 202 confirms durable command
+        acceptance only. Same actor/key/body replays the same operation; a different body returns IDEMPOTENCY_CONFLICT.
+        START is fenced again before execution and expires at expiresAt. No GET performs provider I/O.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '202':
+          description: Durably accepted; actual success must be polled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperOperation'
+              example:
+                operationId: 12345678-1234-4234-8234-123456789012
+                operationType: PAUSE
+                status: ACCEPTED
+                idempotencyKey: synthetic-paper-verify-01
+                acceptedGeneration: 1
+                acceptedAt: '2026-10-20T10:00:00Z'
+                updatedAt: '2026-10-20T10:00:00Z'
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+        '400':
+          description: Invalid bounded input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Local session required
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Origin or CSRF refused
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '409':
+          description: Conflict or safe refusal
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Temporarily unavailable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaperControlRequest'
+  /api/v1/paper/order-requests:
+    post:
+      tags:
+      - Paper
+      operationId: createPaperLimitOrderRequest
+      summary: Persist a human LIMIT requirement for the shared risk path
+      description: REQ-APW-002/005/006/007/010; APW-01. Authenticated loopback, exact same Origin and CSRF boundaries
+        apply. Public fields are strict allowlists; no credentials or provider payloads. 202 confirms durable command
+        acceptance only. Same actor/key/body replays the same operation; a different body returns IDEMPOTENCY_CONFLICT.
+        START is fenced again before execution and expires at expiresAt. No GET performs provider I/O.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '202':
+          description: Durably accepted; actual success must be polled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperOperation'
+              example:
+                operationId: 12345678-1234-4234-8234-123456789012
+                operationType: PLACE_LIMIT_ORDER
+                status: ACCEPTED
+                idempotencyKey: synthetic-paper-verify-01
+                acceptedGeneration: 1
+                acceptedAt: '2026-10-20T10:00:00Z'
+                updatedAt: '2026-10-20T10:00:00Z'
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+        '400':
+          description: Invalid bounded input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Local session required
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Origin or CSRF refused
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '409':
+          description: Conflict or safe refusal
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Temporarily unavailable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaperLimitOrderRequest'
+  /api/v1/paper/orders/{orderId}/cancel:
+    post:
+      tags:
+      - Paper
+      operationId: cancelPaperOrder
+      summary: Request durable cancellation of an owned paper order
+      description: REQ-APW-002/005/006/007/010; APW-01. Authenticated loopback, exact same Origin and CSRF boundaries
+        apply. Public fields are strict allowlists; no credentials or provider payloads. 202 confirms durable command
+        acceptance only. Same actor/key/body replays the same operation; a different body returns IDEMPOTENCY_CONFLICT.
+        START is fenced again before execution and expires at expiresAt. No GET performs provider I/O.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      - name: orderId
+        in: path
+        required: true
+        schema: *id001
+      responses:
+        '202':
+          description: Durably accepted; actual success must be polled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperOperation'
+              example:
+                operationId: 12345678-1234-4234-8234-123456789012
+                operationType: CANCEL_ORDER
+                status: ACCEPTED
+                idempotencyKey: synthetic-paper-verify-01
+                acceptedGeneration: 1
+                acceptedAt: '2026-10-20T10:00:00Z'
+                updatedAt: '2026-10-20T10:00:00Z'
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+        '400':
+          description: Invalid bounded input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Local session required
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Origin or CSRF refused
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '409':
+          description: Conflict or safe refusal
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Temporarily unavailable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '404':
+          description: Public resource not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaperCancelRequest'
 components:
   securitySchemes:
     LocalSession:
@@ -2284,7 +2816,9 @@ components:
           items:
             type: object
             additionalProperties: false
-            required: [instrument, quantity]
+            required:
+            - instrument
+            - quantity
             properties:
               instrument:
                 type: string
@@ -2672,3 +3206,568 @@ components:
           const: USD
         strategy:
           $ref: '#/components/schemas/DemoStrategy'
+    PaperErrorCode:
+      type: string
+      enum:
+      - INVALID_REQUEST
+      - AUTHENTICATION_REQUIRED
+      - ORIGIN_REJECTED
+      - IDEMPOTENCY_CONFLICT
+      - OPERATION_NOT_FOUND
+      - ORDER_NOT_FOUND
+      - VERSION_CONFLICT
+      - CREDENTIALS_MISSING
+      - CREDENTIALS_INVALID
+      - ACCOUNT_IDENTITY_MISMATCH
+      - ACCOUNT_BLOCKED
+      - CURRENCY_UNSUPPORTED
+      - MARKET_DATA_UNAVAILABLE
+      - OPEN_ORDERS_PRESENT
+      - UNSUPPORTED_POSITION
+      - COST_BASIS_MISSING
+      - SNAPSHOT_CHANGED
+      - LEDGER_ALREADY_BOUND
+      - LEDGER_NOT_PREPARED
+      - CONNECTION_NOT_VERIFIED
+      - APPROVAL_EXPIRED
+      - ENTRY_PAUSED
+      - KILL_SWITCH_ACTIVE
+      - SESSION_CLOSED
+      - STALE_QUOTE
+      - CAPABILITY_UNCONFIRMED
+      - BUDGET_EXCEEDED
+      - INSUFFICIENT_POSITION
+      - MINIMUM_QUANTITY
+      - POLICY_MISMATCH
+      - RECONCILIATION_REQUIRED
+      - BROKER_STATUS_UNKNOWN
+      - EXTERNAL_ACTIVITY
+      - PROVIDER_RATE_LIMITED
+      - PROVIDER_UNAVAILABLE
+      - PROVIDER_REJECTED
+      - TEMPORARILY_UNAVAILABLE
+      description: Stable allowlisted public failure code. Never contains provider text, credentials, account UUID,
+        paths or exception messages.
+    PaperOperationType:
+      type: string
+      enum:
+      - VERIFY_CONNECTION
+      - PREPARE_LEDGER
+      - START
+      - PAUSE
+      - STOP
+      - KILL
+      - PLACE_LIMIT_ORDER
+      - CANCEL_ORDER
+    PaperSymbol:
+      type: string
+      enum:
+      - SPY
+      - QQQ
+    PaperQuantity:
+      type: string
+      maxLength: 30
+      pattern: ^(?=.*[1-9])(?:0|[1-9][0-9]{0,19})(?:\.[0-9]{1,9})?$
+      description: Strictly positive exact decimal shares; at most nine fractional digits. Fractional DAY LIMIT
+        additionally requires fresh certified asset capability.
+    PaperLimitPrice:
+      type: string
+      maxLength: 28
+      pattern: ^(?=.*[1-9])(?:0|[1-9][0-9]{0,19})(?:\.[0-9]{1,6})?$
+      description: Positive exact USD price; current asset tick policy is checked before planning.
+    PaperGenerationRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - credentialGeneration
+      - accountGeneration
+      properties:
+        credentialGeneration: &id002
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        accountGeneration: *id002
+    PaperVerifyRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - credentialGeneration
+      properties:
+        credentialGeneration: *id002
+    PaperPrepareRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - credentialGeneration
+      - accountGeneration
+      - verificationOperationId
+      properties:
+        credentialGeneration: *id002
+        accountGeneration: *id002
+        verificationOperationId: *id001
+    PaperStartRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - credentialGeneration
+      - accountGeneration
+      - policyVersion
+      - profileVersion
+      - limitPolicyVersion
+      - symbols
+      - expiresAt
+      - riskBudget
+      - currency
+      - strategy
+      - confirmation
+      - budgetVersion
+      properties:
+        credentialGeneration: *id002
+        accountGeneration: *id002
+        policyVersion: *id002
+        profileVersion: *id002
+        limitPolicyVersion: *id002
+        symbols:
+          type: array
+          minItems: 1
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/PaperSymbol'
+          not:
+            not:
+              uniqueItems: true
+          description: JSON array with unique elements. Double negation preserves JSON Schema uniqueness while the
+            pinned Angular generator retains the array wire type.
+        expiresAt: &id003
+          type: string
+          format: date-time
+          pattern: Z$
+          maxLength: 30
+        riskBudget:
+          $ref: '#/components/schemas/PositiveBudget'
+        currency:
+          type: string
+          const: USD
+        strategy:
+          type: string
+          enum:
+          - mock-neutral
+          - neutral-baseline
+          - jev
+        confirmation:
+          type: string
+          const: START_PAPER
+        budgetVersion: &id004
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+    PaperControlRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - action
+      properties:
+        action:
+          type: string
+          enum:
+          - PAUSE
+          - STOP
+          - KILL
+      description: Safety controls are independent of setup, credential, policy and provider readiness. PAUSE/KILL
+        durably close the entry latch before acknowledgement. STOP also ends strategy planning; recovery continues.
+        None liquidates holdings.
+    PaperLimitOrderRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - credentialGeneration
+      - accountGeneration
+      - policyVersion
+      - profileVersion
+      - limitPolicyVersion
+      - symbol
+      - side
+      - quantity
+      - limitPrice
+      - orderType
+      - timeInForce
+      - session
+      - currency
+      - expiresAt
+      - confirmation
+      - budgetVersion
+      - riskBudget
+      properties:
+        credentialGeneration: *id002
+        accountGeneration: *id002
+        policyVersion: *id002
+        profileVersion: *id002
+        limitPolicyVersion: *id002
+        symbol:
+          $ref: '#/components/schemas/PaperSymbol'
+        side:
+          type: string
+          enum:
+          - BUY
+          - SELL
+        quantity:
+          $ref: '#/components/schemas/PaperQuantity'
+        limitPrice:
+          $ref: '#/components/schemas/PaperLimitPrice'
+        orderType:
+          type: string
+          const: LIMIT
+        timeInForce:
+          type: string
+          const: DAY
+        session:
+          type: string
+          const: REGULAR
+        currency:
+          type: string
+          const: USD
+        expiresAt: *id003
+        confirmation:
+          type: string
+          const: PLACE_PAPER_LIMIT
+        budgetVersion: *id004
+        riskBudget:
+          $ref: '#/components/schemas/PositiveBudget'
+      description: Immutable human request; no direct broker submit. Uses the shared deterministic proposal, risk,
+        reservation and execution path. SELL cannot exceed free long holdings. Server binds request ID and trace;
+        no synthetic model decision. No notional, MARKET or fallback order.
+    PaperCancelRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - accountGeneration
+      - confirmation
+      properties:
+        accountGeneration: *id002
+        confirmation:
+          type: string
+          const: CANCEL_PAPER_ORDER
+    PaperOperation:
+      type: object
+      additionalProperties: false
+      required:
+      - operationId
+      - operationType
+      - status
+      - idempotencyKey
+      - acceptedGeneration
+      - acceptedAt
+      - updatedAt
+      - traceId
+      properties:
+        operationId: *id001
+        operationType:
+          $ref: '#/components/schemas/PaperOperationType'
+        status:
+          type: string
+          enum:
+          - ACCEPTED
+          - RUNNING
+          - SUCCEEDED
+          - BLOCKED
+          - FAILED
+        idempotencyKey:
+          type: string
+          minLength: 16
+          maxLength: 128
+          pattern: ^[A-Za-z0-9._:-]+$
+        acceptedGeneration: *id002
+        acceptedAt: *id003
+        updatedAt: *id003
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+        errorCode:
+          $ref: '#/components/schemas/PaperErrorCode'
+        orderId: *id001
+      description: Persisted asynchronous command projection. ACCEPTED is durable receipt only, never trading approval
+        or proof of broker success. CANCEL_ORDER may remain RUNNING while its order is CANCEL_PENDING; reservations
+        remain until terminal reconciliation. Idempotent replay never creates a second obligation.
+      if:
+        properties:
+          status:
+            enum:
+            - BLOCKED
+            - FAILED
+      then:
+        required:
+        - errorCode
+        properties:
+          errorCode:
+            $ref: '#/components/schemas/PaperErrorCode'
+      else:
+        not:
+          required:
+          - errorCode
+          properties:
+            errorCode:
+              $ref: '#/components/schemas/PaperErrorCode'
+    PaperStatus:
+      type: object
+      additionalProperties: false
+      required:
+      - namespace
+      - environment
+      - setupState
+      - operatingState
+      - entryGateOpen
+      - credentialGeneration
+      - accountGeneration
+      - accountLabel
+      - currency
+      - verifiedAt
+      - reconciledAt
+      - observedAt
+      - marketDataFeed
+      - providerVerification
+      - blockers
+      - traceId
+      properties:
+        namespace:
+          type: string
+          const: alpaca-paper
+        environment:
+          type: string
+          const: PAPER
+        setupState:
+          type: string
+          enum:
+          - NOT_CONFIGURED
+          - SAVED
+          - VERIFIED
+          - PREPARED
+        operatingState:
+          type: string
+          enum:
+          - DISABLED
+          - PAUSED
+          - RUNNING
+          - STOPPED
+          - HALTED
+        entryGateOpen:
+          type: boolean
+        credentialGeneration:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        accountGeneration:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        accountLabel:
+          type:
+          - string
+          - 'null'
+          pattern: ^paper-[0-9a-f]{8}$
+          maxLength: 14
+        currency:
+          type: string
+          const: USD
+        cash:
+          $ref: '#/components/schemas/Decimal'
+        riskBudget:
+          $ref: '#/components/schemas/PositiveBudget'
+        verifiedAt: &id005
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: Z$
+          maxLength: 30
+        reconciledAt: *id005
+        observedAt: *id003
+        marketDataFeed:
+          type: string
+          enum:
+          - UNVERIFIED
+          - IEX
+          - SIP
+        providerVerification:
+          type: string
+          enum:
+          - UNVERIFIED
+          - CONFIRMED
+        blockers:
+          type: array
+          maxItems: 37
+          items:
+            $ref: '#/components/schemas/PaperErrorCode'
+          not:
+            not:
+              uniqueItems: true
+          description: JSON array with unique elements. Double negation preserves JSON Schema uniqueness while the
+            pinned Angular generator retains the array wire type.
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+      if:
+        properties:
+          entryGateOpen:
+            const: true
+      then:
+        properties:
+          setupState:
+            const: PREPARED
+          operatingState:
+            const: RUNNING
+          providerVerification:
+            const: CONFIRMED
+          blockers:
+            maxItems: 0
+    PaperProblem:
+      type: object
+      additionalProperties: false
+      required:
+      - type
+      - title
+      - status
+      - code
+      - traceId
+      properties:
+        type:
+          type: string
+          const: urn:agentic-trading-lab:paper-problem
+        title:
+          type: string
+          const: Paper workflow request failed
+        status:
+          type: integer
+          enum:
+          - 400
+          - 401
+          - 403
+          - 404
+          - 409
+          - 503
+        code:
+          $ref: '#/components/schemas/PaperErrorCode'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    PaperTradeProposal:
+      type: object
+      additionalProperties: false
+      required:
+      - credentialGeneration
+      - accountGeneration
+      - policyVersion
+      - profileVersion
+      - limitPolicyVersion
+      - symbol
+      - side
+      - quantity
+      - limitPrice
+      - orderType
+      - timeInForce
+      - session
+      - currency
+      - expiresAt
+      - budgetVersion
+      - riskBudget
+      - proposalId
+      - operationId
+      - marketStateId
+      - proposalSource
+      - decisionId
+      - humanRequestId
+      - createdAt
+      - traceId
+      properties:
+        credentialGeneration: &id006
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        accountGeneration: *id006
+        policyVersion: *id006
+        profileVersion: *id006
+        limitPolicyVersion: *id006
+        symbol:
+          $ref: '#/components/schemas/PaperSymbol'
+        side:
+          type: string
+          enum:
+          - BUY
+          - SELL
+        quantity:
+          $ref: '#/components/schemas/PaperQuantity'
+        limitPrice:
+          $ref: '#/components/schemas/PaperLimitPrice'
+        orderType:
+          type: string
+          const: LIMIT
+        timeInForce:
+          type: string
+          const: DAY
+        session:
+          type: string
+          const: REGULAR
+        currency:
+          type: string
+          const: USD
+        expiresAt:
+          type: string
+          format: date-time
+          pattern: Z$
+          maxLength: 30
+        budgetVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        riskBudget:
+          $ref: '#/components/schemas/PositiveBudget'
+        proposalId:
+          type: string
+          format: uuid
+          maxLength: 36
+        operationId:
+          type: string
+          format: uuid
+          maxLength: 36
+        marketStateId:
+          type: string
+          format: uuid
+          maxLength: 36
+        proposalSource:
+          type: string
+          enum:
+          - MODEL_DECISION
+          - HUMAN_REQUEST
+        decisionId: &id007
+          type:
+          - string
+          - 'null'
+          format: uuid
+          maxLength: 36
+        humanRequestId: *id007
+        createdAt:
+          type: string
+          format: date-time
+          pattern: Z$
+          maxLength: 30
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+      description: Immutable paper proposal with truthful exclusive provenance. Human proposals reference the durable
+        human request without inventing a model decision. Domain validation binds every execution value, generation,
+        policy/budget version and trace to the source; TTL may only narrow.
+      if:
+        properties:
+          proposalSource:
+            const: HUMAN_REQUEST
+      then:
+        properties:
+          decisionId:
+            type: 'null'
+          humanRequestId:
+            type: string
+            format: uuid
+            maxLength: 36
+      else:
+        properties:
+          humanRequestId:
+            type: 'null'
+          decisionId:
+            type: string
+            format: uuid
+            maxLength: 36

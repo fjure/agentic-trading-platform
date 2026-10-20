@@ -116,10 +116,23 @@ if (-not $SkipCompile) {
         $fixtures += "const fixture$fixtureIndex : Decision = $literal;"
         $fixtureIndex++
     }
+    $fixtures += "import type { PaperTradeProposal } from './generated-a/model/paperTradeProposal';"
+    $fixtures += "import type { PaperOperation } from './generated-a/model/paperOperation';"
+    $fixtures += "import type { PaperStatus } from './generated-a/model/paperStatus';"
+    foreach ($paperFixture in @(
+        @('paper-trade-proposal.valid.json', 'PaperTradeProposal'),
+        @('paper-operation.valid.json', 'PaperOperation'),
+        @('paper-workflow.valid.json', 'PaperStatus')
+    )) {
+        $fixturePath = Join-Path $root ('contracts/examples/v1/' + $paperFixture[0])
+        $literal = Get-Content -LiteralPath $fixturePath -Raw
+        $fixtures += "const fixture$fixtureIndex : $($paperFixture[1]) = $literal;"
+        $fixtureIndex++
+    }
     [IO.File]::WriteAllLines((Join-Path $tooling 'client-contract-fixtures.generated.ts'), $fixtures)
     $tsc = Join-Path $tooling 'node_modules/.bin/tsc.cmd'
     if (-not (Test-Path -LiteralPath $tsc)) { throw 'Pinned TypeScript compiler is missing.' }
     & $tsc --project (Join-Path $tooling 'tsconfig.generated.json') --noEmit
     if ($LASTEXITCODE -ne 0) { throw 'Generated Angular client failed TypeScript compile.' }
-    Write-Output 'PASS: generated Angular client and success/ABSTAIN fixtures TypeScript compile.'
+    Write-Output 'PASS: generated Angular client and decision/Paper fixtures TypeScript compile.'
 }

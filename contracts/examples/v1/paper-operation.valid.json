@@ -1,0 +1,10 @@
+{
+  "operationId": "12345678-1234-4234-8234-123456789012",
+  "operationType": "VERIFY_CONNECTION",
+  "status": "ACCEPTED",
+  "idempotencyKey": "synthetic-paper-verify-01",
+  "acceptedGeneration": 1,
+  "acceptedAt": "2026-10-20T10:00:00Z",
+  "updatedAt": "2026-10-20T10:00:00Z",
+  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
+}

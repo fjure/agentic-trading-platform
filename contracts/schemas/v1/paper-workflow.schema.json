@@ -1,0 +1,866 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/paper-workflow.schema.json",
+  "title": "PaperStatus v1",
+  "$defs": {
+    "Decimal": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$",
+      "example": "123.45"
+    },
+    "PaperCancelRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accountGeneration",
+        "confirmation"
+      ],
+      "properties": {
+        "accountGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "confirmation": {
+          "type": "string",
+          "const": "CANCEL_PAPER_ORDER"
+        }
+      }
+    },
+    "PaperControlRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "PAUSE",
+            "STOP",
+            "KILL"
+          ]
+        }
+      },
+      "description": "Safety controls are independent of setup, credential, policy and provider readiness. PAUSE/KILL durably close the entry latch before acknowledgement. STOP also ends strategy planning; recovery continues. None liquidates holdings."
+    },
+    "PaperErrorCode": {
+      "type": "string",
+      "enum": [
+        "INVALID_REQUEST",
+        "AUTHENTICATION_REQUIRED",
+        "ORIGIN_REJECTED",
+        "IDEMPOTENCY_CONFLICT",
+        "OPERATION_NOT_FOUND",
+        "ORDER_NOT_FOUND",
+        "VERSION_CONFLICT",
+        "CREDENTIALS_MISSING",
+        "CREDENTIALS_INVALID",
+        "ACCOUNT_IDENTITY_MISMATCH",
+        "ACCOUNT_BLOCKED",
+        "CURRENCY_UNSUPPORTED",
+        "MARKET_DATA_UNAVAILABLE",
+        "OPEN_ORDERS_PRESENT",
+        "UNSUPPORTED_POSITION",
+        "COST_BASIS_MISSING",
+        "SNAPSHOT_CHANGED",
+        "LEDGER_ALREADY_BOUND",
+        "LEDGER_NOT_PREPARED",
+        "CONNECTION_NOT_VERIFIED",
+        "APPROVAL_EXPIRED",
+        "ENTRY_PAUSED",
+        "KILL_SWITCH_ACTIVE",
+        "SESSION_CLOSED",
+        "STALE_QUOTE",
+        "CAPABILITY_UNCONFIRMED",
+        "BUDGET_EXCEEDED",
+        "INSUFFICIENT_POSITION",
+        "MINIMUM_QUANTITY",
+        "POLICY_MISMATCH",
+        "RECONCILIATION_REQUIRED",
+        "BROKER_STATUS_UNKNOWN",
+        "EXTERNAL_ACTIVITY",
+        "PROVIDER_RATE_LIMITED",
+        "PROVIDER_UNAVAILABLE",
+        "PROVIDER_REJECTED",
+        "TEMPORARILY_UNAVAILABLE"
+      ],
+      "description": "Stable allowlisted public failure code. Never contains provider text, credentials, account UUID, paths or exception messages."
+    },
+    "PaperGenerationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "credentialGeneration",
+        "accountGeneration"
+      ],
+      "properties": {
+        "credentialGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "PaperLimitOrderRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "credentialGeneration",
+        "accountGeneration",
+        "policyVersion",
+        "profileVersion",
+        "limitPolicyVersion",
+        "symbol",
+        "side",
+        "quantity",
+        "limitPrice",
+        "orderType",
+        "timeInForce",
+        "session",
+        "currency",
+        "expiresAt",
+        "confirmation",
+        "budgetVersion",
+        "riskBudget"
+      ],
+      "properties": {
+        "credentialGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "profileVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "limitPolicyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "symbol": {
+          "$ref": "#/$defs/PaperSymbol"
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "BUY",
+            "SELL"
+          ]
+        },
+        "quantity": {
+          "$ref": "#/$defs/PaperQuantity"
+        },
+        "limitPrice": {
+          "$ref": "#/$defs/PaperLimitPrice"
+        },
+        "orderType": {
+          "type": "string",
+          "const": "LIMIT"
+        },
+        "timeInForce": {
+          "type": "string",
+          "const": "DAY"
+        },
+        "session": {
+          "type": "string",
+          "const": "REGULAR"
+        },
+        "currency": {
+          "type": "string",
+          "const": "USD"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "confirmation": {
+          "type": "string",
+          "const": "PLACE_PAPER_LIMIT"
+        },
+        "budgetVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "riskBudget": {
+          "$ref": "#/$defs/PositiveBudget"
+        }
+      },
+      "description": "Immutable human request; no direct broker submit. Uses the shared deterministic proposal, risk, reservation and execution path. SELL cannot exceed free long holdings. Server binds request ID and trace; no synthetic model decision. No notional, MARKET or fallback order."
+    },
+    "PaperLimitPrice": {
+      "type": "string",
+      "maxLength": 28,
+      "pattern": "^(?=.*[1-9])(?:0|[1-9][0-9]{0,19})(?:\\.[0-9]{1,6})?$",
+      "description": "Positive exact USD price; current asset tick policy is checked before planning."
+    },
+    "PaperOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operationId",
+        "operationType",
+        "status",
+        "idempotencyKey",
+        "acceptedGeneration",
+        "acceptedAt",
+        "updatedAt",
+        "traceId"
+      ],
+      "properties": {
+        "operationId": {
+          "type": "string",
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "operationType": {
+          "$ref": "#/$defs/PaperOperationType"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ACCEPTED",
+            "RUNNING",
+            "SUCCEEDED",
+            "BLOCKED",
+            "FAILED"
+          ]
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        },
+        "acceptedGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "acceptedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        },
+        "errorCode": {
+          "$ref": "#/$defs/PaperErrorCode"
+        },
+        "orderId": {
+          "type": "string",
+          "format": "uuid",
+          "maxLength": 36
+        }
+      },
+      "description": "Persisted asynchronous command projection. ACCEPTED is durable receipt only, never trading approval or proof of broker success. CANCEL_ORDER may remain RUNNING while its order is CANCEL_PENDING; reservations remain until terminal reconciliation. Idempotent replay never creates a second obligation.",
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "BLOCKED",
+              "FAILED"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "errorCode"
+        ],
+        "properties": {
+          "errorCode": {
+            "$ref": "#/$defs/PaperErrorCode"
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "errorCode"
+          ],
+          "properties": {
+            "errorCode": {
+              "$ref": "#/$defs/PaperErrorCode"
+            }
+          }
+        }
+      }
+    },
+    "PaperOperationType": {
+      "type": "string",
+      "enum": [
+        "VERIFY_CONNECTION",
+        "PREPARE_LEDGER",
+        "START",
+        "PAUSE",
+        "STOP",
+        "KILL",
+        "PLACE_LIMIT_ORDER",
+        "CANCEL_ORDER"
+      ]
+    },
+    "PaperPrepareRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "credentialGeneration",
+        "accountGeneration",
+        "verificationOperationId"
+      ],
+      "properties": {
+        "credentialGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "verificationOperationId": {
+          "type": "string",
+          "format": "uuid",
+          "maxLength": 36
+        }
+      }
+    },
+    "PaperProblem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "title",
+        "status",
+        "code",
+        "traceId"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "urn:agentic-trading-lab:paper-problem"
+        },
+        "title": {
+          "type": "string",
+          "const": "Paper workflow request failed"
+        },
+        "status": {
+          "type": "integer",
+          "enum": [
+            400,
+            401,
+            403,
+            404,
+            409,
+            503
+          ]
+        },
+        "code": {
+          "$ref": "#/$defs/PaperErrorCode"
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        }
+      }
+    },
+    "PaperQuantity": {
+      "type": "string",
+      "maxLength": 30,
+      "pattern": "^(?=.*[1-9])(?:0|[1-9][0-9]{0,19})(?:\\.[0-9]{1,9})?$",
+      "description": "Strictly positive exact decimal shares; at most nine fractional digits. Fractional DAY LIMIT additionally requires fresh certified asset capability."
+    },
+    "PaperStartRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "credentialGeneration",
+        "accountGeneration",
+        "policyVersion",
+        "profileVersion",
+        "limitPolicyVersion",
+        "symbols",
+        "expiresAt",
+        "riskBudget",
+        "currency",
+        "strategy",
+        "confirmation",
+        "budgetVersion"
+      ],
+      "properties": {
+        "credentialGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "profileVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "limitPolicyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "symbols": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/PaperSymbol"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          },
+          "description": "JSON array with unique elements. Double negation preserves JSON Schema uniqueness while the pinned Angular generator retains the array wire type."
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "riskBudget": {
+          "$ref": "#/$defs/PositiveBudget"
+        },
+        "currency": {
+          "type": "string",
+          "const": "USD"
+        },
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "mock-neutral",
+            "neutral-baseline",
+            "jev"
+          ]
+        },
+        "confirmation": {
+          "type": "string",
+          "const": "START_PAPER"
+        },
+        "budgetVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "PaperStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "environment",
+        "setupState",
+        "operatingState",
+        "entryGateOpen",
+        "credentialGeneration",
+        "accountGeneration",
+        "accountLabel",
+        "currency",
+        "verifiedAt",
+        "reconciledAt",
+        "observedAt",
+        "marketDataFeed",
+        "providerVerification",
+        "blockers",
+        "traceId"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "const": "alpaca-paper"
+        },
+        "environment": {
+          "type": "string",
+          "const": "PAPER"
+        },
+        "setupState": {
+          "type": "string",
+          "enum": [
+            "NOT_CONFIGURED",
+            "SAVED",
+            "VERIFIED",
+            "PREPARED"
+          ]
+        },
+        "operatingState": {
+          "type": "string",
+          "enum": [
+            "DISABLED",
+            "PAUSED",
+            "RUNNING",
+            "STOPPED",
+            "HALTED"
+          ]
+        },
+        "entryGateOpen": {
+          "type": "boolean"
+        },
+        "credentialGeneration": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "accountGeneration": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "accountLabel": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^paper-[0-9a-f]{8}$",
+          "maxLength": 14
+        },
+        "currency": {
+          "type": "string",
+          "const": "USD"
+        },
+        "cash": {
+          "$ref": "#/$defs/Decimal"
+        },
+        "riskBudget": {
+          "$ref": "#/$defs/PositiveBudget"
+        },
+        "verifiedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "reconciledAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "marketDataFeed": {
+          "type": "string",
+          "enum": [
+            "UNVERIFIED",
+            "IEX",
+            "SIP"
+          ]
+        },
+        "providerVerification": {
+          "type": "string",
+          "enum": [
+            "UNVERIFIED",
+            "CONFIRMED"
+          ]
+        },
+        "blockers": {
+          "type": "array",
+          "maxItems": 37,
+          "items": {
+            "$ref": "#/$defs/PaperErrorCode"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          },
+          "description": "JSON array with unique elements. Double negation preserves JSON Schema uniqueness while the pinned Angular generator retains the array wire type."
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        }
+      },
+      "if": {
+        "properties": {
+          "entryGateOpen": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "setupState": {
+            "const": "PREPARED"
+          },
+          "operatingState": {
+            "const": "RUNNING"
+          },
+          "providerVerification": {
+            "const": "CONFIRMED"
+          },
+          "blockers": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    "PaperSymbol": {
+      "type": "string",
+      "enum": [
+        "SPY",
+        "QQQ"
+      ]
+    },
+    "PaperTradeProposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "credentialGeneration",
+        "accountGeneration",
+        "policyVersion",
+        "profileVersion",
+        "limitPolicyVersion",
+        "symbol",
+        "side",
+        "quantity",
+        "limitPrice",
+        "orderType",
+        "timeInForce",
+        "session",
+        "currency",
+        "expiresAt",
+        "budgetVersion",
+        "riskBudget",
+        "proposalId",
+        "operationId",
+        "marketStateId",
+        "proposalSource",
+        "decisionId",
+        "humanRequestId",
+        "createdAt",
+        "traceId"
+      ],
+      "properties": {
+        "credentialGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "profileVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "limitPolicyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "symbol": {
+          "$ref": "#/$defs/PaperSymbol"
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "BUY",
+            "SELL"
+          ]
+        },
+        "quantity": {
+          "$ref": "#/$defs/PaperQuantity"
+        },
+        "limitPrice": {
+          "$ref": "#/$defs/PaperLimitPrice"
+        },
+        "orderType": {
+          "type": "string",
+          "const": "LIMIT"
+        },
+        "timeInForce": {
+          "type": "string",
+          "const": "DAY"
+        },
+        "session": {
+          "type": "string",
+          "const": "REGULAR"
+        },
+        "currency": {
+          "type": "string",
+          "const": "USD"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "budgetVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "riskBudget": {
+          "$ref": "#/$defs/PositiveBudget"
+        },
+        "proposalId": {
+          "type": "string",
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "operationId": {
+          "type": "string",
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "marketStateId": {
+          "type": "string",
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "proposalSource": {
+          "type": "string",
+          "enum": [
+            "MODEL_DECISION",
+            "HUMAN_REQUEST"
+          ]
+        },
+        "decisionId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "humanRequestId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        }
+      },
+      "description": "Immutable paper proposal with truthful exclusive provenance. Human proposals reference the durable human request without inventing a model decision. Domain validation binds every execution value, generation, policy/budget version and trace to the source; TTL may only narrow.",
+      "if": {
+        "properties": {
+          "proposalSource": {
+            "const": "HUMAN_REQUEST"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "decisionId": {
+            "type": "null"
+          },
+          "humanRequestId": {
+            "type": "string",
+            "format": "uuid",
+            "maxLength": 36
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "humanRequestId": {
+            "type": "null"
+          },
+          "decisionId": {
+            "type": "string",
+            "format": "uuid",
+            "maxLength": 36
+          }
+        }
+      }
+    },
+    "PaperVerifyRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "credentialGeneration"
+      ],
+      "properties": {
+        "credentialGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "PositiveBudget": {
+      "type": "string",
+      "pattern": "^(?=.*[1-9])(?:(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,18})?|1000000(?:\\.0{1,18})?)$",
+      "description": "Exact positive decimal USD amount no greater than 1000000."
+    },
+    "TraceId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "example": "4bf92f3577b34da6a3ce929d0e0e4736"
+    }
+  },
+  "$ref": "#/$defs/PaperStatus"
+}
