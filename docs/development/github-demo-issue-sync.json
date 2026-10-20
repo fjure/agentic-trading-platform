@@ -4,7 +4,7 @@
   "changeId": "dashboard-trading-demo",
   "status": "synchronized-read-back-verified",
   "transport": "official-gh-cli-user-authorized-fallback",
-  "lastReadBackAt": "2026-10-20T18:56:59.045663+00:00",
+  "lastReadBackAt": "2026-10-20T19:03:27.562687+00:00",
   "lastSyncRun": {
     "created": 0,
     "updated": 1,
@@ -19,7 +19,7 @@
       "state": "closed",
       "contentHash": "20652ec4cc9617417dfe2da71f2df056ca9312f7d6a5d59a0dc90d7431cab575",
       "dependsOn": [],
-      "syncedAt": "2026-10-20T18:56:55.190172+00:00"
+      "syncedAt": "2026-10-20T19:03:23.913336+00:00"
     },
     {
       "taskId": "DEMO-02",
@@ -30,7 +30,7 @@
       "dependsOn": [
         "DEMO-01"
       ],
-      "syncedAt": "2026-10-20T18:56:55.708461+00:00"
+      "syncedAt": "2026-10-20T19:03:24.388773+00:00"
     },
     {
       "taskId": "DEMO-03",
@@ -44,7 +44,7 @@
         "DEMO-05",
         "DEMO-06"
       ],
-      "syncedAt": "2026-10-20T18:56:58.608181+00:00"
+      "syncedAt": "2026-10-20T19:03:27.016636+00:00"
     },
     {
       "taskId": "DEMO-04",
@@ -58,7 +58,7 @@
         "DEMO-05",
         "DEMO-06"
       ],
-      "syncedAt": "2026-10-20T18:56:59.045653+00:00"
+      "syncedAt": "2026-10-20T19:03:27.562675+00:00"
     },
     {
       "taskId": "DEMO-05",
@@ -69,19 +69,19 @@
       "dependsOn": [
         "DEMO-01"
       ],
-      "syncedAt": "2026-10-20T18:56:57.631804+00:00"
+      "syncedAt": "2026-10-20T19:03:24.877788+00:00"
     },
     {
       "taskId": "DEMO-06",
       "issueNumber": 31,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/31",
-      "state": "open",
-      "contentHash": "4e9c420d43c7f92ac381968e790ff363e1a1b5d27fc8911bcfeedadb233fc1a8",
+      "state": "closed",
+      "contentHash": "22f8468bb1d2abd1e969fa56b62ca97367d9e112b22a66f6ea0c45dc11395cbd",
       "dependsOn": [
         "DEMO-01",
         "DEMO-02"
       ],
-      "syncedAt": "2026-10-20T18:56:58.114836+00:00"
+      "syncedAt": "2026-10-20T19:03:26.601476+00:00"
     }
   ]
 }

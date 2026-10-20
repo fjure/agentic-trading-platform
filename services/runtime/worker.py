@@ -99,14 +99,26 @@ class WorkerRuntime:
             # and the final fenced transaction independently reject lease loss.
             with self.ledger.transaction() as tx:
                 state = tx.get(m.MarketState, claim.input_ref)
+                decision_engine = self.decision
+                decision_config = "runtime-decision-v1"
+                if self.config.decision_provider == "mock":
+                    from packages.decisions.baseline import DeterministicBaselineDecisionEngine
+                    from packages.decisions.mock import MockDecisionEngine
+                    from packages.risk.budget import read_strategy
+
+                    strategy, version = read_strategy(tx.connection, self.config.account_id)
+                    engine_type = (MockDecisionEngine if strategy == "mock-neutral"
+                                   else DeterministicBaselineDecisionEngine)
+                    decision_engine = engine_type(clock=self.clock, ids=self.ids)
+                    decision_config += ":" + version
                 prior = tx.connection.execute(
                     text("""SELECT id FROM public.decisions
                     WHERE market_state_id=:state AND config_version=:config LIMIT 1"""),
-                    {"state": claim.input_ref, "config": "runtime-decision-v1"},
+                    {"state": claim.input_ref, "config": decision_config},
                 ).scalar_one_or_none()
             if state is None:
                 raise ValueError("MARKET_STATE_MISSING")
-            result = None if prior else self.decision.decide(state, "runtime-decision-v1")
+            result = None if prior else decision_engine.decide(state, decision_config)
             if not self.jobs.heartbeat(claim):
                 raise ValueError("LEASE_LOST")
             with self.jobs.transaction(claim) as connection:
@@ -141,7 +153,7 @@ class WorkerRuntime:
                         m.AgentRun(
                             self.ids.new_id("run", claim.job_id),
                             result.input_hash,
-                            "runtime-decision-v1",
+                            decision_config,
                             state.id,
                             "DONE",
                             self.clock.now(),

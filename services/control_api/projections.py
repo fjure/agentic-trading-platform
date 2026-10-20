@@ -206,6 +206,7 @@ _ACTIONS = frozenset(
         "safety.resume",
         "control.mode_set",
         "control.risk_policy_updated",
+        "control.trading_profile_updated",
         "execution.unsafe_restart",
         "execution.paper_baseline",
         "execution.paper_receipt",
