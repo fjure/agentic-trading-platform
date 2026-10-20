@@ -10,6 +10,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { firstValueFrom } from 'rxjs';
 import type { Resource } from '../state/supervisor.models';
 import { SupervisorStore } from '../state/supervisor.store';
+import { DemoSetupComponent } from '../demo-setup/demo-setup.component';
 
 type View = 'overview' | Resource;
 type FieldSpec = readonly [label: string, path: string];
@@ -83,7 +84,7 @@ export class ConfirmDialogComponent { readonly data = inject<DialogData>(MAT_DIA
 
 @Component({
   selector: 'atl-supervisor',
-  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatTableModule, MatToolbarModule],
+  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatTableModule, MatToolbarModule, DemoSetupComponent],
   templateUrl: './supervisor.component.html',
   styleUrl: './supervisor.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

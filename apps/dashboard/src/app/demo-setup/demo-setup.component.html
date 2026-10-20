@@ -1,0 +1,69 @@
+<section class="demo-setup" aria-labelledby="demo-setup-title">
+  <div class="demo-banner" role="note"><strong>Simulation – keine Brokerverbindung</strong><span>Diese Demo verwendet ausschließlich synthetische Daten und ein isoliertes Demo-Ledger.</span></div>
+  <h2 id="demo-setup-title">Demo &amp; Einrichtung</h2>
+  @if (message()) { <p class="notice" role="status">{{ message() }}</p> }
+  @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+
+  <div class="demo-grid">
+    <mat-card appearance="outlined"><mat-card-content>
+      <div class="kicker">SYNTHETISCHE SIMULATION</div><h3>Demo starten</h3>
+      <p>Wähle ein exaktes USD-Startbudget und eine vorhandene Entscheidungsvariante.</p>
+      <form class="stack" (submit)="$event.preventDefault(); startDemo()">
+        <mat-form-field appearance="outline"><mat-label>Startbudget (USD)</mat-label><input matInput type="text" inputmode="decimal" autocomplete="off" [formControl]="budget" aria-describedby="budget-help" /><mat-hint id="budget-help">Positiv, bis 1.000.000 USD. Es wird nichts umgerechnet oder gerundet.</mat-hint>@if (budget.invalid && budget.touched) { <mat-error>Gib einen gültigen exakten USD-Betrag bis 1.000.000 ein.</mat-error> }</mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Strategievariante</mat-label><mat-select [formControl]="strategy"><mat-option value="mock-neutral">Mock neutral</mat-option><mat-option value="neutral-baseline">Deterministic neutral baseline</mat-option></mat-select></mat-form-field>
+        <button mat-flat-button type="submit" [disabled]="!budget.valid || loading() || run()?.status === 'RUNNING'">{{ loading() || run()?.status === 'RUNNING' ? 'Demo läuft…' : 'Demo starten' }}</button>
+      </form>
+      @if (loading()) { <mat-spinner diameter="28" aria-label="Demolauf wird gestartet"></mat-spinner> }
+    </mat-card-content></mat-card>
+
+    <mat-card appearance="outlined"><mat-card-content>
+      <div class="kicker">LOKALE EINRICHTUNG</div><h3>Provider-Schlüssel</h3>
+      <p>Schlüssel werden beim Speichern aus dem Formular gelöscht. Es erfolgen keine Verbindungsprüfungen und keine Provideraufrufe.</p>
+      <div class="provider-row"><div><b>Alpaca Paper</b><span>{{ integrations()?.alpaca?.status === 'CONFIGURED' ? 'Gespeichert – Verbindung noch nicht geprüft' : 'Nicht eingerichtet' }}</span></div><button mat-stroked-button type="button" (click)="openCredentials('alpaca')">Alpaca einrichten</button></div>
+      <div class="provider-row"><div><b>Jev</b><span>{{ integrations()?.jev?.status === 'CONFIGURED' ? 'Gespeichert – Verbindung noch nicht geprüft' : 'Nicht eingerichtet' }}</span></div><button mat-stroked-button type="button" (click)="openCredentials('jev')">Jev einrichten</button></div>
+      <p class="muted">Das Speichern aktiviert keinen Handel. Eine spätere Aktivierung erfolgt separat.</p>
+    </mat-card-content></mat-card>
+
+    <mat-card appearance="outlined"><mat-card-content>
+      <div class="kicker">PAPER LIMIT</div><h3>Separates Paper-Budget</h3>
+      <p>Zusätzliche Obergrenze für gehaltenes und reserviertes Exposure. Sie verändert weder Brokerkontostand noch Ledger-Cashbasis.</p>
+      <p>Mindestmengen und bestehende Risikogates bleiben wirksam; ein kleineres Budget erzeugt keine künstlichen Bruchteile.</p>
+      <form class="stack" (submit)="$event.preventDefault(); saveProfile()">
+        <mat-form-field appearance="outline"><mat-label>Paper-Budget (USD)</mat-label><input matInput type="text" inputmode="decimal" autocomplete="off" [formControl]="profileBudget" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Strategievariante</mat-label><mat-select [formControl]="profileStrategy"><mat-option value="mock-neutral">Mock neutral</mat-option><mat-option value="neutral-baseline">Deterministic neutral baseline</mat-option></mat-select></mat-form-field>
+        <button mat-stroked-button type="submit" [disabled]="!profileBudget.valid">Paper-Budget speichern</button>
+      </form>
+    </mat-card-content></mat-card>
+  </div>
+
+  @if (runs().length > 0) {
+    <mat-card appearance="outlined" class="run-list"><mat-card-content>
+      <div class="kicker">PERSISTENTE DEMOHISTORIE</div><h3>Vorherige Läufe</h3>
+      <ul>@for (item of runs(); track item.runId) { <li><button mat-button type="button" (click)="run.set(item); snapshot.set(null); resumeSelection(item)">{{ item.status }} · {{ item.initialBudget }} USD · {{ item.strategy }} · {{ item.runId }}</button></li> }</ul>
+    </mat-card-content></mat-card>
+  }
+
+  @if (run(); as current) {
+    <mat-card appearance="outlined" class="result-card"><mat-card-content>
+      <div class="result-heading"><div><div class="kicker">SIMULATION – KEINE BROKERVERBINDUNG</div><h3>Demo-Ergebnis: {{ current.status }}</h3></div><span class="run-id">Run {{ current.runId }}</span></div>
+      <div class="run-meta"><span>Trace-ID <b>{{ current.traceId }}</b></span><span>Startbudget <b>{{ current.initialBudget }} {{ current.currency }}</b></span><span>Variante <b>{{ current.strategy }}</b></span></div>
+      @if (current.status === 'RUNNING') { <p role="status">Synthetischer Handelspfad wird ausgeführt…</p> }
+      @if (current.status === 'RUNNING') { <div class="run-controls"><button mat-stroked-button type="button" (click)="controlRun('pause')">Demo pausieren</button><button mat-stroked-button type="button" (click)="controlRun('kill')">Demo stoppen</button></div> }
+      @if (current.status === 'FAILED') { <p class="error" role="alert">Der Lauf wurde beendet. Vorhandene Demo-Belege bleiben erhalten.</p> }
+      @if (snapshot(); as data) {
+        <div class="portfolio"><div><span>Demo-Equity</span><b>{{ data.portfolioEquity }} USD</b></div><div><span>Demo-Cash</span><b>{{ data.portfolioCash ?? 'nicht verfügbar' }} USD</b></div><div><span>Letzte Demo-Order</span><b>{{ data.recentOrders[0]?.status ?? 'Keine Order' }}</b></div><div><span>Gefüllte Menge</span><b>{{ data.recentOrders[0]?.filledQuantity ?? 'nicht verfügbar' }}</b></div></div>
+        @if (data.positions?.length) { <section class="position-list" aria-label="Demo-Positionen"><h4>Demo-Positionen</h4>@for (position of data.positions; track position.instrument) { <div><b>{{ position.instrument }}</b><span>Menge {{ position.quantity }} · Ø-Preis {{ position.averagePrice ?? 'nicht verfügbar' }}</span></div> }</section> }
+      }
+      <div class="evidence-grid">
+        @for (resource of requiredHistory; track resource) {
+          <section class="evidence"><h4>{{ historyTitle(resource) }}</h4>
+            @if (pages()[resource]?.loading) { <p>Wird geladen…</p> }
+            @if (pages()[resource]?.error) { <p class="muted">{{ pages()[resource]?.error }}</p> }
+            @for (row of rows(resource); track row.id) { <details><summary>{{ row.title }} · {{ row.status }}</summary><dl>@for (field of row.fields; track field.label) { <div><dt>{{ field.label }}</dt><dd>{{ field.value }}</dd></div> }</dl></details> }
+            @if (!pages()[resource]?.loading && !rows(resource).length && !pages()[resource]?.error) { <p class="muted">Noch keine Einträge.</p> }
+          </section>
+        }
+      </div>
+    </mat-card-content></mat-card>
+  }
+</section>

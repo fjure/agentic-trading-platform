@@ -43,6 +43,7 @@
       </mat-card>
     } @else {
       @if (active() === 'overview') {
+        <atl-demo-setup />
         @if (store.snapshot(); as snapshot) {
           @if (store.mode() ?? snapshot.mode; as mode) {
           <div class="overview-grid">

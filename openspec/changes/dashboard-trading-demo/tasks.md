@@ -8,7 +8,7 @@
 
 ## 2. Sichtbare Demo
 
-- [ ] 2.1 DEMO-03 Demo im Angular-Dashboard: „Demo starten“, permanentes Simulationsbanner, Fortschritt/Fehler, gefüllte Order, Portfolioänderung und Trace-Navigation mit explizit getrenntem Demokontext einbauen; vorhandene Session verwenden, Doppelklick und Reload behandeln, normale Betriebsansicht erhalten und README um den Ein-Klick-Ablauf ergänzen. Requirements: REQ-DEMO-001, REQ-DEMO-002, REQ-DEMO-003, REQ-DEMO-004, REQ-DEMO-005. Depends on: DEMO-01, DEMO-02. Paths: `apps/dashboard/src/app/supervisor/`, `tests/e2e/`, `README.md`, `docs/runbooks/dashboard-demo.md`. Tests: Browserfälle für Start, Ladezustand, Erfolg, Fehler, Wiederholung, Reload und klar getrennte Controls. DoD: keine Credentials oder Risklogik im Browser, nur generierter Client, klare Simulation und dokumentierter sichtbarer Trade; Review und Issue-Read-back.
+- [x] 2.1 DEMO-03 Demo im Angular-Dashboard: „Demo starten“, permanentes Simulationsbanner, Fortschritt/Fehler, gefüllte Order, Portfolioänderung und Trace-Navigation mit explizit getrenntem Demokontext einbauen; vorhandene Session verwenden, Doppelklick und Reload behandeln, normale Betriebsansicht erhalten und README um den Ein-Klick-Ablauf ergänzen. Requirements: REQ-DEMO-001, REQ-DEMO-002, REQ-DEMO-003, REQ-DEMO-004, REQ-DEMO-005. Depends on: DEMO-01, DEMO-02. Paths: `apps/dashboard/src/app/supervisor/`, `tests/e2e/`, `README.md`, `docs/runbooks/dashboard-demo.md`. Tests: Browserfälle für Start, Ladezustand, Erfolg, Fehler, Wiederholung, Reload und klar getrennte Controls. DoD: keine Credentials oder Risklogik im Browser, nur generierter Client, klare Simulation und dokumentierter sichtbarer Trade; Review und Issue-Read-back.
 
 ## 3. Durchgehende Abnahme
 
