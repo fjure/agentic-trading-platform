@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "repository": "fjure/agentic-trading-platform",
+  "changeId": "dashboard-trading-demo",
+  "verifiedAt": "2026-10-20T19:09:55.090686+00:00",
+  "observedRemoteMain": "a17bb279433b379b2abbcf546aa2438e96766158",
+  "note": "Observed before a later documentation-only evidence commit.",
+  "integrations": [
+    {
+      "taskId": "DEMO-01",
+      "issueNumber": 26,
+      "branch": "codex/ptv-26-demo-contracts",
+      "implementationCommit": "b52dbe999e30339fd6ea43bc6db07e585a94bb71",
+      "mergeCommit": "b21d9135216b71d36ec46c39db55d21633cc9241",
+      "remoteBranchMatched": true,
+      "containedInRemoteMain": true,
+      "implementationAndMergeTreesEqual": true
+    },
+    {
+      "taskId": "DEMO-02",
+      "issueNumber": 27,
+      "branch": "codex/ptv-27-demo-runtime",
+      "implementationCommit": "71c7b840fb050b6cc91346d84d32eabebb698742",
+      "mergeCommit": "500dfd095b913a45f6ec5ff2517009a169c88f71",
+      "remoteBranchMatched": true,
+      "containedInRemoteMain": true,
+      "implementationAndMergeTreesEqual": true
+    },
+    {
+      "taskId": "DEMO-03",
+      "issueNumber": 28,
+      "branch": "codex/ptv-28-demo-dashboard",
+      "implementationCommit": "c4e433b4d3bbaef995169d68a5ab406e205fd40b",
+      "mergeCommit": "4b6c2a2021d733f7cdca669fb2e65dd872e1b51f",
+      "remoteBranchMatched": true,
+      "containedInRemoteMain": true,
+      "implementationAndMergeTreesEqual": true
+    },
+    {
+      "taskId": "DEMO-04",
+      "issueNumber": 29,
+      "branch": "codex/ptv-29-demo-acceptance",
+      "implementationCommit": "25e0ae11920e45338720c757421d4ce43673c543",
+      "mergeCommit": "a17bb279433b379b2abbcf546aa2438e96766158",
+      "remoteBranchMatched": true,
+      "containedInRemoteMain": true,
+      "implementationAndMergeTreesEqual": true
+    },
+    {
+      "taskId": "DEMO-05",
+      "issueNumber": 30,
+      "branch": "codex/ptv-30-provider-setup",
+      "implementationCommit": "86e8b96828933da2b0bdbc77dd7a1b7c2d040411",
+      "mergeCommit": "8ae2b4c8cc0945230415f81e361d67098d0ebeea",
+      "remoteBranchMatched": true,
+      "containedInRemoteMain": true,
+      "implementationAndMergeTreesEqual": true
+    },
+    {
+      "taskId": "DEMO-06",
+      "issueNumber": 31,
+      "branch": "codex/ptv-31-demo-budget",
+      "implementationCommit": "62209a3e81e4d34cd19e9952587bda4e1443a06d",
+      "mergeCommit": "23652ce636e968198452eb67d591eee1360065ce",
+      "remoteBranchMatched": true,
+      "containedInRemoteMain": true,
+      "implementationAndMergeTreesEqual": true
+    }
+  ]
+}
