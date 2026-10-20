@@ -26,31 +26,21 @@ def test_lab_roles_are_separate_and_hardened():
         assert service["cap_drop"] == ["ALL"]
         assert service["security_opt"] == ["no-new-privileges:true"]
         assert service["healthcheck"]["test"] == [
-            "CMD",
-            "python",
-            "-m",
-            "services.runtime",
-            "health",
+            "CMD", "python", "-m", "services.runtime", "health"
         ]
-        assert service["networks"] == (
-            ["control_db", "demo_control"]
-            if role == "control-api"
-            else [role.replace("-", "_") + "_db"]
-        )
+        assert service["networks"] == {
+            "execution": ["execution_db"], "worker": ["worker_db"],
+            "control-api": ["control_db", "demo_control", "setup_control"],
+            "watchdog": ["watchdog_db"],
+        }[role]
         network = service["networks"][0]
         networks.append(network)
         assert config["networks"][network]["internal"] is True
-        assert service["secrets"] == [
-            {
-                "source": {
-                    "execution": "execution_database",
-                    "worker": "worker_database",
-                    "control-api": "control_database",
-                    "watchdog": "watchdog_database",
-                }[role],
-                "target": "database",
-            }
-        ]
+        assert service["secrets"] == [{
+            "source": {"execution": "execution_database", "worker": "worker_database",
+                       "control-api": "control_database", "watchdog": "watchdog_database"}[role],
+            "target": "database",
+        }]
         if role == "control-api":
             assert service["ports"] == ["127.0.0.1:8000:8000"]
             assert service["volumes"] == [
@@ -58,9 +48,34 @@ def test_lab_roles_are_separate_and_hardened():
             ]
         else:
             assert "ports" not in service
-            assert "volumes" not in service
+            assert service.get("volumes", []) == {
+                "execution": ["alpaca_setup:/run/provider/alpaca:ro"],
+                "worker": ["jev_setup:/run/provider/jev:ro"], "watchdog": [],
+            }[role]
     assert len(set(networks)) == 4
     assert not {"execution-egress", "worker-egress"} & config["services"].keys()
+
+
+def test_demo_and_setup_have_no_public_port_or_provider_egress():
+    config = yaml.safe_load(COMPOSE.read_text())
+    for role, networks in (("demo", ["demo_control", "demo_db"]),
+                           ("provider-setup", ["setup_control"])):
+        service = config["services"][role]
+        assert service["user"] == "10001:10001"
+        assert service["read_only"] is True
+        assert service["cap_drop"] == ["ALL"]
+        assert service["security_opt"] == ["no-new-privileges:true"]
+        assert service["networks"] == networks
+        assert all(config["networks"][network]["internal"] for network in networks)
+        assert "ports" not in service
+        assert "environment" not in service
+        assert service["configs"] == []
+    assert config["services"]["demo"].get("volumes", []) == []
+    assert config["services"]["demo"]["secrets"] == [
+        {"source": "demo_database", "target": "demo_database"}]
+    assert config["services"]["provider-setup"]["secrets"] == []
+    assert config["services"]["provider-setup"]["volumes"] == [
+        "alpaca_setup:/run/provider/alpaca", "jev_setup:/run/provider/jev"]
 
 
 def test_paper_only_assigns_each_provider_secret_to_its_role():
@@ -117,7 +132,7 @@ def test_deployed_lab_process_secret_and_network_boundaries():
     # Peer networks are not shared. Probe actual peer IPs to avoid DNS-only assertions.
     for role in roles:
         targets = [addresses[peer] for peer in roles if peer != role]
-        probe = """
+        probe = '''
 import json, os, pathlib, socket, sys
 targets = json.loads(sys.stdin.read())
 def can_connect(host, port):
@@ -138,13 +153,10 @@ try:
 except OSError:
     pass
 print('boundaries verified')
-"""
+'''
         result = subprocess.run(
             ["docker", "exec", "-i", ids[role], "python", "-c", probe],
-            input=json.dumps(targets),
-            text=True,
-            capture_output=True,
-            timeout=20,
+            input=json.dumps(targets), text=True, capture_output=True, timeout=20,
         )
         assert result.returncode == 0, "container boundary probe failed (output suppressed)"
         assert result.stdout.strip() == "boundaries verified"
@@ -171,7 +183,7 @@ def test_deployed_lab_cannot_reach_isolated_external_bridge():
     try:
         assert docker("network", "create", "--label", label, fixture).returncode == 0
         network_created = True
-        sink = """
+        sink = '''
 import socket
 s = socket.socket()
 s.bind(('0.0.0.0',443))
@@ -179,27 +191,11 @@ s.listen()
 while True:
     c, _ = s.accept()
     c.close()
-"""
+'''
         result = docker(
-            "run",
-            "-d",
-            "--name",
-            fixture,
-            "--network",
-            fixture,
-            "--label",
-            label,
-            "--read-only",
-            "--cap-drop",
-            "ALL",
-            "--security-opt",
-            "no-new-privileges:true",
-            "--user",
-            "10001:10001",
-            image,
-            "python",
-            "-c",
-            sink,
+            "run", "-d", "--name", fixture, "--network", fixture, "--label", label,
+            "--read-only", "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true",
+            "--user", "10001:10001", image, "python", "-c", sink,
         )
         assert result.returncode == 0
         sink_created = True
@@ -209,28 +205,15 @@ while True:
         # A control attached to this ordinary noninternal bridge can reach the sink.
         for _ in range(15):
             control = docker(
-                "run",
-                "--rm",
-                "--network",
-                fixture,
-                "--label",
-                label,
-                "--read-only",
-                "--cap-drop",
-                "ALL",
-                "--user",
-                "10001:10001",
-                image,
-                "python",
-                "-c",
-                connect,
-                address,
+                "run", "--rm", "--network", fixture, "--label", label,
+                "--read-only", "--cap-drop", "ALL", "--user", "10001:10001",
+                image, "python", "-c", connect, address,
             )
             if control.returncode == 0:
                 break
-            time.sleep(0.1)
+            time.sleep(.1)
         assert control.returncode == 0, "synthetic external bridge control was unreachable"
-        deny = """
+        deny = '''
 import socket, sys
 try:
     socket.create_connection((sys.argv[1],443), timeout=1).close()
@@ -238,13 +221,11 @@ except OSError:
     print('denied')
 else:
     raise SystemExit(1)
-"""
+'''
         for role in ("execution", "worker", "control-api", "watchdog"):
             result = subprocess.run(
                 [*compose, "exec", "-T", role, "python", "-c", deny, address],
-                text=True,
-                capture_output=True,
-                timeout=10,
+                text=True, capture_output=True, timeout=10,
             )
             assert result.returncode == 0 and result.stdout.strip() == "denied"
     finally:
@@ -266,47 +247,24 @@ def test_synthetic_broker_mount_is_confined_to_execution():
     value = secrets.token_urlsafe(32)
     try:
         path.write_text(json.dumps({"synthetic": value}), encoding="utf-8")
-        check = """
+        check = '''
 import json, pathlib, sys
 actual = json.loads(pathlib.Path('/run/secrets/alpaca').read_text())['synthetic']
 assert actual == sys.stdin.read()
 print('canary confined')
-"""
+'''
         result = subprocess.run(
-            [
-                *compose,
-                "run",
-                "--rm",
-                "--no-deps",
-                "-T",
-                "--volume",
-                str(path) + ":/run/secrets/alpaca:ro",
-                "execution",
-                "python",
-                "-c",
-                check,
-            ],
-            input=value,
-            text=True,
-            capture_output=True,
-            timeout=30,
+            [*compose, "run", "--rm", "--no-deps", "-T", "--volume",
+             str(path) + ":/run/secrets/alpaca:ro", "execution", "python", "-c", check],
+            input=value, text=True, capture_output=True, timeout=30,
         )
         assert result.returncode == 0, "synthetic mount check failed (output suppressed)"
         assert result.stdout.strip() == "canary confined"
         for role in ("worker", "control-api", "watchdog"):
             result = subprocess.run(
-                [
-                    *compose,
-                    "exec",
-                    "-T",
-                    role,
-                    "python",
-                    "-c",
-                    "from pathlib import Path; assert not Path('/run/secrets/alpaca').exists()",
-                ],
-                text=True,
-                capture_output=True,
-                timeout=10,
+                [*compose, "exec", "-T", role, "python", "-c",
+                 "from pathlib import Path; assert not Path('/run/secrets/alpaca').exists()"],
+                text=True, capture_output=True, timeout=10,
             )
             assert result.returncode == 0, "broker mount escaped execution"
     finally:

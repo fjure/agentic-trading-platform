@@ -85,6 +85,7 @@ def test_store_success_returns_only_status_and_never_activates_trading():
     "field,value",
     [
         ("apiKey", ""),
+        ("apiKey", " " + CANARY),
         ("apiKey", CANARY * 20),
         ("apiSecret", CANARY + "\n"),
         ("expectedAccountId", CANARY),
