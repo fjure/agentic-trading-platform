@@ -31,7 +31,13 @@ Lokale Testplattform mit Angular-Material-Dashboard, Control API, Worker, Execut
 
 Der Launcher erzeugt beim Start keinen Code. Ein leerer Codebereich im Terminal ist deshalb zunächst normal. Diese Aktivierung öffnet ausschließlich die lokale Browsersitzung.
 
+Launcher und Anwendungsbootstrap unterstützen auch Windows PowerShell 5.1. Für die übrige Entwicklungstoolchain weiterhin PowerShell 7 verwenden. Die Windows-Dateirechteprüfung lässt sich ohne Docker oder bestehende Secrets mit `powershell.exe -NoProfile -File scripts/test-private-acl.ps1` sowie `pwsh -NoProfile -File scripts/test-private-acl.ps1` prüfen.
+
 ## Was du beim ersten Test erwarten solltest
+
+**Sichtbare Trades testen:** Nach der Anmeldung in **Übersicht → Demo & Einrichtung** das Startbudget auf `100` USD setzen, **Mock neutral** wählen und **Demo starten** anklicken. Nach **SUCCEEDED** siehst du eine gefüllte synthetische Order, 95 USD Demo-Cash und eine Position mit Menge 1. Das sind eigene Demodaten; die normale Betriebsansicht bleibt separat pausiert. [Schritt-für-Schritt-Anleitung](docs/runbooks/dashboard-demo.md)
+
+Im selben Abschnitt kannst du Alpaca und Jev über eigene Dialoge vorbereiten und ein zusätzliches Paperbudget speichern. **Gespeichert** bestätigt noch keine Providerverbindung oder Handelsfreigabe. Für die Demo brauchst du kein Konto und keine Schlüssel.
 
 | Anzeige | Erwartetes Verhalten im normalen Fake-Lab |
 |---|---|
@@ -85,7 +91,7 @@ Invoke-RestMethod 'http://127.0.0.1:8000/ready'
 # Unabhängige Pause, auch bei gestörter Browseroberfläche
 docker compose -f infra/compose/compose.yaml --profile lab exec -T control-api python -m services.execution.control_socket --socket /run/control/control.sock pause
 
-# Vier Anwendungsdienste und lokalen Browser-Tunnel stoppen
+# Anwendungs-, Demo-/Einrichtungsdienste und lokalen Browser-Tunnel stoppen
 .\scripts\start-local-lab.ps1 -Stop
 ```
 
@@ -160,6 +166,7 @@ Fehlerberichte auf Schritte, sichtbaren Fehlercode und redigierte Statusangaben 
 
 ## Weiterführende Dokumentation
 
+- [Alpaca-Paperkonto und private Konfiguration vorbereiten](docs/runbooks/alpaca-setup.md)
 - [Lokaler Betrieb und Kontrollpfade](docs/runbooks/local-operation.md)
 - [Dashboard und Verbindungsverhalten](docs/runbooks/dashboard.md)
 - [Störungen und Kill-Switch](docs/runbooks/incident.md), [Recovery und Reconciliation](docs/runbooks/recovery.md)

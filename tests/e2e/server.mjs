@@ -13,6 +13,7 @@ const origin = `http://${host}:${port}`;
 const traceId = '4bf92f3577b34da6a3ce929d0e0e4736';
 const activationCode = 'synthetic-local-activation-code-000001';
 const sessionValue = 'synthetic-e2e-session';
+const demoRunId = '8c0c8b85-b804-4f0e-89bc-4387a73231b4';
 const at = '2026-10-12T14:45:05Z';
 
 async function example(name) {
@@ -64,6 +65,9 @@ function reset() {
     },
     snapshotCursor: 'c_000100', snapshotReads: 0, connections: 0,
     events: [], requests: [], writes: [], usedKeys: new Map(),
+    demoRuns: [], demoKey: null, demoStatus: 'RUNNING',
+    integrationStatus: { alpaca: { status: 'UNCONFIGURED', restartRequired: false }, jev: { status: 'UNCONFIGURED', restartRequired: false } },
+    tradingProfile: { budget: '100', currency: 'USD', strategy: 'mock-neutral' },
     refuseResume: false, expireNext: false, streams: 0,
   };
 }
@@ -210,6 +214,39 @@ async function api(req, res, url) {
     return res.end();
   }
   if (!hasSession(req)) return problem(res, 401, 'INVALID_REQUEST', 'Operator session required');
+  if (url.pathname === '/api/v1/demo/runs' && req.method === 'POST') {
+    if (req.headers.origin !== origin || !req.headers['idempotency-key'] || !req.headers['content-type']?.startsWith('application/json')) return problem(res, 400, 'INVALID_REQUEST', 'Invalid demo request');
+    let input; try { input = await body(req); } catch { return problem(res, 400, 'INVALID_REQUEST', 'Invalid request'); }
+    if (state.demoKey && state.demoKey === req.headers['idempotency-key']) return sendJson(res, 202, state.demoRuns[0]);
+    const created = { runId: demoRunId, status: 'RUNNING', simulationOnly: true, traceId, initialBudget: input.initialBudget, currency: 'USD', strategy: input.strategy, createdAt: at, updatedAt: at };
+    state.demoKey = req.headers['idempotency-key']; state.demoStatus = 'SUCCEEDED'; state.demoRuns = [created];
+    return sendJson(res, 202, created);
+  }
+  if (req.method === 'GET' && url.pathname === '/api/v1/demo/runs') return sendJson(res, 200, { items: state.demoRuns.map(item => ({ ...item, status: state.demoStatus })), nextCursor: null });
+  const demoRunMatch = url.pathname.match(/^\/api\/v1\/demo\/runs\/([^/]+)(?:\/(.*))?$/);
+  if (demoRunMatch) {
+    if (!state.demoRuns.length || demoRunMatch[1] !== demoRunId) return problem(res, 404, 'INVALID_REQUEST', 'Demo run not found');
+    const suffix = demoRunMatch[2] ?? '';
+    if (req.method === 'GET' && !suffix) return sendJson(res, 200, { ...state.demoRuns[0], status: state.demoStatus });
+    if (req.method === 'GET' && suffix === 'snapshot') return sendJson(res, 200, { ...snapshot(), portfolioCash: '99.50', positions: [{ instrument: 'SPY', quantity: '0.50', averagePrice: '1.00' }] });
+    const history = suffix.match(/^history\/(market-states|decisions|proposals|risk-decisions|orders|audit|runs|costs)$/);
+    if (req.method === 'GET' && history) return sendJson(res, 200, { items: pages[history[1]][0], nextCursor: null });
+    if (req.method === 'POST' && /^controls\/(pause|kill)$/.test(suffix)) return sendJson(res, 200, { runId: demoRunId, action: suffix.split('/').at(-1), status: 'PAUSED', simulationOnly: true, traceId });
+  }
+  if (req.method === 'GET' && url.pathname === '/api/v1/integrations') return sendJson(res, 200, state.integrationStatus);
+  const integrationMatch = url.pathname.match(/^\/api\/v1\/integrations\/(alpaca|jev)$/);
+  if (integrationMatch && req.method === 'PUT') {
+    if (req.headers.origin !== origin || !req.headers['idempotency-key']) return problem(res, 400, 'INVALID_REQUEST', 'Invalid setup request');
+    try { await body(req); } catch { return problem(res, 400, 'INVALID_REQUEST', 'Invalid request'); }
+    const provider = integrationMatch[1]; state.integrationStatus[provider] = { status: 'CONFIGURED', restartRequired: true };
+    return sendJson(res, 200, { status: 'CONFIGURED', restartRequired: true });
+  }
+  if (url.pathname === '/api/v1/trading-profile' && req.method === 'GET') return sendJson(res, 200, state.tradingProfile);
+  if (url.pathname === '/api/v1/trading-profile' && req.method === 'PUT') {
+    if (req.headers.origin !== origin || !req.headers['idempotency-key']) return problem(res, 400, 'INVALID_REQUEST', 'Invalid profile request');
+    try { state.tradingProfile = await body(req); } catch { return problem(res, 400, 'INVALID_REQUEST', 'Invalid request'); }
+    return sendJson(res, 200, state.tradingProfile);
+  }
   if (req.method === 'GET' && url.pathname === '/api/v1/snapshot') {
     state.snapshotReads++;
     return sendJson(res, 200, snapshot());
