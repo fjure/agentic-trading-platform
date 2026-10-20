@@ -1,0 +1,11 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://agentic-trading-lab.invalid/schemas/v1/demo-run.schema.json",
+  "title":"Demo run and creation contracts",
+  "$defs":{
+    "PositiveBudget":{"type":"string","pattern":"^(?=.*[1-9])(?:(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,18})?|1000000(?:\\.0{1,18})?)$"},
+    "DemoRun":{"type":"object","additionalProperties":false,"required":["runId","status","simulationOnly","traceId","initialBudget","currency","strategy","createdAt","updatedAt"],"properties":{"runId":{"type":"string","format":"uuid"},"status":{"enum":["RUNNING","SUCCEEDED","FAILED","PAUSED"]},"simulationOnly":{"const":true},"traceId":{"type":"string","pattern":"^[0-9a-f]{32}$"},"initialBudget":{"$ref":"#/$defs/PositiveBudget"},"currency":{"const":"USD"},"strategy":{"enum":["mock-neutral","neutral-baseline"]},"createdAt":{"type":"string","format":"date-time","pattern":"Z$"},"updatedAt":{"type":"string","format":"date-time","pattern":"Z$"},"errorCode":{"enum":["TEMPORARILY_UNAVAILABLE","INVALID_REQUEST","RISK_LIMIT_EXCEEDED"]}}},
+    "DemoRunCreateRequest":{"type":"object","additionalProperties":false,"required":["initialBudget","currency","strategy"],"properties":{"initialBudget":{"$ref":"#/$defs/PositiveBudget"},"currency":{"const":"USD"},"strategy":{"enum":["mock-neutral","neutral-baseline"]}}}
+  },
+  "$ref":"#/$defs/DemoRun"
+}

@@ -5,6 +5,7 @@
 - LIVE bleibt technisch unerreichbar, bis ein eigener späterer Change ausdrücklich freigegeben ist. Agenten senden niemals Brokerorders. Risk Engine und Execution-Gates sind deterministisch und fail-closed.
 - Geld, Preise und Mengen verwenden Decimal; technische Zeitstempel UTC.
 - Secrets und personenbezogene Daten gehören weder in Git, Logs, Browser noch Modellkontext. Nur Execution erhält Paper-Broker-Credentials.
+- Ausdrückliche Nutzerfreigabe 2026-10-18: Menschen dürfen Alpaca-Paper- und Jev-Schlüssel in einem lokalen authentifizierten Einrichtungsdialog eingeben. Diese eng begrenzte Ausnahme erlaubt ausschließlich flüchtige Formulareingabe und geschützte Same-Origin-Übertragung an den separaten Einrichtungsdienst; keine Rückgabe, Browserpersistenz, Logs, Telemetrie, Screenshots oder Agentenzugriffe auf Schlüssel. Dauerhafte Handelskonsumenten bleiben ausschließlich Execution für Alpaca und Worker für Jev. Einrichtung aktiviert keinen Handel und sendet keine Orders.
 - Tests, Reconciliation, Audit-Evidenz und Contract-Validierung sind Teil der Definition of Done.
 - Angular Material ist die UI-Library; PrimeNG ist verboten. NgRx/SignalStore nur für begründet gemeinsam genutzten Zustand, ohne Risk-/Brokerlogik oder Secrets.
 - OpenSpec definiert Verhalten; contracts/http/control-api.openapi.yaml ist der kanonische HTTP-Vertrag. Generierten Clientcode niemals manuell ändern. Breaking Changes, Contract Drift und ungültige Beispiele blockieren die Definition of Done.

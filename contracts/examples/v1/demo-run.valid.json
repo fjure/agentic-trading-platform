@@ -1,0 +1,11 @@
+{
+  "runId": "8c0c8b85-b804-4f0e-89bc-4387a73231b4",
+  "status": "SUCCEEDED",
+  "simulationOnly": true,
+  "traceId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "initialBudget": "100.00",
+  "currency": "USD",
+  "strategy": "mock-neutral",
+  "createdAt": "2026-10-18T12:00:00Z",
+  "updatedAt": "2026-10-18T12:00:01Z"
+}

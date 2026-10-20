@@ -1,0 +1,10 @@
+{
+  "alpaca": {
+    "status": "CONFIGURED",
+    "restartRequired": true
+  },
+  "jev": {
+    "status": "UNCONFIGURED",
+    "restartRequired": false
+  }
+}
