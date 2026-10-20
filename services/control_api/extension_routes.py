@@ -70,7 +70,7 @@ class AlpacaWrite(DTO):
     @field_validator("apiKey", "apiSecret")
     @classmethod
     def no_controls(cls, value):
-        if any(ord(char) < 32 or ord(char) == 127 for char in value):
+        if value.strip() != value or any(ord(char) < 32 or ord(char) == 127 for char in value):
             raise ValueError("INVALID_REQUEST")
         return value
 

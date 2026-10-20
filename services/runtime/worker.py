@@ -39,7 +39,9 @@ class WorkerRuntime:
         if config.decision_provider == "jev":
             from packages.decisions.jev import JevDecisionEngine, load_config
 
-            value = secret_fields(Path("/run/secrets/jev"), {"api_key"})
+            setup_path = Path("/run/provider/jev/credentials.json")
+            value = secret_fields(
+                setup_path if setup_path.exists() else Path("/run/secrets/jev"), {"api_key"})
             self.decision = JevDecisionEngine(
                 clock=self.clock,
                 ids=self.ids,

@@ -32,8 +32,10 @@ class ExecutionRuntime:
             from services.execution.broker_binding import AlpacaExecutionBinding
             from services.execution.market_gateway import MarketGateway
 
+            setup_path = Path("/run/provider/alpaca/credentials.json")
             credentials = secret_fields(
-                Path("/run/secrets/alpaca"), {"api_key", "api_secret", "expected_account_id"}
+                setup_path if setup_path.exists() else Path("/run/secrets/alpaca"),
+                {"api_key", "api_secret", "expected_account_id"},
             )
             self.market_provider = AlpacaMarketDataProvider(
                 self.clock,

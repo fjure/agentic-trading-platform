@@ -211,6 +211,7 @@ def run_api(config, ledger, telemetry=None):
     from services.control_api.events import EventFeed
     from services.control_api.snapshot import SnapshotReader
     from services.execution.control_socket import LocalControlServer, dispatcher
+    from services.setup.client import FixedSetupClient
 
     auth = LocalAuth(config.origin, transport_origin="http://127.0.0.1:8001")
     sampler = RuntimeMetrics(ledger, telemetry, config.account_id) if telemetry else None
@@ -238,6 +239,7 @@ def run_api(config, ledger, telemetry=None):
         health=health,
         delivery_observer=sampler.delivered if sampler else None,
         demo=DemoClient(),
+        setup=FixedSetupClient(),
     )
 
     def status_loop():

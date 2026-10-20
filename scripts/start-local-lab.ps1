@@ -75,7 +75,7 @@ $previousPath = $env:PATH
 try {
     if ($Stop) {
         Stop-LocalBridge
-        & docker compose -f $composePath --profile lab stop execution worker control-api watchdog demo
+        & docker compose -f $composePath --profile lab stop execution worker control-api watchdog demo provider-setup
         if ($LASTEXITCODE -ne 0) { throw 'Local role shutdown failed.' }
         return
     }
@@ -116,7 +116,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Locked dashboard dependency installation failed.' }
         & (Join-Path $nodeRoot 'npm.cmd') --prefix apps/dashboard run build
         if ($LASTEXITCODE -ne 0) { throw 'Dashboard production build failed.' }
-        & docker compose -f $composePath --profile lab build execution worker control-api watchdog demo
+        & docker compose -f $composePath --profile lab build execution worker control-api watchdog demo provider-setup
         if ($LASTEXITCODE -ne 0) { throw 'Frozen runtime image build failed.' }
     }
     # Use the tag just built, rather than a stale created container's image ID.
@@ -126,6 +126,8 @@ try {
         --network agentic-trading-lab-dev_local --tmpfs /tmp --user 0:0 `
         --mount "type=bind,source=$runtimeDir,target=/run/provision" `
         --mount "type=bind,source=$postgresSecret,target=/run/secrets/postgres_password,readonly" `
+        --mount 'type=volume,source=agentic-trading-lab-dev_alpaca_setup,target=/run/provider/alpaca' `
+        --mount 'type=volume,source=agentic-trading-lab-dev_jev_setup,target=/run/provider/jev' `
         --entrypoint python $image -m services.runtime.provision --initial-cash $InitialCash
     if ($LASTEXITCODE -ne 0) { throw 'Local runtime provisioning failed; diagnostic output is redacted.' }
     foreach ($name in @('execution.json', 'worker.json', 'control.json', 'watchdog.json', 'demo.json')) {
@@ -138,7 +140,7 @@ try {
         # Release only this launcher's verified helper before Docker Desktop
         # attempts to reserve the same loopback port during container recreation.
         Stop-LocalBridge
-        & docker compose -f $composePath --profile lab up -d --wait --wait-timeout 60 execution worker control-api watchdog demo
+        & docker compose -f $composePath --profile lab up -d --wait --wait-timeout 60 execution worker control-api watchdog demo provider-setup
         if ($LASTEXITCODE -ne 0) { throw 'Local runtime startup failed.' }
         $reachable = $false
         try {
