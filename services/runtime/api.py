@@ -207,6 +207,7 @@ def run_api(config, ledger, telemetry=None):
     from services.control_api.app import create_app
     from services.control_api.auth import LocalAuth
     from services.control_api.backend import ControlBackend
+    from services.control_api.demo_client import DemoClient
     from services.control_api.events import EventFeed
     from services.control_api.snapshot import SnapshotReader
     from services.execution.control_socket import LocalControlServer, dispatcher
@@ -236,6 +237,7 @@ def run_api(config, ledger, telemetry=None):
         events=EventFeed(ledger, config.account_id),
         health=health,
         delivery_observer=sampler.delivered if sampler else None,
+        demo=DemoClient(),
     )
 
     def status_loop():

@@ -4,7 +4,7 @@
   "changeId": "dashboard-trading-demo",
   "status": "synchronized-read-back-verified",
   "transport": "official-gh-cli-user-authorized-fallback",
-  "lastReadBackAt": "2026-10-20T18:43:11.730599+00:00",
+  "lastReadBackAt": "2026-10-20T18:54:45.641383+00:00",
   "lastSyncRun": {
     "created": 0,
     "updated": 1,
@@ -19,18 +19,18 @@
       "state": "closed",
       "contentHash": "20652ec4cc9617417dfe2da71f2df056ca9312f7d6a5d59a0dc90d7431cab575",
       "dependsOn": [],
-      "syncedAt": "2026-10-20T18:43:09.713973+00:00"
+      "syncedAt": "2026-10-20T18:54:41.887143+00:00"
     },
     {
       "taskId": "DEMO-02",
       "issueNumber": 27,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/27",
-      "state": "open",
-      "contentHash": "61e5f25518eb679ffb468339084c98faaa14e1fb431b30002da69abd9f5fc32e",
+      "state": "closed",
+      "contentHash": "5cfa18c07dd892773a036b46297576eebaf1f57b6a4738e6bd7de82bd82ad444",
       "dependsOn": [
         "DEMO-01"
       ],
-      "syncedAt": "2026-10-20T18:43:10.133530+00:00"
+      "syncedAt": "2026-10-20T18:54:43.874754+00:00"
     },
     {
       "taskId": "DEMO-03",
@@ -44,7 +44,7 @@
         "DEMO-05",
         "DEMO-06"
       ],
-      "syncedAt": "2026-10-20T18:43:11.332704+00:00"
+      "syncedAt": "2026-10-20T18:54:45.215903+00:00"
     },
     {
       "taskId": "DEMO-04",
@@ -58,7 +58,7 @@
         "DEMO-05",
         "DEMO-06"
       ],
-      "syncedAt": "2026-10-20T18:43:11.730591+00:00"
+      "syncedAt": "2026-10-20T18:54:45.641373+00:00"
     },
     {
       "taskId": "DEMO-05",
@@ -69,7 +69,7 @@
       "dependsOn": [
         "DEMO-01"
       ],
-      "syncedAt": "2026-10-20T18:43:10.564840+00:00"
+      "syncedAt": "2026-10-20T18:54:44.294590+00:00"
     },
     {
       "taskId": "DEMO-06",
@@ -81,7 +81,7 @@
         "DEMO-01",
         "DEMO-02"
       ],
-      "syncedAt": "2026-10-20T18:43:10.964467+00:00"
+      "syncedAt": "2026-10-20T18:54:44.799323+00:00"
     }
   ]
 }

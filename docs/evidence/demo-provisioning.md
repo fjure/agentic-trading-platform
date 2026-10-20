@@ -1,0 +1,13 @@
+# Demo-Provisionierung: bestehende Membershipdrift
+
+Stand 2026-10-18. Begrenzter Offline-Nachweis für die Ablehnung unsicherer bestehender Memberships des Demo-Provisionierers. Ein privater `_LOGIN`-Konstantenpunkt erhält unverändert den Produktionsnamen; ausschließlich Tests ersetzen ihn durch einen UUID-benannten synthetischen Testlogin.
+
+Die Prüfung erwartet exakt `atl_worker`, `atl_execution`, `atl_control_api` und `atl_watchdog`, jeweils mit ADMINfalse, INHERITfalse und SETtrue. Fehlende/zusätzliche Rollen oder abweichende Optionen müssen vor jedem Zugriff auf feste Demo-/Normaldatenbankmetadaten fehlschlagen; bestehende Privilegien werden niemals automatisch korrigiert.
+
+**8Unitfälle bestanden in0,57s**, darunter zusätzliche/fehlende Membership, ADMIN/INHERIT/SET-Drift, unsichere Loginflags und der weiterhin wirksame `lab_runtime`-CONNECT-Guard. Der erlaubte Fall prüft außerdem, dass vorhandene synthetische `demo.json`-Inhalte nicht über Path-Leseoperationen geöffnet werden. Ruff über alle vier betroffenen Pythondateien bestanden.
+
+Die echte PostgreSQL-Abnahme legt ausschließlich einen UUID-Testdriver, UUID-Ziellogin, eine harmlose UUID-NOLOGIN-Gruppe und eine UUID-Testdatenbank an. Der Ziellogin besitzt die erwarteten produktiven Flags; sein synthetisches0600-Dateifixture enthält keine echten Zugangsdaten. Die getestete Funktion erhält den injizierten Testlogin. Ein lokaler Testwrapper leitet ausschließlich ihren Verbindungsaufbau auf die Testdatenbank um und verhindert jede mutierende SQL-Anweisung sowie jeden Zugriff auf `lab_demo`-/`lab_runtime`-Metadaten vor der Membershipablehnung. Die übrigen SELECTs und Membershipflags stammen aus echtem PostgreSQL.
+
+Fünf Driftvarianten wurden tatsächlich eingerichtet: zusätzliche harmlose Testgruppe, ADMINtrue, INHERITtrue, SETfalse und fehlende erwartete Membership. **Der PostgreSQL-Integrationstest mit allen fünf Varianten bestand in78,69s.** Vorher/nachher wurden die Zielloginflags, sämtliche direkten Memberships samt Optionen, Metadaten/Owner/ACLs von `lab`, `lab_demo`, `lab_runtime` und der Testdatenbank sowie Inhalt/Metadaten der ausschließlich synthetischen Datei verglichen. Die feste echte Provisioniererrolle wurde weder geändert noch authentifiziert; echte Secretdateien wurden nicht eingebunden oder gelesen. Temporäre Parameter-SET-Rechte des Testdrivers wurden wieder entzogen; Cleanup entfernte ausschließlich die konkret erzeugten UUID-Testressourcen.
+
+Keine Providerrequests, keine Orders, keine Aktivierung und keine Reparatur produktiver Rollenkonfiguration. Die generelle Container-/Providerisolation wird separat nachgewiesen.

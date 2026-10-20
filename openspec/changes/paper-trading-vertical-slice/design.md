@@ -222,6 +222,8 @@ Erster Meilenstein: Build → Domain/Contract → DB → Fake/Mock/Risk → loka
 
 ## Migration Plan
 
+Windows-Launcher-Kompatibilitätskorrektur 2026-10-18: Launcher und Anwendungsbootstrap wenden die unveränderte geschützte Benutzer-DACL unter Windows PowerShell 5.1 über die .NET-Framework-Instanzmethode und unter PowerShell 7 über FileSystemAclExtensions an. Read-back der exklusiven FullControl-Regel bleibt verpflichtend. Synthetische frische und vorhandene Dateien/Verzeichnisse werden durch `scripts/test-private-acl.ps1` in beiden Laufzeiten geprüft, ohne vorhandene Secrets oder Dienste zu berühren. Bootstrap verwendet eine in beiden Laufzeiten verfügbare kryptographische RNG-Instanz; HTTP-Readinessprobes benötigen keinen Internet-Explorer-Parser. Keine fachliche Vertrags-, Task- oder Handelsfreigabeänderung.
+
 Keine bestehende Anwendung zu migrieren. Apply verlangt neue ausdrückliche Freigabe und vollständige DoR-Evidenz. Erst lokale Fake-Composeumgebung mit Migrationen und Backup/Restore prüfen, danach externe Adapter hinter default-deaktivierten Flags. Deployment startet DISABLED; Rollback pausiert, erhält Ledger/Reservations und reconciliiert nach kompatibler Migration. Keine destruktiven DB-Downgrades bei unbekannten Orders.
 
 ## Open Questions
