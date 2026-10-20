@@ -4,11 +4,11 @@
   "changeId": "dashboard-trading-demo",
   "status": "synchronized-read-back-verified",
   "transport": "official-gh-cli-user-authorized-fallback",
-  "lastReadBackAt": "2026-10-20T19:06:59.673163+00:00",
+  "lastReadBackAt": "2026-10-20T19:08:09.257931+00:00",
   "lastSyncRun": {
     "created": 0,
-    "updated": 1,
-    "unchanged": 5,
+    "updated": 0,
+    "unchanged": 6,
     "duplicates": 0
   },
   "tasks": [
@@ -19,7 +19,7 @@
       "state": "closed",
       "contentHash": "20652ec4cc9617417dfe2da71f2df056ca9312f7d6a5d59a0dc90d7431cab575",
       "dependsOn": [],
-      "syncedAt": "2026-10-20T19:06:55.751352+00:00"
+      "syncedAt": "2026-10-20T19:08:06.899928+00:00"
     },
     {
       "taskId": "DEMO-02",
@@ -30,7 +30,7 @@
       "dependsOn": [
         "DEMO-01"
       ],
-      "syncedAt": "2026-10-20T19:06:56.211697+00:00"
+      "syncedAt": "2026-10-20T19:08:07.375668+00:00"
     },
     {
       "taskId": "DEMO-03",
@@ -44,7 +44,7 @@
         "DEMO-05",
         "DEMO-06"
       ],
-      "syncedAt": "2026-10-20T19:06:57.879286+00:00"
+      "syncedAt": "2026-10-20T19:08:08.798235+00:00"
     },
     {
       "taskId": "DEMO-04",
@@ -58,7 +58,7 @@
         "DEMO-05",
         "DEMO-06"
       ],
-      "syncedAt": "2026-10-20T19:06:59.673146+00:00"
+      "syncedAt": "2026-10-20T19:08:09.257920+00:00"
     },
     {
       "taskId": "DEMO-05",
@@ -69,7 +69,7 @@
       "dependsOn": [
         "DEMO-01"
       ],
-      "syncedAt": "2026-10-20T19:06:56.724211+00:00"
+      "syncedAt": "2026-10-20T19:08:07.843710+00:00"
     },
     {
       "taskId": "DEMO-06",
@@ -81,7 +81,7 @@
         "DEMO-01",
         "DEMO-02"
       ],
-      "syncedAt": "2026-10-20T19:06:57.315167+00:00"
+      "syncedAt": "2026-10-20T19:08:08.353719+00:00"
     }
   ]
 }

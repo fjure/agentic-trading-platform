@@ -1,5 +1,13 @@
 # Codex-Tooling: Bootstrap-Status
 
+Aktueller Zusatzstand 2026-10-20: **`dashboard-trading-demo` vollständig umgesetzt, 6/6 Tasks (`all_done`), sechs Issues #26–#31 geschlossen und sämtliche Managedblocks/Labels/Abhängigkeiten zurückgelesen; Wiederholung 0 Updates, 6 unverändert.** Jeder Task besitzt einen eigenen gepushten Issuebranch und regulären main-Merge; Remote-SHAs, Erreichbarkeit und identische Implementierungs-/Mergebäume sind in `git-demo-integrations.json` tatsächlich geprüft. Die ursprünglichen 25 PTV-Tasks und deren Mapping bleiben separat erhalten.
+
+Aktuelle Evidenz: 814 lokale Regressionen bestanden, 19 ausgewiesene Skips; ergänzend 54 tatsächliche Linux-Setup- und drei Deploymentprüfungen. 20 Browserregressionen bestanden; separate echte Chromium→API→PostgreSQL-Abnahme bestanden (21,6s), persistente Demoorders, Cash95/195USD, Reload, Secretcanaries und unverändertes normales Testledger. Budget-/Provisionierungs-/Recovery-PG-Szenarien und begrenzter unabhängiger Safetyreview bestanden. 31 HTTP-Operationen/14 Schemas, 88 reproduzierbare generierte Clientdateien; oasdiff gegen tatsächliche Vor-Demo-Baseline erfolgreich, Source-Scan483Dateien0Treffer und striktes OpenSpec erfolgreich. Details: `docs/evidence/dashboard-trading-demo.md`.
+
+Alle sechs Implementierungsmerges besitzen erfolgreiche Contracts-CI. Finale tatsächliche main-Abnahme `a17bb279433b379b2abbcf546aa2438e96766158`: [Contracts39480772167 erfolgreich](https://github.com/fjure/agentic-trading-platform/actions/runs/39480772167). Nachfolgende reine Dokumentationscommits dürfen main weiterführen.
+
+Finale sechs Rollenimages am20.10.2026 gebaut und lokal gestartet; PostgreSQL sowie ControlAPI, Execution, Worker, Watchdog, Demo und Einrichtung gesund, `/ready` tatsächlich200. Normales Lab weiterhin Fake/DISABLED/PAUSE_NEW; kein Aktivierungscode durch Agenten erzeugt, keine tatsächlichen Anbieterrequests oder Brokerorders. Oberfläche nach Anmeldung: Übersicht → Demo & Einrichtung. Einrichtung speichert lediglich geschützt; Verbindung und Handel werden dadurch nicht aktiviert. Die folgende Historie wird durch diesen Zusatzstand ergänzt. Der Nutzer hat anschließend einen eigenen vollständigen Alpaca-Paper-Workflow angefordert; dessen Planung/Abnahme bleibt getrennt von der abgeschlossenen Fake-Demo.
+
 Stand: 2026-10-18 (Europe/Berlin); ursprüngliche Quellenprüfung 2026-10-12. **Definition of Ready erfüllt; Apply gesondert freigegeben, 25/25 Tasks abgeschlossen.**
 
 ## Aktueller Apply-Stand
