@@ -9,6 +9,7 @@ from decimal import Decimal, localcontext
 from sqlalchemy import text
 
 from packages.domain import models as m
+from packages.risk.budget import budget_reasons, read_cap
 from packages.risk.engine import RiskLimits, evaluate
 from packages.risk.reservations import _exact_numeric, _fresh_facts
 
@@ -342,5 +343,6 @@ def evaluate_submit_gate(
             )
         _require(facts.open_exit_quantity >= Decimal("0"), "EXPOSURE_INCONSISTENT")
     reasons = evaluate(proposal, facts, effective_limits)
+    reasons += budget_reasons(proposal, facts, read_cap(connection, account_id))
     _require(not reasons, reasons[0] if reasons else "GATE_DENIED")
     return intent, proposal, decision, reservation, facts.capability, now

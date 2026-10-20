@@ -15,6 +15,7 @@ from packages.domain import models as m
 from packages.observability.outbox import persist
 from packages.persistence.ledger import PostgresLedger
 from packages.persistence.schema import TABLES, accounts
+from packages.risk.budget import budget_reasons, read_cap
 from packages.risk.engine import RiskFacts, RiskLimits, evaluate
 
 _NAMESPACE = uuid.UUID("b1429754-6ca2-455c-a126-c51c8cb0d078")
@@ -190,6 +191,7 @@ def reserve(
                 )
                 if facts is not None:
                     reasons = evaluate(proposal, facts, effective_limits)
+                    reasons += budget_reasons(proposal, facts, read_cap(connection, account_id))
         return _record(
             tx,
             account_id,

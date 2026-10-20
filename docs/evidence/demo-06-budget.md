@@ -1,0 +1,27 @@
+# DEMO-06: exaktes USD-Budget als zusätzliche Obergrenze
+
+Stand 2026-10-18. Diese Evidenz betrifft das normale Paper-Konto; die unabhängige Demo-Laufdatenbasis und deren Startbudget werden separat nachgewiesen.
+
+`TradingProfileBackend` liest und speichert ausschließlich `{budget,currency,strategy}`. Budget ist ein positiver exakter Decimalstring mit höchstens18Nachkommastellen und maximal1000000USD. `mock-neutral` und `neutral-baseline` binden an die vorhandenen Versionen `mock-neutral.v1` beziehungsweise `neutral-baseline.v1`. Keine frei wählbaren Modelle, Prompts oder Providerendpunkte. Ein fehlendes Profil behält bestehendes Laufzeitverhalten bei: GET zeigt den Formularvorschlag100USD/Mock, installiert aber keine finanzielle Konfiguration. Erst ausdrückliches Speichern richtet den zusätzlichen Cap ein. Die Anzeige ist kein Brokerkontostand und verändert keine Cash-/Ledgerbasis.
+
+Migration0012 enthält `trading_profiles` und unveränderliche `trading_profile_receipts`. API, Worker und Execution besitzen nur SELECT auf Profile; die API kann die schmale `SECURITY DEFINER`-Funktion `control_update_trading_profile` ausführen. Direkte API-INSERT/UPDATE-Privilegien fehlen. Die Funktion prüft nochmals Eingaben, sperrt dasselbe Konto wie Reservation/Submit, kontrolliert aktuelle Positionen und offene Reservationen und schreibt Version, Strategiebinding, Audit und Idempotenzreceipt atomar. Wiederholung derselben Operation erzeugt keinen zweiten Audit; abweichende Wiederverwendung wird abgewiesen. Receipts enthalten ausschließlich öffentliche Konfigurationswerte. UNKNOWN/SUBMITTING oder HELD_UNKNOWN, unzugewiesene Zeilen, ungebundene Orderautorität, Fremdwährungen und nicht frisch bewertbare Bestände sperren Änderungen.
+
+Unter dem bestehenden Accountlock ergänzen Reservation und unmittelbarer Submit-Recheck sämtliche bisherigen Riskgates um den Cap. Berechnet wird gehaltenes Exposure plus aktive LONG-Reservationen plus Kandidat; für noch nicht gefüllte Käufe gilt zusätzlich1%Puffer. Beim Submit wird die eigene Reservation vor erneuter Kandidatenprüfung genau einmal abgezogen. Es werden keine Risklimits gelockert, keine fehlenden Fakten als Freigabe behandelt und keine Decimalwerte gerundet. Exit/FLAT bleibt vom zusätzlichen Entrycap ausgenommen; bestehende Exitgates gelten weiter. Grenzverletzungen verwenden den vorhandenen stabilen Grund `CASH_LIMIT` und dessen öffentliche Abbildung `RISK_LIMIT_EXCEEDED`.
+
+Lokale Unitprüfung: **26Tests bestanden**, zuletzt0,67s; Ruff über alle geänderten Budgetdateien bestanden. **Sechs echte PostgreSQL-Szenarien bestanden in140,07s**: Profil/Audit/Idempotenz/Rollenrechte, parallele Reservationen, Update unter gehaltenem/reserviertem Exposure, HELD_UNKNOWN, unmittelbare Submit-Neuprüfung und Legacybetrieb ohne gespeicherten Cap. Eine abschließende Wiederholung des Profilszenarios prüfte die endgültige `.v1`-Versionsbindung sowie ausdrückliche `has_table_privilege`-/`has_function_privilege`-Assertions: **1bestanden/5abgewählt in23,81s**. Die PostgreSQL-Abnahme verwendete ausschließlich UUID-benannte temporäre Datenbanken und synthetische Fixtures des bestehenden Dockerharness; keine Providerrequests und keine Änderungen an der normalen finanziellen Datenbasis.
+
+Sicherheitsreview gemäß `trading-safety-review`:
+
+| Invariante | Evidenz | Bewertung |
+|---|---|---|
+| Deterministische Risk-/Submitgates, atomarer Cap | `budget_reasons`, `reserve`, `evaluate_submit_gate`; echte PG-Race-/Rechecktests | Unit und PostgreSQL bestanden |
+| Decimal und UTC, keine Rundung | `validate_budget`, Decimal-Kontext100, SQLnumeric, DB-`clock_timestamp()` | Unit bestanden |
+| UNKNOWN hält Autorität | Updatefunktion weist UNKNOWN/SUBMITTING/HELD_UNKNOWN ab; tatsächlicher HELD_UNKNOWN-Test | PostgreSQL bestanden; zusätzliche Brokerstatuszweige quellgeprüft |
+| Audit und unveränderliche Referenzen | Auditschreiben und Profilversion im selben SQL-Funktionsaufruf; bisherige Proposal-/Riskreferenzen unverändert | PostgreSQL bestanden |
+| LIVE und Agenten-Brokersubmit ausgeschlossen | Budgetcode importiert keine Brokerfactory und verändert keine Modi oder Provider | Quellprüfung bestanden |
+| Kill/PAUSE_NEW, Recovery, partielle Fills | Sämtliche bisherigen Gates unverändert vor zusätzlichem Budgetcheck | Bestehende integrierte Regression durch Hauptagent erforderlich |
+| Credentials und Redaction | Profil enthält nur öffentliche Zahlen/Strategien; feste `AuthDenied`-Codes ohne DBfehlerdetails | Quell-/Unitprüfung bestanden |
+
+Diese begrenzte Prüfung ersetzt weder die vollständige integrierte Regression noch eine Bestätigung echter Paper-Ausführung oder Strategieprofitabilität.
+
+Integrierter Abschluss20.10.2026: **26Units erneut bestanden,0,40s**; vollständige lokale Matrix **814passed,19explizitePlattform-/Deploymentskips,82,66s** (POSIX-/Deploymentgrenzen separat geprüft). RuntimeWorker bindet die gespeicherte `.v1`-Variantenwahl an Konfigurationshash und AgentRun; API verwendet den tatsächlichen Profilbackend. Eine bei der Integration erkannte fehlende öffentliche Audit-Allowlist für `control.trading_profile_updated` gezielt ergänzt; tatsächlicher PostgreSQL→authentifizierter HTTP-Profil-/Auditabruf danach **passed,23,90s**. Dabei bleiben ungültige/private Auditaktionen weiterhin gesperrt, und Budgetänderungen verändern weder Cashbasis noch Brokerzustand. Unabhängiger begrenzter Sicherheitsreview ohne verbleibenden bestätigten P1/P2; keine echten Providercalls oder Orders.
