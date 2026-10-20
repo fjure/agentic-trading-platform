@@ -108,8 +108,15 @@ def main() -> None:
         fail("operationIds are missing or duplicated")
 
     schema_docs = {p.name: json.loads(p.read_text(encoding="utf-8")) for p in SCHEMAS.glob("*.schema.json")}
-    if len(schema_docs) != 11:
-        fail(f"expected 11 versioned schemas, found {len(schema_docs)}")
+    required_schema_files = {
+        "common.schema.json", "control-event.schema.json", "decision-result.schema.json",
+        "event-envelope.schema.json", "execution-report.schema.json", "market-state.schema.json",
+        "risk-decision.schema.json", "risk-reservation.schema.json", "runtime-health.schema.json",
+        "safety-event.schema.json", "trade-proposal.schema.json", "demo-run.schema.json",
+        "integration-status.schema.json", "trading-profile.schema.json",
+    }
+    if not required_schema_files.issubset(schema_docs):
+        fail(f"missing required versioned schemas: {sorted(required_schema_files - schema_docs.keys())}")
     registry = Registry()
     for filename, schema in schema_docs.items():
         Draft202012Validator.check_schema(schema)

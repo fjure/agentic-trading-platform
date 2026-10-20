@@ -9,6 +9,7 @@
  */
 import { Order } from './order';
 import { ModeState } from './modeState';
+import { SupervisorSnapshotPositionsInner } from './supervisorSnapshotPositionsInner';
 import { AgentRun } from './agentRun';
 
 
@@ -22,6 +23,14 @@ export interface SupervisorSnapshot {
     paperAccount: string;
     connections: { [key: string]: SupervisorSnapshot.ConnectionsEnum; };
     portfolioEquity: string;
+    /**
+     * Current cash for this ledger; demo responses carry the isolated demo ledger balance.
+     */
+    portfolioCash?: string;
+    /**
+     * Current positions in the same ledger as portfolioEquity and portfolioCash.
+     */
+    positions?: Array<SupervisorSnapshotPositionsInner>;
     workers: Array<AgentRun>;
     recentOrders: Array<Order>;
 }

@@ -18,7 +18,7 @@ NEXT = "c_" + "B" * 43
 TRACE = "b" * 32
 
 
-def test_all_twenty_runtime_operations_match_canonical_contract():
+def test_all_runtime_operations_match_canonical_contract():
     actual = {
         (route.path, method.lower(), route.operation_id)
         for route in create_app().routes
@@ -29,7 +29,7 @@ def test_all_twenty_runtime_operations_match_canonical_contract():
         for path, methods in OAS["paths"].items()
         for method, operation in methods.items()
     }
-    assert actual == expected and len(actual) == 20
+    assert actual == expected
 
 
 def event():

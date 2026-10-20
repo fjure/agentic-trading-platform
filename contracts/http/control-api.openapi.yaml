@@ -2,9 +2,9 @@ openapi: 3.1.2
 info:
   title: Agentic Trading Lab local control API
   version: 1.0.0
-  description: Canonical planning contract for the local, paper-only supervisor. No broker submit, provider
-    raw payload, credential, or live-mode operation is exposed. The contract does not assert that a runtime
-    implementation exists.
+  description: Canonical planning contract for the local, paper-only supervisor. No broker submit, provider raw
+    payload, credential, or live-mode operation is exposed. The contract does not assert that a runtime implementation
+    exists.
 servers:
 - url: http://127.0.0.1:8000
   description: Loopback only; deployment must reject non-loopback bind and untrusted Origin.
@@ -24,13 +24,14 @@ tags:
 paths:
   /health:
     get:
-      tags: [Control]
+      tags:
+      - Control
       operationId: getRuntimeHealth
       security: []
       summary: Read local process liveness and sanitized dependency checks
-      description: No session required. Actual transport and peer must be loopback; canonical public
-        Host and optional Origin remain mandatory boundaries and forwarding headers are rejected.
-        A live process returns HEALTHY even when a dependency is unavailable. This never grants trading permission.
+      description: No session required. Actual transport and peer must be loopback; canonical public Host and optional
+        Origin remain mandatory boundaries and forwarding headers are rejected. A live process returns HEALTHY even
+        when a dependency is unavailable. This never grants trading permission.
       responses:
         '200':
           description: Process is alive; dependency checks may be unavailable
@@ -40,18 +41,20 @@ paths:
                 $ref: '#/components/schemas/RuntimeHealth'
               example:
                 status: HEALTHY
-                checks: {DATABASE: UNAVAILABLE}
+                checks:
+                  DATABASE: UNAVAILABLE
         '400':
           $ref: '#/components/responses/InvalidRequest'
   /ready:
     get:
-      tags: [Control]
+      tags:
+      - Control
       operationId: getRuntimeReadiness
       security: []
       summary: Read local database readiness and sanitized dependency checks
-      description: Same strict loopback and Host/Origin boundaries as /health, without a session.
-        HTTP 200 depends only on DATABASE being HEALTHY; optional decision or market failures cannot
-        disable safety controls or reconciliation. Readiness never grants trading permission.
+      description: Same strict loopback and Host/Origin boundaries as /health, without a session. HTTP 200 depends
+        only on DATABASE being HEALTHY; optional decision or market failures cannot disable safety controls or reconciliation.
+        Readiness never grants trading permission.
       responses:
         '200':
           description: Database is ready; other dependency checks may remain degraded
@@ -61,7 +64,9 @@ paths:
                 $ref: '#/components/schemas/RuntimeHealth'
               example:
                 status: DEGRADED
-                checks: {DATABASE: HEALTHY, DECISION: UNAVAILABLE}
+                checks:
+                  DATABASE: HEALTHY
+                  DECISION: UNAVAILABLE
         '503':
           description: Database readiness unavailable; contains only bounded health codes
           content:
@@ -70,7 +75,8 @@ paths:
                 $ref: '#/components/schemas/RuntimeHealth'
               example:
                 status: UNAVAILABLE
-                checks: {DATABASE: UNAVAILABLE}
+                checks:
+                  DATABASE: UNAVAILABLE
         '400':
           $ref: '#/components/responses/InvalidRequest'
   /api/v1/session:
@@ -79,11 +85,11 @@ paths:
       - Control
       operationId: activateLocalSession
       summary: Exchange a one-time local launcher code for an HttpOnly session
-      description: The trusted local launcher displays a random, single-use activation code to the operator,
-        never in a URL or log. The same-origin form posts it over loopback; the server checks Host and Origin,
-        expires the code within five minutes, rate limits attempts, and sets an HttpOnly SameSite=Strict cookie.
-        No broker or Jev credential is involved. Browser writes require the session, exact same Origin, JSON
-        content type, and CSRF protection. This is a planning contract only.
+      description: The trusted local launcher displays a random, single-use activation code to the operator, never
+        in a URL or log. The same-origin form posts it over loopback; the server checks Host and Origin, expires
+        the code within five minutes, rate limits attempts, and sets an HttpOnly SameSite=Strict cookie. No broker
+        or Jev credential is involved. Browser writes require the session, exact same Origin, JSON content type,
+        and CSRF protection. This is a planning contract only.
       security: []
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
@@ -116,8 +122,8 @@ paths:
       - Snapshot
       operationId: getSupervisorSnapshot
       summary: Read an atomic supervisor view and the cursor to continue from it
-      description: Cursor marks the last event included at the atomic snapshot boundary; SSE resumes strictly
-        after it. If the stream later reports CURSOR_EXPIRED, discard cached state and fetch a new snapshot.
+      description: Cursor marks the last event included at the atomic snapshot boundary; SSE resumes strictly after
+        it. If the stream later reports CURSOR_EXPIRED, discard cached state and fetch a new snapshot.
       parameters:
       - $ref: '#/components/parameters/Traceparent'
       responses:
@@ -142,17 +148,17 @@ paths:
       x-event-schema:
         $ref: '#/components/schemas/SupervisorEvent'
       description: 'The client first reads /snapshot, then connects with that response''s cursor. Last-Event-ID
-        takes precedence over the cursor query when both are supplied. Each data frame is one SupervisorEvent
-        JSON value; id is the event cursor, event is its versioned eventType. Events can be redelivered; clients
-        deduplicate by eventId and apply monotonically increasing aggregateVersion. A comment heartbeat (`:
-        heartbeat`) is sent at most every 15 seconds while idle and carries no state. Reconnect uses Last-Event-ID.
-        Expired/unknown cursor returns HTTP 410 problem+json before the stream opens; midstream interruption
-        requires a reconnect, which either replays all retained events or returns 410. If a gap is detected
-        after streaming begins, emit `event: reset-required` with a sanitized CURSOR_EXPIRED problem JSON payload,
-        then close; the client fetches a fresh snapshot. Retention defaults to seven days. A missing heartbeat
-        for 45 seconds marks the client connection stale. The server must never silently skip a gap. Events
-        are at-least-once and ordered by cursor, not necessarily by aggregate. Browser EventSource cannot attach
-        arbitrary headers; authentication must use a same-origin, HttpOnly local session cookie.'
+        takes precedence over the cursor query when both are supplied. Each data frame is one SupervisorEvent JSON
+        value; id is the event cursor, event is its versioned eventType. Events can be redelivered; clients deduplicate
+        by eventId and apply monotonically increasing aggregateVersion. A comment heartbeat (`: heartbeat`) is sent
+        at most every 15 seconds while idle and carries no state. Reconnect uses Last-Event-ID. Expired/unknown
+        cursor returns HTTP 410 problem+json before the stream opens; midstream interruption requires a reconnect,
+        which either replays all retained events or returns 410. If a gap is detected after streaming begins, emit
+        `event: reset-required` with a sanitized CURSOR_EXPIRED problem JSON payload, then close; the client fetches
+        a fresh snapshot. Retention defaults to seven days. A missing heartbeat for 45 seconds marks the client
+        connection stale. The server must never silently skip a gap. Events are at-least-once and ordered by cursor,
+        not necessarily by aggregate. Browser EventSource cannot attach arbitrary headers; authentication must use
+        a same-origin, HttpOnly local session cookie.'
       parameters:
       - $ref: '#/components/parameters/Cursor'
       - name: Last-Event-ID
@@ -215,8 +221,8 @@ paths:
       - Control
       operationId: setMode
       summary: Request DISABLED, REPLAY, SHADOW, or PAPER
-      description: PAPER requires explicit health and reconciliation success. LIVE is absent from the schema
-        and must be rejected at every layer. No mode directly submits orders.
+      description: PAPER requires explicit health and reconciliation success. LIVE is absent from the schema and
+        must be rejected at every layer. No mode directly submits orders.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
       - $ref: '#/components/parameters/Traceparent'
@@ -372,9 +378,8 @@ paths:
       - Risk policy
       operationId: updateRiskPolicy
       summary: Replace the complete validated paper risk policy
-      description: Check the actor/operation/idempotency-key record before evaluating If-Match, so an exact
-        retry returns the original result even after ETag advancement. A new key with an old ETag receives
-        412.
+      description: Check the actor/operation/idempotency-key record before evaluating If-Match, so an exact retry
+        returns the original result even after ETag advancement. A new key with an old ETag receives 412.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
       - $ref: '#/components/parameters/IfMatch'
@@ -614,15 +619,351 @@ paths:
           $ref: '#/components/responses/AuthenticationRequired'
         '503':
           $ref: '#/components/responses/TemporarilyUnavailable'
+  /api/v1/demo/runs:
+    get:
+      tags:
+      - Demo
+      operationId: listDemoRuns
+      summary: List isolated simulation runs
+      parameters:
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoRunPage'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+    post:
+      tags:
+      - Demo
+      operationId: createDemoRun
+      summary: Start an isolated, finite simulation
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '202':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoRun'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DemoRunCreateRequest'
+  /api/v1/demo/runs/{runId}:
+    get:
+      tags:
+      - Demo
+      operationId: getDemoRun
+      summary: Read public simulation run status
+      parameters:
+      - $ref: '#/components/parameters/Traceparent'
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoRun'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /api/v1/demo/runs/{runId}/snapshot:
+    get:
+      tags:
+      - Demo
+      operationId: getDemoSnapshot
+      summary: Read isolated demo supervisor snapshot
+      parameters:
+      - $ref: '#/components/parameters/Traceparent'
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupervisorSnapshot'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /api/v1/demo/runs/{runId}/history/{resource}:
+    get:
+      tags:
+      - Demo
+      operationId: getDemoHistory
+      summary: Read a page of isolated demo history
+      parameters:
+      - $ref: '#/components/parameters/Traceparent'
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: resource
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/DemoHistoryResource'
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/Cursor'
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoHistoryPage'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /api/v1/demo/runs/{runId}/controls/{action}:
+    post:
+      tags:
+      - Demo
+      operationId: controlDemoRun
+      summary: Pause or kill an isolated demo run
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: action
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - pause
+          - kill
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoRunControlResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DemoRunControlRequest'
+  /api/v1/integrations:
+    get:
+      tags:
+      - Setup
+      operationId: getIntegrationStatuses
+      summary: Read redacted integration setup statuses
+      parameters:
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationStatuses'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /api/v1/integrations/alpaca:
+    put:
+      tags:
+      - Setup
+      operationId: saveAlpacaIntegration
+      summary: Store Alpaca paper credentials without verification
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationSaveResult'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlpacaIntegrationWriteRequest'
+  /api/v1/integrations/jev:
+    put:
+      tags:
+      - Setup
+      operationId: saveJevIntegration
+      summary: Store Jev credentials without verification
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationSaveResult'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JevIntegrationWriteRequest'
+  /api/v1/trading-profile:
+    get:
+      tags:
+      - Setup
+      operationId: getTradingProfile
+      summary: Read local paper budget and strategy profile
+      parameters:
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradingProfile'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+    put:
+      tags:
+      - Setup
+      operationId: updateTradingProfile
+      summary: Set bounded USD paper budget and existing strategy
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradingProfile'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '409':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TradingProfileUpdateRequest'
 components:
   securitySchemes:
     LocalSession:
       type: apiKey
       in: cookie
       name: atl_session
-      description: Same-origin HttpOnly Secure (where TLS is used), SameSite=Strict local operator session.
-        The runtime must provide explicit local authentication, Origin checks, and CSRF protection for writes;
-        never place tokens in URLs or SSE cursors.
+      description: Same-origin HttpOnly Secure (where TLS is used), SameSite=Strict local operator session. The
+        runtime must provide explicit local authentication, Origin checks, and CSRF protection for writes; never
+        place tokens in URLs or SSE cursors.
   parameters:
     Traceparent:
       name: traceparent
@@ -636,9 +977,8 @@ components:
       name: Idempotency-Key
       in: header
       required: true
-      description: Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same
-        key and same payload return the original semantic result; same key with different payload is a 409
-        IDEMPOTENCY_CONFLICT.
+      description: Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key
+        and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
       schema:
         type: string
         minLength: 16
@@ -774,34 +1114,58 @@ components:
     RuntimeHealth:
       type: object
       additionalProperties: false
-      required: [status, checks]
+      required:
+      - status
+      - checks
       properties:
         status:
           type: string
-          enum: [HEALTHY, DEGRADED, UNAVAILABLE]
+          enum:
+          - HEALTHY
+          - DEGRADED
+          - UNAVAILABLE
         checks:
           type: object
           additionalProperties: false
-          required: [DATABASE]
+          required:
+          - DATABASE
           properties:
             DATABASE:
               type: string
-              enum: [HEALTHY, DEGRADED, UNAVAILABLE]
+              enum:
+              - HEALTHY
+              - DEGRADED
+              - UNAVAILABLE
             BROKER:
               type: string
-              enum: [HEALTHY, DEGRADED, UNAVAILABLE]
+              enum:
+              - HEALTHY
+              - DEGRADED
+              - UNAVAILABLE
             MARKET:
               type: string
-              enum: [HEALTHY, DEGRADED, UNAVAILABLE]
+              enum:
+              - HEALTHY
+              - DEGRADED
+              - UNAVAILABLE
             DECISION:
               type: string
-              enum: [HEALTHY, DEGRADED, UNAVAILABLE]
+              enum:
+              - HEALTHY
+              - DEGRADED
+              - UNAVAILABLE
             EXECUTION:
               type: string
-              enum: [HEALTHY, DEGRADED, UNAVAILABLE]
+              enum:
+              - HEALTHY
+              - DEGRADED
+              - UNAVAILABLE
             WATCHDOG:
               type: string
-              enum: [HEALTHY, DEGRADED, UNAVAILABLE]
+              enum:
+              - HEALTHY
+              - DEGRADED
+              - UNAVAILABLE
     Cursor:
       type: string
       minLength: 1
@@ -1911,6 +2275,23 @@ components:
             - UNAVAILABLE
         portfolioEquity:
           $ref: '#/components/schemas/Decimal'
+        portfolioCash:
+          $ref: '#/components/schemas/Decimal'
+          description: Current cash for this ledger; demo responses carry the isolated demo ledger balance.
+        positions:
+          type: array
+          description: Current positions in the same ledger as portfolioEquity and portfolioCash.
+          items:
+            type: object
+            additionalProperties: false
+            required: [instrument, quantity]
+            properties:
+              instrument:
+                type: string
+              quantity:
+                $ref: '#/components/schemas/Decimal'
+              averagePrice:
+                $ref: '#/components/schemas/Decimal'
         workers:
           type: array
           items:
@@ -2041,3 +2422,253 @@ components:
           oneOf:
           - $ref: '#/components/schemas/Cursor'
           - type: 'null'
+    DemoRunCreateRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - initialBudget
+      - currency
+      - strategy
+      properties:
+        initialBudget:
+          $ref: '#/components/schemas/PositiveBudget'
+        currency:
+          type: string
+          const: USD
+        strategy:
+          $ref: '#/components/schemas/DemoStrategy'
+    PositiveBudget:
+      type: string
+      pattern: ^(?=.*[1-9])(?:(?:0|[1-9][0-9]{0,5})(?:\.[0-9]{1,18})?|1000000(?:\.0{1,18})?)$
+      description: Exact positive decimal USD amount no greater than 1000000.
+    DemoStrategy:
+      type: string
+      enum:
+      - mock-neutral
+      - neutral-baseline
+    DemoRun:
+      type: object
+      additionalProperties: false
+      required:
+      - runId
+      - status
+      - simulationOnly
+      - traceId
+      - initialBudget
+      - currency
+      - strategy
+      - createdAt
+      - updatedAt
+      properties:
+        runId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - RUNNING
+          - SUCCEEDED
+          - FAILED
+          - PAUSED
+        simulationOnly:
+          type: boolean
+          const: true
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+        initialBudget:
+          $ref: '#/components/schemas/PositiveBudget'
+        currency:
+          type: string
+          const: USD
+        strategy:
+          $ref: '#/components/schemas/DemoStrategy'
+        createdAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        updatedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        errorCode:
+          type: string
+          enum:
+          - TEMPORARILY_UNAVAILABLE
+          - INVALID_REQUEST
+          - RISK_LIMIT_EXCEEDED
+    DemoRunPage:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DemoRun'
+        nextCursor:
+          oneOf:
+          - $ref: '#/components/schemas/Cursor'
+          - type: 'null'
+    DemoHistoryResource:
+      type: string
+      enum:
+      - market-states
+      - decisions
+      - proposals
+      - risk-decisions
+      - orders
+      - audit
+      - runs
+      - costs
+    DemoHistoryPage:
+      anyOf:
+      - $ref: '#/components/schemas/MarketStatePage'
+      - $ref: '#/components/schemas/DecisionPage'
+      - $ref: '#/components/schemas/ProposalPage'
+      - $ref: '#/components/schemas/RiskDecisionPage'
+      - $ref: '#/components/schemas/OrderPage'
+      - $ref: '#/components/schemas/AuditPage'
+      - $ref: '#/components/schemas/RunPage'
+      - $ref: '#/components/schemas/CostPage'
+    DemoRunControlRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          maxLength: 200
+    DemoRunControlResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - runId
+      - action
+      - status
+      - simulationOnly
+      - traceId
+      properties:
+        runId:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum:
+          - pause
+          - kill
+        status:
+          type: string
+          enum:
+          - PAUSED
+          - FAILED
+        simulationOnly:
+          type: boolean
+          const: true
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    IntegrationState:
+      type: string
+      enum:
+      - UNCONFIGURED
+      - CONFIGURED
+    IntegrationStatus:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - restartRequired
+      properties:
+        status:
+          $ref: '#/components/schemas/IntegrationState'
+        restartRequired:
+          type: boolean
+    IntegrationStatuses:
+      type: object
+      additionalProperties: false
+      required:
+      - alpaca
+      - jev
+      properties:
+        alpaca:
+          $ref: '#/components/schemas/IntegrationStatus'
+        jev:
+          $ref: '#/components/schemas/IntegrationStatus'
+    AlpacaIntegrationWriteRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - apiKey
+      - apiSecret
+      - expectedAccountId
+      - paperOnly
+      properties:
+        apiKey:
+          type: string
+          format: password
+          writeOnly: true
+          minLength: 1
+          maxLength: 512
+        apiSecret:
+          type: string
+          format: password
+          writeOnly: true
+          minLength: 1
+          maxLength: 512
+        expectedAccountId:
+          type: string
+          format: uuid
+        paperOnly:
+          type: boolean
+          const: true
+    JevIntegrationWriteRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - apiKey
+      properties:
+        apiKey:
+          type: string
+          format: password
+          writeOnly: true
+          minLength: 1
+          maxLength: 512
+    IntegrationSaveResult:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - restartRequired
+      properties:
+        status:
+          type: string
+          const: CONFIGURED
+        restartRequired:
+          type: boolean
+          const: true
+    TradingProfileUpdateRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - budget
+      - currency
+      - strategy
+      properties:
+        budget:
+          $ref: '#/components/schemas/PositiveBudget'
+        currency:
+          type: string
+          const: USD
+        strategy:
+          $ref: '#/components/schemas/DemoStrategy'
+    TradingProfile:
+      type: object
+      additionalProperties: false
+      required:
+      - budget
+      - currency
+      - strategy
+      properties:
+        budget:
+          $ref: '#/components/schemas/PositiveBudget'
+        currency:
+          type: string
+          const: USD
+        strategy:
+          $ref: '#/components/schemas/DemoStrategy'

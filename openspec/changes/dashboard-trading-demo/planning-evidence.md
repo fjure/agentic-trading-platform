@@ -1,0 +1,9 @@
+# Planungsnachweis
+
+Stand 2026-10-18. Proposal, Delta-Spec, Design und vier offene Leaf-Tasks liegen vor. `scripts/openspec.ps1 validate dashboard-trading-demo --strict` bestanden; CLI meldet alle vier Planungsartefakte vollständig. Das ist kein Implementierungsnachweis. Vertragsentwurf und Contract-Validierung sind Teil von DEMO-01 vor Runtimeänderungen.
+
+GitHub-Ziel und CLI-Anmeldung lesend als `fjure/agentic-trading-platform` und `fjure` bestätigt. Offizieller MCP fehlt im aktuellen Katalog; explizit freigegebener GH-CLI-Fallback verwendet. Vier Tasks als Issues #26–#29 erstellt, eigenes Change-Label, stabile DEMO-Marker, je ein verwalteter Block und verlinkte Abhängigkeiten. Nach einer zunächst unvollständigen REST-Gesamtliste wurden die vier Issues über die aktuelle Issue-Liste und anschließend jeden einzelnen REST-Read-back bestätigt. Idempotente Wiederholung: 0 erstellt, 0 aktualisiert, 4 unverändert, 0 Duplikate. Zuordnung und UTF-8-SHA256 in `docs/development/github-demo-issue-sync.json`; bestehende PTV-Zuordnung unverändert.
+
+Unabhängiger Planreview führte zu präzisierten DB-/Rollen-/Seedgrenzen, festen EntryPoint-Konfigurationen, persistentem Fakebrokertransport, Crash-Reconciliation und negativen Auth-/Ledgerisolationsprüfungen im Design. Alle sind vor einem Implementierungsabschluss nachzuweisen. Keine Anwendung geändert, keine Dienste gestartet, keine Secrets gelesen, keine Providerrequests und keine Orders ausgeführt. Fremde und frühere uncommittete Änderungen bleiben erhalten.
+
+Die separat ergänzte Anleitung `docs/runbooks/alpaca-setup.md` erklärt die menschliche Paperkontoeinrichtung anhand aktueller offizieller Alpaca-Quellen. Sie behauptet weder eine bestehende Verbindung noch eine Handelsfreigabe. Eine Implementierung des Demo-Changes benötigt den gesonderten Apply-Auftrag gemäß AGENTS.md.

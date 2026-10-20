@@ -196,6 +196,9 @@ def create_app(
     events=None,
     health=None,
     delivery_observer=None,
+    demo=None,
+    setup=None,
+    trading_profile=None,
 ) -> FastAPI:
     auth = auth if auth is not None else LocalAuth()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
@@ -410,6 +413,10 @@ def create_app(
         ("costs", "listApiCosts"),
     ):
         register_history(resource, operation)
+    from services.control_api.extension_routes import register_extensions
+
+    register_extensions(app, body_reader=_body, key_reader=key, demo=demo,
+                        setup=setup, trading_profile=trading_profile)
     return app
 
 

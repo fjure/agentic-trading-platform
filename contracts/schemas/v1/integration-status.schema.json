@@ -1,0 +1,8 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"https://agentic-trading-lab.invalid/schemas/v1/integration-status.schema.json",
+ "title":"Redacted integration setup status",
+ "type":"object","additionalProperties":false,"required":["alpaca","jev"],
+ "properties":{"alpaca":{"$ref":"#/$defs/status"},"jev":{"$ref":"#/$defs/status"}},
+ "$defs":{"status":{"type":"object","additionalProperties":false,"required":["status","restartRequired"],"properties":{"status":{"enum":["UNCONFIGURED","CONFIGURED"]},"restartRequired":{"type":"boolean"}}},"alpacaWrite":{"type":"object","additionalProperties":false,"required":["apiKey","apiSecret","expectedAccountId","paperOnly"],"properties":{"apiKey":{"type":"string","format":"password","writeOnly":true,"maxLength":512},"apiSecret":{"type":"string","format":"password","writeOnly":true,"maxLength":512},"expectedAccountId":{"type":"string","format":"uuid"},"paperOnly":{"const":true}}},"jevWrite":{"type":"object","additionalProperties":false,"required":["apiKey"],"properties":{"apiKey":{"type":"string","format":"password","writeOnly":true,"maxLength":512}}},"saveResult":{"type":"object","additionalProperties":false,"required":["status","restartRequired"],"properties":{"status":{"const":"CONFIGURED"},"restartRequired":{"const":true}}}}
+ }

@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "repository": "fjure/agentic-trading-platform",
+  "changeId": "dashboard-trading-demo",
+  "status": "synchronized-read-back-verified",
+  "transport": "official-gh-cli-user-authorized-fallback",
+  "lastReadBackAt": "2026-10-20T18:43:11.730599+00:00",
+  "lastSyncRun": {
+    "created": 0,
+    "updated": 1,
+    "unchanged": 5,
+    "duplicates": 0
+  },
+  "tasks": [
+    {
+      "taskId": "DEMO-01",
+      "issueNumber": 26,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/26",
+      "state": "closed",
+      "contentHash": "20652ec4cc9617417dfe2da71f2df056ca9312f7d6a5d59a0dc90d7431cab575",
+      "dependsOn": [],
+      "syncedAt": "2026-10-20T18:43:09.713973+00:00"
+    },
+    {
+      "taskId": "DEMO-02",
+      "issueNumber": 27,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/27",
+      "state": "open",
+      "contentHash": "61e5f25518eb679ffb468339084c98faaa14e1fb431b30002da69abd9f5fc32e",
+      "dependsOn": [
+        "DEMO-01"
+      ],
+      "syncedAt": "2026-10-20T18:43:10.133530+00:00"
+    },
+    {
+      "taskId": "DEMO-03",
+      "issueNumber": 28,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/28",
+      "state": "open",
+      "contentHash": "78e3f76eb66e46bca8d375a8ff3d61b96d2803b084de8eeed2fd44b0c8e53c96",
+      "dependsOn": [
+        "DEMO-01",
+        "DEMO-02",
+        "DEMO-05",
+        "DEMO-06"
+      ],
+      "syncedAt": "2026-10-20T18:43:11.332704+00:00"
+    },
+    {
+      "taskId": "DEMO-04",
+      "issueNumber": 29,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/29",
+      "state": "open",
+      "contentHash": "3457ce884ea5a9d1505c52554f31592993dbfd7146be25a5c73023a2e8cfde13",
+      "dependsOn": [
+        "DEMO-02",
+        "DEMO-03",
+        "DEMO-05",
+        "DEMO-06"
+      ],
+      "syncedAt": "2026-10-20T18:43:11.730591+00:00"
+    },
+    {
+      "taskId": "DEMO-05",
+      "issueNumber": 30,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/30",
+      "state": "open",
+      "contentHash": "a6b96ea50eb8d7a2d133c2b74f0146f1a91b4b9cc78b826d30db5527f29a3698",
+      "dependsOn": [
+        "DEMO-01"
+      ],
+      "syncedAt": "2026-10-20T18:43:10.564840+00:00"
+    },
+    {
+      "taskId": "DEMO-06",
+      "issueNumber": 31,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/31",
+      "state": "open",
+      "contentHash": "4e9c420d43c7f92ac381968e790ff363e1a1b5d27fc8911bcfeedadb233fc1a8",
+      "dependsOn": [
+        "DEMO-01",
+        "DEMO-02"
+      ],
+      "syncedAt": "2026-10-20T18:43:10.964467+00:00"
+    }
+  ]
+}
