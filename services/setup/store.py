@@ -14,6 +14,13 @@ PROVIDERS = frozenset({"alpaca", "jev"})
 FILENAME = "credentials.json"
 
 
+def generation_filename(generation: int) -> str:
+    """An internal allocation ID, never a caller-controlled filename."""
+    if type(generation) is not int or not 1 <= generation <= 9007199254740991:
+        raise SetupInvalid()
+    return f"credentials-generation-{generation:016d}.json"
+
+
 class SetupInvalid(ValueError):
     def __init__(self):
         super().__init__("INVALID_REQUEST")
@@ -168,3 +175,59 @@ class ProviderStore:
                 finally:
                     os.close(directory)
         return {"status": "CONFIGURED", "restartRequired": True}
+
+    def save_generation(self, provider: str, generation: int, value: dict) -> dict:
+        """Publish an immutable pending Alpaca generation; never change active files.
+
+        The command owner must allocate the generation and durably pause/invalidate
+        approvals before calling. This method neither selects nor promotes it.
+        An existing allocation is never overwritten, including after a crash.
+        A retry acknowledges its securely published metadata; first write wins.
+        """
+        if provider != "alpaca":
+            raise SetupInvalid()
+        filename = generation_filename(generation)
+        private = validate(provider, value)
+        payload = json.dumps(private, ensure_ascii=True, separators=(",", ":")).encode("ascii")
+        if len(payload) > MAX_BODY:
+            raise SetupInvalid()
+        directory = None
+        temporary = "." + uuid4().hex + ".tmp"
+        created = False
+        try:
+            directory = self._directory(provider)
+            descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                                 0o600, dir_fd=directory)
+            created = True
+            try:
+                os.fchmod(descriptor, 0o600)
+                with os.fdopen(descriptor, "wb", closefd=False) as stream:
+                    stream.write(payload)
+                    stream.flush()
+                self._private(os.fstat(descriptor))
+                os.fsync(descriptor)
+            finally:
+                os.close(descriptor)
+            self._private(os.fstat(directory), directory=True)
+            # link(2) fails if the destination exists; rename/replace would not.
+            try:
+                os.link(temporary, filename, src_dir_fd=directory, dst_dir_fd=directory,
+                        follow_symlinks=False)
+            except FileExistsError:
+                # Recover a lost response after publication without opening,
+                # hashing or comparing the prior credential contents. A reused
+                # allocation cannot replace them; verification proves that file.
+                self._private(os.stat(filename, dir_fd=directory, follow_symlinks=False))
+            os.unlink(temporary, dir_fd=directory)
+            created = False
+            os.fsync(directory)
+        except Exception:
+            raise SetupUnavailable() from None
+        finally:
+            if directory is not None:
+                try:
+                    if created:
+                        os.unlink(temporary, dir_fd=directory)
+                finally:
+                    os.close(directory)
+        return {"status": "CONFIGURED", "credentialGeneration": generation}

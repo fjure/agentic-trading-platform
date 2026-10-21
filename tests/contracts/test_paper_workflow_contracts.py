@@ -6,9 +6,11 @@ from pathlib import Path
 
 import pytest
 import yaml
-from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
+
+from scripts.contract_formats import contract_formats
 
 ROOT = Path(__file__).resolve().parents[2]
 OAS = yaml.safe_load((ROOT / "contracts/http/control-api.openapi.yaml").read_text(encoding="utf-8"))
@@ -22,7 +24,7 @@ def validator(name):
     return Draft202012Validator(
         {"$ref": URI + "#/components/schemas/" + name},
         registry=REGISTRY,
-        format_checker=FormatChecker(),
+        format_checker=contract_formats(),
     )
 
 
@@ -46,7 +48,7 @@ def test_public_and_versioned_examples_are_equivalent(filename, component):
         (ROOT / "contracts/schemas/v1" / (filename + ".schema.json")).read_text(encoding="utf-8")
     )
     Draft202012Validator.check_schema(schema)
-    Draft202012Validator(schema, format_checker=FormatChecker()).validate(example(filename))
+    Draft202012Validator(schema, format_checker=contract_formats()).validate(example(filename))
     validator(component).validate(example(filename))
 
 
@@ -258,7 +260,7 @@ def test_materialized_negative_examples_are_rejected(filename, component):
     )
     assert not validator(component).is_valid(fixture)
     schema = json.loads((ROOT / "contracts/schemas/v1" / (filename + ".schema.json")).read_text())
-    assert not Draft202012Validator(schema, format_checker=FormatChecker()).is_valid(fixture)
+    assert not Draft202012Validator(schema, format_checker=contract_formats()).is_valid(fixture)
 
 
 @pytest.mark.parametrize(
@@ -307,4 +309,4 @@ def test_duplicate_public_blockers_remain_invalid_with_array_wire_type():
     state["blockers"] = ["CONNECTION_NOT_VERIFIED", "CONNECTION_NOT_VERIFIED"]
     assert not validator("PaperStatus").is_valid(state)
     schema = json.loads((ROOT / "contracts/schemas/v1/paper-workflow.schema.json").read_text())
-    assert not Draft202012Validator(schema, format_checker=FormatChecker()).is_valid(state)
+    assert not Draft202012Validator(schema, format_checker=contract_formats()).is_valid(state)

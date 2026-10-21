@@ -3,16 +3,18 @@
 
 from __future__ import annotations
 
-import json
 import copy
+import json
 import re
 import sys
 from pathlib import Path
 
 import yaml
-from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
+
+from contract_formats import contract_formats
 
 ROOT = Path(__file__).resolve().parents[1]
 OPENAPI = ROOT / "contracts/http/control-api.openapi.yaml"
@@ -77,7 +79,7 @@ def main() -> None:
         examples = ([media["example"]] if "example" in media else []) + [item["value"] for item in media.get("examples", {}).values()]
         for example in examples:
             check_schema = {"$ref": openapi_id + schema["$ref"]} if "$ref" in schema else schema
-            errors = list(Draft202012Validator(check_schema, registry=openapi_registry, format_checker=FormatChecker()).iter_errors(example))
+            errors = list(Draft202012Validator(check_schema, registry=openapi_registry, format_checker=contract_formats()).iter_errors(example))
             if errors:
                 fail(f"OpenAPI response example: {errors[0].message}")
             response_examples += 1
@@ -159,7 +161,7 @@ def main() -> None:
         ("UtcTimestamp", "2026-10-12T10:00:00+02:00"),
     ]
     for name, invalid in scalar_checks:
-        if Draft202012Validator(document["components"]["schemas"][name], format_checker=FormatChecker()).is_valid(invalid):
+        if Draft202012Validator(document["components"]["schemas"][name], format_checker=contract_formats()).is_valid(invalid):
             fail(f"{name} unexpectedly accepts {invalid!r}")
     if Draft202012Validator(document["components"]["schemas"]["SetModeRequest"]).is_valid({"mode": "LIVE", "reason": "test"}):
         fail("LIVE mode unexpectedly accepted")
@@ -172,7 +174,7 @@ def main() -> None:
         if not example.is_file():
             fail(f"missing example: {example.name}")
         instance = json.loads(example.read_text(encoding="utf-8"))
-        validator = Draft202012Validator(schema, registry=registry, format_checker=FormatChecker())
+        validator = Draft202012Validator(schema, registry=registry, format_checker=contract_formats())
         errors = list(validator.iter_errors(instance))
         if errors:
             fail(f"{example.name}: {errors[0].message}")
@@ -186,8 +188,8 @@ def main() -> None:
             fail(f"invalid problem status in {name}")
 
     sample = {name: json.loads((EXAMPLES / f"{name}.valid.json").read_text(encoding="utf-8")) for name in ("market-state", "decision-result", "trade-proposal", "risk-decision", "risk-reservation", "execution-report")}
-    decision_validator = Draft202012Validator(schema_docs["decision-result.schema.json"], registry=registry, format_checker=FormatChecker())
-    public_decision_validator = Draft202012Validator({"$ref": openapi_id + "#/components/schemas/Decision"}, registry=openapi_registry, format_checker=FormatChecker())
+    decision_validator = Draft202012Validator(schema_docs["decision-result.schema.json"], registry=registry, format_checker=contract_formats())
+    public_decision_validator = Draft202012Validator({"$ref": openapi_id + "#/components/schemas/Decision"}, registry=openapi_registry, format_checker=contract_formats())
     abstain = json.loads((EXAMPLES / "decision-result.abstain.json").read_text(encoding="utf-8"))
     for fixture in (sample["decision-result"], abstain):
         if not decision_validator.is_valid(fixture):
@@ -221,7 +223,7 @@ def main() -> None:
         public_invalid = {key: value for key, value in invalid.items() if key != "schemaVersion"}
         if decision_validator.is_valid(invalid) or public_decision_validator.is_valid(public_invalid):
             fail("mixed/missing question type or fabricated fallback accepted")
-    envelope_validator = Draft202012Validator(schema_docs["event-envelope.schema.json"], registry=registry, format_checker=FormatChecker())
+    envelope_validator = Draft202012Validator(schema_docs["event-envelope.schema.json"], registry=registry, format_checker=contract_formats())
     event = json.loads((EXAMPLES / "event-envelope.valid.json").read_text(encoding="utf-8"))
     for event_type in ("risk.decided.v1", "unknown.updated.v1"):
         invalid = copy.deepcopy(event)
@@ -229,7 +231,7 @@ def main() -> None:
         if envelope_validator.is_valid(invalid):
             fail("event type/payload mismatch accepted")
     control_validator = Draft202012Validator(
-        schema_docs["control-event.schema.json"], registry=registry, format_checker=FormatChecker()
+        schema_docs["control-event.schema.json"], registry=registry, format_checker=contract_formats()
     )
     control = json.loads((EXAMPLES / "control-event.valid.json").read_text(encoding="utf-8"))
     invalid_control = json.loads(

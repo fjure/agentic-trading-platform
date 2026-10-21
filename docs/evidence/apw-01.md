@@ -20,7 +20,7 @@ Start und LIMIT-Anforderungen binden Konto-/Credentialgeneration, Policy-/Profil
 - Vollständige finale Vertragsmatrix: 502bestanden, zwei fehlgeschlagen (28,49s), identisch zum vorangehenden Lauf. Die beiden exakten Route-/Vertragsabgleiche erwarten die neuen acht Paper-Routen bereits in `create_app`; laut Aufgabenplan werden sie erst in APW-03/05/07/08 implementiert. Kein Test wurde gelockert, kein Laufzeitstub ergänzt. Der eingeschränkte erste Lauf hing und wurde beendet; die vollständigen ASGI-Läufe nutzten den freigegebenen lokalen Prozesszugriff.
 - Vorbereitender vollständiger Issue-Read-back über den autorisierten GH-CLI-Fallback: 0Änderungen, zehn unveränderte offene APW-Issues. APW-01 bleibt wegen des Integrationsblockers offen, kein Commit/Push/Merge behauptet.
 
-## Offener Ablaufblocker
+## Historischer Ablaufblocker20.10.2026
 
 Der Plan verlangt bestandene APW-01-Gates vor nachfolgenden Implementierungen und einzelne geprüfte Issueintegrationen nach main. Die bestehende vollständige Route-/Vertragsgleichheit verbietet gleichzeitig einen ausschließlich kanonischen Vertrags-Zwischenstand. Nutzerentscheidung20.10.2026 ausdrücklich erteilt: eigene Issuebranches erhalten, APW-01 bis zur tatsächlichen Implementierung der abhängigen Routen offen lassen und main erst nach gemeinsamer Vertragsabnahme integrieren. Abhängige Implementierungen sind damit freigegeben; die zwei vollständigen Vertragsprüfungen bleiben unverändert und verpflichtend. APW-01 bleibt bis dahin offen.
 
@@ -29,3 +29,9 @@ Branch: `codex/ptv-32-paper-workflow-contracts`, Basis `f2afbfc9f56675f8dc74fce9
 ## Safetygrenze
 
 Der Stand definiert ausschließlich Verträge und Validierung. Kein Brokerport im Browser/API, keine neuen Runtimegates, kein LIVE und keine Providerorders. Agenten verwendeten ausschließlich synthetische Werte und Offlineprüfungen. Tatsächliche Alpaca-Fähigkeiten und private menschliche Providerabnahme bleiben unverifiziert.
+
+## Gemeinsame Vertragsabnahme21.10.2026
+
+Die tatsächlichen Paper-HTTP-/Kommandoadapter sind im laufenden APW-03 vorhanden. Unveränderte vollständige Routendeckungsprüfungen bestehen jetzt; gesamte Vertrags-/Human-Domainmatrix629passed/7,94s. Keine Stubs, keine Ausnahmen in den beiden vorher fehlgeschlagenen Tests. Vertragsvalidator, positive/negative Beispiele, vorhandene additive Baseline-/Client-/Buildnachweise und unabhängige Reviews gelten weiterhin. Aktualisierte Generator-/Formatprüfstrategie in `docs/development/contract-validation.md`. Damit ist APW-01 fachlich lokal abgeschlossen; APW-03 und die vollständige Handelsabnahme bleiben getrennt offen. Die lokalen Issuebranches werden erst nach der freigegebenen gemeinsamen finalen Abnahme nach main integriert.
+
+Issue#32 geschlossen und alle zehn APW-Issues vollständig zurückgelesen. Idempotente Wiederholung:0Updates/10unverändert. APW-01 und APW-02 abgeschlossen, OpenSpec2/10. Die früheren offenen Zustände oben dokumentieren den damaligen Zwischenstand.

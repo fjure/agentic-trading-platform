@@ -101,6 +101,16 @@ def test_dormant_role_ticks_without_loading_providers_or_finance(tmp_path, monke
     engine = SimpleNamespace(dispose=lambda: None)
     monkeypatch.setattr(paper, "database_engine", lambda *_, **__: engine)
     monkeypatch.setattr(paper, "check_identity", lambda *_: "READY")
+    if role == "api":
+        from services.runtime import paper_api
+
+        monkeypatch.setattr(paper_api, "run_private_paper_api",
+                            lambda _: statuses.append((role, "READY")))
+    elif role == "execution":
+        from services.runtime import paper_verification
+
+        monkeypatch.setattr(paper_verification, "PaperVerificationRuntime",
+                            lambda _: SimpleNamespace(tick=lambda: "READY"))
 
     class Once:
         stopped = False
