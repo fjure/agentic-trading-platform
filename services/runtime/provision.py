@@ -254,6 +254,9 @@ def provision(initial_cash: Decimal):
     from services.runtime.provision_demo import initialize_provider_volumes, provision_demo
 
     provision_demo(common, SECRET_ROOT)
+    from services.runtime.provision_paper import provision_paper
+
+    provision_paper(common, SECRET_ROOT)
     initialize_provider_volumes()
 
 

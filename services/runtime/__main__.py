@@ -25,7 +25,8 @@ def health() -> int:
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "role", choices=["execution", "worker", "watchdog", "api", "activate", "health"]
+        "role", choices=["execution", "worker", "watchdog", "api", "activate", "health",
+                         "paper-execution", "paper-worker", "paper-watchdog", "paper-api"]
     )
     args = parser.parse_args(argv)
     # SDKs/frameworks never emit exception bodies, URLs, headers or ambient data.
@@ -34,6 +35,11 @@ def main(argv=None):
     if args.role == "health":
         return health()
     try:
+        if args.role.startswith("paper-"):
+            from .paper import run
+
+            run(args.role.removeprefix("paper-"))
+            return 0
         if args.role == "activate":
             from .api import activate
 
@@ -45,6 +51,8 @@ def main(argv=None):
         from .common import run_loop, write_status
 
         config = RuntimeConfig.load()
+        if config.deployment != "lab":
+            raise ValueError("DEPLOYMENT_ENTRYPOINT_MISMATCH")
         write_status(args.role, "STARTING")
         engine = database_engine(args.role)
         ledger = PostgresLedger(engine=engine)
