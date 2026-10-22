@@ -457,7 +457,7 @@ class AlpacaPaperBrokerAdapter:
             _decimal(asset.get("min_order_size"), positive=True)
         else:
             # Alpaca's fractional quantity envelope is nine decimal places;
-            # this is still restricted to MARKET DAY in _validate_intent.
+            # DAY LIMIT is locally certified under ADR-APW-004; provider remains unverified.
             quantity_step = (
                 Decimal("0.000000001") if asset.get("fractionable") is True else Decimal("1")
             )
@@ -473,7 +473,7 @@ class AlpacaPaperBrokerAdapter:
                 decimal_string(price_tick),
                 _canonical_decimal(_decimal(asset.get("min_order_size"), positive=True))
                 if crypto
-                else "whole-or-market-fractional",
+                else "equity-day-limit-fractional.offline-v1",
                 "continuous" if crypto else str(clock["is_open"]),
                 session_start.isoformat(),
                 session_end.isoformat(),
@@ -561,10 +561,11 @@ class AlpacaPaperBrokerAdapter:
                 ):
                     raise CapabilityError("crypto price increment")
             else:
-                if fractional and (
-                    intent.order_type != "MARKET" or asset.get("fractionable") is not True
-                ):
-                    raise CapabilityError("fractional equities require market order")
+                # Only fresh explicit fractionable=true authorizes the certified
+                # equity envelope. Wire TIF/session are fixed to DAY/regular below;
+                # rejection never retries with MARKET or a different quantity.
+                if fractional and asset.get("fractionable") is not True:
+                    raise CapabilityError("fractional equity capability unconfirmed")
                 if fractional and intent.quantity % Decimal("0.000000001"):
                     raise CapabilityError("fractional equity precision")
                 if not fractional and intent.quantity % 1:
@@ -636,6 +637,13 @@ class AlpacaPaperBrokerAdapter:
             or data.get("order_class") != "simple"
         ):
             raise IdempotencyConflict("broker order and immutable intent disagree")
+        if (
+            intent.instrument_id != "BTC/USD"
+            and intent.order_type == "LIMIT"
+            and intent.quantity != intent.quantity.to_integral_value()
+            and data.get("extended_hours", False) is not False
+        ):
+            raise IdempotencyConflict("broker session and immutable intent disagree")
         quantity = _decimal(data.get("qty"), positive=True)
         filled = _decimal(data.get("filled_qty"))
         if quantity != intent.quantity or filled > quantity:

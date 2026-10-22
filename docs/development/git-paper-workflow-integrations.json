@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "repository": "fjure/agentic-trading-platform",
+  "changeId": "alpaca-paper-workflow",
+  "verifiedImplementationMainCommit": "46aa83b7db4b3a0f97d61a0f5e58ca48c97b7176",
+  "verifiedAt": "2026-10-22T07:08:23Z",
+  "ci": {
+    "url": "https://github.com/fjure/agentic-trading-platform/actions/runs/39738075221",
+    "conclusion": "success"
+  },
+  "issueIntegrations": [
+    {
+      "taskId": "APW-01",
+      "issueNumber": 32,
+      "branch": "codex/ptv-32-paper-workflow-contracts",
+      "branchCommit": "e5b485ecbb64736f17d1b3186ef6f3851c0e2c07",
+      "mergeCommit": "2cd34d3db55ec33b0f7b828c08dcaa9e36cacae1",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true
+    },
+    {
+      "taskId": "APW-02",
+      "issueNumber": 33,
+      "branch": "codex/ptv-33-isolated-paper-runtime",
+      "branchCommit": "533c236eca3088983369c99e165039f0b8335abe",
+      "mergeCommit": "0aea19ab32e833d219183299581da7ffd5bd28fb",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true
+    },
+    {
+      "taskId": "APW-03",
+      "issueNumber": 34,
+      "branch": "codex/ptv-34-paper-verification",
+      "branchCommit": "54e5917ccb79b6feed4949c6d8ca57c70b3bd03b",
+      "mergeCommit": "871bbb936099ff5f88d8f5f99d4c162f790cf71d",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true
+    },
+    {
+      "taskId": "APW-04",
+      "issueNumber": 35,
+      "branch": "codex/ptv-35-paper-initial-basis",
+      "branchCommit": "cbcf86c57748959f8c18b9a8bc8237371efe5a50",
+      "mergeCommit": "46aa83b7db4b3a0f97d61a0f5e58ca48c97b7176",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true
+    }
+  ],
+  "note": "Gemeinsame Vertrags-/Runtimeabnahme vom Nutzer freigegeben. Vier reguläre Merges ohne Force-Push; main-Baum entspricht exakt dem gemeinsam geprüften APW-04-Baum. Spätere Dokumentations- und Implementierungscommits können main fortschreiben."
+}

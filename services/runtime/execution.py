@@ -134,6 +134,14 @@ class ExecutionRuntime:
                 for entity in (state.evidence, state):
                     if tx.get(type(entity), entity.id) is None:
                         tx.insert(entity)
+                if getattr(self.config, "deployment", None) == "paper":
+                    from services.execution.paper_quotes import publish_quote
+
+                    publish_quote(
+                        tx, state, feed.snapshot,
+                        owner_id=self.process.owner_id,
+                        fencing_token=self.process.fencing_token,
+                    )
                 persist(
                     tx.connection,
                     m.EventEnvelope(

@@ -19,6 +19,7 @@ from packages.risk.budget import budget_reasons, read_cap
 from packages.risk.engine import RiskFacts, RiskLimits, evaluate
 from packages.risk.paper_daily import assess_daily_loss
 from packages.risk.paper_daily_sql import is_isolated_paper, read_daily
+from packages.risk.paper_rounding import exposure_upper, pnl_lower
 
 _NAMESPACE = uuid.UUID("b1429754-6ca2-455c-a126-c51c8cb0d078")
 _OPEN = (
@@ -226,6 +227,11 @@ def _fresh_facts(
     paper_daily_required = is_isolated_paper(connection)
     paper_reference, paper_observation = None, None
     if paper_daily_required:
+        from packages.risk.paper_limits import paper_proposal_reasons
+
+        policy_blockers = paper_proposal_reasons(connection, tx, proposal, state, now)
+        if policy_blockers:
+            return policy_blockers, None
         paper_reference, paper_observation = read_daily(
             connection,
             account_id,
@@ -412,9 +418,13 @@ def _fresh_facts(
             cash=snapshot.cash,
             day_start_equity=account_context["day_start_equity"],
             realized_pnl_today=_exact_numeric(realized - account_context["day_start_realized_pnl"]),
-            unrealized_pnl=_exact_numeric(unrealized),
-            instrument_exposure=_exact_numeric(exposure.get(proposal.instrument_id, Decimal("0"))),
-            gross_notional=_exact_numeric(gross_notional),
+            unrealized_pnl=(pnl_lower if paper_daily_required else _exact_numeric)(unrealized),
+            instrument_exposure=(exposure_upper if paper_daily_required else _exact_numeric)(
+                exposure.get(proposal.instrument_id, Decimal("0"))
+            ),
+            gross_notional=(exposure_upper if paper_daily_required else _exact_numeric)(
+                gross_notional
+            ),
             reserved_notional=reserved_total,
             position_count_instrument=int(proposal.instrument_id in active_instruments),
             position_count_total=len(active_instruments),

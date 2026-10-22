@@ -1,6 +1,6 @@
 # APW-04: Anfangsbasis und Paper-Tagesrisiko
 
-Stand22.10.2026: lokale Implementierung und verpflichtende Abnahme abgeschlossen; TaskAPW-04 markiert und Issue#35 geschlossen, alle zehn Issues vollständig zurückgelesen. Branch `codex/ptv-35-paper-initial-basis`, Basis `54e5917`; noch keine APW-Remoteintegration. Die freigegebene Entscheidung steht in `openspec/changes/alpaca-paper-workflow/risk-basis-decision.md`.
+Stand22.10.2026: Implementierung, Abnahme und Remoteintegration abgeschlossen; TaskAPW-04 markiert und Issue#35 geschlossen, alle zehn Issues vollständig zurückgelesen und Wiederholung0Updates/10unverändert. Branch `codex/ptv-35-paper-initial-basis`, Commit `cbcf86c57748959f8c18b9a8bc8237371efe5a50`, regulär über Merge `46aa83b7db4b3a0f97d61a0f5e58ca48c97b7176` integriert. Remote-Issue-SHA, exakte Baumgleichheit des geprüften Standes mit main und Remote-main-SHA verifiziert; APW-01bis04 haben eigene erhaltene Remote-Issuebranches. [main-CI39738075221](https://github.com/fjure/agentic-trading-platform/actions/runs/39738075221) vollständig erfolgreich, einschließlich echter Baseline, Clientdrift, Angular- und Browserverifikation. Die freigegebene Entscheidung steht in `openspec/changes/alpaca-paper-workflow/risk-basis-decision.md`.
 
 ## Implementierter und geprüfter Zwischenstand
 

@@ -32,6 +32,7 @@ class _JobLedger:
 class WorkerRuntime:
     def __init__(self, config, ledger, telemetry=None):
         self.config, self.ledger, self.telemetry = config, ledger, telemetry
+        self.paper_planning = getattr(config, "deployment", None) == "paper"
         self.clock, self.ids = Clock(), Ids()
         self.jobs = JobStore(ledger.engine)
         self.owner = uuid.uuid4().hex
@@ -124,6 +125,13 @@ class WorkerRuntime:
             with self.jobs.transaction(claim) as connection:
                 tx = LedgerUnit(connection)
                 if result is not None:
+                    paper_inputs = None
+                    if self.paper_planning:
+                        from services.worker.paper_planning import read_planning_inputs
+
+                        # Read after external decision I/O, inside the fenced job
+                        # transaction. A missing proof never selects legacy planning.
+                        paper_inputs = read_planning_inputs(connection, state.id)
                     proposal = plan_proposal(
                         decision=result,
                         market_state=state,
@@ -131,7 +139,19 @@ class WorkerRuntime:
                         clock=self.clock,
                         ids=self.ids,
                         ledger=_JobLedger(tx),
+                        paper_inputs=paper_inputs,
+                        require_paper=self.paper_planning,
                     )
+                    if self.paper_planning and proposal is not None:
+                        from services.worker.paper_planning import record_planning_inputs
+
+                        record_planning_inputs(connection, proposal, paper_inputs, claim)
+                    if self.paper_planning:
+                        from services.worker.paper_planning import record_planning_outcome
+
+                        record_planning_outcome(
+                            tx, result, state, proposal, paper_inputs, self.clock.now(), self.ids,
+                        )
                     for entity, event_type in (
                         (result, "decision.completed.v1"),
                         (proposal, "trade.proposed.v1"),

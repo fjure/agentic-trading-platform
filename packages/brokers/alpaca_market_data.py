@@ -75,6 +75,8 @@ class MarketSnapshot:
     spread: Decimal | None = None
     quote_provider_time: datetime | None = None
     quote_observed_at: datetime | None = None
+    bid: Decimal | None = None
+    ask: Decimal | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -473,7 +475,9 @@ class AlpacaMarketDataProvider:
             raise MarketDataError("BAR_GAP_OR_ORDER")
         return tuple(normalized)
 
-    def _quote(self, instrument: Instrument) -> tuple[Decimal, datetime, datetime]:
+    def _quote(
+        self, instrument: Instrument
+    ) -> tuple[Decimal, datetime, datetime, Decimal, Decimal]:
         crypto = instrument.market is Market.CRYPTO
         params = {"symbols": instrument.broker_symbol}
         if not crypto:
@@ -505,7 +509,7 @@ class AlpacaMarketDataProvider:
         with localcontext() as context:
             context.prec = 38
             spread = ask - bid
-        return spread, provider_time, observed_at
+        return spread, provider_time, observed_at, bid, ask
 
     def _capture(
         self, instrument_id: str, session_id: str, *, require_spread: bool = False,
@@ -565,9 +569,9 @@ class AlpacaMarketDataProvider:
             session_start,
             session_end,
         )
-        spread = quote_time = quote_observed_at = None
+        spread = quote_time = quote_observed_at = bid = ask = None
         if require_spread:
-            spread, quote_time, quote_observed_at = self._quote(instrument)
+            spread, quote_time, quote_observed_at, bid, ask = self._quote(instrument)
         final_time = self._now()
         if (
             final_time < capture_start
@@ -629,6 +633,8 @@ class AlpacaMarketDataProvider:
             spread,
             quote_time,
             quote_observed_at,
+            bid,
+            ask,
         )
         return snapshot, BindingProof(
             provider_account_id=str(account["id"]),
