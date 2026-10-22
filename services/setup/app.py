@@ -5,7 +5,14 @@ from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
 
-from .store import MAX_BODY, ProviderStore, SetupInvalid, SetupUnavailable, parse_body
+from .store import (
+    MAX_BODY,
+    ProviderStore,
+    SetupInvalid,
+    SetupUnavailable,
+    generation_filename,
+    parse_body,
+)
 
 
 def _response(value, status=200):
@@ -38,7 +45,7 @@ def create_app(store: ProviderStore | None = None) -> FastAPI:
     async def integrations():
         return _response(await run_in_threadpool(storage.status))
 
-    async def save(provider, request):
+    async def save(provider, request, generation=None):
         try:
             if request.headers.get("content-type", "").split(";")[0].strip() != "application/json":
                 raise SetupInvalid()
@@ -51,7 +58,11 @@ def create_app(store: ProviderStore | None = None) -> FastAPI:
                     raise SetupInvalid()
                 body.extend(chunk)
             value = parse_body(provider, bytes(body))
-            return _response(await run_in_threadpool(storage.save, provider, value))
+            if generation is None:
+                return _response(await run_in_threadpool(storage.save, provider, value))
+            return _response(await run_in_threadpool(
+                storage.save_generation, provider, generation, value,
+            ))
         except (SetupInvalid, SetupUnavailable):
             raise
         except Exception:
@@ -60,6 +71,16 @@ def create_app(store: ProviderStore | None = None) -> FastAPI:
     @app.put("/integrations/alpaca")
     async def alpaca(request: Request):
         return await save("alpaca", request)
+
+    @app.put("/integrations/alpaca/generations/{generation}")
+    async def alpaca_generation(generation: str, request: Request):
+        if not generation.isascii() or not generation.isdecimal() or len(generation) > 16:
+            raise SetupInvalid()
+        value = int(generation)
+        if str(value) != generation:
+            raise SetupInvalid()
+        generation_filename(value)
+        return await save("alpaca", request, value)
 
     @app.put("/integrations/jev")
     async def jev(request: Request):

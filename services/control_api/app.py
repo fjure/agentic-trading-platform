@@ -199,9 +199,22 @@ def create_app(
     demo=None,
     setup=None,
     trading_profile=None,
+    paper=None,
 ) -> FastAPI:
+    from services.control_api.paper_commands import PaperCommandError
+    from services.control_api.paper_routes import paper_problem, register_paper_routes
+
     auth = auth if auth is not None else LocalAuth()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
+
+    def public_problem(request, status, code):
+        if request.url.path.startswith("/api/v1/paper/"):
+            if status == 401:
+                code = "AUTHENTICATION_REQUIRED"
+            elif status == 400 and request.headers.getlist("origin") not in ([], [auth.origin]):
+                status, code = 403, "ORIGIN_REJECTED"
+            return paper_problem(status, code, request.state.trace_id)
+        return problem(status, code, request.state.trace_id)
 
     @app.middleware("http")
     async def boundary(request: Request, call_next):
@@ -217,9 +230,9 @@ def create_app(
                 request.state.actor_id = auth.authenticate(request.cookies.get("atl_session", ""))
             response = await call_next(request)
         except AuthDenied as exc:
-            response = problem(exc.status, exc.code, request.state.trace_id)
+            response = public_problem(request, exc.status, exc.code)
         except Exception:
-            response = problem(503, "TEMPORARILY_UNAVAILABLE", request.state.trace_id)
+            response = public_problem(request, 503, "TEMPORARILY_UNAVAILABLE")
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
@@ -230,11 +243,17 @@ def create_app(
 
     @app.exception_handler(HTTPException)
     async def http_error(request: Request, exc: HTTPException):
+        if request.url.path.startswith("/api/v1/paper/"):
+            return public_problem(request, 400, "INVALID_REQUEST")
         return problem(exc.status_code, "INVALID_REQUEST", request.state.trace_id)
 
     @app.exception_handler(CursorExpired)
     async def cursor_error(request: Request, _exc: CursorExpired):
         return problem(410, "CURSOR_EXPIRED", request.state.trace_id)
+
+    @app.exception_handler(PaperCommandError)
+    async def paper_command_error(request: Request, exc: PaperCommandError):
+        return public_problem(request, exc.status, exc.code)
 
     def port() -> Backend:
         if backend is None:
@@ -416,7 +435,8 @@ def create_app(
     from services.control_api.extension_routes import register_extensions
 
     register_extensions(app, body_reader=_body, key_reader=key, demo=demo,
-                        setup=setup, trading_profile=trading_profile)
+                        setup=setup, trading_profile=trading_profile, paper=paper)
+    register_paper_routes(app, paper=paper, body_reader=_body, key_reader=key)
     return app
 
 

@@ -1,4 +1,4 @@
-"""Inactive isolated Paper processes. No financial or provider composition yet."""
+"""Isolated Paper processes with explicit read-only verification commands."""
 
 import signal
 from threading import Event
@@ -29,15 +29,30 @@ def run(role):
         raise ValueError("DEPLOYMENT_ENTRYPOINT_MISMATCH")
     write_status(role, "STARTING")
     engine = database_engine(role, deployment="paper")
+    if role == "api":
+        from .paper_api import run_private_paper_api
+
+        try:
+            run_private_paper_api(engine)
+        finally:
+            engine.dispose()
+        return
+    verifier = None
+    if role == "execution":
+        from .paper_verification import PaperVerificationRuntime
+
+        verifier = PaperVerificationRuntime(engine)
     stop = Event()
     for signum in (signal.SIGINT, signal.SIGTERM):
         signal.signal(signum, lambda *_: stop.set())
     try:
-        # No ExecutionRuntime/WorkerRuntime, ledger seed or credentials reader.
-        # APW-03/05 will add persistent commands before any provider composition.
+        # Trading runtimes remain inactive. Execution reads credentials only for
+        # an explicitly claimed durable verification command.
         while not stop.is_set():
             try:
                 write_status(role, check_identity(engine, role))
+                if verifier is not None:
+                    verifier.tick()
             except Exception:
                 write_status(role, "UNAVAILABLE")
             stop.wait(5)

@@ -1,6 +1,6 @@
 # Alpaca-Paperkonto für das lokale Lab vorbereiten
 
-Diese Anleitung bereitet ein Alpaca-Paperkonto für einen menschlich kontrollierten Lab-Ablauf vor. Im Dashboard gibt es jetzt **Übersicht → Demo & Einrichtung → Alpaca einrichten**. Der Dialog speichert die private Konfiguration, prüft aber keine Providerverbindung und aktiviert keinen Handel. Für sichtbare Trades ohne Konto zunächst die [Dashboard-Demo](dashboard-demo.md) verwenden; der echte Paper-Smoke bleibt in [paper-smoke.md](paper-smoke.md) beschrieben.
+Diese Anleitung bereitet ein Alpaca-Paperkonto für einen menschlich kontrollierten Lab-Ablauf vor. Im Dashboard gibt es **Übersicht → Demo & Einrichtung → Alpaca einrichten**. Der Dialog speichert die private Konfiguration und aktiviert keinen Handel. Der neue Ablauf trennt Speichern, Kontoprüfung, finanzielle Vorbereitung und Betriebsfreigabe. Seine geführte Oberfläche ist noch in Umsetzung; der aktuelle Dialog führt beim Speichern keine Kontoprüfung aus. Für sichtbare Trades ohne Konto zunächst die [Dashboard-Demo](dashboard-demo.md) verwenden; der separate Paper-Smoke bleibt in [paper-smoke.md](paper-smoke.md) beschrieben.
 
 ## 1. Paperkonto bei Alpaca anlegen
 
@@ -34,7 +34,17 @@ Das Speichern der Datei bedeutet nur **Zugangsdaten vorhanden**. **Konto verbund
 
 Das bestehende Lab-Ledger startet mit einer eingefrorenen Basis von 10.000 USD; Alpacas neues Paperkonto startet üblicherweise mit 100.000 USD. Bei einer Abweichung darf kein Smoke-Lauf beginnen. Ein bestehendes Ledger oder Volume nicht löschen, zurücksetzen oder „rebased“ starten, und `InitialCash` ändert keine bestehende Finanzbasis. Eine passende dedizierte Paper-/Laborbasis muss separat und sicher eingerichtet werden, bevor der Ablauf weitergehen kann. Der Mensch muss außerdem ein sauberes Paperkonto ohne Positionen und offene oder unbekannte Orders verwenden.
 
-Die normale lokale Startverknüpfung verweigert absichtlich eine Paper-Konfiguration. Ein Neustart allein verbindet das Konto nicht. Der gegenwärtige Paper-Smoke ist ein manueller Einmalablauf mit privaten Terminals und mehreren Schutzprüfungen; führe ihn nur gemäß [paper-smoke.md](paper-smoke.md) und dessen Vorbedingungen aus. Er ist kein autonomer Dashboard-Demo-Modus. Bis ein eigener, geprüfter Ablauf die Kontobindung bestätigt, bleibt die Verbindung unbestätigt und Trading geschlossen.
+Die normale lokale Startverknüpfung startet zusätzlich ein getrenntes, zunächst inaktives Paperpaket mit eigener Datenbank. Das bestehende Fake-Lab bleibt erhalten. Ein Neustart allein verbindet das Konto nicht und startet keinen Handel. Der separate Paper-Smoke ist ein manueller Einmalablauf mit privaten Terminals und mehreren Schutzprüfungen; führe ihn nur gemäß [paper-smoke.md](paper-smoke.md) und dessen Vorbedingungen aus. Bis Kontoprüfung, einmalige finanzielle Vorbereitung und explizite Betriebsfreigabe abgeschlossen sind, bleiben neue Einstiege geschlossen.
+
+## Neue Schlüsselgeneration und Kontoprüfung
+
+Der normale authentifizierte Dialog veröffentlicht eine unveränderliche neue Schlüsselgeneration im privaten Einrichtungsdienst. Das schließt zuerst neue Einstiege und entwertet bisherige Freigaben. Bestehende aktive Dateien bleiben für Recovery erhalten. Ein Speichervorgang bestätigt ausschließlich die Speicherung; insbesondere sind `CONFIGURED` und eine erfolgreiche HTTP-Annahme keine bestätigte Brokerverbindung.
+
+Eine anschließend ausdrücklich angeforderte Kontoprüfung wird als dauerhafter Vorgang von Execution bearbeitet. Execution prüft die erwartete Konto-UUID, USD, Kontosperren und den IEX-Feedzugriff über feste Paper-/Marktdatenhosts. Öffentliche Antworten zeigen nur ein redigiertes Kontolabel und feste Fehlercodes. Eine erfolgreiche Prüfung allein bereitet weder einen Ledger vor noch gibt sie Handel frei. Alte Quotes außerhalb der Marktzeiten können Feedzugriff belegen; sie gelten nicht als frische Handelspreise.
+
+Bei Rotation muss die neue Generation dasselbe bereits gebundene Konto belegen. Ungeklärte Brokerverpflichtungen verhindern die Umschaltung; die vorherige aktive Generation wird nicht überschrieben. Bei einer verlorenen Speicherantwort kann derselbe Vorgang die zuerst veröffentlichte Generation erneut bestätigen. Der Server vergleicht dabei keine Schlüsselwerte. Für andere Schlüssel muss ein neuer Speichervorgang angelegt werden. Ein Prozessabbruch genau zwischen Dateiveröffentlichung und Aufräumen eines temporären Hardlinks bleibt sicher gesperrt; ein neuer Speichervorgang mit neuer Generation ermöglicht die Wiederaufnahme. Unsichere Dateimetadaten werden niemals automatisch repariert.
+
+Die vollständige Oberfläche und Betriebsabnahme dieses neuen Ablaufs folgen in APW-09/10. Bis dahin beschreibt [APW-03-Evidenz](../evidence/apw-03.md) den jeweils tatsächlich geprüften Implementierungsstand. Agenten führen Kontoprüfungen ausschließlich gegen lokale Testdoubles mit synthetischen Schlüsseln aus.
 
 ## Offizielle Quellen
 

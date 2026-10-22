@@ -1,7 +1,7 @@
 """Privileged fixed Paper schema provisioning, without any financial seed.
 
-Dormant roles receive CONNECT only. Later versioned workflow migrations must
-explicitly grant each business permission before persistent commands can run.
+Revision 0012 roles receive CONNECT only. Revision 0013 adds only the explicit
+command-function manifest below, never table access or financial permissions.
 """
 
 from __future__ import annotations
@@ -19,6 +19,18 @@ FILES = {
     "api": "paper-control.json", "watchdog": "paper-watchdog.json",
 }
 _FLAGS = "rolcanlogin,rolsuper,rolcreatedb,rolcreaterole,rolinherit,rolreplication,rolbypassrls"
+_COMMAND_FUNCTIONS = {
+    "atl_paper_control_api": (
+        "public.paper_status(text)", "public.paper_operation(uuid)",
+        "public.paper_rotation_begin(text,text,text)",
+        "public.paper_rotation_complete(bigint)",
+        "public.paper_enqueue(text,jsonb,text,text,text)",
+    ),
+    "atl_paper_execution": (
+        "public.paper_claim(uuid,integer)",
+        "public.paper_finish(uuid,uuid,bigint,jsonb,uuid,text)",
+    ),
+}
 
 
 def _memberships(connection, name):
@@ -115,32 +127,52 @@ def _create_identities(connection, directory, existing):
 
 
 def _verify_dormant_privileges(connection):
-    """No object privileges/ownership belong to APW-02's CONNECT-only roles.
-
-    Future workflow grants require an explicit versioned manifest here. Never
-    accept arbitrary existing ACLs just because a later migration may need them.
-    """
+    """Enforce the exact manifest of the database's already-applied revision."""
     identities = tuple(PAPER_ROLES.values()) + tuple(
         name + "_login" for name in PAPER_ROLES.values()
     )
-    # Inspect ACLs, not has_*_privilege alone: column grants and direct login
-    # grants must be rejected even when the service always SET ROLEs initially.
-    unexpected = connection.execute(
+    version_table = connection.execute(
+        "SELECT to_regclass('public.alembic_version')"
+    ).fetchone()[0]
+    revisions = connection.execute(
+        "SELECT version_num FROM public.alembic_version"
+    ).fetchall() if version_table is not None else []
+    expected = set()
+    if revisions == [("0013_paper_commands",)]:
+        for group, functions in _COMMAND_FUNCTIONS.items():
+            expected.add(("schema", "public", group, "USAGE", False))
+            expected.update(("function", name, group, "EXECUTE", False) for name in functions)
+    elif revisions not in ([], [("0012_trading_profile",)]):
+        raise PermissionError("PAPER_PRIVILEGE_MANIFEST_UNSUPPORTED")
+    # Empty/unmigrated databases and 0012 permit no direct object ACLs. Inspect
+    # columns and login grantees too; initial SET ROLE is not a permission bound.
+    actual = connection.execute(
+        "WITH acls(kind,name,acl) AS ("
+        "SELECT 'schema',nspname::text,nspacl FROM pg_namespace UNION ALL "
+        "SELECT 'relation',n.nspname||'.'||c.relname,c.relacl FROM pg_class c "
+        "JOIN pg_namespace n ON n.oid=c.relnamespace UNION ALL "
+        "SELECT 'column',n.nspname||'.'||c.relname||'.'||a.attname,a.attacl "
+        "FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid "
+        "JOIN pg_namespace n ON n.oid=c.relnamespace UNION ALL "
+        "SELECT 'function',n.nspname||'.'||p.proname||'('||"
+        "replace(oidvectortypes(p.proargtypes),' ','')||')',p.proacl FROM pg_proc p "
+        "JOIN pg_namespace n ON n.oid=p.pronamespace) "
+        "SELECT kind,name,r.rolname,x.privilege_type,x.is_grantable "
+        "FROM acls CROSS JOIN LATERAL aclexplode(acl) x JOIN pg_roles r ON r.oid=x.grantee "
+        "WHERE r.rolname=ANY(%s)", (list(identities),),
+    ).fetchall()
+    if set(actual) != expected:
+        raise PermissionError("PAPER_OBJECT_PRIVILEGES_UNSAFE")
+    owned = connection.execute(
         "WITH identities AS (SELECT oid FROM pg_roles WHERE rolname=ANY(%s)), "
-        "acls AS ("
-        "SELECT nspacl AS acl FROM pg_namespace UNION ALL "
-        "SELECT relacl FROM pg_class UNION ALL "
-        "SELECT attacl FROM pg_attribute UNION ALL "
-        "SELECT proacl FROM pg_proc) "
-        "SELECT EXISTS(SELECT 1 FROM acls CROSS JOIN LATERAL aclexplode(acl) x "
-        "WHERE x.grantee IN (SELECT oid FROM identities)) OR "
-        "EXISTS(SELECT 1 FROM pg_namespace WHERE nspowner IN (SELECT oid FROM identities)) OR "
+        "owned AS (SELECT 1 FROM pg_namespace WHERE nspowner IN (SELECT oid FROM identities)) "
+        "SELECT EXISTS(SELECT 1 FROM owned) OR "
         "EXISTS(SELECT 1 FROM pg_class WHERE relowner IN (SELECT oid FROM identities)) OR "
         "EXISTS(SELECT 1 FROM pg_proc WHERE proowner IN (SELECT oid FROM identities)) OR "
         "EXISTS(SELECT 1 FROM pg_type WHERE typowner IN (SELECT oid FROM identities))",
         (list(identities),),
     ).fetchone()[0]
-    if unexpected:
+    if owned:
         raise PermissionError("PAPER_OBJECT_PRIVILEGES_UNSAFE")
     for identity in identities:
         if connection.execute(

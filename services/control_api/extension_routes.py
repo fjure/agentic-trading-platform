@@ -129,7 +129,7 @@ def _run(value):
     return DemoRun.model_validate(value).model_dump(exclude_none=True)
 
 
-def register_extensions(app, *, body_reader, key_reader, demo, setup, trading_profile):
+def register_extensions(app, *, body_reader, key_reader, demo, setup, trading_profile, paper=None):
     @app.get("/api/v1/demo/runs", operation_id="listDemoRuns")
     async def runs():
         value = await run_in_threadpool(_port(demo).list_runs)
@@ -215,17 +215,35 @@ def register_extensions(app, *, body_reader, key_reader, demo, setup, trading_pr
         }
 
     @app.get("/api/v1/integrations", operation_id="getIntegrationStatuses")
-    async def integrations():
+    async def integrations(request: Request):
         value = await run_in_threadpool(_port(setup).read_integrations)
+        if paper is not None:
+            # Saved generation metadata is authoritative for the new workflow;
+            # legacy status inspects only the pre-generation credentials file.
+            state = await run_in_threadpool(paper.read_status, request.state.trace_id)
+            if state["setupState"] != "NOT_CONFIGURED":
+                value["alpaca"] = {"status": "CONFIGURED", "restartRequired": True}
         return Integrations.model_validate(value).model_dump()
 
     def provider_route(provider, model, operation):
         async def save(request: Request):
-            key_reader(request)
+            key = key_reader(request)
             payload = await body_reader(request, model)
             try:
-                method = getattr(_port(setup), "save_" + provider)
-                value = await run_in_threadpool(method, payload)
+                if provider == "alpaca" and paper is not None:
+                    # Metadata/latch commit precedes private I/O. Neither the
+                    # command backend nor its receipts receive credential values.
+                    generation = await run_in_threadpool(
+                        paper.rotation_begin, request.state.actor_id, key, request.state.trace_id,
+                    )
+                    value = await run_in_threadpool(
+                        _port(setup).save_alpaca_generation, payload, generation,
+                    )
+                    if not await run_in_threadpool(paper.rotation_complete, generation):
+                        raise AuthDenied(409, "VERSION_CONFLICT")
+                else:
+                    method = getattr(_port(setup), "save_" + provider)
+                    value = await run_in_threadpool(method, payload)
             finally:
                 # No credential receipts or body digests; do not retain strings.
                 payload.clear()

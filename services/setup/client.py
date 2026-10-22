@@ -4,7 +4,7 @@ import json
 
 import httpx
 
-from .store import MAX_BODY, SetupUnavailable, validate
+from .store import MAX_BODY, SetupUnavailable, generation_filename, validate
 
 
 class FixedSetupClient:
@@ -51,6 +51,15 @@ class FixedSetupClient:
 
     def save_alpaca(self, value: dict) -> dict:
         return self._save("alpaca", value)
+
+    def save_alpaca_generation(self, value: dict, generation: int) -> dict:
+        generation_filename(generation)
+        validate("alpaca", value)
+        result = self._request("PUT", "/integrations/alpaca/generations/" + str(generation), value)
+        expected = {"status": "CONFIGURED", "credentialGeneration": generation}
+        if result != expected:
+            raise SetupUnavailable()
+        return {"status": "CONFIGURED", "restartRequired": True}
 
     def save_jev(self, value: dict) -> dict:
         return self._save("jev", value)

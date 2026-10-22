@@ -13,6 +13,7 @@ import time
 import traceback
 import uuid
 from pathlib import Path
+from unittest.mock import patch
 
 _STAGE = "START"
 
@@ -99,10 +100,16 @@ def host():
 def guest():
     stage("IMPORTS")
     import psycopg
+    from alembic import command
     from psycopg import sql
 
     from services.runtime.config import PAPER_ROLES
-    from services.runtime.provision_paper import DATABASE, FILES, provision_paper
+    from services.runtime.provision_paper import (
+        DATABASE,
+        FILES,
+        _verify_dormant_privileges,
+        provision_paper,
+    )
 
     def synthetic_private_bytes(path):
         # This disposable fixture owns only generated synthetic DB credentials.
@@ -130,9 +137,31 @@ def guest():
     with tempfile.TemporaryDirectory() as temporary:
         directory = Path(temporary)
         stage("FIRST_PROVISION")
-        provision_paper(common, directory)
+        # Exercise the real APW-02 baseline first, then the actual 0013 upgrade.
+        upgrade = command.upgrade
+        with patch("alembic.command.upgrade", side_effect=lambda config, _target: upgrade(
+            config, "0012_trading_profile",
+        )):
+            provision_paper(common, directory)
         first = {name: synthetic_private_bytes(directory / name) for name in FILES.values()}
+        stage("BASELINE_MANIFEST")
+        with psycopg.connect(dbname=DATABASE, autocommit=True, **common) as admin:
+            assert admin.execute("SELECT version_num FROM public.alembic_version").fetchall() == [
+                ("0012_trading_profile",),
+            ]
+            _verify_dormant_privileges(admin)
+            admin.execute("GRANT USAGE ON SCHEMA public TO atl_paper_execution")
+            try:
+                provision_paper(common, directory)
+            except PermissionError as error:
+                assert str(error) == "PAPER_OBJECT_PRIVILEGES_UNSAFE"
+            else:
+                raise AssertionError("0012 must not accept future schema privileges")
+            assert admin.execute("SELECT has_schema_privilege("
+                                 "'atl_paper_execution','public','USAGE')").fetchone() == (True,)
+            admin.execute("REVOKE USAGE ON SCHEMA public FROM atl_paper_execution")
         stage("REPEAT_PROVISION")
+        provision_paper(common, directory)
         provision_paper(common, directory)
         assert first == {
             name: synthetic_private_bytes(directory / name) for name in FILES.values()
@@ -155,6 +184,15 @@ def guest():
                 assert restricted.execute("SELECT current_user,current_database()").fetchone() == (
                     group, DATABASE,
                 )
+                assert restricted.execute("SELECT has_schema_privilege(current_user,"
+                                          "'public','USAGE')").fetchone() == (
+                    role in ("api", "execution"),
+                )
+                if role == "api":
+                    public_status = restricted.execute(
+                        "SELECT public.paper_status(%s)", ("a" * 32,),
+                    ).fetchone()[0]
+                    assert public_status["entryGateOpen"] is False
                 for statement in (
                     "CREATE TABLE public.forbidden(id int)", "CREATE SCHEMA forbidden",
                     "CREATE TEMP TABLE forbidden(id int)", "SET ROLE atl_execution",
@@ -211,6 +249,7 @@ def guest():
 
             def fingerprint():
                 return (
+                    admin.execute("SELECT version_num FROM public.alembic_version").fetchall(),
                     admin.execute("SELECT nspowner,nspacl::text FROM pg_namespace "
                                   "WHERE nspname='public'").fetchall(),
                     admin.execute("SELECT relname,relowner,relacl::text FROM pg_class "
@@ -225,8 +264,8 @@ def guest():
                 )
 
             scenarios = (
-                ("GRANT USAGE ON SCHEMA public TO atl_paper_execution",
-                 "REVOKE USAGE ON SCHEMA public FROM atl_paper_execution"),
+                ("GRANT USAGE ON SCHEMA public TO atl_paper_worker",
+                 "REVOKE USAGE ON SCHEMA public FROM atl_paper_worker"),
                 ("GRANT SELECT ON public.accounts TO atl_paper_execution",
                  "REVOKE SELECT ON public.accounts FROM atl_paper_execution"),
                 ("GRANT UPDATE(currency) ON public.accounts TO atl_paper_execution_login",
@@ -240,6 +279,20 @@ def guest():
                  "ALTER TABLE public.accounts OWNER TO lab_migration"),
                 ("ALTER FUNCTION public.apw_probe_function() OWNER TO atl_paper_worker",
                  "ALTER FUNCTION public.apw_probe_function() OWNER TO lab_migration"),
+                ("GRANT EXECUTE ON FUNCTION public.paper_status(text) TO atl_paper_execution",
+                 "REVOKE EXECUTE ON FUNCTION public.paper_status(text) FROM atl_paper_execution"),
+                ("GRANT EXECUTE ON FUNCTION public.paper_status(text) "
+                 "TO atl_paper_control_api_login",
+                 "REVOKE EXECUTE ON FUNCTION public.paper_status(text) "
+                 "FROM atl_paper_control_api_login"),
+                ("GRANT EXECUTE ON FUNCTION public.paper_status(text) "
+                 "TO atl_paper_control_api WITH GRANT OPTION",
+                 "REVOKE GRANT OPTION FOR EXECUTE ON FUNCTION public.paper_status(text) "
+                 "FROM atl_paper_control_api"),
+                ("REVOKE EXECUTE ON FUNCTION public.paper_status(text) FROM atl_paper_control_api",
+                 "GRANT EXECUTE ON FUNCTION public.paper_status(text) TO atl_paper_control_api"),
+                ("REVOKE USAGE ON SCHEMA public FROM atl_paper_execution",
+                 "GRANT USAGE ON SCHEMA public TO atl_paper_execution"),
             )
             for unsafe, restore in scenarios:
                 admin.execute(unsafe)
@@ -252,6 +305,17 @@ def guest():
                     raise AssertionError("unsafe object privilege was accepted")
                 assert fingerprint() == before, "drift rejection must not repair existing ACLs"
                 admin.execute(restore)
+            stage("UNKNOWN_MANIFEST")
+            admin.execute("UPDATE public.alembic_version SET version_num='0014_unreviewed'")
+            before = fingerprint()
+            try:
+                provision_paper(common, directory)
+            except PermissionError as error:
+                assert str(error) == "PAPER_PRIVILEGE_MANIFEST_UNSUPPORTED"
+            else:
+                raise AssertionError("unreviewed revision must not authorize existing grants")
+            assert fingerprint() == before
+            admin.execute("UPDATE public.alembic_version SET version_num='0013_paper_commands'")
         stage("PRESERVED_DATABASES")
         for database in ("lab_runtime", "lab_demo"):
             with psycopg.connect(dbname=database, **common) as normal:
@@ -276,6 +340,7 @@ if __name__ == "__main__":
                 "PAPER_DATABASE_OWNER_MISMATCH", "PAPER_DDL_PRIVILEGES_UNSAFE",
                 "PAPER_DATABASE_ISOLATION_FAILED",
                 "PAPER_OBJECT_PRIVILEGES_UNSAFE",
+                "PAPER_PRIVILEGE_MANIFEST_UNSUPPORTED",
             }
             code = f":{error}" if type(error) is PermissionError and str(error) in codes else ""
             number = f":ERRNO{error.errno}" if isinstance(error, OSError) and error.errno else ""
