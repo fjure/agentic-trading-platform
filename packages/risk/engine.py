@@ -18,6 +18,7 @@ from packages.domain.models import (
     decimal_value,
     utc_time,
 )
+from packages.risk.paper_daily import DailyRiskObservation, DailyRiskReference, assess_daily_loss
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,8 +121,21 @@ class RiskFacts:
     held_quantity: Decimal
     reconciliation_current: bool
     market: Market = Market.US_EQUITY
+    paper_daily_required: bool = False
+    paper_reference: DailyRiskReference | None = None
+    paper_observation: DailyRiskObservation | None = None
 
     def __post_init__(self) -> None:
+        if (
+            type(self.paper_daily_required) is not bool
+            or self.paper_reference is not None
+            and type(self.paper_reference) is not DailyRiskReference
+            or self.paper_observation is not None
+            and type(self.paper_observation) is not DailyRiskObservation
+            or not self.paper_daily_required
+            and (self.paper_reference is not None or self.paper_observation is not None)
+        ):
+            raise ValueError("invalid Paper daily authority")
         for name in ("now", "session_valid_until", "market_available_at"):
             object.__setattr__(self, name, utc_time(getattr(self, name)))
         for name in (
@@ -149,6 +163,15 @@ class RiskFacts:
             object.__setattr__(self, name, decimal_value(getattr(self, name)))
         if self.market_price <= 0 or self.equity <= 0 or self.day_start_equity <= 0:
             raise ValueError("positive price and equity required")
+        if self.paper_daily_required and (
+            self.paper_observation is not None
+            and not self.paper_observation.current_equity.lower
+            <= self.equity
+            <= self.paper_observation.current_equity.upper
+            or self.paper_reference is not None
+            and self.day_start_equity != self.paper_reference.capital_lower
+        ):
+            raise ValueError("Paper financial authority differs from locked portfolio")
         if (
             self.spread < 0
             or self.instrument_exposure < 0
@@ -177,6 +200,16 @@ def evaluate(proposal: TradeProposal, facts: RiskFacts, limits: RiskLimits) -> t
     def deny(condition: bool, code: str) -> None:
         if condition:
             reasons.append(code)
+
+    paper_daily = None
+    if facts.paper_daily_required:
+        paper_daily = assess_daily_loss(
+            facts.paper_reference,
+            facts.paper_observation,
+            now=facts.now,
+            max_loss_fraction=limits.max_daily_loss_fraction,
+        )
+        reasons.extend(code for code in paper_daily.reasons if code != "DAILY_LOSS_LIMIT")
 
     deny(
         facts.mode is not Mode.PAPER or facts.safety_state is not SafetyState.RUNNING,
@@ -230,11 +263,14 @@ def evaluate(proposal: TradeProposal, facts: RiskFacts, limits: RiskLimits) -> t
                 "POSITION_NOTIONAL_LIMIT",
             )
             deny(notional > facts.cash - facts.reserved_notional, "CASH_LIMIT")
-            daily_loss = -(facts.realized_pnl_today + facts.unrealized_pnl)
-            deny(
-                daily_loss >= facts.day_start_equity * limits.max_daily_loss_fraction,
-                "DAILY_LOSS_LIMIT",
-            )
+            if facts.paper_daily_required:
+                reasons.extend(code for code in paper_daily.reasons if code == "DAILY_LOSS_LIMIT")
+            else:
+                daily_loss = -(facts.realized_pnl_today + facts.unrealized_pnl)
+                deny(
+                    daily_loss >= facts.day_start_equity * limits.max_daily_loss_fraction,
+                    "DAILY_LOSS_LIMIT",
+                )
         elif proposal.target is Target.FLAT:
             deny(
                 proposal.quantity > facts.held_quantity - facts.open_exit_quantity, "EXIT_QUANTITY"

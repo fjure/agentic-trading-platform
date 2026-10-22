@@ -12,6 +12,7 @@ from packages.brokers.alpaca_paper import AlpacaPaperBrokerAdapter
 from packages.brokers.fake import FakeBrokerAdapter
 from packages.brokers.proofs import BindingProof
 from packages.domain import models as m
+from packages.persistence.execution_identity import is_execution
 from packages.persistence.ledger import PostgresLedger
 from services.execution.gates import SubmitDenied
 
@@ -156,7 +157,7 @@ class AlpacaExecutionBinding:
         with self._ledger.transaction() as tx:
             c = tx.connection
             _require(
-                c.execute(text("SELECT current_user")).scalar_one() == "atl_execution",
+                is_execution(c),
                 "EXECUTION_ROLE_REQUIRED",
             )
             tx.lock_account(self._account_id)
@@ -379,7 +380,7 @@ class AlpacaExecutionBinding:
         """Recheck every private identity and capability under caller's account lock."""
         c = tx.connection
         _require(
-            c.execute(text("SELECT current_user")).scalar_one() == "atl_execution",
+            is_execution(c),
             "EXECUTION_ROLE_REQUIRED",
         )
         _require(
@@ -400,7 +401,7 @@ class AlpacaExecutionBinding:
         """Fresh dual-provider proof for every configured instrument under the gate."""
         c = tx.connection
         _require(
-            c.execute(text("SELECT current_user")).scalar_one() == "atl_execution",
+            is_execution(c),
             "EXECUTION_ROLE_REQUIRED",
         )
         _require(self.restored, "BINDING_RESTORE_REQUIRED")

@@ -1,6 +1,6 @@
 # Entscheidungsvorlage: Tagesverlust bei importierten Paperbeständen
 
-Status21.10.2026: Vorschlag zur Nutzerentscheidung, noch nicht freigegebene Anforderung. APW-03 kann unabhängig fertig geprüft werden.
+Status21.10.2026: Vom Nutzer ausdrücklich freigegeben: Paper-Berechnung und begrenzte Ersttagsregel. Die gewählte Regel ist Bestandteil von ADR-APW-003 und REQ-APW-004.
 
 ## Befund
 
@@ -8,7 +8,7 @@ Die vorhandene Riskberechnung addiert realisierten Tagesertrag und gesamten unre
 
 Die offizielle Portfoliohistorie verwendet links beschriftete Zeitfenster mit Eigenkapital am Fensterende. Ein abgeschlossenes Minutenfenster mit Beschriftung23:59UTC kann daher die folgende UTC-Tagesgrenze belegen. Geldwerte sind auf zwei Dezimalstellen gerundet; das Rundungsverfahren wird nicht angegeben. Ein neu angelegtes Paperkonto erhält üblicherweise100000USD, aber ein passender erster Einzahlungsvorgang oder ein historischer Mitternachtspunkt wird nicht zugesichert.
 
-## Vorgeschlagene Ergänzung zu ADR-APW-003
+## Freigegebene Ergänzung zu ADR-APW-003
 
 Für Paper wird eine eigene versionierte Tagesverlustberechnung eingeführt. Sie misst die Veränderung des belegten Eigenkapitals seit der UTC-Tagesgrenze, bereinigt um nachgewiesene externe Ein-/Auszahlungen. Dividenden, Gebühren und Handelsergebnisse bleiben Ertrag beziehungsweise Verlust. Unklare Transfers oder unvollständige Belege sperren neue Einstiege. Fake und Demo behalten ihre bisherige Berechnung.
 
@@ -18,7 +18,7 @@ Für ein nach UTC-Mitternacht neu angelegtes, nachweislich bisher ungehandeltes 
 
 Importierte Positionen speichern die tatsächliche `cost_basis` unabhängig von `avg_entry_price`. Immutable Herkunft und künftige Kostenbasisfortschreibung werden gemeinsam mit der einmaligen Anfangsbasis erweitert; es gibt kein Rebase und keine erfundenen realisierten Gewinne als Ausgleich für historische Buchgewinne.
 
-## Alternative
+## Nicht gewählte Alternative
 
 Nur eine vollständig belegte UTC-Tagesgrenze zulassen. Neu angelegte Konten ohne diese Evidenz bleiben zunächst gesperrt. Das vermeidet eine Ersttagsausnahme, kann aber die normale Ersteinrichtung bis zum nächsten belegbaren UTC-Tageswechsel verzögern. Auch diese Variante benötigt die korrigierte Paper-Tagesverlustberechnung für importierte Positionen.
 

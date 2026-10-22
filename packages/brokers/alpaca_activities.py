@@ -15,6 +15,7 @@ from packages.domain.models import BrokerOrder, decimal_value, utc_time
 
 if TYPE_CHECKING:
     from packages.brokers.alpaca_paper import AlpacaPaperBrokerAdapter
+    from packages.brokers.initial_anchors import InitialHistoryProof
 
 EQUITY_ZERO_FEE_PROFILE = "alpaca-paper-us-retail-equity-zero-v1"
 
@@ -26,6 +27,7 @@ class AlpacaPositionEvidence:
     quantity: Decimal
     avg_entry_price: Decimal
     market_value: Decimal
+    cost_basis: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -147,8 +149,75 @@ def _activity(raw: object, after: datetime, until: datetime) -> AlpacaActivityEv
     )
 
 
+def _imported_orders(broker, proof, until):
+    """Exhaust ID-cursor history; only exact immutable terminal anchors may be excluded."""
+    from packages.brokers.alpaca_paper import _time, _uuid
+    from packages.brokers.initial_anchors import order_fingerprint
+
+    anchors = dict(proof.orders)
+    seen, anchored, cursors = set(), set(), set()
+    result, cursor, previous_time = {}, None, None
+    for _ in range(1000):
+        params = {"status": "all", "direction": "asc", "limit": "500", "nested": "false"}
+        if cursor is not None:
+            params["after_order_id"] = cursor
+        rows = broker._get("/v2/orders", params=params)
+        if not isinstance(rows, list) or len(rows) > 500:
+            _fail()
+        for row in rows:
+            if not isinstance(row, dict):
+                _fail()
+            identity = _uuid(row.get("id"))
+            if identity in seen:
+                _fail("CONFLICTING_RECONCILIATION_EVIDENCE")
+            seen.add(identity)
+            submitted = row.get("submitted_at")
+            if submitted is None and identity in anchors:
+                submitted = row.get("created_at")
+            moment = _time(submitted)
+            if moment > until or previous_time is not None and moment < previous_time:
+                _fail()
+            previous_time = moment
+            if identity in anchors:
+                try:
+                    fingerprint = order_fingerprint(row)
+                except ValueError:
+                    _fail("CONFLICTING_RECONCILIATION_EVIDENCE")
+                if fingerprint != anchors[identity] or row.get("status") not in {
+                    "filled",
+                    "canceled",
+                    "expired",
+                    "rejected",
+                    "replaced",
+                }:
+                    _fail("CONFLICTING_RECONCILIATION_EVIDENCE")
+                if any(
+                    _time(row[name]) > proof.baseline_at
+                    for name in ("submitted_at", "updated_at", "created_at")
+                    if row.get(name) is not None
+                ):
+                    _fail("CONFLICTING_RECONCILIATION_EVIDENCE")
+                anchored.add(identity)
+            else:
+                result[identity] = row
+        if len(rows) < 500:
+            break
+        cursor = _uuid(rows[-1]["id"])
+        if cursor in cursors:
+            _fail("INCOMPLETE_RECONCILIATION_EVIDENCE")
+        cursors.add(cursor)
+    else:
+        _fail("INCOMPLETE_RECONCILIATION_EVIDENCE")
+    if anchored != set(anchors):
+        _fail("INCOMPLETE_RECONCILIATION_EVIDENCE")
+    return result
+
+
 def collect_evidence(
-    broker: AlpacaPaperBrokerAdapter, *, after: datetime
+    broker: AlpacaPaperBrokerAdapter,
+    *,
+    after: datetime,
+    initial_history: InitialHistoryProof | None = None,
 ) -> AlpacaReconciliationEvidence:
     from packages.brokers.alpaca_paper import _MAX_AGE, _time, _uuid
     from packages.brokers.fake import IdempotencyConflict
@@ -157,6 +226,11 @@ def collect_evidence(
         after = utc_time(after)
     except ValueError:
         _fail("INVALID_RECONCILIATION_WINDOW")
+    if initial_history is not None:
+        from packages.brokers.initial_anchors import InitialHistoryProof
+
+        if type(initial_history) is not InitialHistoryProof or initial_history.baseline_at != after:
+            _fail("INITIAL_HISTORY_INVALID")
     clock = broker._get("/v2/clock")
     if not isinstance(clock, dict):
         _fail()
@@ -189,6 +263,7 @@ def collect_evidence(
                     _number(row.get("qty"), positive=True),
                     _number(row.get("avg_entry_price"), positive=True),
                     _number(row.get("market_value")),
+                    _number(row["cost_basis"]) if "cost_basis" in row else None,
                 )
             )
         if len({p.instrument_id for p in result}) != len(result):
@@ -198,6 +273,8 @@ def collect_evidence(
         return tuple(sorted(result, key=lambda p: p.instrument_id))
 
     account = account_values()
+    if initial_history is not None and initial_history.provider_account_id != account[0]:
+        _fail("INITIAL_HISTORY_INVALID")
     positions = positions_values()
     with localcontext() as context:
         context.prec = 80
@@ -207,50 +284,55 @@ def collect_evidence(
     # Orders are read across the entire account history, including orders opened
     # before the activity baseline. Overlap the timestamp boundary to avoid
     # silently losing orders with identical submitted_at timestamps.
-    raw_orders: dict[str, dict] = {}
-    cursor = None
-    for _ in range(1000):
-        params = {
-            "status": "all",
-            "direction": "asc",
-            "limit": "500",
-            "nested": "false",
-            "until": until.isoformat(),
-        }
-        if cursor is not None:
-            params["after"] = cursor.isoformat()
-        rows = broker._get("/v2/orders", params=params)
-        if not isinstance(rows, list) or len(rows) > 500:
-            _fail()
-        added, last = 0, None
-        for row in rows:
-            if not isinstance(row, dict):
-                _fail()
-            identity = _uuid(row.get("id"))
-            submitted = _time(row.get("submitted_at"))
-            if submitted > until or (last is not None and submitted < last):
-                _fail()
-            if cursor is not None and submitted < cursor:
-                _fail()
-            last = submitted
-            prior = raw_orders.get(identity)
-            if prior is not None and prior != row:
-                _fail("CONFLICTING_RECONCILIATION_EVIDENCE")
-            if prior is None:
-                added += 1
-            raw_orders[identity] = row
-        if len(rows) < 500:
-            break
-        if not added or last is None:
-            _fail("INCOMPLETE_RECONCILIATION_EVIDENCE")
-        next_cursor = last - timedelta(microseconds=1)
-        if cursor is not None and next_cursor <= cursor:
-            _fail("INCOMPLETE_RECONCILIATION_EVIDENCE")
-        cursor = next_cursor
+    if initial_history is not None:
+        raw_orders = _imported_orders(broker, initial_history, until)
     else:
-        _fail("INCOMPLETE_RECONCILIATION_EVIDENCE")
+        raw_orders: dict[str, dict] = {}
+        cursor = None
+        for _ in range(1000):
+            params = {
+                "status": "all",
+                "direction": "asc",
+                "limit": "500",
+                "nested": "false",
+                "until": until.isoformat(),
+            }
+            if cursor is not None:
+                params["after"] = cursor.isoformat()
+            rows = broker._get("/v2/orders", params=params)
+            if not isinstance(rows, list) or len(rows) > 500:
+                _fail()
+            added, last = 0, None
+            for row in rows:
+                if not isinstance(row, dict):
+                    _fail()
+                identity = _uuid(row.get("id"))
+                submitted = _time(row.get("submitted_at"))
+                if submitted > until or (last is not None and submitted < last):
+                    _fail()
+                if cursor is not None and submitted < cursor:
+                    _fail()
+                last = submitted
+                prior = raw_orders.get(identity)
+                if prior is not None and prior != row:
+                    _fail("CONFLICTING_RECONCILIATION_EVIDENCE")
+                if prior is None:
+                    added += 1
+                raw_orders[identity] = row
+            if len(rows) < 500:
+                break
+            if not added or last is None:
+                _fail("INCOMPLETE_RECONCILIATION_EVIDENCE")
+            next_cursor = last - timedelta(microseconds=1)
+            if cursor is not None and next_cursor <= cursor:
+                _fail("INCOMPLETE_RECONCILIATION_EVIDENCE")
+            cursor = next_cursor
+        else:
+            _fail("INCOMPLETE_RECONCILIATION_EVIDENCE")
 
     activities: dict[str, AlpacaActivityEvidence] = {}
+    anchored_activities = dict(initial_history.activities) if initial_history is not None else {}
+    activity_ids = set()
     token = None
     tokens: set[str] = set()
     for _ in range(1000):
@@ -267,6 +349,27 @@ def collect_evidence(
         if not isinstance(rows, list) or len(rows) > 100:
             _fail()
         for row in rows:
+            if initial_history is not None:
+                from packages.brokers.initial_anchors import activity_fingerprint
+
+                if not isinstance(row, dict) or not isinstance(row.get("id"), str):
+                    _fail()
+                identity = row["id"]
+                if identity in activity_ids:
+                    _fail("CONFLICTING_RECONCILIATION_EVIDENCE")
+                activity_ids.add(identity)
+                if identity in anchored_activities:
+                    try:
+                        fingerprint = activity_fingerprint(row)
+                    except ValueError:
+                        _fail("CONFLICTING_RECONCILIATION_EVIDENCE")
+                    if fingerprint != anchored_activities[identity] or any(
+                        _time(row[name]) > after
+                        for name in ("transaction_time", "created_at")
+                        if row.get(name) is not None
+                    ):
+                        _fail("CONFLICTING_RECONCILIATION_EVIDENCE")
+                    continue
             item = _activity(row, day_start, until)
             prior = activities.get(item.id)
             if prior is not None and prior != item:

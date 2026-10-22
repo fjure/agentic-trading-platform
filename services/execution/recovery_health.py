@@ -15,9 +15,10 @@ from packages.brokers.alpaca_paper import AlpacaPaperBrokerAdapter
 from packages.brokers.fake import FakeBrokerAdapter
 from packages.brokers.reports import event_hash, normalized_report
 from packages.domain import models as m
+from packages.persistence.execution_identity import is_execution
 from packages.persistence.ledger import PostgresLedger
 from packages.risk.engine import RiskLimits
-from services.control_api.control import ControlDenied, _now, _require, _role
+from services.control_api.control import ControlDenied, _now, _require
 from services.execution.broker_binding import AlpacaExecutionBinding
 from services.execution.gates import SubmitDenied
 from services.execution.reconciliation import _source
@@ -36,7 +37,7 @@ def claim_execution_owner(
     _require(bool(re.fullmatch(r"[0-9a-f]{32}", trace_id)), "TRACE_INVALID")
     with ledger.transaction() as tx:
         c = tx.connection
-        _role(c, "atl_execution")
+        _require(is_execution(c), "ROLE_DENIED")
         tx.lock_account(account_id)
         c.execute(
             text("SELECT public.safety_latch(:a,'PAUSE_NEW','execution-startup',:t,'PAUSED_NEW')"),
@@ -65,7 +66,7 @@ def heartbeat_execution_owner(
     """Only the current, still-live owner can extend its heartbeat."""
     with ledger.transaction() as tx:
         c = tx.connection
-        _role(c, "atl_execution")
+        _require(is_execution(c), "ROLE_DENIED")
         tx.lock_account(account_id)
         updated = c.execute(
             text("""
@@ -80,7 +81,7 @@ def heartbeat_execution_owner(
 
 def check_runtime(connection, account_id: str, *, owner_id: str, fencing_token: int) -> None:
     """Execution submit gate: DB, current owner, and fresh heartbeat are required."""
-    _role(connection, "atl_execution")
+    _require(is_execution(connection), "ROLE_DENIED")
     row = (
         connection.execute(
             text("""
@@ -119,7 +120,7 @@ def cancel_known_after_halt(
     requests = []
     with ledger.transaction() as tx:
         c = tx.connection
-        _role(c, "atl_execution")
+        _require(is_execution(c), "ROLE_DENIED")
         tx.lock_account(account_id)
         check_runtime(c, account_id, owner_id=owner_id, fencing_token=fencing_token)
         _require(
@@ -403,7 +404,7 @@ def execution_refresh_and_resume(
         try:
             with ledger.transaction() as tx:
                 c = tx.connection
-                _role(c, "atl_execution")
+                _require(is_execution(c), "ROLE_DENIED")
                 request = (
                     c.execute(
                         text("""
@@ -469,7 +470,7 @@ def _execution_refresh_and_resume(
     limits = limits or RiskLimits()
     with ledger.transaction() as tx:
         c = tx.connection
-        _role(c, "atl_execution")
+        _require(is_execution(c), "ROLE_DENIED")
         tx.lock_account(account_id)
         check_runtime(c, account_id, owner_id=owner_id, fencing_token=fencing_token)
         now = _now(c)

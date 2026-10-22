@@ -18,9 +18,11 @@ from sqlalchemy import text
 from packages.brokers.alpaca_paper import AlpacaPaperBrokerAdapter
 from packages.domain import models as m
 from packages.observability.outbox import persist
+from packages.persistence.execution_identity import is_execution
 from packages.persistence.ledger import PostgresLedger, _encode
 from services.execution.broker_binding import AlpacaExecutionBinding
 from services.execution.gates import SubmitDenied, _now
+from services.execution.paper_cost_basis import costed_fill
 from services.execution.reconciliation import _audit, _context, _exact, _fail, _id, _update_context
 
 _ACTOR = "execution-reconciliation"
@@ -77,7 +79,7 @@ def ensure_paper_baseline(tx, account_id, binding, now, trace_id) -> None:
     an attempt: a narrowed activity window cannot prove historic accounting.
     """
     c = tx.connection
-    if c.execute(text("SELECT current_user")).scalar_one() != "atl_execution":
+    if not is_execution(c):
         raise SubmitDenied("EXECUTION_ROLE_REQUIRED")
     _boundary(binding.ledger, account_id, binding.broker, binding)
     tx.lock_account(account_id)
@@ -167,7 +169,7 @@ def ensure_paper_baseline(tx, account_id, binding, now, trace_id) -> None:
 def ensure_paper_order_basis(tx, account_id, order, intent, reservation, now, trace_id):
     """Pin the original risk budget in the durable SUBMITTING transaction, before I/O."""
     c = tx.connection
-    if c.execute(text("SELECT current_user")).scalar_one() != "atl_execution":
+    if not is_execution(c):
         raise SubmitDenied("EXECUTION_ROLE_REQUIRED")
     tx.lock_account(account_id)
     owner = (
@@ -419,7 +421,7 @@ def reconcile_paper_account_tx(
     from services.execution.intents import _assert_owner
 
     c = tx.connection
-    if c.execute(text("SELECT current_user")).scalar_one() != "atl_execution":
+    if not is_execution(c):
         raise SubmitDenied("EXECUTION_ROLE_REQUIRED")
     tx.lock_account(account_id)
     _assert_owner(tx, account_id, owner_id, fencing_token)
@@ -441,7 +443,22 @@ def reconcile_paper_account_tx(
             "ACCOUNT_AMBIGUOUS",
         )
         orders = _orders(tx, account_id)
-        evidence = broker.reconciliation_evidence(after=baseline["baseline_at"])
+        from packages.risk.paper_daily_sql import is_isolated_paper
+
+        if is_isolated_paper(c):
+            from services.execution.paper_initialization import read_initial_history
+
+            history = read_initial_history(c, account_id)
+            _require(
+                history.baseline_at == baseline["baseline_at"]
+                and history.provider_account_id == str(baseline["provider_account_id"]),
+                "INITIAL_HISTORY_MISMATCH",
+            )
+            evidence = broker.reconciliation_evidence(
+                after=baseline["baseline_at"], initial_history=history
+            )
+        else:
+            evidence = broker.reconciliation_evidence(after=baseline["baseline_at"])
         _assert_owner(tx, account_id, owner_id, fencing_token)
         final_now = _now(c)
         _require(
@@ -536,6 +553,7 @@ def _plan(tx, account_id, baseline, orders, evidence):
         "PORTFOLIO_BASIS_MISMATCH",
     )
     positions = {}
+    raw_bases = {}
     for raw in baseline["positions"]:
         position = m.Position(
             raw["id"],
@@ -547,6 +565,13 @@ def _plan(tx, account_id, baseline, orders, evidence):
             raw["ledger_version"],
         )
         positions[position.instrument_id] = position
+        if "cost_basis" in raw:
+            basis = m.decimal_value(raw["cost_basis"])
+            _require(
+                basis >= 0 and (position.quantity > 0 or basis == 0), "POSITION_COST_BASIS_MISSING"
+            )
+            raw_bases[position.instrument_id] = basis
+    _require(not raw_bases or set(raw_bases) == set(positions), "POSITION_COST_BASIS_MISSING")
     local_positions = {
         p.instrument_id: p
         for p in (
@@ -718,16 +743,27 @@ def _plan(tx, account_id, baseline, orders, evidence):
         ),
     )
     prior_positions = dict(positions)
+    prior_bases, updated_bases = dict(raw_bases), dict(raw_bases)
     for activity, _digest_value in ordered:
         if activity.id not in prior:
             continue
         instrument = activity.instrument_id
         if activity.kind == "FILL":
             _require(instrument in prior_positions, "POSITION_BASELINE_MISMATCH")
-            prior_positions[instrument] = _fill_position(
-                prior_positions[instrument], activity.side, activity.quantity, activity.price
-            )
+            if raw_bases:
+                prior_positions[instrument], prior_bases[instrument] = costed_fill(
+                    prior_positions[instrument],
+                    prior_bases[instrument],
+                    activity.side,
+                    activity.quantity,
+                    activity.price,
+                )
+            else:
+                prior_positions[instrument] = _fill_position(
+                    prior_positions[instrument], activity.side, activity.quantity, activity.price
+                )
         elif activity.kind == "CFEE":
+            _require(not raw_bases, "POSITION_COST_BASIS_UNPROVEN")
             _require(instrument in prior_positions, "POSITION_BASELINE_MISMATCH")
             p = prior_positions[instrument]
             qty = _exact(p.quantity + activity.quantity)
@@ -737,14 +773,20 @@ def _plan(tx, account_id, baseline, orders, evidence):
     for instrument, p in prior_positions.items():
         current_position = local_positions[instrument]
         _require(
-            (p.quantity, p.average_price, p.realized_pnl)
+            (p.quantity, None if raw_bases else p.average_price, p.realized_pnl)
             == (
                 current_position.quantity,
-                current_position.average_price,
+                None if raw_bases else current_position.average_price,
                 current_position.realized_pnl,
             ),
             "POSITION_LEDGER_DRIFT",
         )
+        if raw_bases:
+            locked_basis = c.execute(
+                text("SELECT public.paper_cost_basis_read(:id,:version)"),
+                {"id": current_position.id, "version": current_position.ledger_version},
+            ).scalar_one_or_none()
+            _require(locked_basis == prior_bases[instrument], "POSITION_COST_BASIS_MISMATCH")
     for activity, digest in ordered:
         quantity_delta, cash_delta = Decimal(0), Decimal(0)
         instrument = activity.instrument_id
@@ -774,9 +816,18 @@ def _plan(tx, account_id, baseline, orders, evidence):
                 or (intent.side == "SELL" and activity.price < intent.limit_price)
             ):
                 ready, reason = False, "FILL_LIMIT_PRICE_MISMATCH"
-            positions[instrument] = _fill_position(
-                positions[instrument], intent.side, activity.quantity, activity.price
-            )
+            if raw_bases:
+                positions[instrument], updated_bases[instrument] = costed_fill(
+                    positions[instrument],
+                    updated_bases[instrument],
+                    intent.side,
+                    activity.quantity,
+                    activity.price,
+                )
+            else:
+                positions[instrument] = _fill_position(
+                    positions[instrument], intent.side, activity.quantity, activity.price
+                )
             quantity_delta = activity.quantity if intent.side == "BUY" else -activity.quantity
             cash_delta = -cost if intent.side == "BUY" else cost
         elif activity.kind == "FEE":
@@ -789,6 +840,7 @@ def _plan(tx, account_id, baseline, orders, evidence):
             cash_delta = activity.net_amount
             ready, reason = False, "PAPER_FEE_AUTHORITY_UNKNOWN"
         elif activity.kind == "CFEE":
+            _require(not raw_bases, "POSITION_COST_BASIS_UNPROVEN")
             _require(
                 instrument in positions
                 and activity.quantity is not None
@@ -857,7 +909,16 @@ def _plan(tx, account_id, baseline, orders, evidence):
                 {"a": account_id, "i": key},
             ).scalar_one_or_none()
             _require(pin is not None and str(pin) == source.asset_id, "PROVIDER_ASSET_CHANGED")
-            _require(source.avg_entry_price == p.average_price, "POSITION_COST_BASIS_MISMATCH")
+            if raw_bases:
+                _require(
+                    source.cost_basis is not None and source.cost_basis == updated_bases[key],
+                    "POSITION_COST_BASIS_MISMATCH",
+                )
+                # Accept the provider's rounded presentation only after the
+                # independent total basis and exact quantity were reconciled.
+                positions[key] = replace(p, average_price=source.avg_entry_price)
+            else:
+                _require(source.avg_entry_price == p.average_price, "POSITION_COST_BASIS_MISMATCH")
     _require(cash == evidence.cash, "CASH_ACCOUNT_MISMATCH")
     exposure = _exact(sum((p.market_value for p in evidence.positions), Decimal(0)))
     _require(_exact(cash + exposure) == evidence.equity, "EQUITY_ACCOUNT_MISMATCH")
@@ -874,6 +935,7 @@ def _plan(tx, account_id, baseline, orders, evidence):
         "ready": ready,
         "reason": reason,
         "exposure": exposure,
+        "cost_bases": updated_bases,
     }
 
 
@@ -900,6 +962,40 @@ def _book(tx, account_id, baseline, orders, evidence, plan, now, trace_id):
         )
         if not tx.replace(new, expected_version=old.ledger_version):
             raise RuntimeError("POSITION_VERSION_CONFLICT")
+        if plan["cost_bases"]:
+            identity = new.id + ":cost:" + str(new.ledger_version)
+            _audit(
+                tx,
+                entity_id=identity,
+                version=1,
+                trace_id=trace_id,
+                action="paper_position_cost",
+                reason="PAPER_ACTIVITY_BOOKED",
+                now=now,
+            )
+            digest = _payload_digest(
+                {
+                    "basis": str(plan["cost_bases"][instrument]),
+                    "quantity": str(new.quantity),
+                    "observed_at": evidence.observed_at.isoformat(),
+                    "activities": sorted(d for _, d, *_ in plan["movements"]),
+                }
+            )
+            recorded = c.execute(
+                text(
+                    "SELECT public.paper_cost_basis_append("
+                    ":id,:version,:quantity,:basis,:hash,:trace)"
+                ),
+                {
+                    "id": new.id,
+                    "version": new.ledger_version,
+                    "quantity": new.quantity,
+                    "basis": plan["cost_bases"][instrument],
+                    "hash": digest,
+                    "trace": trace_id,
+                },
+            ).scalar_one()
+            _require(recorded, "POSITION_COST_BASIS_MISMATCH")
     changed = any(activity.id not in plan["prior"] for activity, *_ in plan["movements"])
     refresh_authority = plan["ready"] and (
         tx.get(m.PortfolioSnapshot, context["portfolio_snapshot_id"]).quality is not m.Quality.VALID

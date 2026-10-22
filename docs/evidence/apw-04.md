@@ -1,0 +1,27 @@
+# APW-04: Anfangsbasis und Paper-Tagesrisiko
+
+Stand22.10.2026: lokale Implementierung und verpflichtende Abnahme abgeschlossen; TaskAPW-04 markiert und Issue#35 geschlossen, alle zehn Issues vollständig zurückgelesen. Branch `codex/ptv-35-paper-initial-basis`, Basis `54e5917`; noch keine APW-Remoteintegration. Die freigegebene Entscheidung steht in `openspec/changes/alpaca-paper-workflow/risk-basis-decision.md`.
+
+## Implementierter und geprüfter Zwischenstand
+
+- GET-only zweimalige finanzielle Aufnahme mit Kontoidentität, echten Cash-/Equitywerten, erlaubten Longpositionen, unabhängiger Rohkostenbasis und vollständigen Historienankern.
+- Migration0014 initialisiert unter Konto-/Vorgangssperre und Owner/Fence/Generationprüfung eine einzige unveränderliche Basis samt Audit, Portfolio, Positionen und gesperrtem Riskkontext. Keine Order und keine Handelsaktivierung.
+- Paper-spezifischer Tagesverlust aus Equityänderung abzüglich belegter externer Finanzierung; konservative Centintervalle und eingefrorener Kapitalnenner. Historische Buchgewinne verdecken keinen heutigen Verlust. Fake-/Demoregel bleibt erhalten.
+- Ersttagsreferenz ausschließlich für belegbar heute neu angelegte, bisher ungehandelte Konten; Beginn an der Bindung, Ende nächste UTC-Mitternacht. Ohne gültige Referenz und vollständige aktuelle Evidenz bleiben Einstiege gesperrt.
+- Vollständige und gefilterte Aktivitätenhistorie werden über IDs und finanzielle Hashes abgeglichen; fehlende bekannte Einzahlungen oder unbekannte Transfers dürfen keine Vollständigkeitsbestätigung erzeugen. Fehlt ein Erstellungszeitpunkt, benötigt jeder nicht im Tagesfenster enthaltene Anker einen exakten, vollständig paginierten Vorperiodenbeleg. Keine Erstellungszeit wird aus Abrechnungs- oder Ausführungsdatum geraten.
+- Rohkosten werden bei Teilverkäufen mit Decimal/18Nachkommastellen verteilt (ROUND_HALF_EVEN), der Rest bleibt exakt an der verbleibenden Position; der Schlussverkauf verbraucht den gesamten Rest. Der gerundete Provider-Durchschnitt ist keine Ersatzkostenbasis.
+
+Tatsächliche isolierte PostgreSQL-Prüfungen für Provisionierung und Initialisierung bestanden. Die Ersttagsprüfung nutzt den echten POSIX-Speicher, GenerationReader, Verifier, Collector und Runtime mit festem Paper-SQL-Login; ausschließlich der äußere GET-Transport wird lokal ersetzt. Ein konkurrierender Doppelabschluss erzeugt genau eine finanzielle Basis. Immutable-, Audit-, Fence-, Null-/Fehlbeleg- und Rohkostenport-Prüfungen bestanden. Nachweislich ungefüllte stornierte/abgelehnte/abgelaufene Versuche erlauben die Ersttagsregel; fehlende oder widersprüchliche Fillbelege sperren sie.
+
+## Abschließende Evidenz
+
+- Gemeinsame lokale Vertrags-/Unit-/Property-/Adapterregression:1106bestanden,1Linuxskip,1bestehende Starlettewarnung/9,46s. Befehl: `.venv/Scripts/python.exe -m pytest tests/contracts tests/unit tests/property tests/recovery/test_alpaca_fixtures.py --basetemp .tooling/output/apw04-final-local -q`.
+- Unabhängiger abschließender Safetyreview:232fokussierte Tests bestanden; Befunde zu fehlenden Cashflows einschließlich fehlender Erstellungszeiten geschlossen, keine offenenP1/P2 in Tagesrisiko, Rohkosten, Historienbindung, Rollen-/Loginprüfung oder0014ACL. Kein Review als Ersatz fehlender Laufzeitprüfung.
+- Bestehende tatsächliche PostgreSQL-Alpaca-Reconciliation:23Szenarien bestanden/552,32s; Timeout, fehlende Seiten/Fills, Fremdorders, Kosten-/Cash-/Positionsdrift, unbekannte Gebühren, Crash/Restart, Teilfill-/Cancelrace und Reservationsschutz. Bestehender SQL-Test mit100konkurrierenden Riskreservierungen bestanden/25,35s.
+- Tatsächlicher fester Paper-SQL-Login: Ownerclaim, lokale Wiederherstellung ohne Provider-I/O und Reconciliation funktionieren mit exakt gewährten Tabellen-/Spaltenrechten. Ungeklärte Gebührenautorität erzeugt dauerhaften gesperrten Receipt; Rohkosten770→771 erzeugen gesperrten Kostenbasis-Receipt. Anfangsevidenz, Cash/Positionen/Rohkosten bleiben unverändert, ModeDISABLED und null Orders. Keine Erfindung einer Nullgebührenautorität.
+- Tatsächlicher SQL-Budgettest:100USD Budget wird getrennt von100000USD Cash/Equity gespeichert;101USD inklusive Puffer wird abgelehnt,99,99USD akzeptiert. Importierte900USD Position verhindert100USD Budget. Kein Verkauf, keine Neubewertung und keine Veränderung der finanziellen Anfangsbasis. Initialisierungs-/Budget-/Reconciliation-Gesamtguest bestanden/14,22s; isolierter Provisionierungs-/Manifestguest ebenfalls bestanden.
+- Normales Launcherdeployment mit bestehenden Volumes und Migration0014 gesund und inaktiv. Nach finalem Collectorfix Paper-Executionimage erneut gebaut und normaler Launcher wiederholt. PAUSED, Credentialzähler0, aktiveGeneration0, Konten0, Orders0, Kommandos0. Zwei vorhandene Fake-/Demo-Datenbanken über je neun Finanztabellen vor/nach unverändert.
+- Zehn tatsächliche Paper-/Demo-Deploymentprüfungen bestanden/92,23s. Finaler Collectorquellhash im laufenden Paper-Executioncontainer entspricht exakt der geprüften Workspacequelle; keine Providerdateien gelesen.
+- Vertragsvalidator:39Operationen,18Schemas und sämtliche Beispiele gültig. Striktes OpenSpec, Ruff, Whitespaceprüfung und redigierter Sourcescan572Dateien/0Befunde bestanden.
+
+Handelsaktivierung, fortlaufende Tickplanung und vollständige Order-/Cancel-/Browserabnahme gehören zu APW-05bis10. Keine echten Alpaca-Requests, Orders oder Schlüssel wurden verwendet.
