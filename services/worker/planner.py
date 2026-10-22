@@ -22,6 +22,7 @@ from packages.domain.models import (
 )
 from packages.domain.ports import Clock, IdGenerator
 from packages.domain.repositories import LedgerRepository, LedgerTransaction
+from services.worker.paper_limit import PaperPlanningInputs, evaluate_paper_limit
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,7 +53,9 @@ class PlannerConfig:
 
 def plan_proposal(*, decision: DecisionResult, market_state: MarketState,
                   config: PlannerConfig, clock: Clock, ids: IdGenerator,
-                  ledger: LedgerRepository | None = None) -> TradeProposal | None:
+                  ledger: LedgerRepository | None = None,
+                  paper_inputs: PaperPlanningInputs | None = None,
+                  require_paper: bool = False) -> TradeProposal | None:
     now = utc_time(clock.now())
 
     def finish(proposal: TradeProposal | None) -> TradeProposal | None:
@@ -90,6 +93,14 @@ def plan_proposal(*, decision: DecisionResult, market_state: MarketState,
     else:
         return finish(None)
     valid_until = min(decision.valid_until, now + timedelta(seconds=config.proposal_ttl_seconds))
+    paper = None
+    if paper_inputs is not None or require_paper:
+        paper = evaluate_paper_limit(
+            decision=decision, market_state=market_state, inputs=paper_inputs, now=now,
+        )
+        if paper.quantity is None:
+            return finish(None)
+        quantity, valid_until = paper.quantity, min(valid_until, paper.valid_until)
     if valid_until - now < timedelta(seconds=config.minimum_decision_ttl_seconds):
         return finish(None)
     planner_fingerprint = hashlib.sha256(json.dumps({
@@ -99,12 +110,29 @@ def plan_proposal(*, decision: DecisionResult, market_state: MarketState,
         "minimum_decision_ttl_seconds": config.minimum_decision_ttl_seconds,
         "minimum_confidence": str(config.minimum_confidence),
     }, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    rationale = (decision.reason_code, config.version)
+    if paper is not None:
+        planner_fingerprint = hashlib.sha256(
+            f"{planner_fingerprint}:{paper.input_hash}".encode()
+        ).hexdigest()
+        rationale += (
+            "PAPER_LIMIT_DAY_REGULAR_USD",
+            f"PAPER_LIMIT_POLICY:{paper_inputs.limit_policy_version}",
+            f"PAPER_INPUT_SHA256:{paper.input_hash}",
+            f"PAPER_QUOTE:{paper_inputs.quote_evidence_id}",
+            *(f"PAPER_{name.upper()}:{getattr(paper_inputs, name)}" for name in (
+                "context_version", "portfolio_version", "account_generation",
+                "credential_generation", "policy_version", "profile_version", "budget_version",
+                "capability_version",
+            )),
+        )
     proposal = TradeProposal(
         id=ids.new_id("proposal", f"{decision.id}:{decision.input_hash}:{planner_fingerprint}"),
         decision_id=decision.id, market_state_id=market_state.id,
         instrument_id=market_state.instrument_id, target=target, quantity=quantity,
         created_at=now, valid_until=valid_until, trace_id=decision.trace_id,
-        rationale_codes=(decision.reason_code, config.version),
+        rationale_codes=rationale,
+        limit_price=paper.limit_price if paper is not None else None,
     )
     return finish(proposal)
 

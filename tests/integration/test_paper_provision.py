@@ -190,7 +190,7 @@ def guest():
                 )
                 assert restricted.execute("SELECT has_schema_privilege(current_user,"
                                           "'public','USAGE')").fetchone() == (
-                    role in ("api", "execution"),
+                    role in ("api", "execution", "worker"),
                 )
                 if role == "api":
                     public_status = restricted.execute(
@@ -268,8 +268,8 @@ def guest():
                 )
 
             scenarios = (
-                ("GRANT USAGE ON SCHEMA public TO atl_paper_worker",
-                 "REVOKE USAGE ON SCHEMA public FROM atl_paper_worker"),
+                ("GRANT USAGE ON SCHEMA public TO atl_paper_worker_login",
+                 "REVOKE USAGE ON SCHEMA public FROM atl_paper_worker_login"),
                 ("GRANT UPDATE(currency) ON public.accounts TO atl_paper_execution",
                  "REVOKE UPDATE(currency) ON public.accounts FROM atl_paper_execution"),
                 ("GRANT UPDATE(currency) ON public.accounts TO atl_paper_execution_login",
@@ -320,7 +320,7 @@ def guest():
                 raise AssertionError("unreviewed revision must not authorize existing grants")
             assert fingerprint() == before
             admin.execute("UPDATE public.alembic_version "
-                          "SET version_num='0014_paper_initial_basis'")
+                          "SET version_num='0015_paper_limit_policy'")
         stage("PRESERVED_DATABASES")
         for database in ("lab_runtime", "lab_demo"):
             with psycopg.connect(dbname=database, **common) as normal:

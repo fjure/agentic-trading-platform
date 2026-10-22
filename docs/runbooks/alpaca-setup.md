@@ -46,7 +46,7 @@ Bei Rotation muss die neue Generation dasselbe bereits gebundene Konto belegen. 
 
 Die vollständige Oberfläche und Betriebsabnahme dieses neuen Ablaufs folgen in APW-09/10. Die [APW-03-Evidenz](../evidence/apw-03.md) beschreibt die abgenommene Kontoprüfung; die [APW-04-Evidenz](../evidence/apw-04.md) trennt bereits geprüfte Vorbereitung von noch offener Integration. Agenten führen Kontoprüfungen ausschließlich gegen lokale Testdoubles mit synthetischen Schlüsseln aus.
 
-## Finanzielle Vorbereitung (APW-04 in Umsetzung)
+## Finanzielle Vorbereitung (APW-04 lokal abgenommen)
 
 Die Vorbereitung übernimmt einmalig belegtes Cash und erlaubte SPY-/QQQ-Longpositionen in den getrennten Paperledger. Offene Orders, widersprüchliche Aufnahmen oder fehlende Rohkostenbasis verhindern die Bindung. Zwei vollständige Aufnahmen müssen übereinstimmen. Vorhandene Anfangspositionen sind keine neu gesendeten Orders; alte Aktivitäten werden über unveränderliche finanzielle Historienanker gebunden. Ein vorhandener Ledger darf durch erneute Einrichtung niemals neu bewertet oder zurückgesetzt werden. `PREPARED` öffnet keine Handelsgates.
 

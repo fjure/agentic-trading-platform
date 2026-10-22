@@ -335,8 +335,9 @@ def test_capability_cash_fraction_and_no_short_guard() -> None:
     fractional = prepared(adapter, client_id="fraction", quantity="0.5", order_type="MARKET")
     with pytest.raises(CapabilityError, match="bounded cost"):
         adapter.submit(fractional)
-    with pytest.raises(CapabilityError, match="fractional equities"):
-        adapter.submit(replace(fractional, order_type="LIMIT", limit_price=Decimal("100.01")))
+    with pytest.raises(CapabilityError, match="fractional equity precision"):
+        adapter.submit(replace(fractional, order_type="LIMIT", limit_price=Decimal("100.01"),
+                               quantity=Decimal("0.0000000001")))
     with pytest.raises(CapabilityError, match="insufficient cash"):
         adapter.submit(replace(whole, quantity=Decimal("11")))
     seller = prepared(adapter, client_id="sell", side="SELL", quantity="6")
