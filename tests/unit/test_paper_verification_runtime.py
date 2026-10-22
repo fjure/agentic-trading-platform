@@ -35,7 +35,8 @@ class Commands:
         self.finishes, self.owners = [], []
         self.operation_status = "RUNNING"
 
-    def claim(self, owner):
+    def claim(self, owner, lease_seconds=30):
+        assert lease_seconds == 90
         self.owners.append(owner)
         return self.claimed
 

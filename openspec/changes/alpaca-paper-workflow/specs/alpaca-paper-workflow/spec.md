@@ -42,6 +42,16 @@ Das System SHALL einen isolierten dauerhaften Paperledger aus frischen, konsiste
 - **WHEN** bei Erstbindung offene Orders, nicht unterstützte Positionen, unvollständige Kostenbasis oder wechselnde Bestände vorliegen
 - **THEN** entsteht keine aktive finanzielle Basis; die Oberfläche erklärt den Blocker, ohne Positionen zu verkaufen, Orders zu stornieren oder Kontodaten zu löschen.
 
+Die Paper-Tagesverlustprüfung MUST historische Positionsgewinne von heutigem Ertrag trennen und die Eigenkapitaländerung um belegte externe Finanzierung bereinigen. Historische Centwerte MUST mit dem freigegebenen konservativen Intervall von einem Cent je Richtung bewertet werden; die ungünstigste Verlustkombination und ein eingefrorener Kapitalnenner MUST gelten. Fehlende, unklare oder abgelaufene Belege MUST Einstiegssperre auslösen. Fake-/Demoberechnung MUST unverändert bleiben.
+
+#### Scenario: T-APW-021 Importierte Position und Tagesverlust
+- **WHEN** eine erlaubte Longposition historische Buchgewinne besitzt und heute Eigenkapital verliert oder externe Finanzierung erhält
+- **THEN** berücksichtigt die Paperprüfung ausschließlich den belegten heutigen Ertrag mit konservativer Genauigkeit, erhält die exakte Kostenbasis und verdeckt den Verlust weder durch historische Gewinne noch Einzahlungen.
+
+#### Scenario: T-APW-022 Begrenzte Ersttagsreferenz
+- **WHEN** ein heute nach UTC-Mitternacht angelegtes Konto anhand Erstellungszeitpunkt, fehlender Positionen, vollständiger leerer Handels-/Ertragshistorie und zwei übereinstimmender Cashbelege als ungehandelt bestätigt ist
+- **THEN** darf seine erste konsistente Bindung als gekennzeichnete Ersttagsreferenz dienen; sie endet an der nächsten UTC-Tagesgrenze, danach sperrt ein fehlender belegter Tagesstart neue Einstiege.
+
 ### Requirement: REQ-APW-005 Expliziter begrenzter Paperbetrieb
 Der Mensch SHALL vorbereiteten Paperbetrieb mit bestätigtem Budget, Strategie, Symbolen und Limits ausdrücklich starten können. Nur Execution MUST nach frischer Reconciliation und allen bestehenden Gates PAPER/RUNNING freigeben. Startanfragen SHALL asynchron und idempotent sein. Setup, Login, Prüfung und Neustart MUST keinen Handel aktivieren; LIVE MUST unerreichbar bleiben.
 

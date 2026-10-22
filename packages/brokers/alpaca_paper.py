@@ -38,6 +38,7 @@ from packages.domain.ports import Clock, IdGenerator
 
 if TYPE_CHECKING:
     from packages.brokers.alpaca_activities import AlpacaReconciliationEvidence
+    from packages.brokers.initial_anchors import InitialHistoryProof
 
 _HOST = "https://paper-api.alpaca.markets"
 _MAX_BODY = 1_000_000
@@ -856,11 +857,16 @@ class AlpacaPaperBrokerAdapter:
         return tuple(self._reports.get(client_order_id, ()))
 
     @_locked
-    def reconciliation_evidence(self, *, after: datetime) -> AlpacaReconciliationEvidence:
+    def reconciliation_evidence(
+        self,
+        *,
+        after: datetime,
+        initial_history: InitialHistoryProof | None = None,
+    ) -> AlpacaReconciliationEvidence:
         """Collect exhaustive read-only account evidence, or fail closed."""
         from packages.brokers.alpaca_activities import collect_evidence
 
-        return collect_evidence(self, after=after)
+        return collect_evidence(self, after=after, initial_history=initial_history)
 
     @_locked
     def cancel(self, client_order_id: str) -> BrokerOrder | None:

@@ -17,6 +17,8 @@ from packages.persistence.ledger import PostgresLedger
 from packages.persistence.schema import TABLES, accounts
 from packages.risk.budget import budget_reasons, read_cap
 from packages.risk.engine import RiskFacts, RiskLimits, evaluate
+from packages.risk.paper_daily import assess_daily_loss
+from packages.risk.paper_daily_sql import is_isolated_paper, read_daily
 
 _NAMESPACE = uuid.UUID("b1429754-6ca2-455c-a126-c51c8cb0d078")
 _OPEN = (
@@ -61,6 +63,7 @@ def reserve(
             raise ValueError("paper account is missing, ambiguous, or mismatched")
         tx.lock_account(account_id)
         now = m.utc_time(connection.execute(text("SELECT clock_timestamp()")).scalar_one())
+        paper_daily_required = is_isolated_paper(connection)
         account_currency = account_rows[0].currency
         # Any unassigned ownership is unsafe. Include terminal rows because historic
         # ambiguity cannot be silently attributed to this account.
@@ -131,9 +134,9 @@ def reserve(
             reasons = ("RISK_CONTEXT_STALE",)
         elif account_context["risk_config_version"] != limits.config_version:
             reasons = ("RISK_CONFIG_VERSION",)
-        elif account_context["day_start_at"].astimezone(UTC) != now.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        ):
+        elif not paper_daily_required and account_context["day_start_at"].astimezone(
+            UTC
+        ) != now.replace(hour=0, minute=0, second=0, microsecond=0):
             reasons = ("DAY_START_STALE",)
         else:
             snapshot = tx.get(m.PortfolioSnapshot, account_context["portfolio_snapshot_id"])
@@ -220,6 +223,29 @@ def _fresh_facts(
     limits,
     now,
 ):
+    paper_daily_required = is_isolated_paper(connection)
+    paper_reference, paper_observation = None, None
+    if paper_daily_required:
+        paper_reference, paper_observation = read_daily(
+            connection,
+            account_id,
+            account_context["portfolio_version"],
+        )
+        assessment = assess_daily_loss(
+            paper_reference,
+            paper_observation,
+            now=now,
+            max_loss_fraction=limits.max_daily_loss_fraction,
+        )
+        blockers = tuple(code for code in assessment.reasons if code != "DAILY_LOSS_LIMIT")
+        if blockers:
+            return blockers, None
+        if (
+            account_context["day_start_at"] != paper_reference.starts_at
+            or account_context["day_start_equity"] != paper_reference.capital_lower
+            or snapshot.equity != paper_observation.current_equity.lower
+        ):
+            return ("PAPER_DAILY_EVIDENCE_UNPROVEN",), None
     rows = (
         connection.execute(
             text("""
@@ -293,7 +319,16 @@ def _fresh_facts(
             held[position.instrument_id] = (
                 held.get(position.instrument_id, Decimal("0")) + position.quantity
             )
-            unrealized += position.quantity * (marked.bar.close - position.average_price)
+            if paper_daily_required:
+                basis = connection.execute(
+                    text("SELECT public.paper_cost_basis_read(:id,:version)"),
+                    {"id": position.id, "version": position.ledger_version},
+                ).scalar_one_or_none()
+                if basis is None:
+                    return ("PAPER_POSITION_COST_BASIS_MISSING",), None
+                unrealized += position.quantity * marked.bar.close - basis
+            else:
+                unrealized += position.quantity * (marked.bar.close - position.average_price)
             gross_notional += position.quantity * marked.bar.close
         exposure = {
             instrument: qty * state.bar.close
@@ -387,6 +422,9 @@ def _fresh_facts(
             held_quantity=held.get(proposal.instrument_id, Decimal("0")),
             reconciliation_current=account_context["reconciliation_current"],
             market=state.market,
+            paper_daily_required=paper_daily_required,
+            paper_reference=paper_reference,
+            paper_observation=paper_observation,
         )
         return (), facts
 

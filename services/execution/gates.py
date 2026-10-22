@@ -11,6 +11,7 @@ from sqlalchemy import text
 from packages.domain import models as m
 from packages.risk.budget import budget_reasons, read_cap
 from packages.risk.engine import RiskLimits, evaluate
+from packages.risk.paper_daily_sql import is_isolated_paper
 from packages.risk.reservations import _exact_numeric, _fresh_facts
 
 
@@ -206,8 +207,11 @@ def evaluate_submit_gate(
     _require(
         account_context["valid_until"] > now
         and account_context["risk_config_version"] == limits.config_version
-        and account_context["day_start_at"].astimezone(UTC)
-        == now.replace(hour=0, minute=0, second=0, microsecond=0),
+        and (
+            is_isolated_paper(connection)
+            or account_context["day_start_at"].astimezone(UTC)
+            == now.replace(hour=0, minute=0, second=0, microsecond=0)
+        ),
         "ACCOUNT_CONTEXT_STALE",
     )
     _require(instrument_context is not None, "CAPABILITY_MISSING")

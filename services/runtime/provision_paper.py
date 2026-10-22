@@ -2,6 +2,8 @@
 
 Revision 0012 roles receive CONNECT only. Revision 0013 adds only the explicit
 command-function manifest below, never table access or financial permissions.
+Revision 0014 permits only audited reconciliation writes to an existing basis;
+account/position/order creation and lifecycle activation remain unavailable.
 """
 
 from __future__ import annotations
@@ -30,6 +32,30 @@ _COMMAND_FUNCTIONS = {
         "public.paper_claim(uuid,integer)",
         "public.paper_finish(uuid,uuid,bigint,jsonb,uuid,text)",
     ),
+}
+_RECONCILIATION_SELECT_0014 = (
+    "accounts", "instruments", "positions", "portfolio_snapshots", "risk_account_context",
+    "risk_decisions", "risk_reservations", "order_intents", "broker_orders", "execution_reports",
+    "audit_events", "paper_reconciliation_baselines", "paper_order_accounting_bases",
+    "paper_activity_evidence", "outbox_events", "execution_owners", "broker_asset_bindings",
+    "broker_account_bindings", "broker_binding_proofs",
+)
+_RECONCILIATION_INSERT_0014 = (
+    "audit_events", "portfolio_snapshots", "paper_activity_evidence",
+    "paper_reconciliation_receipts", "paper_order_accounting_bases", "execution_reports",
+    "outbox_events", "execution_owners",
+)
+_RECONCILIATION_UPDATE_0014 = {
+    "accounts": "ledger_version",
+    "risk_account_context": "version,safety_state,reconciliation_current,portfolio_snapshot_id,"
+                            "portfolio_version,actor_id,trace_id",
+    "execution_owners": "owner_id,fencing_token,claimed_at,heartbeat_at,trace_id",
+    "positions": "instrument_id,currency,quantity,average_price,realized_pnl,ledger_version",
+    "risk_reservations": "proposal_id,risk_decision_id,currency,reserved_notional,state,version,"
+                         "created_at,trace_id,released_at",
+    "broker_orders": "intent_id,client_order_id,broker_order_id,status,requested_quantity,"
+                     "filled_quantity,version,updated_at,trace_id",
+    "outbox_events": "event_id",
 }
 
 
@@ -138,10 +164,35 @@ def _verify_dormant_privileges(connection):
         "SELECT version_num FROM public.alembic_version"
     ).fetchall() if version_table is not None else []
     expected = set()
-    if revisions == [("0013_paper_commands",)]:
+    if revisions in ([("0013_paper_commands",)], [("0014_paper_initial_basis",)]):
         for group, functions in _COMMAND_FUNCTIONS.items():
             expected.add(("schema", "public", group, "USAGE", False))
             expected.update(("function", name, group, "EXECUTE", False) for name in functions)
+        if revisions == [("0014_paper_initial_basis",)]:
+            expected.add(("function",
+                          "public.safety_latch(charactervarying,charactervarying,charactervarying,"
+                          "charactervarying,charactervarying)",
+                          "atl_paper_execution", "EXECUTE", False))
+            for privilege, relations in (("SELECT", _RECONCILIATION_SELECT_0014),
+                                         ("INSERT", _RECONCILIATION_INSERT_0014)):
+                expected.update(("relation", "public." + name,
+                                 "atl_paper_execution", privilege, False)
+                                for name in relations)
+            for relation, columns in _RECONCILIATION_UPDATE_0014.items():
+                expected.update(("column", "public." + relation + "." + column,
+                                 "atl_paper_execution", "UPDATE", False)
+                                for column in columns.split(","))
+            expected.add(("function", "public.paper_prepare(uuid,uuid,bigint,jsonb)",
+                          "atl_paper_execution", "EXECUTE", False))
+            expected.add(("function", "public.paper_daily_read(text,bigint)",
+                          "atl_paper_execution", "EXECUTE", False))
+            expected.add(("function", "public.paper_initial_history(text)",
+                          "atl_paper_execution", "EXECUTE", False))
+            expected.add(("function", "public.paper_cost_basis_read(text,integer)",
+                          "atl_paper_execution", "EXECUTE", False))
+            expected.add(("function",
+                          "public.paper_cost_basis_append(text,integer,numeric,numeric,text,text)",
+                          "atl_paper_execution", "EXECUTE", False))
     elif revisions not in ([], [("0012_trading_profile",)]):
         raise PermissionError("PAPER_PRIVILEGE_MANIFEST_UNSUPPORTED")
     # Empty/unmigrated databases and 0012 permit no direct object ACLs. Inspect

@@ -45,6 +45,10 @@ Schlüsselrotation aus ADR-APW-003 benötigt eine private Pendinggeneration: akt
 
 Importierte Longbestände aus ADR-APW-002 müssen Kostenbasis, Reconciliationstart, Exposure, Tagesverlustreferenz und Reservationen konsistent initialisieren. Die bisherigen Leer-Konto-Annahmen des Smokeablaufs dürfen nicht ungeprüft wiederverwendet werden.
 
+Nutzerentscheidung21.10.2026: Für Paper gilt `paper-utc-equity-risk.v1`: Tagesertrag ist Eigenkapitaländerung seit belegter UTC-Tagesgrenze abzüglich nachgewiesener externer Finanzierung. Historische Centwerte erhalten als konservative Zertifizierungsregel ein Intervall von einem Cent unter bis einem Cent über dem gemeldeten Wert; Verlust wird gegen die ungünstigste Kombination und einen eingefrorenen Kapitalnenner geprüft. Unklare Transfers, fehlende Belege oder abgelaufene Referenzen sperren Einstiege. Fake-/Demoberechnung und alle bestehenden Gates bleiben erhalten. Kostenbasis wird unabhängig vom gerundeten Durchschnittspreis exakt gespeichert und fortgeschrieben.
+
+Für ein heute nach UTC-Mitternacht angelegtes, nachweislich ungehandeltes Konto darf die erste konsistente finanzielle Bindung als ausdrücklich gekennzeichnete Ersttagsreferenz dienen: verifizierter Erstellungszeitpunkt, keine Positionen, vollständige leere Handels-/Ertragshistorie und zwei übereinstimmende Cashbelege. Die Ausnahme endet an der nächsten UTC-Tagesgrenze; danach ist ein belegter Tagesstart erforderlich. Sie behauptet keine historische Mitternachtsbilanz. Details und Quellen: `risk-basis-decision.md`.
+
 ### ADR-APW-004: Begrenzte Planung und manuelle Anforderungen
 
 Eine versionierte Paper-LIMIT-Policy setzt vor dem unveränderlichen Vorschlag Preisgrenze, DAY, reguläre US-Session, TTL und abgerundete Menge. Preisquelle/Alter, Tickgröße und maximaler Abstand sind Teil der Policy; der Gebühren-/Reservationspuffer bleibt zusätzlich wirksam. Worker erhält ausschließlich öffentliche Markt-/Fähigkeitsevidenz, keine Credentials und keinen Submitport. SPY/QQQ bleiben die erste allowlist.

@@ -28,8 +28,14 @@ POSTGRES = (
 )
 
 
-def host():
+def host(guest_path=None, expected_marker=None):
     root = Path(__file__).resolve().parents[2]
+    guest_path = Path(__file__).resolve() if guest_path is None else guest_path.resolve()
+    if not guest_path.is_relative_to(root / "tests/integration") or guest_path.suffix != ".py":
+        raise ValueError("isolated guest must be an integration test source")
+    expected_marker = expected_marker or (
+        "PASS: isolated Paper provisioning, privileges, drift and no financial basis"
+    )
     tag = "atl-paper-probe-" + uuid.uuid4().hex[:16]
     network, container = tag + "-net", tag + "-pg"
 
@@ -80,15 +86,13 @@ def host():
             "--mount", f"type=bind,source={root / 'packages'},target=/opt/lab/packages,readonly",
             "--mount", f"type=bind,source={root / 'alembic.ini'},"
             "target=/opt/lab/alembic.ini,readonly",
-            "--mount", f"type=bind,source={Path(__file__).resolve()},"
+            "--mount", f"type=bind,source={guest_path},"
             "target=/opt/lab/test_paper_provision.py,readonly",
             "--workdir", "/opt/lab", "--entrypoint", "python",
             "agentic-trading-lab-dev-build-smoke:latest",
             "test_paper_provision.py", "guest",
         )
-        assert result == (
-            "PASS: isolated Paper provisioning, privileges, drift and no financial basis"
-        )
+        assert result == expected_marker
         return result
     finally:
         if container_created:
@@ -266,8 +270,8 @@ def guest():
             scenarios = (
                 ("GRANT USAGE ON SCHEMA public TO atl_paper_worker",
                  "REVOKE USAGE ON SCHEMA public FROM atl_paper_worker"),
-                ("GRANT SELECT ON public.accounts TO atl_paper_execution",
-                 "REVOKE SELECT ON public.accounts FROM atl_paper_execution"),
+                ("GRANT UPDATE(currency) ON public.accounts TO atl_paper_execution",
+                 "REVOKE UPDATE(currency) ON public.accounts FROM atl_paper_execution"),
                 ("GRANT UPDATE(currency) ON public.accounts TO atl_paper_execution_login",
                  "REVOKE UPDATE(currency) ON public.accounts FROM atl_paper_execution_login"),
                 ("GRANT USAGE ON SEQUENCE public.apw_probe_sequence TO atl_paper_worker_login",
@@ -315,7 +319,8 @@ def guest():
             else:
                 raise AssertionError("unreviewed revision must not authorize existing grants")
             assert fingerprint() == before
-            admin.execute("UPDATE public.alembic_version SET version_num='0013_paper_commands'")
+            admin.execute("UPDATE public.alembic_version "
+                          "SET version_num='0014_paper_initial_basis'")
         stage("PRESERVED_DATABASES")
         for database in ("lab_runtime", "lab_demo"):
             with psycopg.connect(dbname=database, **common) as normal:

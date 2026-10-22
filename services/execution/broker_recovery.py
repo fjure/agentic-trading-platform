@@ -8,6 +8,7 @@ from sqlalchemy import text
 
 from packages.brokers.alpaca_paper import AlpacaPaperBrokerAdapter
 from packages.domain import models as m
+from packages.persistence.execution_identity import is_execution
 from packages.persistence.ledger import PostgresLedger
 from services.execution.broker_binding import AlpacaExecutionBinding
 from services.execution.gates import SubmitDenied
@@ -41,7 +42,7 @@ def restore_alpaca_attempts(
 
     with ledger.transaction() as tx:
         c = tx.connection
-        if c.execute(text("SELECT current_user")).scalar_one() != "atl_execution":
+        if not is_execution(c):
             raise SubmitDenied("EXECUTION_ROLE_REQUIRED")
         tx.lock_account(account_id)
         try:

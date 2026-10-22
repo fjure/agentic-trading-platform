@@ -9,7 +9,7 @@ Apply-Update20.10.2026: separater Auftrag erteilt. APW-01 lokal vorbereitet, weg
 | REQ-APW-001 | T-APW-001 | APW-01,09,10 | Externer offizieller Einstieg, kein Eröffnungsrequest/PII |
 | REQ-APW-002 | T-APW-002,003 | APW-01,03,09,10 | Executionprüfungen, UUID/USD/Sperren/Feed, redigierter Zustand |
 | REQ-APW-003 | T-APW-004 | APW-02,03,09,10 | Mounts/Canaries/Rotation/Generation bei UNKNOWN |
-| REQ-APW-004 | T-APW-005,006 | APW-02,04,10 | Tatsächliche SQLrechte, konsistente einmalige Basis, Normalledgerhash |
+| REQ-APW-004 | T-APW-005,006,021,022 | APW-02,04,10 | Tatsächliche SQLrechte, konsistente einmalige Basis, Normalledgerhash, konservative Tagesreferenz und UTC-Ende der Ersttagsregel |
 | REQ-APW-005 | T-APW-007,008 | APW-01,02,03,05,09,10 | Dauerhafte Aktivierung/Idempotenz/TTL/Restartpause |
 | REQ-APW-006 | T-APW-009,010 | APW-01,06,07,10 | LIMIT vor Persistierung, Decimal/Version/Riskbudget |
 | REQ-APW-007 | T-APW-011,012 | APW-01,06,07,09,10 | Menschliche Provenienz, Doubleclick, konkurrierende Budgetreservation |
