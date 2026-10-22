@@ -1,0 +1,19 @@
+{
+  "credentialGeneration": 1,
+  "accountGeneration": 1,
+  "policyVersion": 1,
+  "profileVersion": 1,
+  "limitPolicyVersion": 1,
+  "symbol": "SPY",
+  "side": "BUY",
+  "quantity": "0.1234567891",
+  "limitPrice": "600.00",
+  "orderType": "MARKET",
+  "timeInForce": "DAY",
+  "session": "REGULAR",
+  "currency": "USD",
+  "expiresAt": "2026-10-20T10:01:00Z",
+  "confirmation": "PLACE_PAPER_LIMIT",
+  "budgetVersion": 1,
+  "riskBudget": "100"
+}

@@ -3,110 +3,110 @@
   "repository": "fjure/agentic-trading-platform",
   "changeId": "alpaca-paper-workflow",
   "transport": "official-gh-cli-authorized-fallback",
-  "status": "specification-ready-implementation-pending",
-  "lastReadBackAt": "2026-10-20T19:17:26.811692+00:00",
+  "status": "synchronized-read-back-verified",
+  "lastReadBackAt": "2026-10-20T19:46:20.288386+00:00",
   "tasks": [
     {
       "taskId": "APW-01",
       "issueNumber": 32,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/32",
+      "state": "open",
       "contentHash": "4a61bc4b90650d9e4d228de41b938e09195633b467d596b2ea294d15c6f12715",
-      "syncedAt": "2026-10-20T19:17:17.384458+00:00",
       "dependencies": [],
-      "state": "open"
+      "syncedAt": "2026-10-20T19:46:10.936592+00:00"
     },
     {
       "taskId": "APW-02",
       "issueNumber": 33,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/33",
+      "state": "open",
       "contentHash": "d9ca753f627d8fac18eab38cebc7c0d679ed119ef903130e1baabbd4ac189948",
-      "syncedAt": "2026-10-20T19:17:18.271681+00:00",
       "dependencies": [
         "APW-01"
       ],
-      "state": "open"
+      "syncedAt": "2026-10-20T19:46:11.973044+00:00"
     },
     {
       "taskId": "APW-03",
       "issueNumber": 34,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/34",
+      "state": "open",
       "contentHash": "b39e6bcfdc707e94c4b9d1563e79e6ef8552da8af0f34bc42ffa6f1c839121f7",
-      "syncedAt": "2026-10-20T19:17:19.207120+00:00",
       "dependencies": [
         "APW-01",
         "APW-02"
       ],
-      "state": "open"
+      "syncedAt": "2026-10-20T19:46:12.766713+00:00"
     },
     {
       "taskId": "APW-04",
       "issueNumber": 35,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/35",
+      "state": "open",
       "contentHash": "8484039991f1de0fbb042823caaa3ef5168f06f23db588f9dcb8f9e142ba21a4",
-      "syncedAt": "2026-10-20T19:17:20.325588+00:00",
       "dependencies": [
         "APW-02",
         "APW-03"
       ],
-      "state": "open"
+      "syncedAt": "2026-10-20T19:46:13.624633+00:00"
     },
     {
       "taskId": "APW-05",
       "issueNumber": 36,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/36",
+      "state": "open",
       "contentHash": "34307b06ff181e4ea64ce230d2db9eac9811b051548e8b385b0f875d700aaea3",
-      "syncedAt": "2026-10-20T19:17:21.368598+00:00",
       "dependencies": [
         "APW-03",
         "APW-04"
       ],
-      "state": "open"
+      "syncedAt": "2026-10-20T19:46:14.840959+00:00"
     },
     {
       "taskId": "APW-06",
       "issueNumber": 37,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/37",
+      "state": "open",
       "contentHash": "ec8b176eb88b2b02948c999135d4fb97bbf580d06afd4689ee56f8cca85783a7",
-      "syncedAt": "2026-10-20T19:17:22.381816+00:00",
       "dependencies": [
         "APW-01",
         "APW-03",
         "APW-04"
       ],
-      "state": "open"
+      "syncedAt": "2026-10-20T19:46:15.432798+00:00"
     },
     {
       "taskId": "APW-07",
       "issueNumber": 38,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/38",
+      "state": "open",
       "contentHash": "0edbf88e1948c02bee65e9af9b96b69c52ae19640077145c5e3154d40251d76a",
-      "syncedAt": "2026-10-20T19:17:23.342362+00:00",
       "dependencies": [
         "APW-01",
         "APW-04",
         "APW-05",
         "APW-06"
       ],
-      "state": "open"
+      "syncedAt": "2026-10-20T19:46:16.235188+00:00"
     },
     {
       "taskId": "APW-08",
       "issueNumber": 39,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/39",
+      "state": "open",
       "contentHash": "6e6da700cf3e6a579e727baf832a1946a6e0135a38f178466c16719a91ef3552",
-      "syncedAt": "2026-10-20T19:17:24.281847+00:00",
       "dependencies": [
         "APW-05",
         "APW-07"
       ],
-      "state": "open"
+      "syncedAt": "2026-10-20T19:46:16.876993+00:00"
     },
     {
       "taskId": "APW-09",
       "issueNumber": 40,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/40",
+      "state": "open",
       "contentHash": "02cf9810ea7144307f4e55020c4d77840876901b538bcdcb4f80c04727ef13a5",
-      "syncedAt": "2026-10-20T19:17:25.315902+00:00",
       "dependencies": [
         "APW-01",
         "APW-03",
@@ -115,14 +115,14 @@
         "APW-07",
         "APW-08"
       ],
-      "state": "open"
+      "syncedAt": "2026-10-20T19:46:17.593797+00:00"
     },
     {
       "taskId": "APW-10",
       "issueNumber": 41,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/41",
+      "state": "open",
       "contentHash": "e6ac9d0f1b34d7b27e6bb102e710d73113cd59197f86885812690a7728ba5a0a",
-      "syncedAt": "2026-10-20T19:17:26.258694+00:00",
       "dependencies": [
         "APW-02",
         "APW-03",
@@ -133,7 +133,7 @@
         "APW-08",
         "APW-09"
       ],
-      "state": "open"
+      "syncedAt": "2026-10-20T19:46:18.531059+00:00"
     }
   ],
   "lastSyncRun": {
@@ -142,5 +142,5 @@
     "unchanged": 10
   },
   "blockers": [],
-  "note": "Planning only; ten open implementation tasks. Linked issue dependencies, not native dependencies. No real provider requests."
+  "note": "OpenSpec authoritative; local certification only."
 }

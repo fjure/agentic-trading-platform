@@ -1,0 +1,20 @@
+{
+  "namespace": "alpaca-paper",
+  "environment": "PAPER",
+  "setupState": "SAVED",
+  "operatingState": "PAUSED",
+  "entryGateOpen": false,
+  "credentialGeneration": 1,
+  "accountGeneration": 0,
+  "accountLabel": null,
+  "currency": "USD",
+  "verifiedAt": null,
+  "reconciledAt": null,
+  "observedAt": "2026-10-20T10:00:00Z",
+  "marketDataFeed": "UNVERIFIED",
+  "providerVerification": "UNVERIFIED",
+  "blockers": [
+    "CONNECTION_NOT_VERIFIED"
+  ],
+  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
+}

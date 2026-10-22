@@ -2,6 +2,8 @@
 
 Stand20.10.2026, ausschließlich Planung. Kein Eintrag hier zertifiziert eine noch nicht implementierte Paperfunktion.
 
+Apply-Update20.10.2026: separater Auftrag erteilt. APW-01 lokal vorbereitet, wegen Konflikt zwischen Contract-first-Aufgabenreihenfolge und bestehender vollständiger Runtime-/Routegleichheit weiterhin offen. Finale Matrix502bestanden/2fehlgeschlagen; keine Ausnahmen in Tests. Nutzerentscheidung zur späteren gemeinsamen Integrationsabnahme angefordert. Prüfungen, Branch/Basis und konkrete Grenzen: `docs/evidence/apw-01.md`. Die Ready-Formulierung zum ausstehenden Apply-Auftrag unten ist historisch.
+
 | Requirement | Szenarien | Verantwortliche Tasks | Wesentliche Evidenz |
 |---|---|---|---|
 | REQ-APW-001 | T-APW-001 | APW-01,09,10 | Externer offizieller Einstieg, kein Eröffnungsrequest/PII |
