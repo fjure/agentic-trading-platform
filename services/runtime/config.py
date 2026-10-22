@@ -15,6 +15,8 @@ ROLES = {
     "api": "atl_control_api",
     "watchdog": "atl_watchdog",
 }
+PAPER_ROLES = {role: group.replace("atl_", "atl_paper_", 1) for role, group in ROLES.items()}
+DATABASES = {"lab": "lab_runtime", "paper": "lab_paper_runtime"}
 
 
 def _pairs(items):
@@ -63,10 +65,12 @@ class RuntimeConfig:
     origin: str = "http://127.0.0.1:8000"
     paper_enabled: bool = False
     reconciliation_fee_profile: str | None = None
+    deployment: str = "lab"
 
     def __post_init__(self):
         if (
-            self.mode not in {"DISABLED", "REPLAY", "SHADOW", "PAPER"}
+            self.deployment not in DATABASES
+            or self.mode not in {"DISABLED", "REPLAY", "SHADOW", "PAPER"}
             or self.broker_provider not in {"fake", "alpaca-paper"}
             or self.decision_provider not in {"mock", "jev"}
             or self.account_id != "paper"
@@ -78,8 +82,14 @@ class RuntimeConfig:
             or self.origin != "http://127.0.0.1:8000"
             or self.reconciliation_fee_profile
             not in {None, "alpaca-paper-us-retail-equity-zero-v1"}
-            or (self.broker_provider == "alpaca-paper" and not self.paper_enabled)
+            or (self.deployment == "lab" and self.broker_provider == "alpaca-paper"
+                and not self.paper_enabled)
             or (self.mode == "PAPER" and not self.paper_enabled)
+            or (self.deployment == "paper" and (
+                self.mode != "DISABLED" or self.paper_enabled
+                or self.broker_provider != "alpaca-paper" or self.decision_provider != "mock"
+                or self.reconciliation_fee_profile is not None
+            ))
         ):
             raise ValueError("UNSAFE_RUNTIME_CONFIG")
 
@@ -95,14 +105,20 @@ class RuntimeConfig:
         return cls(**value)
 
 
-def database_engine(role: str, path: Path = DATABASE_PATH):
+def database_engine(role: str, path: Path = DATABASE_PATH, *, deployment: str = "lab"):
     """Fixed host/database; verified SET ROLE on every physical connection."""
     from sqlalchemy import URL, create_engine, event
 
-    if role not in ROLES:
+    if role not in ROLES or deployment not in DATABASES:
         raise ValueError("INVALID_ROLE")
+    expected = (PAPER_ROLES if deployment == "paper" else ROLES)[role]
     credentials = secret_fields(path, {"username", "password"})
     if not re.fullmatch(r"atl_[a-z_]+_login", credentials["username"]):
+        raise ValueError("INVALID_DATABASE_IDENTITY")
+    if (
+        deployment == "paper" and credentials["username"] != expected + "_login"
+        or deployment == "lab" and credentials["username"].startswith("atl_paper_")
+    ):
         raise ValueError("INVALID_DATABASE_IDENTITY")
     engine = create_engine(
         URL.create(
@@ -111,14 +127,13 @@ def database_engine(role: str, path: Path = DATABASE_PATH):
             password=credentials["password"],
             host="postgres",
             port=5432,
-            database="lab_runtime",
+            database=DATABASES[deployment],
         ),
         hide_parameters=True,
         pool_pre_ping=True,
         connect_args={"connect_timeout": 5},
         echo=False,
     )
-    expected = ROLES[role]
 
     @event.listens_for(engine, "connect")
     def assign(connection, _record):
@@ -126,8 +141,9 @@ def database_engine(role: str, path: Path = DATABASE_PATH):
             with connection.cursor() as cursor:
                 cursor.execute(f"SET ROLE {expected}")
                 cursor.execute("SET TIME ZONE 'UTC'")
-                cursor.execute("SELECT current_user")
-                if cursor.fetchone()[0] != expected:
+                cursor.execute("SELECT current_user,current_database(),session_user")
+                identity = cursor.fetchone()
+                if identity != (expected, DATABASES[deployment], credentials["username"]):
                     raise PermissionError("DATABASE_ROLE_MISMATCH")
             connection.commit()
         except Exception:

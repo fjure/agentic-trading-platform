@@ -75,7 +75,8 @@ $previousPath = $env:PATH
 try {
     if ($Stop) {
         Stop-LocalBridge
-        & docker compose -f $composePath --profile lab stop execution worker control-api watchdog demo provider-setup
+        & docker compose -f $composePath --profile lab stop execution worker control-api watchdog demo provider-setup `
+            paper-execution paper-worker paper-api paper-watchdog paper-execution-egress paper-worker-egress
         if ($LASTEXITCODE -ne 0) { throw 'Local role shutdown failed.' }
         return
     }
@@ -86,7 +87,8 @@ try {
     Set-PrivateAcl $postgresSecret $false
     New-Item -ItemType Directory -Force -Path $runtimeDir | Out-Null
     Set-PrivateAcl $runtimeDir $true
-    foreach ($name in @('execution.json', 'worker.json', 'control.json', 'watchdog.json', 'demo.json')) {
+    foreach ($name in @('execution.json', 'worker.json', 'control.json', 'watchdog.json', 'demo.json',
+        'paper-execution.json', 'paper-worker.json', 'paper-control.json', 'paper-watchdog.json')) {
         $privateFile = Join-Path $runtimeDir $name
         if (Test-Path -LiteralPath $privateFile) { Set-PrivateAcl $privateFile $false }
     }
@@ -105,6 +107,24 @@ try {
             '{"mode":"DISABLED","broker_provider":"fake","decision_provider":"mock","paper_enabled":false}',
             [Text.UTF8Encoding]::new($false))
     }
+    # Public fixed dormant deployment; no provider key or financial value is read.
+    $paperRuntimeConfig = Join-Path $runtimeDir 'paper-runtime.json'
+    if (Test-Path -LiteralPath $paperRuntimeConfig) {
+        try { $paperConfig = Get-Content -LiteralPath $paperRuntimeConfig -Raw | ConvertFrom-Json }
+        catch { throw 'Invalid public Paper runtime configuration.' }
+        $paperFields = @($paperConfig.PSObject.Properties.Name | Sort-Object)
+        if (($paperFields -join ',') -ne 'broker_provider,decision_provider,deployment,mode,paper_enabled' -or
+            $paperConfig.deployment -ne 'paper' -or $paperConfig.mode -ne 'DISABLED' -or
+            $paperConfig.broker_provider -ne 'alpaca-paper' -or
+            $paperConfig.decision_provider -ne 'mock' -or $paperConfig.paper_enabled -ne $false) {
+            throw 'Launcher refuses an enabled or nonfixed Paper deployment configuration.'
+        }
+    } else {
+        [IO.File]::WriteAllText($paperRuntimeConfig,
+            '{"deployment":"paper","mode":"DISABLED","broker_provider":"alpaca-paper","decision_provider":"mock","paper_enabled":false}',
+            [Text.UTF8Encoding]::new($false))
+    }
+    Set-PrivateAcl $paperRuntimeConfig $false
     & docker compose -f $composePath --profile lab up -d --wait postgres
     if ($LASTEXITCODE -ne 0) { throw 'Local PostgreSQL startup failed.' }
     if (-not $SkipBuild) {
@@ -116,7 +136,8 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Locked dashboard dependency installation failed.' }
         & (Join-Path $nodeRoot 'npm.cmd') --prefix apps/dashboard run build
         if ($LASTEXITCODE -ne 0) { throw 'Dashboard production build failed.' }
-        & docker compose -f $composePath --profile lab build execution worker control-api watchdog demo provider-setup
+        & docker compose -f $composePath --profile lab build execution worker control-api watchdog demo provider-setup `
+            paper-execution paper-worker paper-api paper-watchdog paper-execution-egress paper-worker-egress
         if ($LASTEXITCODE -ne 0) { throw 'Frozen runtime image build failed.' }
     }
     # Use the tag just built, rather than a stale created container's image ID.
@@ -130,7 +151,8 @@ try {
         --mount 'type=volume,source=agentic-trading-lab-dev_jev_setup,target=/run/provider/jev' `
         --entrypoint python $image -m services.runtime.provision --initial-cash $InitialCash
     if ($LASTEXITCODE -ne 0) { throw 'Local runtime provisioning failed; diagnostic output is redacted.' }
-    foreach ($name in @('execution.json', 'worker.json', 'control.json', 'watchdog.json', 'demo.json')) {
+    foreach ($name in @('execution.json', 'worker.json', 'control.json', 'watchdog.json', 'demo.json',
+        'paper-execution.json', 'paper-worker.json', 'paper-control.json', 'paper-watchdog.json')) {
         Set-PrivateAcl (Join-Path $runtimeDir $name) $false
     }
     if (-not $ProvisionOnly) {
@@ -140,7 +162,8 @@ try {
         # Release only this launcher's verified helper before Docker Desktop
         # attempts to reserve the same loopback port during container recreation.
         Stop-LocalBridge
-        & docker compose -f $composePath --profile lab up -d --wait --wait-timeout 60 execution worker control-api watchdog demo provider-setup
+        & docker compose -f $composePath --profile lab up -d --wait --wait-timeout 60 execution worker control-api watchdog demo provider-setup `
+            paper-execution paper-worker paper-api paper-watchdog paper-execution-egress paper-worker-egress
         if ($LASTEXITCODE -ne 0) { throw 'Local runtime startup failed.' }
         $reachable = $false
         try {
@@ -173,6 +196,7 @@ try {
                 throw 'Fixed local transport is unavailable; no dashboard readiness confirmed.'
             }
         }
+        Write-Output 'Isolated Paper roles are READY but inactive; no provider verification or trading is enabled.'
         Write-Output 'Fake/DISABLED lab started at http://127.0.0.1:8000; trading remains paused.'
         Write-Output 'Only an operator in a private terminal may run: docker compose -f infra/compose/compose.yaml --profile lab exec control-api python -m services.runtime activate'
     }

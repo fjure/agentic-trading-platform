@@ -23,11 +23,20 @@ x-runtime: &runtime
   configs:
     - source: runtime_config
       target: /run/config/runtime.json
+x-paper-runtime: &paper-runtime
+  <<: *runtime
+  configs:
+    - source: paper_runtime_config
+      target: /run/config/runtime.json
 services:
   postgres:
     image: postgres:18.6-trixie@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336
     profiles: [fake, lab, paper]
     user: postgres
+    command: [postgres, -c, hba_file=/etc/postgresql/pg_hba.conf]
+    configs:
+      - source: postgres_hba
+        target: /etc/postgresql/pg_hba.conf
     read_only: true
     cap_drop: [ALL]
     tmpfs: [/tmp, /var/run/postgresql]
@@ -39,7 +48,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
     ports: ["127.0.0.1:55432:5432"]
-    networks: [local, execution_db, worker_db, control_db, watchdog_db, demo_db]
+    networks: [local, execution_db, worker_db, control_db, watchdog_db, demo_db, paper_execution_db, paper_worker_db, paper_control_db, paper_watchdog_db]
     healthcheck:
       test: [CMD-SHELL, "pg_isready -U lab_migration -d lab"]
       interval: 3s
@@ -83,7 +92,7 @@ services:
   control-api:
     <<: *runtime
     command: [python, -m, services.runtime, api]
-    networks: [control_db, demo_control, setup_control]
+    networks: [control_db, demo_control, setup_control, paper_control]
     ports: ["127.0.0.1:8000:8000"]
     volumes:
       - ../../apps/dashboard/dist/dashboard/browser:/opt/lab/dashboard:ro
@@ -127,6 +136,83 @@ services:
       timeout: 3s
       start_period: 20s
       retries: 6
+  # APW-02: fixed isolated deployment. Dormant commands perform no provider I/O.
+  paper-execution:
+    <<: *paper-runtime
+    command: [python, -m, services.runtime, paper-execution]
+    networks: [paper_execution_db, paper_market, paper_execution_egress]
+    environment:
+      HTTPS_PROXY: http://paper-execution-egress:8080
+      HTTP_PROXY: http://paper-execution-egress:8080
+      NO_PROXY: postgres,127.0.0.1,localhost
+    volumes:
+      - alpaca_setup:/run/provider/alpaca:ro
+    secrets:
+      - source: paper_execution_database
+        target: database
+    depends_on:
+      postgres:
+        condition: service_healthy
+      paper-execution-egress:
+        condition: service_healthy
+  paper-worker:
+    <<: *paper-runtime
+    command: [python, -m, services.runtime, paper-worker]
+    networks: [paper_worker_db, paper_market, paper_worker_egress]
+    environment:
+      HTTPS_PROXY: http://paper-worker-egress:8080
+      HTTP_PROXY: http://paper-worker-egress:8080
+      NO_PROXY: postgres,127.0.0.1,localhost
+    volumes:
+      - jev_setup:/run/provider/jev:ro
+    secrets:
+      - source: paper_worker_database
+        target: database
+    depends_on:
+      postgres:
+        condition: service_healthy
+      paper-worker-egress:
+        condition: service_healthy
+  paper-api:
+    <<: *paper-runtime
+    command: [python, -m, services.runtime, paper-api]
+    networks: [paper_control_db, paper_control]
+    secrets:
+      - source: paper_control_database
+        target: database
+  paper-watchdog:
+    <<: *paper-runtime
+    command: [python, -m, services.runtime, paper-watchdog]
+    networks: [paper_watchdog_db]
+    secrets:
+      - source: paper_watchdog_database
+        target: database
+  paper-execution-egress:
+    <<: *runtime
+    command: [python, -m, services.runtime.egress, execution]
+    configs: []
+    depends_on: {}
+    tmpfs: [/tmp]
+    networks: [paper_execution_egress, paper_execution_outbound]
+    healthcheck:
+      test: [CMD, python, -c, "import socket; socket.create_connection(('127.0.0.1',8080),timeout=1).close()"]
+      interval: 5s
+      timeout: 3s
+      start_period: 5s
+      retries: 6
+  paper-worker-egress:
+    <<: *runtime
+    command: [python, -m, services.runtime.egress, worker]
+    configs: []
+    depends_on: {}
+    tmpfs: [/tmp]
+    networks: [paper_worker_egress, paper_worker_outbound]
+    healthcheck:
+      test: [CMD, python, -c, "import socket; socket.create_connection(('127.0.0.1',8080),timeout=1).close()"]
+      interval: 5s
+      timeout: 3s
+      start_period: 5s
+      retries: 6
 networks:
   local:
     internal: true
@@ -144,6 +230,24 @@ networks:
     internal: true
   setup_control:
     internal: true
+  paper_execution_db:
+    internal: true
+  paper_worker_db:
+    internal: true
+  paper_control_db:
+    internal: true
+  paper_watchdog_db:
+    internal: true
+  paper_control:
+    internal: true
+  paper_market:
+    internal: true
+  paper_execution_egress:
+    internal: true
+  paper_worker_egress:
+    internal: true
+  paper_execution_outbound: {}
+  paper_worker_outbound: {}
 volumes:
   postgres_data:
   alpaca_setup:
@@ -161,6 +265,18 @@ secrets:
     file: ../../.tooling/application/runtime/watchdog.json
   demo_database:
     file: ../../.tooling/application/runtime/demo.json
+  paper_execution_database:
+    file: ../../.tooling/application/runtime/paper-execution.json
+  paper_worker_database:
+    file: ../../.tooling/application/runtime/paper-worker.json
+  paper_control_database:
+    file: ../../.tooling/application/runtime/paper-control.json
+  paper_watchdog_database:
+    file: ../../.tooling/application/runtime/paper-watchdog.json
 configs:
+  postgres_hba:
+    file: ./pg_hba.conf
+  paper_runtime_config:
+    file: ../../.tooling/application/runtime/paper-runtime.json
   runtime_config:
     file: ../../.tooling/application/runtime/runtime.json
