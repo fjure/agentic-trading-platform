@@ -45,11 +45,13 @@ class PaperRuntimeCoordinator:
         self.process = self.binding = self.gateway = self.broker = self.market_provider = None
         self._component_key, self._faulted = None, False
         self._owner_faulted = False
+        self._manual_pending = None
         self._cycle = Lock()
         self.outbox = Outbox(ledger.engine)
         self.verifier = PaperVerificationRuntime(
             commands=self.commands, reader_factory=reader_factory, clock=self.clock,
             start_handler=self.start,
+            manual_handler=self.manual_order,
         )
 
     def _read(self):
@@ -229,6 +231,11 @@ class PaperRuntimeCoordinator:
             except (ValueError, TypeError, KeyError, AttributeError):
                 raise PaperCommandError(409, "RECONCILIATION_REQUIRED") from None
 
+    def manual_order(self, claim, command_owner):
+        from .paper_manual import run_manual_order
+
+        return run_manual_order(self, claim, command_owner)
+
     def recovery_tick(self):
         with self._cycle:
             context = self._read()
@@ -254,14 +261,26 @@ class PaperRuntimeCoordinator:
                     self.commands._call("SELECT public.paper_restart_close(:owner,:fence)",
                                         {"owner": self.process.owner_id,
                                          "fence": self.process.fencing_token})
+                # Recovery can establish an order outcome even when fresh
+                # market data for new entries is unavailable afterwards.
+                self._finish_manual_pending()
                 return "DATA_UNAVAILABLE"
             current = self._read()
             if not self._faulted and current and current.get("activation") is not None:
                 self._process_current_work()
+            self._finish_manual_pending()
             for _ in range(100):
                 if self.outbox.publish_one(lambda _event: None) is None:
                     break
             return "UNAVAILABLE" if self._faulted else "READY"
+
+    def _finish_manual_pending(self):
+        pending = self._manual_pending
+        if pending is not None and self.commands._call(
+            "SELECT public.paper_human_finish(CAST(:id AS uuid),CAST(:owner AS uuid),:fence)",
+            pending,
+        ) is True:
+            self._manual_pending = None
 
     def _process_current_work(self):
         try:

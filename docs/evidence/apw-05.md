@@ -1,6 +1,6 @@
 # APW-05: Paper-Lebenszyklus und explizite Aktivierung
 
-Stand23.10.2026. Lokale Implementierung auf `codex/ptv-36-paper-lifecycle`, Basis main52706b0b89dc8cef37af4772ba5fb3eb9ef5bfeb. **Implementierung vollständig geprüft; Issue-/Gitintegration wird anschließend verifiziert.** Keine echten Schlüssel, Providerrequests oder Orders; sämtliche Providerfälle verwenden synthetische lokale HTTPtransporte.
+Stand23.10.2026. Lokale Implementierung auf `codex/ptv-36-paper-lifecycle`, Basis main52706b0b89dc8cef37af4772ba5fb3eb9ef5bfeb. **Vollständig geprüft, Issue-synchronisiert und regulär nach main integriert; CI erfolgreich.** Keine echten Schlüssel, Providerrequests oder Orders; sämtliche Providerfälle verwenden synthetische lokale HTTPtransporte.
 
 ## Verhalten
 
@@ -21,7 +21,7 @@ Der laufende Coordinator erneuert belegte Beobachtungen und Tagesbelege ohne Reb
 - Legacy-Reconciliation6bestanden/145,11s. Historische Migration15-Kommandoregressionen plus aktuelle feste Initialisierung3bestanden/88,56s; historische Fälle behaupten keine Head16-Zertifizierung.
 - Tatsächliche Deployment-/Transport-/Secretmatrix18bestanden/102,31s mit PAPER_DOCKER und PTV21_DOCKER. Exakte Topologieerwartung um bestehendes internes Paperkontrollnetz ergänzt; exklusiv zwei APIteilnehmer, unabhängig geprüft. Keine Sicherheitsgrenze abgeschwächt.
 - Normaler Launcher einschließlich Angularproduktionsbuild und Schema0016 erfolgreich, alle14Container gesund/inaktiv.13Laufzeitquellen SHA-256-identisch zum laufenden Paperimage.0gespeicherte/aktive Paper-Schlüsselgenerationen und0Konten/Orders/Kommandos. Bestehende2Fake-/Demo-Datenbanken über9Finanztabellen vor/nach Launcher unverändert.
-- Kanonischer HTTPvertrag41Operationen/20Schemas,19Schema-/23Responsebeispiele bestanden; oasdiff1.33.0 gegen tatsächliches main52706b0 ohne BreakingChange. Vertrags-SHA2566bbb10838dd15b75e9e08f7e79ae4f2284e4befa11bbdab3a49ef084f21925f0.110Clientdateien zweimal und gegen Anwendungsbaum byteidentisch, TypeScript bestanden. Striktes OpenSpec, Ruff, UTF-8, Whitespaceprüfung und Sourcescan623Dateien/0Treffer bestanden.
+- Kanonischer HTTPvertrag41Operationen/20Schemas,19Schema-/23Responsebeispiele bestanden; oasdiff1.33.0 gegen tatsächliches main52706b0 ohne BreakingChange. Lokaler Eingabebytehash vor Git-LF-Normalisierung6bbb10838dd15b75e9e08f7e79ae4f2284e4befa11bbdab3a49ef084f21925f0.110Clientdateien zweimal und gegen Anwendungsbaum byteidentisch, TypeScript bestanden. Striktes OpenSpec, Ruff, UTF-8, Whitespaceprüfung und Sourcescan623Dateien/0Treffer bestanden.
 
 ## Grenzen und Integration
 
@@ -30,3 +30,7 @@ Vollständige tatsächliche Coordinatorpositivkette im echten09:45UTC-Viertelstu
 Unabhängige Safetyreviews decken Agenten-/Brokerisolation, LIVE-Sperre, Decimal/UTC, immutable Herkunft, finanzielle Gates, Kill/Pause, Geheimnisgrenzen, Reservationserhalt und Lookup-onlyRecovery ab. Tatsächliche Alpaca-/Jevanbieterfähigkeit bleibt eine spätere private menschliche Abnahme. Manuelle Orders, Cancellation und vollständige Materialbedienung folgen in APW-07/08/09.
 
 Gehaltene Nutzer-/APW-10-Dateien `apps/dashboard/angular.json`, `package.json`, `package-lock.json` und `docs/evidence/apw-10.md` bleiben außerhalb des APW-05-Commits. Issue36 bleibt bis zum dokumentierten Taskabschluss offen; Commit/Push/main-CI werden erst nach tatsächlicher Integration eingetragen.
+
+Git-/CI-Read-back23.10.2026: Branchcommit `2f2ada6867002e6f1f030fa37a132801da862d9b`, regulärer Merge-main `d28d8d20c31413435cd11ead47f2e779a890d5e6`; beide Remote-SHAs stimmen, identischer geprüfter Dateibaum und Issuecommit in main enthalten. [CI39934500495 erfolgreich](https://github.com/fjure/agentic-trading-platform/actions/runs/39934500495). Vollständiger Zehn-Issue-Read-back mit Wiederholung0Updates/10unverändert; OpenSpec6/10.
+
+Bytehinweis: Der normalisierte kanonische Vertrag im integrierten main besitzt SHA256af8009def1419a1f4e83fda29c6208a38098353ca425a1434830493c1d2ea420; semantischer erneuter Vergleich gegen d28d8d2 bestätigt unveränderten Inhalt.

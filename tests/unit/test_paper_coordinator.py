@@ -188,3 +188,20 @@ def test_current_worker_plan_is_processed_before_binding_version_refresh():
          patch.object(value, "_refresh", side_effect=lambda _: steps.append("refresh")):
         assert value.recovery_tick() == "READY"
     assert steps == ["pending", "refresh", "pending"]
+
+
+def test_observed_manual_outcome_can_finish_while_new_entry_market_data_is_unavailable():
+    value, _ = runtime()
+    value.process = PaperOwner("owner", 7)
+    pending = {"id": "original-operation", "owner": "command-owner", "fence": 3}
+    value._manual_pending = pending
+    value.commands._call.side_effect = [{"profileVersion": 1, "activation": None}, True]
+    with patch.object(value, "_refresh", side_effect=RuntimeError("market-unavailable")), \
+         patch.object(value, "_risk_and_submit") as submit:
+        assert value.recovery_tick() == "DATA_UNAVAILABLE"
+    assert value._manual_pending is None
+    submit.assert_not_called()
+    assert value.commands._call.call_args.args == (
+        "SELECT public.paper_human_finish(CAST(:id AS uuid),CAST(:owner AS uuid),:fence)",
+        pending,
+    )

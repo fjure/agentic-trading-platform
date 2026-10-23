@@ -142,9 +142,14 @@ def reserve(
         else:
             snapshot = tx.get(m.PortfolioSnapshot, account_context["portfolio_snapshot_id"])
             state = tx.get(m.MarketState, proposal.market_state_id)
-            decision = tx.get(m.DecisionResult, proposal.decision_id)
-            if snapshot is None or state is None or decision is None:
+            from packages.risk.paper_limits import proposal_source_reasons
+
+            source_reasons = (proposal_source_reasons(connection, tx, proposal, state, now)
+                              if state is not None else ("SOURCE_MISSING",))
+            if snapshot is None or state is None:
                 reasons = ("SOURCE_MISSING",)
+            elif source_reasons:
+                reasons = source_reasons
             elif (
                 snapshot.quality is not m.Quality.VALID
                 or snapshot.reconciliation is not m.Reconciliation.CURRENT
@@ -153,13 +158,8 @@ def reserve(
                 or snapshot.ledger_version != account_context["portfolio_version"]
                 or snapshot.as_of > now
                 or now - snapshot.as_of > timedelta(seconds=limits.market_max_age_seconds)
-                or decision.valid_until <= now
-                or decision.market_state_id != state.id
-                or proposal.trace_id != state.trace_id
                 or state.instrument_id != proposal.instrument_id
                 or state.evidence.quality is not m.Quality.VALID
-                or decision.choice.value != proposal.target.value
-                or decision.typed_answers is None
             ):
                 reasons = ("PORTFOLIO_OR_SOURCE_STALE",)
             elif policy.version > 0 and (

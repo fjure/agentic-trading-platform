@@ -22,12 +22,14 @@ class PaperVerificationRuntime:
         clock=None,
         owner=None,
         start_handler=None,
+        manual_handler=None,
     ):
         self.commands = commands if commands is not None else PaperCommands(engine)
         self.reader_factory, self.verifier_factory = reader_factory, verifier_factory
         self.preparation_factory = preparation_factory
         self.clock, self.owner = clock or Clock(), owner or str(uuid.uuid4())
         self.start_handler = start_handler
+        self.manual_handler = manual_handler
 
     def tick(self):
         # Verification plus preparation each has a 30-second provider deadline.
@@ -36,11 +38,15 @@ class PaperVerificationRuntime:
         if claim is None:
             return "READY"
         error, public, private = None, {}, None
-        if claim["operationType"] == "START" and self.start_handler is not None:
+        handler = {
+            "START": self.start_handler,
+            "PLACE_LIMIT_ORDER": self.manual_handler,
+        }.get(claim["operationType"])
+        if handler is not None:
             try:
                 # The coordinator performs provider I/O outside SQL locks; its
-                # final SQL port owns both activation and command completion.
-                self.start_handler(claim, self.owner)
+                # SQL ports own authority and evidence-based command completion.
+                handler(claim, self.owner)
                 return "READY"
             except PaperCommandError as failure:
                 error = failure.code
