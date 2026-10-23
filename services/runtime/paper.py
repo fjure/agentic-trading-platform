@@ -1,7 +1,7 @@
 """Isolated Paper processes with explicit read-only verification commands."""
 
 import signal
-from threading import Event
+from threading import Event, Thread
 
 from .common import write_status
 from .config import PAPER_ROLES, RuntimeConfig, database_engine
@@ -37,24 +37,81 @@ def run(role):
         finally:
             engine.dispose()
         return
-    verifier = None
-    if role == "execution":
-        from .paper_verification import PaperVerificationRuntime
-
-        verifier = PaperVerificationRuntime(engine)
     stop = Event()
     for signum in (signal.SIGINT, signal.SIGTERM):
         signal.signal(signum, lambda *_: stop.set())
+    from packages.persistence.ledger import PostgresLedger
+
+    ledger = PostgresLedger(engine=engine)
+    coordinator, tick = None, None
+    threads = []
+
+    def schedule(callback, *, health=False):
+        def loop():
+            while not stop.is_set():
+                try:
+                    result = callback() or "READY"
+                    if health:
+                        write_status(role, result)
+                except Exception:
+                    if health:
+                        write_status(role, "UNAVAILABLE")
+                stop.wait(5)
+
+        thread = Thread(target=loop, daemon=True)
+        threads.append(thread)
+        thread.start()
+
+    if role == "execution":
+        from .paper_coordinator import PaperRuntimeCoordinator
+
+        coordinator = PaperRuntimeCoordinator(config, ledger)
+        schedule(coordinator.command_tick)
+        schedule(coordinator.heartbeat_tick, health=True)
+        tick = coordinator.recovery_tick
+    elif role == "worker":
+        from sqlalchemy import text
+
+        from .worker import WorkerRuntime
+
+        worker = WorkerRuntime(config, ledger)
+
+        def worker_tick():
+            try:
+                result = worker.tick()
+            except Exception:
+                result = "DECISION_UNAVAILABLE"
+            with engine.begin() as connection:
+                connection.execute(text("SELECT public.paper_worker_heartbeat(:state)"),
+                                   {"state": "READY" if result == "READY" else "UNAVAILABLE"})
+            return result
+
+        tick = worker_tick
+    elif role == "watchdog":
+        from sqlalchemy import text
+
+        def watchdog_tick():
+            import uuid
+
+            with engine.begin() as connection:
+                connection.execute(text("SELECT public.paper_watchdog_poll(:trace)"),
+                                   {"trace": uuid.uuid4().hex})
+            return "READY"
+
+        tick = watchdog_tick
     try:
-        # Trading runtimes remain inactive. Execution reads credentials only for
-        # an explicitly claimed durable verification command.
         while not stop.is_set():
             try:
-                write_status(role, check_identity(engine, role))
-                if verifier is not None:
-                    verifier.tick()
+                check_identity(engine, role)
+                result = tick() if tick else "READY"
+                write_status(role, result)
             except Exception:
                 write_status(role, "UNAVAILABLE")
             stop.wait(5)
     finally:
+        stop.set()
+        for thread in threads:
+            thread.join(timeout=5)
+        if coordinator is not None:
+            coordinator.close()
         engine.dispose()

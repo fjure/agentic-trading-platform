@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/paper-trading-profile-update-request.schema.json",
+  "title": "PaperTradingProfileUpdateRequest v1",
+  "$defs": {
+    "PaperTradingProfileUpdateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "riskBudget",
+        "currency",
+        "strategy",
+        "credentialGeneration",
+        "accountGeneration",
+        "expectedProfileVersion",
+        "confirmation",
+        "feeAttestation"
+      ],
+      "properties": {
+        "riskBudget": {
+          "$ref": "#/$defs/PositiveBudget"
+        },
+        "currency": {
+          "type": "string",
+          "const": "USD"
+        },
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "mock-neutral",
+            "neutral-baseline",
+            "jev"
+          ]
+        },
+        "credentialGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "expectedProfileVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "confirmation": {
+          "type": "string",
+          "const": "SAVE_PAPER_PROFILE"
+        },
+        "feeAttestation": {
+          "$ref": "#/$defs/PaperFeeAttestation"
+        }
+      },
+      "description": "Create at expectedProfileVersion zero or update the exact existing version. Immutable actor/key/body replay is idempotent; conflicting reuse or stale bindings are refused. Explicit fee-scope confirmation is version bound. Save closes gates without activating a workflow or contacting providers."
+    },
+    "PositiveBudget": {
+      "type": "string",
+      "pattern": "^(?=.*[1-9])(?:(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,18})?|1000000(?:\\.0{1,18})?)$",
+      "description": "Exact positive decimal USD amount no greater than 1000000."
+    },
+    "PaperFeeAttestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "confirmed"
+      ],
+      "properties": {
+        "scope": {
+          "type": "string",
+          "const": "alpaca-paper-direct-retail-us-equity-zero-v1"
+        },
+        "confirmed": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "description": "Explicit operator attestation for this direct-retail USD US-equity Paper fee scope only. It is bound atomically to the saved profile version; it does not assert a provider verification or activate trading."
+    }
+  },
+  "$ref": "#/$defs/PaperTradingProfileUpdateRequest"
+}

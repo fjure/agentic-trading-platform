@@ -30,7 +30,7 @@ def test_lab_roles_are_separate_and_hardened():
         ]
         assert service["networks"] == {
             "execution": ["execution_db"], "worker": ["worker_db"],
-            "control-api": ["control_db", "demo_control", "setup_control"],
+            "control-api": ["control_db", "demo_control", "setup_control", "paper_control"],
             "watchdog": ["watchdog_db"],
         }[role]
         network = service["networks"][0]
@@ -53,6 +53,11 @@ def test_lab_roles_are_separate_and_hardened():
                 "worker": ["jev_setup:/run/provider/jev:ro"], "watchdog": [],
             }[role]
     assert len(set(networks)) == 4
+    assert config["networks"]["paper_control"]["internal"] is True
+    assert {
+        name for name, service in config["services"].items()
+        if "paper_control" in service.get("networks", [])
+    } == {"control-api", "paper-api"}
     assert not {"execution-egress", "worker-egress"} & config["services"].keys()
 
 

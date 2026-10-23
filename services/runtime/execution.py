@@ -101,9 +101,21 @@ class ExecutionRuntime:
                 snapshot_id = tx.connection.execute(
                     text("""
                     SELECT portfolio_snapshot_id FROM public.risk_account_context
-                    WHERE account_id=:account AND reconciliation_current
+                    WHERE account_id=:account AND (reconciliation_current OR
+                      (:isolated AND EXISTS(SELECT 1 FROM public.paper_reconciliation_receipts r
+                        WHERE r.account_id=:account AND r.ready
+                        AND r.portfolio_snapshot_id=risk_account_context.portfolio_snapshot_id
+                        AND r.portfolio_version=risk_account_context.portfolio_version
+                        AND r.owner_id=:owner AND r.fencing_token=:fence
+                        AND r.observed_at>clock_timestamp()-interval '30 seconds'
+                        AND NOT EXISTS(SELECT 1 FROM public.paper_reconciliation_receipts newer
+                          WHERE newer.account_id=r.account_id AND newer.owner_id=r.owner_id
+                          AND newer.fencing_token=r.fencing_token
+                          AND newer.observed_at>r.observed_at))))
                 """),
-                    {"account": self.config.account_id},
+                    {"account": self.config.account_id,
+                     "isolated": getattr(self.config, "deployment", None) == "paper",
+                     "owner": self.process.owner_id, "fence": self.process.fencing_token},
                 ).scalar_one_or_none()
                 position_id = tx.connection.execute(
                     text("""

@@ -1,0 +1,19 @@
+{
+  "namespace": "alpaca-paper",
+  "configured": true,
+  "currency": "USD",
+  "riskBudget": "100",
+  "strategy": "mock-neutral",
+  "strategyVersion": "mock-neutral.v1",
+  "credentialGeneration": 1,
+  "accountGeneration": 1,
+  "policyVersion": 1,
+  "profileVersion": 1,
+  "budgetVersion": 1,
+  "limitPolicyVersion": 1,
+  "feeAttestation": {
+    "scope": "alpaca-paper-direct-retail-us-equity-zero-v1",
+    "confirmed": true
+  },
+  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
+}

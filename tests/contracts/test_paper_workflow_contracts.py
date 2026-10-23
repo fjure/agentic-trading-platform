@@ -80,7 +80,7 @@ def test_async_routes_are_authenticated_idempotent_and_have_stable_errors():
     routes = {
         path: item for path, item in OAS["paths"].items() if path.startswith("/api/v1/paper/")
     }
-    assert len(routes) == 8
+    assert len(routes) == 9
     for _path, item in routes.items():
         for method, op in item.items():
             assert op.get("security", OAS["security"]) == [{"LocalSession": []}]

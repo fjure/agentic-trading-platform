@@ -12,6 +12,7 @@ from packages.brokers.alpaca_paper import AlpacaPaperBrokerAdapter
 from packages.brokers.fake import FakeBrokerAdapter
 from packages.domain import models as m
 from packages.observability.outbox import persist
+from packages.persistence.execution_identity import is_execution
 from packages.persistence.ledger import PostgresLedger
 from packages.risk.engine import RiskLimits
 from services.execution.broker_binding import AlpacaExecutionBinding
@@ -60,7 +61,7 @@ def _reject_before_io(
     reason: str,
     adapter_id: str,
 ) -> m.BrokerOrder:
-    if tx.connection.execute(text("SELECT current_user")).scalar_one() != "atl_execution":
+    if not is_execution(tx.connection):
         raise SubmitDenied("EXECUTION_ROLE_REQUIRED")
     tx.lock_account(account_id)
     _assert_owner(tx, account_id, owner_id, fencing_token)
@@ -198,6 +199,9 @@ def _finish(
         if not tx.replace(next_reservation, expected_version=reservation.version):
             raise SubmitDenied("RESERVATION_VERSION_CONFLICT")
     if status is m.OrderStatus.UNKNOWN:
+        from packages.risk.paper_daily_sql import is_isolated_paper
+
+        isolated_paper = is_isolated_paper(tx.connection)
         context = (
             tx.connection.execute(
                 text("""
@@ -227,11 +231,14 @@ def _finish(
         tx.connection.execute(
             text("""
                 UPDATE public.risk_account_context
-                SET version=:version,safety_state='PAUSE_NEW',
+                SET version=:version,safety_state=CASE
+                      WHEN :preserve_halt AND safety_state='HALTED' THEN 'HALTED'
+                      ELSE 'PAUSE_NEW' END,
                     reconciliation_current=false,actor_id='execution-submit',trace_id=:trace
                 WHERE account_id=(SELECT account_id FROM public.order_intents WHERE id=:intent)
             """),
-            {"version": next_version, "trace": intent.trace_id, "intent": intent.id},
+            {"version": next_version, "trace": intent.trace_id, "intent": intent.id,
+             "preserve_halt": isolated_paper},
         )
     report = m.ExecutionReport(
         id=_id(f"report:{status.value}", intent.id),
@@ -518,7 +525,7 @@ def pause_after_restart(*, ledger: PostgresLedger, account_id: str) -> None:
     """Latch new Paper submits off when an Execution process starts or restarts."""
     with ledger.transaction() as tx:
         connection = tx.connection
-        if connection.execute(text("SELECT current_user")).scalar_one() != "atl_execution":
+        if not is_execution(connection):
             raise SubmitDenied("EXECUTION_ROLE_REQUIRED")
         tx.lock_account(account_id)
         context = (

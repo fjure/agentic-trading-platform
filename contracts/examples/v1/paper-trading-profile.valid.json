@@ -1,0 +1,16 @@
+{
+  "namespace": "alpaca-paper",
+  "configured": false,
+  "currency": "USD",
+  "riskBudget": null,
+  "strategy": null,
+  "strategyVersion": null,
+  "credentialGeneration": 0,
+  "accountGeneration": 0,
+  "policyVersion": 0,
+  "profileVersion": 0,
+  "budgetVersion": 0,
+  "limitPolicyVersion": 1,
+  "feeAttestation": null,
+  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
+}

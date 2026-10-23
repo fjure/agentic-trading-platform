@@ -86,6 +86,19 @@ class PaperCommands:
     def read_status(self, trace_id):
         return self._call("SELECT public.paper_status(:trace)", {"trace": trace_id})
 
+    def read_profile(self, trace_id):
+        return self._call("SELECT public.paper_trading_profile_get(:trace)", {"trace": trace_id})
+
+    def save_profile(self, payload, actor_id, key, trace_id):
+        try:
+            payload = dto.ProfileUpdate.model_validate(payload).model_dump()
+        except (ValueError, TypeError):
+            raise PaperCommandError(400, "INVALID_REQUEST") from None
+        return self._call(
+            "SELECT public.paper_trading_profile_put(:actor,:key,:trace,CAST(:body AS jsonb))",
+            {"actor": actor_id, "key": key, "trace": trace_id, "body": json.dumps(payload)},
+        )
+
     def read_operation(self, operation_id, trace_id=None):
         dto.identity(operation_id)
         result = self._call(

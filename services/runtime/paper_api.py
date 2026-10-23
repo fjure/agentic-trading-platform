@@ -47,6 +47,10 @@ class RotationComplete(DTO):
     generation: Version
 
 
+class ProfileContext(Context):
+    payload: dict
+
+
 def create_private_paper_app(commands):
     app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None, redirect_slashes=False)
 
@@ -95,6 +99,21 @@ def create_private_paper_app(commands):
     async def operation(operation_id: str):
         identity(operation_id)
         return await run_in_threadpool(commands.read_operation, operation_id, secrets.token_hex(16))
+
+    @app.get("/trading-profile")
+    async def profile(request: Request):
+        import re
+
+        trace = request.query_params.get("trace", "")
+        if not re.fullmatch(r"[0-9a-f]{32}", trace):
+            raise ValueError()
+        return await run_in_threadpool(commands.read_profile, trace)
+
+    @app.put("/trading-profile")
+    async def save_profile(request: Request):
+        value = await _body(request, ProfileContext)
+        return await run_in_threadpool(commands.save_profile, value["payload"], value["actorId"],
+                                       value["key"], value["traceId"])
 
     @app.post("/commands")
     async def enqueue(request: Request):

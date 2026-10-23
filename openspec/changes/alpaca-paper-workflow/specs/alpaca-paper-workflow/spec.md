@@ -63,6 +63,11 @@ Der Mensch SHALL vorbereiteten Paperbetrieb mit bestätigtem Budget, Strategie, 
 - **WHEN** ein Dienst neu startet, eine Freigabe abläuft oder Konto-/Policygeneration wechselt
 - **THEN** bleiben neue Einstiege pausiert; eine alte oder wiederholte Anfrage erteilt keine neue Freigabe und Recovery läuft ohne Blindresubmit.
 
+#### Scenario: T-APW-023 Getrennte versionierte Paperkonfiguration
+- **WHEN** ein Mensch im vorbereiteten Paperkontext Budget und Strategie ausdrücklich speichert
+- **THEN** führen eigene authentifizierte GET-/PUT-Operationen unter `/api/v1/paper/trading-profile` eine generationgebundene, optimistisch versionierte Konfiguration mit idempotenter Bestätigung; fehlende Konfiguration erscheint mit Version0 und ohne erfundenes Budget. Jede Änderung schließt die Einstiegssperre und invalidiert frühere Freigaben. Der vorhandene Fake-Profilendpunkt bleibt unverändert.
+- **AND** eine Gebührenautorität setzt die ausdrückliche menschliche Bestätigung des unterstützten direkten Retail-Paper-US-Aktienkontos voraus; sie wird separat unveränderlich und an die Profilversion gebunden gespeichert. Die ursprüngliche Anfangsbasis bleibt unverändert. Fehlende oder widersprüchliche Gebührenevidenz sperrt weiterhin.
+
 ### Requirement: REQ-APW-006 Unveränderliche preisbegrenzte Planung
 Automatische und manuelle Paperaufträge SHALL unveränderlich an Symbol, Seite, Menge, LIMIT-Preis, DAY, Budget-/Policyversion, TTL und Trace gebunden sein. Sie MUST denselben deterministischen Risk-/Reservations-/Executionpfad nutzen. Preise und Mengen MUST Decimal sein. MARKET-BUY, Shorts, Margin, unbestätigte Fähigkeiten und stilles Aufrunden MUST ausgeschlossen bleiben.
 

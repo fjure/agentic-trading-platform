@@ -119,10 +119,15 @@ if (-not $SkipCompile) {
     $fixtures += "import type { PaperTradeProposal } from './generated-a/model/paperTradeProposal';"
     $fixtures += "import type { PaperOperation } from './generated-a/model/paperOperation';"
     $fixtures += "import type { PaperStatus } from './generated-a/model/paperStatus';"
+    $fixtures += "import type { PaperTradingProfile } from './generated-a/model/paperTradingProfile';"
+    $fixtures += "import type { PaperTradingProfileUpdateRequest } from './generated-a/model/paperTradingProfileUpdateRequest';"
     foreach ($paperFixture in @(
         @('paper-trade-proposal.valid.json', 'PaperTradeProposal'),
         @('paper-operation.valid.json', 'PaperOperation'),
-        @('paper-workflow.valid.json', 'PaperStatus')
+        @('paper-workflow.valid.json', 'PaperStatus'),
+        @('paper-trading-profile.valid.json', 'PaperTradingProfile'),
+        @('paper-trading-profile.configured.valid.json', 'PaperTradingProfile'),
+        @('paper-trading-profile-update-request.valid.json', 'PaperTradingProfileUpdateRequest')
     )) {
         $fixturePath = Join-Path $root ('contracts/examples/v1/' + $paperFixture[0])
         $literal = Get-Content -LiteralPath $fixturePath -Raw
