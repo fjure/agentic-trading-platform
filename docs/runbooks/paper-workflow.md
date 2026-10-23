@@ -1,6 +1,6 @@
 # Alpaca-Paperworkflow
 
-Stand22.10.2026: Kontoprüfung, einmalige finanzielle Vorbereitung und begrenzte LIMIT-Planung sind lokal abgenommen. Der Paperlebenszyklus ist in APW-05 lokal abgenommen; manuelle Orders, Cancels und die Bedienoberfläche folgen in APW-07/08/09; diese Anleitung behauptet noch keinen vollständig bedienbaren Handelsablauf. Das normale Lab startet weiterhin inaktiv. Die vollständige Offline- und spätere private menschliche Providerabnahme werden in APW-10 getrennt dokumentiert.
+Stand22.10.2026: Kontoprüfung, einmalige finanzielle Vorbereitung und begrenzte LIMIT-Planung sind lokal abgenommen. Der Paperlebenszyklus ist in APW-05 lokal abgenommen; menschliche LIMIT-Anfragen sind in APW-07 als Backendpfad abgenommen; Cancels und die Bedienoberfläche folgen in APW-08/09; diese Anleitung behauptet noch keinen vollständig bedienbaren Handelsablauf. Das normale Lab startet weiterhin inaktiv. Die vollständige Offline- und spätere private menschliche Providerabnahme werden in APW-10 getrennt dokumentiert.
 
 ## Einrichtung und Zustand
 
@@ -31,3 +31,14 @@ Kommandoverarbeitung, Heartbeat und Reconciliation laufen getrennt. Providerwart
 Tagesbelege werden ohne Rebase erneuert. Die Ersttagsreferenz behält ihren ursprünglichen Beginn und Kapitalnenner; spätere Finanzierung wird ab diesem Beginn belegt. Nach UTC-Ablauf ist ein echter neuer Tagesstartbeleg erforderlich. Bei unverändertem Bestand darf eine neue unveränderliche Portfolio-Beobachtung dessen tatsächliche Reconciliationzeit dokumentieren, ohne Cash, Kostenbasis oder Anfangshistorie zu verändern.
 
 Versionierte Profile, Start-/Pause-/Stop-/Killtakte, fortlaufende Tagesbelege und nachvollziehbare Gebührenautorität sind implementiert. Menschliche Order-/Canceldialoge und die vollständige Browserabnahme folgen in APW-07bis10. Fehlende Voraussetzungen bleiben gesperrt. Keine Anleitung hier fordert Agenten zu echten Brokerorders auf; die spätere menschliche Alpaca-Abnahme bleibt privat und ausdrücklich vom lokalen Testdouble getrennt.
+
+
+## Menschliche LIMIT-Anforderung
+
+Der authentifizierte Paperendpunkt `/api/v1/paper/order-requests` nimmt eine bestätigte einzelne BUY-/SELL-LIMIT-DAY-Anforderung entgegen. Menge und Preis bleiben exakt; ungültige Schritte, Ticks, Fähigkeiten, Versionen oder Fristen werden abgewiesen. Es entsteht keine Modellentscheidung. Die Anfrage teilt dieselbe Riskprüfung, Kontosperre und Reservation mit automatischen Vorschlägen. Kosten einschließlich Puffer müssen ins aktuelle Budget passen; SELL überschreitet keinen unreservierten Longbestand.
+
+HTTP202 bedeutet angenommen, nicht ausgeführt. Der dauerhafte Vorgang liefert erst nach tatsächlichem Risk-/Brokerbeleg einen Abschluss und die abgeleitete Order-ID. UNKNOWN bleibt laufend und reserviert; dieselbe Verpflichtung wird gesucht und abgeglichen, niemals blind wieder gesendet. Doppelte identische Idempotenzschlüssel erzeugen keinen zweiten Auftrag, abweichender Inhalt wird zurückgewiesen. Budget-/SELL-Races erscheinen als BUDGET_EXCEEDED bzw. INSUFFICIENT_POSITION.
+
+Ein tatsächlicher Fill kann die gebundene Portfolio-Version verändern und damit die alte Freigabe schließen. Neue Orders benötigen dann einen neuen expliziten START mit aktuellen Belegen. Ein bereits belegter Auftrag kann nach Pause, Rotation oder Neustart abgeschlossen werden, ohne neuen START oder neuen Brokerrequest. Mit den derzeitigen15Minutenkerzen-/120Sekunden-Frischegrenzen bleiben neue Einstiege außerhalb eines frischen belegten Datenfensters geschlossen; Recovery läuft weiter. Diese Grenzen wurden für Tests nicht gelockert.
+
+Die vollständige Materialbedienung für diese Backendfunktion folgt in APW-09; Cancellation folgt in APW-08. [Lokale Abnahme und Betriebsgrenzen](../evidence/apw-07.md).

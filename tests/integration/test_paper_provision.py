@@ -455,7 +455,9 @@ def guest():
             else:
                 raise AssertionError("unreviewed revision must not authorize existing grants")
             assert fingerprint() == before
-            admin.execute("UPDATE public.alembic_version SET version_num='0016_paper_lifecycle'")
+            admin.execute(
+                "UPDATE public.alembic_version SET version_num='0018_paper_human_finish_guard'"
+            )
         stage("PRESERVED_DATABASES")
         for database in ("lab_runtime", "lab_demo"):
             with psycopg.connect(dbname=database, **common) as normal:

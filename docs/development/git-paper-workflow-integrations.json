@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "repository": "fjure/agentic-trading-platform",
   "changeId": "alpaca-paper-workflow",
-  "verifiedImplementationMainCommit": "52706b0b89dc8cef37af4772ba5fb3eb9ef5bfeb",
-  "verifiedAt": "2026-10-22T12:47:58Z",
+  "verifiedImplementationMainCommit": "d28d8d20c31413435cd11ead47f2e779a890d5e6",
+  "verifiedAt": "2026-10-23T09:51:27.336984Z",
   "ci": {
-    "url": "https://github.com/fjure/agentic-trading-platform/actions/runs/39778509806",
+    "url": "https://github.com/fjure/agentic-trading-platform/actions/runs/39934500495",
     "conclusion": "success"
   },
   "issueIntegrations": [
@@ -53,7 +53,16 @@
       "mergeCommit": "52706b0b89dc8cef37af4772ba5fb3eb9ef5bfeb",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true
+    },
+    {
+      "taskId": "APW-05",
+      "issueNumber": 36,
+      "branch": "codex/ptv-36-paper-lifecycle",
+      "branchCommit": "2f2ada6867002e6f1f030fa37a132801da862d9b",
+      "mergeCommit": "d28d8d20c31413435cd11ead47f2e779a890d5e6",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true
     }
   ],
-  "note": "APW-01 bis04 und06 regulaer ohne Force-Push integriert; main-Baum entspricht exakt dem geprueften APW-06-Baum. CI erfolgreich. APW-05 bleibt lokaler ungepruefter Zwischenstand."
+  "note": "APW-01bis06 regulaer ohne Force-Push integriert; main-Baum entspricht exakt dem geprueften APW-05-Baum. CI39934500495 erfolgreich. APW-07 beginnt auf eigenem Issue38-Branch."
 }

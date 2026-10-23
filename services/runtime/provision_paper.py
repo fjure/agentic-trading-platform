@@ -294,6 +294,8 @@ def _verify_dormant_privileges(connection):
         [("0014_paper_initial_basis",)],
         [("0015_paper_limit_policy",)],
         [("0016_paper_lifecycle",)],
+        [("0017_paper_human_orders",)],
+        [("0018_paper_human_finish_guard",)],
     ):
         for group, functions in _COMMAND_FUNCTIONS.items():
             expected.add(("schema", "public", group, "USAGE", False))
@@ -302,6 +304,8 @@ def _verify_dormant_privileges(connection):
             [("0014_paper_initial_basis",)],
             [("0015_paper_limit_policy",)],
             [("0016_paper_lifecycle",)],
+            [("0017_paper_human_orders",)],
+            [("0018_paper_human_finish_guard",)],
         ):
             expected.add(
                 (
@@ -377,7 +381,12 @@ def _verify_dormant_privileges(connection):
                     False,
                 )
             )
-        if revisions in ([("0015_paper_limit_policy",)], [("0016_paper_lifecycle",)]):
+        if revisions in (
+            [("0015_paper_limit_policy",)],
+            [("0016_paper_lifecycle",)],
+            [("0017_paper_human_orders",)],
+            [("0018_paper_human_finish_guard",)],
+        ):
             expected.update(
                 ("relation", "public." + name, "atl_paper_execution", "SELECT", False)
                 for name in _EXECUTION_SELECT_0015
@@ -425,7 +434,8 @@ def _verify_dormant_privileges(connection):
                     )
                     for column in columns.split(",")
                 )
-        if revisions == [("0016_paper_lifecycle",)]:
+        if revisions in ([("0016_paper_lifecycle",)], [("0017_paper_human_orders",)],
+                         [("0018_paper_human_finish_guard",)]):
             expected.add(("schema", "public", "atl_paper_watchdog", "USAGE", False))
             for group, functions in _FUNCTIONS_0016.items():
                 expected.update(("function", name, group, "EXECUTE", False) for name in functions)
@@ -454,6 +464,18 @@ def _verify_dormant_privileges(connection):
                     )
                     for column in columns.split(",")
                 )
+        if revisions in ([("0017_paper_human_orders",)],
+                         [("0018_paper_human_finish_guard",)]):
+            expected.update(
+                ("function", name, "atl_paper_execution", "EXECUTE", False)
+                for name in (
+                    "public.paper_human_request_read(text)",
+                    "public.paper_human_proposal_read(text)",
+                    "public.paper_human_proposal_create(uuid,uuid,bigint,text,text,timestampwithtimezone)",
+                    "public.paper_human_operation_read(uuid)",
+                    "public.paper_human_finish(uuid,uuid,bigint)",
+                )
+            )
     elif revisions not in ([], [("0012_trading_profile",)]):
         raise PermissionError("PAPER_PRIVILEGE_MANIFEST_UNSUPPORTED")
     # Empty/unmigrated databases and 0012 permit no direct object ACLs. Inspect

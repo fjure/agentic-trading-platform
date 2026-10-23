@@ -1,8 +1,8 @@
 """Additive Paper planning contracts; construction never authorizes execution.
 
-The legacy model-only TradeProposal and its reflected SQL shape stay unchanged.
-APW-07 must persist these references and check them under the normal account lock
-before adapting this value to the shared risk and execution path.
+The legacy model-only TradeProposal dataclass and event shape stay unchanged.
+Source-aware SQL persists these references and adapts human proposals to the
+shared risk and execution path with provenance checks under the account lock.
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ from enum import StrEnum
 from packages.domain.models import (
     Choice,
     DecisionResult,
+    Target,
     _id,
     _positive,
     _positive_version,
@@ -129,6 +130,20 @@ class PaperTradeProposal(PaperLimitTerms):
     proposal_source: ProposalSourceKind
     decision_id: str | None = None
     human_request_id: str | None = None
+
+    @property
+    def instrument_id(self) -> str:
+        return self.symbol
+
+    @property
+    def target(self) -> Target:
+        return Target.LONG if self.side is PaperOrderSide.BUY else Target.FLAT
+
+    @property
+    def rationale_codes(self) -> tuple[str, ...]:
+        if self.proposal_source is ProposalSourceKind.HUMAN_REQUEST:
+            return ("PAPER_HUMAN_LIMIT", "HUMAN_REQUEST:" + self.human_request_id)
+        return ("PAPER_MODEL_LIMIT", "MODEL_DECISION:" + self.decision_id)
 
     def __post_init__(self) -> None:
         PaperLimitTerms.__post_init__(self)

@@ -11,7 +11,7 @@ from enum import StrEnum
 from types import UnionType
 from typing import Union, get_args, get_origin, get_type_hints
 
-from sqlalchemy import Engine, create_engine, insert, select, update
+from sqlalchemy import Engine, create_engine, insert, select, text, update
 from sqlalchemy.engine import Connection
 
 from packages.domain import models
@@ -102,6 +102,25 @@ class LedgerUnit:
         )
         if row is None:
             return None
+        if model is models.TradeProposal and row["decision_id"] is None:
+            from packages.domain.paper_workflow import PaperTradeProposal
+
+            raw = self.connection.execute(
+                text("SELECT public.paper_human_proposal_read(:proposal)"),
+                {"proposal": entity_id},
+            ).scalar_one_or_none()
+            if (
+                type(raw) is not dict
+                or set(raw) != {field.name for field in fields(PaperTradeProposal)}
+                or raw["proposal_source"] != "HUMAN_REQUEST"
+                or raw["decision_id"] is not None
+                or raw["id"] != entity_id
+            ):
+                return None
+            try:
+                return _decode(PaperTradeProposal, raw)
+            except (ValueError, TypeError, KeyError, OverflowError):
+                return None
         values = {}
         for name, hint in get_type_hints(model).items():
             if name in REFERENCES.get(table.name, {}) and not name.endswith("_id"):

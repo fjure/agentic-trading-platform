@@ -224,11 +224,14 @@ def evaluate_submit_gate(
     )
     snapshot = tx.get(m.PortfolioSnapshot, account_context["portfolio_snapshot_id"])
     state = tx.get(m.MarketState, proposal.market_state_id)
-    source_decision = tx.get(m.DecisionResult, proposal.decision_id)
+    from packages.risk.paper_limits import proposal_source_reasons
+
+    source_reasons = (proposal_source_reasons(connection, tx, proposal, state, now)
+                      if state is not None else ("SOURCE_MISSING",))
     _require(
         snapshot is not None
         and state is not None
-        and source_decision is not None
+        and not source_reasons
         and snapshot.quality is m.Quality.VALID
         and snapshot.reconciliation is m.Reconciliation.CURRENT
         and snapshot.currency == account["currency"]
@@ -236,12 +239,7 @@ def evaluate_submit_gate(
         and snapshot.id == state.portfolio.id
         and snapshot.as_of <= now
         and now - snapshot.as_of <= timedelta(seconds=limits.market_max_age_seconds)
-        and source_decision.valid_until > now
-        and source_decision.market_state_id == state.id
-        and source_decision.choice.value == proposal.target.value
-        and source_decision.typed_answers is not None
         and state.instrument_id == proposal.instrument_id
-        and state.trace_id == proposal.trace_id
         and state.evidence.quality is m.Quality.VALID
         and state.evidence.available_at <= now,
         "PORTFOLIO_OR_SOURCE_STALE",
