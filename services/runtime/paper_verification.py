@@ -21,11 +21,13 @@ class PaperVerificationRuntime:
         preparation_factory=None,
         clock=None,
         owner=None,
+        start_handler=None,
     ):
         self.commands = commands if commands is not None else PaperCommands(engine)
         self.reader_factory, self.verifier_factory = reader_factory, verifier_factory
         self.preparation_factory = preparation_factory
         self.clock, self.owner = clock or Clock(), owner or str(uuid.uuid4())
+        self.start_handler = start_handler
 
     def tick(self):
         # Verification plus preparation each has a 30-second provider deadline.
@@ -34,7 +36,17 @@ class PaperVerificationRuntime:
         if claim is None:
             return "READY"
         error, public, private = None, {}, None
-        if claim["operationType"] in {"PAUSE", "STOP", "KILL"}:
+        if claim["operationType"] == "START" and self.start_handler is not None:
+            try:
+                # The coordinator performs provider I/O outside SQL locks; its
+                # final SQL port owns both activation and command completion.
+                self.start_handler(claim, self.owner)
+                return "READY"
+            except PaperCommandError as failure:
+                error = failure.code
+            except Exception:
+                error = "RECONCILIATION_REQUIRED"
+        elif claim["operationType"] in {"PAUSE", "STOP", "KILL"}:
             # Their durable latch was already closed at acceptance. Completion
             # acknowledges that control, without setup or provider dependencies.
             pass

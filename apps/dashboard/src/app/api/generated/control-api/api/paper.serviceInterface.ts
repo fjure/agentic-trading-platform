@@ -19,6 +19,8 @@ import { PaperPrepareRequest } from '../model/models';
 import { PaperProblem } from '../model/models';
 import { PaperStartRequest } from '../model/models';
 import { PaperStatus } from '../model/models';
+import { PaperTradingProfile } from '../model/models';
+import { PaperTradingProfileUpdateRequest } from '../model/models';
 import { PaperVerifyRequest } from '../model/models';
 
 
@@ -79,6 +81,14 @@ export interface PaperServiceInterface {
     getPaperStatus(traceparent?: string, extraHttpRequestParams?: any): Observable<PaperStatus>;
 
     /**
+     * Read actual versioned isolated Paper settings
+     * REQ-APW-005/010; APW-05; T-APW-023. Authenticated same-origin isolated Paper settings. No credentials, private identity, provider payloads or provider I/O. A save durably closes entry gates; only a later explicit START can request activation.
+     * @endpoint get /api/v1/paper/trading-profile
+     * @param traceparent W3C Trace Context; absent or invalid input is replaced by a server trace.
+     */
+    getPaperTradingProfile(traceparent?: string, extraHttpRequestParams?: any): Observable<PaperTradingProfile>;
+
+    /**
      * Request one-time immutable paper basis preparation
      * REQ-APW-002/005/006/007/010; APW-01. Authenticated loopback, exact same Origin and CSRF boundaries apply. Public fields are strict allowlists; no credentials or provider payloads. 202 confirms durable command acceptance only. Same actor/key/body replays the same operation; a different body returns IDEMPOTENCY_CONFLICT. START is fenced again before execution and expires at expiresAt. No GET performs provider I/O.
      * @endpoint post /api/v1/paper/prepare-ledger
@@ -97,6 +107,16 @@ export interface PaperServiceInterface {
      * @param traceparent W3C Trace Context; absent or invalid input is replaced by a server trace.
      */
     startPaperWorkflow(idempotencyKey: string, paperStartRequest: PaperStartRequest, traceparent?: string, extraHttpRequestParams?: any): Observable<PaperOperation>;
+
+    /**
+     * Save generation-bound Paper budget, strategy and fee attestation
+     * REQ-APW-005/010; APW-05; T-APW-023. Authenticated same-origin isolated Paper settings. No credentials, private identity, provider payloads or provider I/O. A save durably closes entry gates; only a later explicit START can request activation.
+     * @endpoint put /api/v1/paper/trading-profile
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param paperTradingProfileUpdateRequest 
+     * @param traceparent W3C Trace Context; absent or invalid input is replaced by a server trace.
+     */
+    updatePaperTradingProfile(idempotencyKey: string, paperTradingProfileUpdateRequest: PaperTradingProfileUpdateRequest, traceparent?: string, extraHttpRequestParams?: any): Observable<PaperTradingProfile>;
 
     /**
      * Request read-only Execution-owned account verification

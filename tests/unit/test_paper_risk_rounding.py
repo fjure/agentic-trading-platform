@@ -74,6 +74,7 @@ def test_negative_exposure_is_invalid_and_rounding_overflow_never_clamps():
 
 
 def facts_for_mark(monkeypatch, *, paper):
+    import packages.risk.paper_lifecycle as paper_lifecycle
     import packages.risk.paper_limits as paper_limits
     import packages.risk.reservations as reservations
 
@@ -93,6 +94,7 @@ def facts_for_mark(monkeypatch, *, paper):
     monkeypatch.setattr(reservations, "read_daily", lambda *_: (reference, observation))
     # This unit isolates numeric fact construction after source-proof admission.
     monkeypatch.setattr(paper_limits, "paper_proposal_reasons", lambda *_: ())
+    monkeypatch.setattr(paper_lifecycle, "activation_reasons", lambda *_: ())
 
     class Result:
         def __init__(self, value):

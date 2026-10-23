@@ -36,6 +36,7 @@ class WorkerRuntime:
         self.clock, self.ids = Clock(), Ids()
         self.jobs = JobStore(ledger.engine)
         self.owner = uuid.uuid4().hex
+        self._paper_jev = None
         self.planner = PlannerConfig("runtime-planner-v1", Decimal("1"))
         if config.decision_provider == "jev":
             from packages.decisions.jev import JevDecisionEngine, load_config
@@ -88,6 +89,13 @@ class WorkerRuntime:
             )
 
     def tick(self):
+        if self.paper_planning:
+            with self.ledger.transaction() as tx:
+                active = tx.connection.execute(text(
+                    "SELECT public.paper_planning_active()"
+                )).scalar_one()
+            if not active:
+                return "READY"
         self.enqueue_latest()
         claim = self.jobs.claim(self.owner, verify_recovery=self.recovery)
         if claim is None:
@@ -102,7 +110,10 @@ class WorkerRuntime:
                 state = tx.get(m.MarketState, claim.input_ref)
                 decision_engine = self.decision
                 decision_config = "runtime-decision-v1"
-                if self.config.decision_provider == "mock":
+                if self.paper_planning:
+                    strategy, version = self._paper_strategy(tx.connection)
+                    decision_config += ":" + version
+                elif self.config.decision_provider == "mock":
                     from packages.decisions.baseline import DeterministicBaselineDecisionEngine
                     from packages.decisions.mock import MockDecisionEngine
                     from packages.risk.budget import read_strategy
@@ -119,6 +130,8 @@ class WorkerRuntime:
                 ).scalar_one_or_none()
             if state is None:
                 raise ValueError("MARKET_STATE_MISSING")
+            if self.paper_planning:
+                decision_engine = self._paper_engine(strategy)
             result = None if prior else decision_engine.decide(state, decision_config)
             if not self.jobs.heartbeat(claim):
                 raise ValueError("LEASE_LOST")
@@ -195,3 +208,35 @@ class WorkerRuntime:
         except Exception:
             self.jobs.fail(claim, "DECISION_UNAVAILABLE")
             return "DECISION_UNAVAILABLE"
+
+    @staticmethod
+    def _paper_strategy(connection):
+        row = connection.execute(text(
+            "SELECT strategy,strategy_version FROM public.trading_profiles WHERE account_id='paper'"
+        )).one_or_none()
+        versions = {"mock-neutral": "mock-neutral.v1", "neutral-baseline": "neutral-baseline.v1",
+                    "jev": "jev.v1"}
+        if row is None or versions.get(row[0]) != row[1]:
+            raise ValueError("PAPER_STRATEGY_UNCONFIGURED")
+        return tuple(row)
+
+    def _paper_engine(self, strategy):
+        if strategy == "jev":
+            if self._paper_jev is None:
+                from packages.decisions.jev import JevDecisionEngine, load_config
+
+                value = secret_fields(Path("/run/provider/jev/credentials.json"), {"api_key"})
+                self._paper_jev = JevDecisionEngine(
+                    clock=self.clock, ids=self.ids, api_key=value["api_key"],
+                    config=replace(load_config(), enabled=True), egress_proxy=True,
+                    proxy_deployment="paper",
+                )
+            return self._paper_jev
+        from packages.decisions.baseline import DeterministicBaselineDecisionEngine
+        from packages.decisions.mock import MockDecisionEngine
+
+        engine_type = {"mock-neutral": MockDecisionEngine,
+                       "neutral-baseline": DeterministicBaselineDecisionEngine}.get(strategy)
+        if engine_type is None:
+            raise ValueError("PAPER_STRATEGY_UNCONFIGURED")
+        return engine_type(clock=self.clock, ids=self.ids)

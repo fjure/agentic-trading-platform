@@ -33,6 +33,10 @@ import { PaperStartRequest } from '../model/paperStartRequest';
 // @ts-ignore
 import { PaperStatus } from '../model/paperStatus';
 // @ts-ignore
+import { PaperTradingProfile } from '../model/paperTradingProfile';
+// @ts-ignore
+import { PaperTradingProfileUpdateRequest } from '../model/paperTradingProfileUpdateRequest';
+// @ts-ignore
 import { PaperVerifyRequest } from '../model/paperVerifyRequest';
 
 // @ts-ignore
@@ -426,6 +430,66 @@ export class PaperService extends BaseService implements PaperServiceInterface {
     }
 
     /**
+     * Read actual versioned isolated Paper settings
+     * REQ-APW-005/010; APW-05; T-APW-023. Authenticated same-origin isolated Paper settings. No credentials, private identity, provider payloads or provider I/O. A save durably closes entry gates; only a later explicit START can request activation.
+     * @endpoint get /api/v1/paper/trading-profile
+     * @param traceparent W3C Trace Context; absent or invalid input is replaced by a server trace.
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getPaperTradingProfile(traceparent?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<PaperTradingProfile>;
+    public getPaperTradingProfile(traceparent?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<PaperTradingProfile>>;
+    public getPaperTradingProfile(traceparent?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<PaperTradingProfile>>;
+    public getPaperTradingProfile(traceparent?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+
+        let localVarHeaders = this.defaultHeaders;
+        if (traceparent !== undefined && traceparent !== null) {
+            localVarHeaders = localVarHeaders.set('traceparent', String(traceparent));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/paper/trading-profile`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<PaperTradingProfile>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
      * Request one-time immutable paper basis preparation
      * REQ-APW-002/005/006/007/010; APW-01. Authenticated loopback, exact same Origin and CSRF boundaries apply. Public fields are strict allowlists; no credentials or provider payloads. 202 confirms durable command acceptance only. Same actor/key/body replays the same operation; a different body returns IDEMPOTENCY_CONFLICT. START is fenced again before execution and expires at expiresAt. No GET performs provider I/O.
      * @endpoint post /api/v1/paper/prepare-ledger
@@ -577,6 +641,87 @@ export class PaperService extends BaseService implements PaperServiceInterface {
             {
                 context: localVarHttpContext,
                 body: paperStartRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Save generation-bound Paper budget, strategy and fee attestation
+     * REQ-APW-005/010; APW-05; T-APW-023. Authenticated same-origin isolated Paper settings. No credentials, private identity, provider payloads or provider I/O. A save durably closes entry gates; only a later explicit START can request activation.
+     * @endpoint put /api/v1/paper/trading-profile
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param paperTradingProfileUpdateRequest 
+     * @param traceparent W3C Trace Context; absent or invalid input is replaced by a server trace.
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public updatePaperTradingProfile(idempotencyKey: string, paperTradingProfileUpdateRequest: PaperTradingProfileUpdateRequest, traceparent?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<PaperTradingProfile>;
+    public updatePaperTradingProfile(idempotencyKey: string, paperTradingProfileUpdateRequest: PaperTradingProfileUpdateRequest, traceparent?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<PaperTradingProfile>>;
+    public updatePaperTradingProfile(idempotencyKey: string, paperTradingProfileUpdateRequest: PaperTradingProfileUpdateRequest, traceparent?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<PaperTradingProfile>>;
+    public updatePaperTradingProfile(idempotencyKey: string, paperTradingProfileUpdateRequest: PaperTradingProfileUpdateRequest, traceparent?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (idempotencyKey === null || idempotencyKey === undefined) {
+            throw new Error('Required parameter idempotencyKey was null or undefined when calling updatePaperTradingProfile.');
+        }
+        if (paperTradingProfileUpdateRequest === null || paperTradingProfileUpdateRequest === undefined) {
+            throw new Error('Required parameter paperTradingProfileUpdateRequest was null or undefined when calling updatePaperTradingProfile.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (idempotencyKey !== undefined && idempotencyKey !== null) {
+            localVarHeaders = localVarHeaders.set('Idempotency-Key', String(idempotencyKey));
+        }
+        if (traceparent !== undefined && traceparent !== null) {
+            localVarHeaders = localVarHeaders.set('traceparent', String(traceparent));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/paper/trading-profile`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<PaperTradingProfile>('put', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: paperTradingProfileUpdateRequest,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

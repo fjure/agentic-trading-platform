@@ -109,9 +109,65 @@ _WORKER_INSERT_0015 = (
     "outbox_events",
 )
 _EXECUTION_SELECT_0015 = (
-    "trade_proposals", "decisions", "market_states", "market_bars", "evidence_bundles",
-    "position_versions", "risk_policies", "trading_profiles",
+    "trade_proposals",
+    "decisions",
+    "market_states",
+    "market_bars",
+    "evidence_bundles",
+    "position_versions",
+    "risk_policies",
+    "trading_profiles",
 )
+_EXECUTION_INSERT_0016 = (
+    "market_bars",
+    "evidence_bundles",
+    "market_states",
+    "broker_account_bindings",
+    "broker_asset_bindings",
+    "broker_binding_proofs",
+    "risk_instrument_context",
+    "broker_orders",
+    "order_intents",
+    "risk_reservations",
+    "risk_decisions",
+)
+_EXECUTION_SELECT_COLUMNS_0016 = {
+    "paper_reconciliation_receipts": "account_id,ready,portfolio_snapshot_id,portfolio_version,"
+    "owner_id,fencing_token,observed_at",
+    "publish_log": "cursor,event_id",
+    "publish_cursor": "singleton,next_cursor",
+}
+_EXECUTION_INSERT_COLUMNS_0016 = {"publish_log": "cursor,event_id"}
+_EXECUTION_UPDATE_0016 = {
+    "publish_cursor": "next_cursor",
+    "outbox_events": "published_at",
+    "risk_account_context": "valid_until",
+    "risk_reservations": "account_id",
+    "order_intents": "account_id",
+    "risk_instrument_context": "version,capability_version,broker_id,paper_confirmed,"
+    "regular_session_confirmed,continuous_session_confirmed,market_order_confirmed,"
+    "limit_order_confirmed,fractional_confirmed,quantity_step,price_tick,session_open,"
+    "session_version,session_valid_until,valid_until,actor_id,trace_id",
+}
+_FUNCTIONS_0016 = {
+    "atl_paper_control_api": (
+        "public.paper_trading_profile_get(text)",
+        "public.paper_trading_profile_put(text,text,text,jsonb)",
+    ),
+    "atl_paper_execution": (
+        "public.paper_fee_authority()",
+        "public.paper_recovery_fee_authority()",
+        "public.paper_activation_read()",
+        "public.paper_activation_guard(text,text)",
+        "public.paper_activation_begin(uuid,uuid,bigint,jsonb)",
+        "public.paper_restart_close(text,bigint)",
+        "public.paper_daily_reference()",
+        "public.paper_daily_append(text,bigint,integer,jsonb)",
+        "public.paper_trading_profile_get(text)",
+    ),
+    "atl_paper_worker": ("public.paper_planning_active()", "public.paper_worker_heartbeat(text)"),
+    "atl_paper_watchdog": ("public.paper_watchdog_poll(text)",),
+}
 _WORKER_UPDATE_0015 = {
     "jobs": "status,lease_owner,lease_until,fencing_token,attempt,not_before,heartbeat,"
     "error_code,completed_at",
@@ -237,11 +293,16 @@ def _verify_dormant_privileges(connection):
         [("0013_paper_commands",)],
         [("0014_paper_initial_basis",)],
         [("0015_paper_limit_policy",)],
+        [("0016_paper_lifecycle",)],
     ):
         for group, functions in _COMMAND_FUNCTIONS.items():
             expected.add(("schema", "public", group, "USAGE", False))
             expected.update(("function", name, group, "EXECUTE", False) for name in functions)
-        if revisions in ([("0014_paper_initial_basis",)], [("0015_paper_limit_policy",)]):
+        if revisions in (
+            [("0014_paper_initial_basis",)],
+            [("0015_paper_limit_policy",)],
+            [("0016_paper_lifecycle",)],
+        ):
             expected.add(
                 (
                     "function",
@@ -316,9 +377,11 @@ def _verify_dormant_privileges(connection):
                     False,
                 )
             )
-        if revisions == [("0015_paper_limit_policy",)]:
-            expected.update(("relation", "public." + name, "atl_paper_execution", "SELECT", False)
-                            for name in _EXECUTION_SELECT_0015)
+        if revisions in ([("0015_paper_limit_policy",)], [("0016_paper_lifecycle",)]):
+            expected.update(
+                ("relation", "public." + name, "atl_paper_execution", "SELECT", False)
+                for name in _EXECUTION_SELECT_0015
+            )
             expected.add(("schema", "public", "atl_paper_worker", "USAGE", False))
             expected.add(
                 (
@@ -357,6 +420,35 @@ def _verify_dormant_privileges(connection):
                         "column",
                         "public." + relation + "." + column,
                         "atl_paper_worker",
+                        "UPDATE",
+                        False,
+                    )
+                    for column in columns.split(",")
+                )
+        if revisions == [("0016_paper_lifecycle",)]:
+            expected.add(("schema", "public", "atl_paper_watchdog", "USAGE", False))
+            for group, functions in _FUNCTIONS_0016.items():
+                expected.update(("function", name, group, "EXECUTE", False) for name in functions)
+            expected.update(
+                ("relation", "public." + name, "atl_paper_execution", "INSERT", False)
+                for name in _EXECUTION_INSERT_0016
+            )
+            for privilege, relations in (
+                ("SELECT", _EXECUTION_SELECT_COLUMNS_0016),
+                ("INSERT", _EXECUTION_INSERT_COLUMNS_0016),
+            ):
+                for relation, columns in relations.items():
+                    expected.update(
+                        ("column", "public." + relation + "." + column,
+                         "atl_paper_execution", privilege, False)
+                        for column in columns.split(",")
+                    )
+            for relation, columns in _EXECUTION_UPDATE_0016.items():
+                expected.update(
+                    (
+                        "column",
+                        "public." + relation + "." + column,
+                        "atl_paper_execution",
                         "UPDATE",
                         False,
                     )

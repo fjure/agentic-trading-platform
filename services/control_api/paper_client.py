@@ -80,6 +80,19 @@ class PaperClient:
         value = self._request("GET", "/status?trace=" + trace_id)
         return self._projection(dto.Status, value)
 
+    def read_profile(self, trace_id):
+        if not isinstance(trace_id, str) or not re.fullmatch(r"[0-9a-f]{32}", trace_id):
+            raise PaperCommandError(400, "INVALID_REQUEST")
+        value = self._request("GET", "/trading-profile?trace=" + trace_id)
+        return self._projection(dto.Profile, value)
+
+    def save_profile(self, payload, actor_id, key, trace_id):
+        payload = dto.ProfileUpdate.model_validate(payload).model_dump()
+        value = self._request("PUT", "/trading-profile", {
+            "payload": payload, "actorId": actor_id, "key": key, "traceId": trace_id,
+        })
+        return self._projection(dto.Profile, value)
+
     def read_operation(self, operation_id, trace_id):
         dto.identity(operation_id)
         if not isinstance(trace_id, str) or not re.fullmatch(r"[0-9a-f]{32}", trace_id):

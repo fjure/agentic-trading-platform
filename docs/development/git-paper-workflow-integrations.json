@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "repository": "fjure/agentic-trading-platform",
   "changeId": "alpaca-paper-workflow",
-  "verifiedImplementationMainCommit": "46aa83b7db4b3a0f97d61a0f5e58ca48c97b7176",
-  "verifiedAt": "2026-10-22T07:08:23Z",
+  "verifiedImplementationMainCommit": "52706b0b89dc8cef37af4772ba5fb3eb9ef5bfeb",
+  "verifiedAt": "2026-10-22T12:47:58Z",
   "ci": {
-    "url": "https://github.com/fjure/agentic-trading-platform/actions/runs/39738075221",
+    "url": "https://github.com/fjure/agentic-trading-platform/actions/runs/39778509806",
     "conclusion": "success"
   },
   "issueIntegrations": [
@@ -44,7 +44,16 @@
       "mergeCommit": "46aa83b7db4b3a0f97d61a0f5e58ca48c97b7176",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true
+    },
+    {
+      "taskId": "APW-06",
+      "issueNumber": 37,
+      "branch": "codex/ptv-37-paper-limit-policy",
+      "branchCommit": "28213f6882e2c705a49192cac5001c19e0e21b20",
+      "mergeCommit": "52706b0b89dc8cef37af4772ba5fb3eb9ef5bfeb",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true
     }
   ],
-  "note": "Gemeinsame Vertrags-/Runtimeabnahme vom Nutzer freigegeben. Vier reguläre Merges ohne Force-Push; main-Baum entspricht exakt dem gemeinsam geprüften APW-04-Baum. Spätere Dokumentations- und Implementierungscommits können main fortschreiben."
+  "note": "APW-01 bis04 und06 regulaer ohne Force-Push integriert; main-Baum entspricht exakt dem geprueften APW-06-Baum. CI erfolgreich. APW-05 bleibt lokaler ungepruefter Zwischenstand."
 }

@@ -54,6 +54,31 @@ class _Mismatch(ValueError):
     """Only fixed local reason codes may be persisted as reconciliation outcomes."""
 
 
+@dataclass(frozen=True, slots=True)
+class CollectedPaperReconciliation:
+    baseline_at: datetime
+    evidence: object
+
+
+def collect_paper_reconciliation(*, ledger, account_id, broker, binding):
+    """Read the immutable import anchor, then collect without financial locks."""
+    _boundary(ledger, account_id, broker, binding)
+    from services.execution.paper_initialization import read_initial_history
+
+    with ledger.transaction() as tx:
+        if not is_execution(tx.connection):
+            raise SubmitDenied("EXECUTION_ROLE_REQUIRED")
+        history = read_initial_history(tx.connection, account_id)
+    try:
+        evidence = broker.reconciliation_evidence(
+            after=history.baseline_at, initial_history=history,
+        )
+    except Exception:
+        # The final fenced transaction persists a fixed failure and closes gates.
+        evidence = None
+    return CollectedPaperReconciliation(history.baseline_at, evidence)
+
+
 def _require(value: bool, reason: str) -> None:
     if not value:
         raise _Mismatch(reason)
@@ -399,7 +424,8 @@ def _orders(tx, account_id):
     return result
 
 
-def reconcile_paper_account(*, ledger, account_id, broker, binding, owner_id, fencing_token):
+def reconcile_paper_account(*, ledger, account_id, broker, binding, owner_id, fencing_token,
+                            collected=None):
     _boundary(ledger, account_id, broker, binding)
     with ledger.transaction() as tx:
         return reconcile_paper_account_tx(
@@ -410,11 +436,13 @@ def reconcile_paper_account(*, ledger, account_id, broker, binding, owner_id, fe
             binding=binding,
             owner_id=owner_id,
             fencing_token=fencing_token,
+            collected=collected,
         )
 
 
 def reconcile_paper_account_tx(
-    tx, *, ledger, account_id, broker, binding, owner_id, fencing_token, now=None, trace_id=None
+    tx, *, ledger, account_id, broker, binding, owner_id, fencing_token, now=None, trace_id=None,
+    collected=None,
 ):
     """Reconcile and issue a receipt under the same owner/account lock as recovery."""
     _boundary(ledger, account_id, broker, binding)
@@ -445,7 +473,8 @@ def reconcile_paper_account_tx(
         orders = _orders(tx, account_id)
         from packages.risk.paper_daily_sql import is_isolated_paper
 
-        if is_isolated_paper(c):
+        isolated = is_isolated_paper(c)
+        if isolated:
             from services.execution.paper_initialization import read_initial_history
 
             history = read_initial_history(c, account_id)
@@ -454,9 +483,15 @@ def reconcile_paper_account_tx(
                 and history.provider_account_id == str(baseline["provider_account_id"]),
                 "INITIAL_HISTORY_MISMATCH",
             )
-            evidence = broker.reconciliation_evidence(
-                after=baseline["baseline_at"], initial_history=history
-            )
+            if collected is not None:
+                _require(type(collected) is CollectedPaperReconciliation
+                         and collected.baseline_at == baseline["baseline_at"]
+                         and collected.evidence is not None, "PAPER_EVIDENCE_UNAVAILABLE")
+                evidence = collected.evidence
+            else:
+                evidence = broker.reconciliation_evidence(
+                    after=baseline["baseline_at"], initial_history=history
+                )
         else:
             evidence = broker.reconciliation_evidence(after=baseline["baseline_at"])
         _assert_owner(tx, account_id, owner_id, fencing_token)
@@ -479,8 +514,19 @@ def reconcile_paper_account_tx(
         with localcontext() as arithmetic:
             arithmetic.prec = 80
             with c.begin_nested():
-                plan = _plan(tx, account_id, baseline, orders, evidence)
-                _book(tx, account_id, baseline, orders, evidence, plan, final_now, trace_id)
+                effective_fee_profile = None
+                if isolated and c.execute(text(
+                    "SELECT to_regprocedure('public.paper_recovery_fee_authority()') IS NOT NULL"
+                )).scalar_one():
+                    authority = c.execute(text(
+                        "SELECT public.paper_recovery_fee_authority()"
+                    )).scalar_one_or_none()
+                    if isinstance(authority, dict):
+                        effective_fee_profile = authority.get("profile")
+                plan = _plan(tx, account_id, baseline, orders, evidence,
+                             effective_fee_profile=effective_fee_profile)
+                _book(tx, account_id, baseline, orders, evidence, plan, final_now, trace_id,
+                      refresh_observation=isolated)
         ready, reason = plan["ready"], plan["reason"]
         _assert_owner(tx, account_id, owner_id, fencing_token)
         _require(
@@ -541,10 +587,11 @@ def _fill_position(position, side, quantity, price):
     )
 
 
-def _plan(tx, account_id, baseline, orders, evidence):
+def _plan(tx, account_id, baseline, orders, evidence, *, effective_fee_profile=None):
     c = tx.connection
+    fee_profile = effective_fee_profile or baseline["fee_authority_profile"]
     _require(
-        baseline["fee_authority_profile"] == evidence.fee_authority_profile,
+        fee_profile == evidence.fee_authority_profile,
         "PAPER_FEE_PROFILE_CHANGED",
     )
     baseline_snapshot = tx.get(m.PortfolioSnapshot, baseline["portfolio_snapshot_id"])
@@ -939,7 +986,8 @@ def _plan(tx, account_id, baseline, orders, evidence):
     }
 
 
-def _book(tx, account_id, baseline, orders, evidence, plan, now, trace_id):
+def _book(tx, account_id, baseline, orders, evidence, plan, now, trace_id,
+          *, refresh_observation=False):
     c = tx.connection
     context = _context(tx, account_id)
     for instrument, p in plan["positions"].items():
@@ -1006,6 +1054,7 @@ def _book(tx, account_id, baseline, orders, evidence, plan, now, trace_id):
     if (
         changed
         or refresh_authority
+        or (refresh_observation and now-old_snapshot.as_of >= timedelta(seconds=30))
         or (old_snapshot.cash, old_snapshot.equity, old_snapshot.exposure)
         != (
             evidence.cash,

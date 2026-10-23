@@ -4,24 +4,24 @@ from pathlib import Path
 
 
 def test_paper_http_sql_runtime_chain():
-    from tests.integration.test_paper_commands import run_isolated_guest
+    from tests.integration.test_paper_provision import host
 
-    run_isolated_guest(Path(__file__), "PASS paper HTTP SQL runtime chain")
+    assert host(Path(__file__), "PASS paper HTTP SQL runtime chain", support_paths=(
+        Path(__file__).with_name("test_paper_lifecycle.py"),
+    )) == "PASS paper HTTP SQL runtime chain"
 
 
 def guest():
     import json
     import os
-    import sys
     import tempfile
     from datetime import UTC, datetime
     from types import SimpleNamespace
 
     import httpx
-    from alembic import command
-    from alembic.config import Config
     from fastapi.testclient import TestClient
-    from sqlalchemy import URL, create_engine, event, text
+    from sqlalchemy import URL, create_engine, text
+    from test_paper_lifecycle import PaperFixture
 
     from services.control_api.app import create_app
     from services.control_api.auth import LocalAuth
@@ -35,32 +35,22 @@ def guest():
     from services.setup.app import create_app as setup_app
     from services.setup.store import ProviderStore, generation_filename
 
-    configuration = json.loads(sys.stdin.read())
+    fixture = PaperFixture()
     url = URL.create(
         "postgresql+psycopg",
-        username=configuration["role"],
-        password=configuration["password"],
+        username="lab_migration",
         host="postgres",
-        database=configuration["database"],
+        database=fixture.database,
     )
     admin = create_engine(url, hide_parameters=True)
-    migration = Config("alembic.ini")
-    with admin.begin() as c:
-        migration.attributes["connection"] = c
-        command.upgrade(migration, "head")
-        c.execute(text("REVOKE USAGE ON SCHEMA public FROM PUBLIC"))
 
     engines = []
 
     def role_engine(role):
-        engine = create_engine(url, hide_parameters=True)
+        engine = fixture.engines[{
+            "atl_paper_control_api": "api", "atl_paper_execution": "execution",
+        }[role]]
         engines.append(engine)
-
-        @event.listens_for(engine, "connect")
-        def assign(connection, _):
-            connection.execute("SET ROLE " + role)
-            connection.commit()
-
         return engine
 
     commands = PaperCommands(role_engine("atl_paper_control_api"))
@@ -328,4 +318,12 @@ def guest():
 
 
 if __name__ == "__main__":
-    guest()
+    import traceback
+
+    try:
+        guest()
+    except Exception as error:
+        root = getattr(error, "orig", error)
+        frame = traceback.extract_tb(error.__traceback__)[-1]
+        print(f"APW02_FAIL:HTTP_CHAIN:{type(root).__name__}:{Path(frame.filename).name}:{frame.lineno}")
+        raise SystemExit(1) from None

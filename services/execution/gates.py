@@ -9,6 +9,7 @@ from decimal import Decimal, localcontext
 from sqlalchemy import text
 
 from packages.domain import models as m
+from packages.persistence.execution_identity import is_execution
 from packages.risk.budget import budget_reasons, read_cap
 from packages.risk.engine import RiskLimits, evaluate
 from packages.risk.paper_daily_sql import is_isolated_paper
@@ -50,7 +51,7 @@ def evaluate_submit_gate(
     """
     connection = tx.connection
     _require(
-        connection.execute(text("SELECT current_user")).scalar_one() == "atl_execution",
+        is_execution(connection),
         "EXECUTION_ROLE_REQUIRED",
     )
     account = (

@@ -1,0 +1,13 @@
+{
+  "riskBudget": "100",
+  "currency": "USD",
+  "strategy": "mock-neutral",
+  "credentialGeneration": 1,
+  "accountGeneration": 1,
+  "expectedProfileVersion": 0,
+  "confirmation": "SAVE_PAPER_PROFILE",
+  "feeAttestation": {
+    "scope": "alpaca-paper-direct-retail-us-equity-zero-v1",
+    "confirmed": true
+  }
+}

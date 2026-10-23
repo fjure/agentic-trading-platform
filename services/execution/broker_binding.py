@@ -154,6 +154,9 @@ class AlpacaExecutionBinding:
 
     def publish(self, instrument_id: str, trace_id: str) -> m.BrokerCapabilities:
         """Refresh both independent providers, then publish audited SQL provenance."""
+        # Network waits must never hold the financial account lock. The short
+        # commit below checks proof time, immutable pins and current SQL identity.
+        market, source, trading, trade = self._proofs(instrument_id)
         with self._ledger.transaction() as tx:
             c = tx.connection
             _require(
@@ -170,7 +173,6 @@ class AlpacaExecutionBinding:
                 and c.execute(text("SELECT count(*) FROM public.accounts")).scalar_one() == 1,
                 "ACCOUNT_MISMATCH",
             )
-            market, source, trading, trade = self._proofs(instrument_id)
             now = _utc(c.execute(text("SELECT clock_timestamp()")).scalar_one())
             _require(_fresh(source, now) and _fresh(trade, now), "BINDING_PROOF_STALE")
             account_pin = c.execute(
@@ -238,7 +240,7 @@ class AlpacaExecutionBinding:
             prior = (
                 c.execute(
                     text("""
-                SELECT version,broker_id,capability_version FROM public.risk_instrument_context
+                SELECT * FROM public.risk_instrument_context
                 WHERE account_id=:account AND instrument_id=:instrument FOR UPDATE
             """),
                     {"account": self._account_id, "instrument": instrument_id},
@@ -246,12 +248,12 @@ class AlpacaExecutionBinding:
                 .mappings()
                 .one_or_none()
             )
-            previous_source = (
+            previous_proof = (
                 None
                 if prior is None
                 else c.execute(
                     text("""
-                SELECT source_capability_version FROM public.broker_binding_proofs
+                SELECT * FROM public.broker_binding_proofs
                 WHERE account_id=:account AND instrument_id=:instrument
                   AND context_version=:version
             """),
@@ -260,8 +262,10 @@ class AlpacaExecutionBinding:
                         "instrument": instrument_id,
                         "version": prior["version"],
                     },
-                ).scalar_one_or_none()
+                ).mappings().one_or_none()
             )
+            previous_source = (previous_proof["source_capability_version"]
+                               if previous_proof is not None else None)
             invalidate_recovery = (
                 account_pin is None
                 or asset_pin is None
@@ -270,6 +274,33 @@ class AlpacaExecutionBinding:
                 or prior["capability_version"] != trading.version
                 or previous_source != source.capability_version
             )
+            # Repeated observations do not revoke a still-fresh immutable proof
+            # whose complete capability/session semantics are unchanged. Its
+            # original validity is retained, never renewed by this early return.
+            if (c.execute(text("SELECT current_database()")).scalar_one() == "lab_paper_runtime"
+                    and not invalidate_recovery and previous_proof is not None
+                    and prior["valid_until"] > now
+                    and previous_proof["valid_until"] > now
+                    and prior["session_open"] is True
+                    and prior["session_valid_until"] == source.session_end
+                    and previous_proof["session_start"] == source.session_start
+                    and previous_proof["session_end"] == source.session_end
+                    and str(previous_proof["provider_account_id"]) == trade.provider_account_id
+                    and str(previous_proof["provider_asset_id"]) == trade.provider_asset_id
+                    and prior["paper_confirmed"] is True
+                    and prior["regular_session_confirmed"]
+                        == (trading.regular_session is m.Capability.CONFIRMED)
+                    and prior["continuous_session_confirmed"]
+                        == (trading.continuous_session is m.Capability.CONFIRMED)
+                    and prior["market_order_confirmed"]
+                        == (trading.market_order is m.Capability.CONFIRMED)
+                    and prior["limit_order_confirmed"]
+                        == (trading.limit_order is m.Capability.CONFIRMED)
+                    and prior["fractional_confirmed"]
+                        == (trading.fractional is m.Capability.CONFIRMED)
+                    and prior["quantity_step"] == trading.quantity_step
+                    and prior["price_tick"] == trading.price_tick):
+                return trading
             version = 1 if prior is None else prior["version"] + 1
             valid_until = min(
                 market.valid_until,
@@ -376,6 +407,7 @@ class AlpacaExecutionBinding:
         intent: m.OrderIntent,
         expected_capability: m.BrokerCapabilities,
         now: datetime,
+        *, collected_proofs=None,
     ) -> None:
         """Recheck every private identity and capability under caller's account lock."""
         c = tx.connection
@@ -395,7 +427,12 @@ class AlpacaExecutionBinding:
             {"intent": intent.id},
         ).scalar_one_or_none()
         _require(owner == self._account_id, "ACCOUNT_MISMATCH")
-        self._validate_context(tx, intent.instrument_id, expected_capability, now)
+        self._validate_context(tx, intent.instrument_id, expected_capability, now,
+                               collected_proofs=collected_proofs)
+
+    def collect_submit_proofs(self, instrument_id):
+        """Collect dual-provider evidence before acquiring financial locks."""
+        return self._proofs(instrument_id)
 
     def validate_recovery(self, tx, *, now: datetime) -> int:
         """Fresh dual-provider proof for every configured instrument under the gate."""
@@ -427,7 +464,8 @@ class AlpacaExecutionBinding:
         return len(instruments)
 
     def _validate_context(
-        self, tx, instrument_id: str, expected_capability: m.BrokerCapabilities, now: datetime
+        self, tx, instrument_id: str, expected_capability: m.BrokerCapabilities, now: datetime,
+        *, collected_proofs=None,
     ) -> None:
         c = tx.connection
         context = (
@@ -480,7 +518,15 @@ class AlpacaExecutionBinding:
             {"account": self._account_id, "instrument": instrument_id},
         ).scalar_one_or_none()
         _require(account_pin is not None and asset_pin is not None, "BINDING_PIN_MISSING")
-        market, source, trading, trade = self._proofs(instrument_id)
+        if collected_proofs is None:
+            collected_proofs = self._proofs(instrument_id)
+        _require(type(collected_proofs) is tuple and len(collected_proofs) == 4,
+                 "BINDING_PROOF_INVALID")
+        market, source, trading, trade = collected_proofs
+        _require(type(source) is BindingProof and type(trade) is BindingProof
+                 and type(trading) is m.BrokerCapabilities
+                 and source.instrument_id == trade.instrument_id == instrument_id
+                 and market.instrument.id == instrument_id, "BINDING_PROOF_INVALID")
         final_now = _utc(c.execute(text("SELECT clock_timestamp()")).scalar_one())
         _require(
             market.valid_until > final_now

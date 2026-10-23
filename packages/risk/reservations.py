@@ -227,8 +227,12 @@ def _fresh_facts(
     paper_daily_required = is_isolated_paper(connection)
     paper_reference, paper_observation = None, None
     if paper_daily_required:
+        from packages.risk.paper_lifecycle import activation_reasons
         from packages.risk.paper_limits import paper_proposal_reasons
 
+        lifecycle_blockers = activation_reasons(connection, tx, account_id, proposal, now)
+        if lifecycle_blockers:
+            return lifecycle_blockers, None
         policy_blockers = paper_proposal_reasons(connection, tx, proposal, state, now)
         if policy_blockers:
             return policy_blockers, None

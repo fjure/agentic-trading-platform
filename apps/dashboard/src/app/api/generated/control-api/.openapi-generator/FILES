@@ -67,6 +67,7 @@ model/orderPage.ts
 model/paperCancelRequest.ts
 model/paperControlRequest.ts
 model/paperErrorCode.ts
+model/paperFeeAttestation.ts
 model/paperGenerationRequest.ts
 model/paperLimitOrderRequest.ts
 model/paperOperation.ts
@@ -77,6 +78,11 @@ model/paperStartRequest.ts
 model/paperStatus.ts
 model/paperSymbol.ts
 model/paperTradeProposal.ts
+model/paperTradingProfile.ts
+model/paperTradingProfileFeeAttestation.ts
+model/paperTradingProfileNot.ts
+model/paperTradingProfileNotAnyOf.ts
+model/paperTradingProfileUpdateRequest.ts
 model/paperVerifyRequest.ts
 model/problem.ts
 model/proposalPage.ts

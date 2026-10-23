@@ -1,4 +1,10 @@
-"""Real isolated PostgreSQL command/lease/generation checks; no provider or private mounts."""
+"""Historical migration15 command model, including pre-isolation Fake obligations.
+
+Current fixed-identity/head behavior is exercised by test_paper_lifecycle,
+test_paper_submit_lifecycle and the real fixed-role HTTP chain. This UUID-DB
+fixture cannot represent the strict fixed database/login boundary introduced
+in16 and must not be used as its acceptance evidence.
+"""
 
 from pathlib import Path
 
@@ -131,7 +137,7 @@ def guest():
     alembic = Config("alembic.ini")
     with engine.begin() as connection:
         alembic.attributes["connection"] = connection
-        command.upgrade(alembic, "head")
+        command.upgrade(alembic, "0015_paper_limit_policy")
         if not connection.execute(text("SELECT to_regclass('public.paper_commands')")).scalar_one():
             spec = importlib.util.spec_from_file_location(
                 "command_migration", "/opt/lab/command_migration.py"
@@ -693,7 +699,20 @@ def obligations_guest():
         execution.engine.dispose()
         print("PASS paper rotation obligations")
 
-    risk_support.guest(run_checks=check)
+    # Preserve every legacy Fake-obligation assertion against its historical
+    # command schema. The current Paper deployment never adopts Fake finances.
+    from unittest.mock import patch
+
+    from alembic import command
+
+    upgrade = command.upgrade
+
+    def migration15(configuration, target):
+        assert target == "head"
+        return upgrade(configuration, "0015_paper_limit_policy")
+
+    with patch.object(command, "upgrade", migration15):
+        risk_support.guest(run_checks=check)
 
 
 if __name__ == "__main__":

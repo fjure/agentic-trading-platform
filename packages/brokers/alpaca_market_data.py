@@ -182,10 +182,12 @@ class AlpacaMarketDataProvider:
         feed: str = "iex",
         transport: httpx.BaseTransport | None = None,
         egress_proxy: bool = False,
+        proxy_deployment: str = "lab",
     ) -> None:
         if feed not in {"iex", "sip"}:
             raise ValueError("unsupported Alpaca stock feed")
-        if any(type(flag) is not bool for flag in (enabled, enable_crypto, egress_proxy)):
+        if (proxy_deployment not in {"lab", "paper"}
+                or any(type(flag) is not bool for flag in (enabled, enable_crypto, egress_proxy))):
             raise ValueError("invalid enable flag")
         if transport is not None and type(transport) is not httpx.MockTransport:
             raise ValueError("only exact MockTransport is accepted for injected transport")
@@ -201,7 +203,9 @@ class AlpacaMarketDataProvider:
         # trust_env=False prevents proxy or CA overrides. The normal transport verifies TLS.
         self._client = httpx.Client(
             transport=transport, timeout=httpx.Timeout(5.0), follow_redirects=False,
-            trust_env=False, proxy="http://execution-egress:8080" if egress_proxy else None,
+            trust_env=False,
+            proxy=("http://paper-execution-egress:8080" if proxy_deployment == "paper"
+                   else "http://execution-egress:8080") if egress_proxy else None,
         )
 
     def close(self) -> None:

@@ -155,8 +155,10 @@ class AlpacaPaperBrokerAdapter:
         cash_cushion_fraction: Decimal = Decimal("0.01"),
         reconciliation_fee_profile: str | None = None,
         egress_proxy: bool = False,
+        proxy_deployment: str = "lab",
     ) -> None:
-        if type(egress_proxy) is not bool or (egress_proxy and transport is not None):
+        if (proxy_deployment not in {"lab", "paper"}
+                or type(egress_proxy) is not bool or (egress_proxy and transport is not None)):
             raise ValueError("invalid egress proxy configuration")
         if type(paper_enabled) is not bool or type(enable_crypto) is not bool:
             raise ValueError("invalid enable flag")
@@ -188,7 +190,8 @@ class AlpacaPaperBrokerAdapter:
             self._cash_buffer = Decimal("1") + cushion
         self._client = httpx.Client(
             transport=transport,
-            proxy="http://execution-egress:8080" if egress_proxy else None,
+            proxy=("http://paper-execution-egress:8080" if proxy_deployment == "paper"
+                   else "http://execution-egress:8080") if egress_proxy else None,
             timeout=httpx.Timeout(5.0),
             follow_redirects=False,
             trust_env=False,
@@ -224,6 +227,7 @@ class AlpacaPaperBrokerAdapter:
         *,
         params: dict[str, str] | None = None,
         payload: dict[str, object] | None = None,
+        before_io=None,
     ) -> tuple[int, object | None]:
         static = {
             "/v2/account",
@@ -276,6 +280,10 @@ class AlpacaPaperBrokerAdapter:
             "Accept-Encoding": "identity",
         }
         try:
+            # POST's recursive account GET and local proof checks above must
+            # finish before Execution commits its final authorization/attempt.
+            if before_io is not None:
+                before_io()
             with self._client.stream(
                 method, _HOST + path, params=params, json=payload, headers=headers
             ) as response:
@@ -781,7 +789,9 @@ class AlpacaPaperBrokerAdapter:
         return self._map(intent, data)
 
     @_locked
-    def submit(self, intent: OrderIntent) -> BrokerOrder:
+    def submit(self, intent: OrderIntent, *, before_io=None) -> BrokerOrder:
+        if before_io is not None and not callable(before_io):
+            raise AlpacaPaperError("INVALID_BEFORE_IO")
         if type(intent) is not OrderIntent or not _CLIENT_ID.fullmatch(intent.client_order_id):
             raise AlpacaPaperError("INVALID_INTENT")
         prior = self._intents.get(intent.client_order_id)
@@ -807,7 +817,6 @@ class AlpacaPaperBrokerAdapter:
         final_asset = self._asset(intent.instrument_id)
         self._validate_intent(intent, final_cap, final_asset, final_account)
         self._fresh_proof(intent.instrument_id)
-        self._attempted.add(intent.client_order_id)
         payload: dict[str, object] = {
             "symbol": intent.instrument_id,
             "qty": _canonical_decimal(intent.quantity),
@@ -820,8 +829,18 @@ class AlpacaPaperBrokerAdapter:
         }
         if intent.limit_price is not None:
             payload["limit_price"] = _canonical_decimal(intent.limit_price)
+
+        def mark_attempt():
+            # This runs inside _request after its final account GET. A failed
+            # commit escapes before both the local attempted marker and POST;
+            # the already bound client ID remains lookup-only on re-entry.
+            if before_io is not None:
+                before_io()
+            self._attempted.add(intent.client_order_id)
+
         try:
-            status, data = self._request("POST", "/v2/orders", payload=payload)
+            status, data = self._request("POST", "/v2/orders", payload=payload,
+                                         before_io=mark_attempt)
         except AlpacaPaperError:
             unknown = self._unknown(intent)
             self._orders[intent.client_order_id] = unknown

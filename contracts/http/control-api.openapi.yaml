@@ -957,6 +957,151 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/TradingProfileUpdateRequest'
+  /api/v1/paper/trading-profile:
+    get:
+      tags:
+      - Paper
+      description: REQ-APW-005/010; APW-05; T-APW-023. Authenticated same-origin isolated Paper settings.
+        No credentials, private identity, provider payloads or provider I/O. A save durably closes entry
+        gates; only a later explicit START can request activation.
+      parameters:
+      - $ref: '#/components/parameters/Traceparent'
+      operationId: getPaperTradingProfile
+      summary: Read actual versioned isolated Paper settings
+      responses:
+        '200':
+          description: Actual stored profile; this is not an activation receipt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperTradingProfile'
+              example:
+                namespace: alpaca-paper
+                configured: false
+                currency: USD
+                riskBudget: null
+                strategy: null
+                strategyVersion: null
+                credentialGeneration: 0
+                accountGeneration: 0
+                policyVersion: 0
+                profileVersion: 0
+                budgetVersion: 0
+                limitPolicyVersion: 1
+                feeAttestation: null
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+        '400':
+          description: Invalid strict profile or attestation
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Local session required
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Origin or CSRF refused
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '409':
+          description: Version, identity, budget, or idempotency conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Paper settings temporarily unavailable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+    put:
+      tags:
+      - Paper
+      description: REQ-APW-005/010; APW-05; T-APW-023. Authenticated same-origin isolated Paper settings.
+        No credentials, private identity, provider payloads or provider I/O. A save durably closes entry
+        gates; only a later explicit START can request activation.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/Traceparent'
+      operationId: updatePaperTradingProfile
+      summary: Save generation-bound Paper budget, strategy and fee attestation
+      responses:
+        '200':
+          description: Actual stored profile; this is not an activation receipt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperTradingProfile'
+              example:
+                namespace: alpaca-paper
+                configured: true
+                currency: USD
+                riskBudget: '100'
+                strategy: mock-neutral
+                strategyVersion: mock-neutral.v1
+                credentialGeneration: 1
+                accountGeneration: 1
+                policyVersion: 1
+                profileVersion: 1
+                budgetVersion: 1
+                limitPolicyVersion: 1
+                feeAttestation:
+                  scope: alpaca-paper-direct-retail-us-equity-zero-v1
+                  confirmed: true
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+        '400':
+          description: Invalid strict profile or attestation
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Local session required
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Origin or CSRF refused
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '409':
+          description: Version, identity, budget, or idempotency conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Paper settings temporarily unavailable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaperTradingProfileUpdateRequest'
+            example:
+              riskBudget: '100'
+              currency: USD
+              strategy: mock-neutral
+              credentialGeneration: 1
+              accountGeneration: 1
+              expectedProfileVersion: 0
+              confirmation: SAVE_PAPER_PROFILE
+              feeAttestation:
+                scope: alpaca-paper-direct-retail-us-equity-zero-v1
+                confirmed: true
   /api/v1/paper/status:
     get:
       tags:
@@ -3771,3 +3916,232 @@ components:
             type: string
             format: uuid
             maxLength: 36
+    PaperFeeAttestation:
+      type: object
+      additionalProperties: false
+      required:
+      - scope
+      - confirmed
+      properties:
+        scope:
+          type: string
+          const: alpaca-paper-direct-retail-us-equity-zero-v1
+        confirmed:
+          type: boolean
+          const: true
+      description: Explicit operator attestation for this direct-retail USD US-equity Paper fee scope only.
+        It is bound atomically to the saved profile version; it does not assert a provider verification or
+        activate trading.
+    PaperTradingProfile:
+      type: object
+      additionalProperties: false
+      required:
+      - namespace
+      - configured
+      - currency
+      - riskBudget
+      - strategy
+      - strategyVersion
+      - credentialGeneration
+      - accountGeneration
+      - policyVersion
+      - profileVersion
+      - budgetVersion
+      - limitPolicyVersion
+      - feeAttestation
+      - traceId
+      properties:
+        namespace:
+          type: string
+          const: alpaca-paper
+        configured:
+          type: boolean
+        currency:
+          type: string
+          const: USD
+        riskBudget:
+          type:
+          - string
+          - 'null'
+          pattern: ^(?=.*[1-9])(?:(?:0|[1-9][0-9]{0,5})(?:\.[0-9]{1,18})?|1000000(?:\.0{1,18})?)$
+        strategy:
+          type:
+          - string
+          - 'null'
+          enum:
+          - mock-neutral
+          - neutral-baseline
+          - jev
+          - null
+        strategyVersion:
+          type:
+          - string
+          - 'null'
+          enum:
+          - mock-neutral.v1
+          - neutral-baseline.v1
+          - jev.v1
+          - null
+        credentialGeneration:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        accountGeneration:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        policyVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        profileVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        budgetVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        limitPolicyVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        feeAttestation:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - scope
+          - confirmed
+          properties:
+            scope:
+              type: string
+              const: alpaca-paper-direct-retail-us-equity-zero-v1
+            confirmed:
+              type: boolean
+              const: true
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+      description: Versioned isolated Paper settings. Unconfigured means no saved budget, strategy or fee
+        attestation; policyVersion is zero only when no authoritative risk policy exists. Configured credential/account
+        generations are the stored profile bindings and never silently rebind on rotation. Saving closes entry
+        gates and never activates trading. strategyVersion names the stored strategy mapping, not a model
+        run version.
+      if:
+        properties:
+          configured:
+            const: false
+      then:
+        properties:
+          namespace: {}
+          configured: {}
+          currency: {}
+          riskBudget:
+            type: 'null'
+          strategy:
+            type: 'null'
+          strategyVersion:
+            type: 'null'
+          credentialGeneration:
+            const: 0
+          accountGeneration:
+            const: 0
+          policyVersion: {}
+          profileVersion:
+            const: 0
+          budgetVersion:
+            const: 0
+          limitPolicyVersion: {}
+          feeAttestation:
+            type: 'null'
+          traceId: {}
+      else:
+        properties:
+          namespace: {}
+          configured: {}
+          currency: {}
+          riskBudget:
+            type: string
+          strategy:
+            type: string
+          strategyVersion:
+            type: string
+          credentialGeneration:
+            minimum: 1
+          accountGeneration:
+            minimum: 1
+          policyVersion:
+            minimum: 1
+          profileVersion:
+            minimum: 1
+          budgetVersion:
+            minimum: 1
+          limitPolicyVersion: {}
+          feeAttestation:
+            type: object
+          traceId: {}
+      not:
+        anyOf:
+        - properties:
+            strategy:
+              const: mock-neutral
+            strategyVersion:
+              not:
+                const: mock-neutral.v1
+        - properties:
+            strategy:
+              const: neutral-baseline
+            strategyVersion:
+              not:
+                const: neutral-baseline.v1
+        - properties:
+            strategy:
+              const: jev
+            strategyVersion:
+              not:
+                const: jev.v1
+    PaperTradingProfileUpdateRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - riskBudget
+      - currency
+      - strategy
+      - credentialGeneration
+      - accountGeneration
+      - expectedProfileVersion
+      - confirmation
+      - feeAttestation
+      properties:
+        riskBudget:
+          $ref: '#/components/schemas/PositiveBudget'
+        currency:
+          type: string
+          const: USD
+        strategy:
+          type: string
+          enum:
+          - mock-neutral
+          - neutral-baseline
+          - jev
+        credentialGeneration:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        accountGeneration:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        expectedProfileVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        confirmation:
+          type: string
+          const: SAVE_PAPER_PROFILE
+        feeAttestation:
+          $ref: '#/components/schemas/PaperFeeAttestation'
+      description: Create at expectedProfileVersion zero or update the exact existing version. Immutable actor/key/body
+        replay is idempotent; conflicting reuse or stale bindings are refused. Explicit fee-scope confirmation
+        is version bound. Save closes gates without activating a workflow or contacting providers.

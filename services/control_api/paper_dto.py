@@ -239,3 +239,67 @@ class Status(DTO):
         ):
             raise ValueError("INVALID_REQUEST")
         return value
+
+
+NonnegativeVersion = Annotated[int, Field(ge=0, le=9007199254740991)]
+Strategy = Literal["mock-neutral", "neutral-baseline", "jev"]
+
+
+class FeeAttestation(DTO):
+    scope: Literal["alpaca-paper-direct-retail-us-equity-zero-v1"]
+    confirmed: Literal[True]
+
+    @field_validator("confirmed", mode="before")
+    @classmethod
+    def explicit_confirmation(cls, value):
+        if type(value) is not bool or value is not True:
+            raise ValueError("INVALID_REQUEST")
+        return value
+
+
+class ProfileUpdate(DTO):
+    riskBudget: Budget
+    currency: Literal["USD"]
+    strategy: Strategy
+    credentialGeneration: Version
+    accountGeneration: Version
+    expectedProfileVersion: NonnegativeVersion
+    confirmation: Literal["SAVE_PAPER_PROFILE"]
+    feeAttestation: FeeAttestation
+
+    _budget = field_validator("riskBudget")(Terms.budget.__func__)
+
+
+class Profile(DTO):
+    namespace: Literal["alpaca-paper"]
+    configured: bool
+    currency: Literal["USD"]
+    riskBudget: Budget | None
+    strategy: Strategy | None
+    strategyVersion: Literal["mock-neutral.v1", "neutral-baseline.v1", "jev.v1"] | None
+    credentialGeneration: NonnegativeVersion
+    accountGeneration: NonnegativeVersion
+    policyVersion: NonnegativeVersion
+    profileVersion: NonnegativeVersion
+    budgetVersion: NonnegativeVersion
+    limitPolicyVersion: Version
+    feeAttestation: FeeAttestation | None
+    traceId: Trace
+
+    @model_validator(mode="after")
+    def profile_bindings(self):
+        nullable = (self.riskBudget, self.strategy, self.strategyVersion, self.feeAttestation)
+        bindings = (
+            self.credentialGeneration,
+            self.accountGeneration,
+            self.profileVersion,
+            self.budgetVersion,
+        )
+        if self.configured:
+            if any(value is None for value in nullable) or any(value < 1 for value in bindings):
+                raise ValueError("INVALID_REQUEST")
+            if self.policyVersion < 1 or self.strategyVersion != self.strategy + ".v1":
+                raise ValueError("INVALID_REQUEST")
+        elif any(value is not None for value in nullable) or any(bindings):
+            raise ValueError("INVALID_REQUEST")
+        return self
