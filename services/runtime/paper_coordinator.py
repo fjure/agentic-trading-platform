@@ -46,6 +46,7 @@ class PaperRuntimeCoordinator:
         self._component_key, self._faulted = None, False
         self._owner_faulted = False
         self._manual_pending = None
+        self._cancel_service = None
         self._cycle = Lock()
         self.outbox = Outbox(ledger.engine)
         self.verifier = PaperVerificationRuntime(
@@ -93,6 +94,26 @@ class PaperRuntimeCoordinator:
             if self._read() is not None:
                 self._ensure_owner()
         return self.verifier.tick()
+
+    def cancel_tick(self):
+        # This lane must not acquire _cycle or reuse the entry adapter: either
+        # can be held by a manual submit waiting on provider I/O. SQL owns the
+        # independent cancel lease and rechecks the current Execution fence.
+        owner = self.process
+        if self._owner_faulted:
+            return "UNAVAILABLE"
+        if owner is None:
+            return "READY"
+        if self._cancel_service is None:
+            from services.execution.paper_cancel import PaperCancelService
+
+            self._cancel_service = PaperCancelService(
+                self.ledger, reader_factory=self.reader_factory,
+                broker_factory=self.broker_factory, clock=self.clock,
+            )
+        return self._cancel_service.tick(
+            owner_id=owner.owner_id, fencing_token=owner.fencing_token,
+        )
 
     def _components(self, context):
         self._ensure_owner()

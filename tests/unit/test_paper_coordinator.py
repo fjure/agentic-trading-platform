@@ -26,9 +26,50 @@ def runtime():
 
 def test_empty_paper_runtime_has_no_secret_or_provider_construction():
     value, readers = runtime()
-    assert value.recovery_tick() == value.heartbeat_tick() == "READY"
+    assert value.recovery_tick() == value.heartbeat_tick() == value.cancel_tick() == "READY"
+    assert value._cancel_service is None
     readers.assert_not_called()
     assert value.process is value.broker is value.binding is value.gateway is None
+
+
+def test_cancel_progresses_with_entry_cycle_blocked_and_entry_faulted():
+    value, readers = runtime()
+    value.process = PaperOwner("owner", 7)
+    value._faulted = True
+    service = Mock()
+    service.tick.return_value = "CANCEL_PENDING"
+    value._cancel_service = service
+    completed, errors = Event(), []
+
+    def cancel():
+        try:
+            assert value.cancel_tick() == "CANCEL_PENDING"
+            completed.set()
+        except Exception as error:
+            errors.append(error)
+
+    with value._cycle:
+        thread = Thread(target=cancel)
+        thread.start()
+        try:
+            assert completed.wait(3), "entry I/O blocked the independent cancel lane"
+        finally:
+            thread.join(1)
+    thread.join(3)
+    assert not thread.is_alive() and errors == []
+    service.tick.assert_called_once_with(owner_id="owner", fencing_token=7)
+    readers.assert_not_called()
+    value.commands._call.assert_not_called()
+
+
+def test_cancel_never_uses_a_lost_execution_owner():
+    value, readers = runtime()
+    value.process = PaperOwner("owner", 7)
+    value._owner_faulted = True
+    value._cancel_service = Mock()
+    assert value.cancel_tick() == "UNAVAILABLE"
+    value._cancel_service.tick.assert_not_called()
+    readers.assert_not_called()
 
 
 def test_prepared_but_unconfigured_profile_claims_no_provider_authority():

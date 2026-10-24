@@ -456,7 +456,7 @@ def guest():
                 raise AssertionError("unreviewed revision must not authorize existing grants")
             assert fingerprint() == before
             admin.execute(
-                "UPDATE public.alembic_version SET version_num='0018_paper_human_finish_guard'"
+                "UPDATE public.alembic_version SET version_num='0019_paper_cancellation'"
             )
         stage("PRESERVED_DATABASES")
         for database in ("lab_runtime", "lab_demo"):

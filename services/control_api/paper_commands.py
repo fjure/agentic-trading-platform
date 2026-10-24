@@ -79,7 +79,8 @@ class PaperCommands:
             result = connection.execute(text(statement), values).scalar_one_or_none()
         if isinstance(result, dict) and "error" in result:
             raise PaperCommandError(
-                400 if result["error"] == "INVALID_REQUEST" else 409, result["error"]
+                {"INVALID_REQUEST": 400, "ORDER_NOT_FOUND": 404,
+                 "OPERATION_NOT_FOUND": 404}.get(result["error"], 409), result["error"]
             )
         return result
 
