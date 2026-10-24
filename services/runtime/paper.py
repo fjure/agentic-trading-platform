@@ -67,6 +67,7 @@ def run(role):
 
         coordinator = PaperRuntimeCoordinator(config, ledger)
         schedule(coordinator.command_tick)
+        schedule(coordinator.cancel_tick)
         schedule(coordinator.heartbeat_tick, health=True)
         tick = coordinator.recovery_tick
     elif role == "worker":

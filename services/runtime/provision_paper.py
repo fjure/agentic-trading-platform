@@ -2,10 +2,12 @@
 
 Revision 0012 roles receive CONNECT only. Revision 0013 adds only the explicit
 command-function manifest below, never table access or financial permissions.
-Revision 0014 permits only audited reconciliation writes to an existing basis;
-account/position/order creation and lifecycle activation remain unavailable.
+Revision 0014 permits audited reconciliation writes to an existing basis.
 Revision 0015 adds immutable LIMIT/quote/plan ports and bounded worker job and
-decision/proposal rights, without activation or financial ledger writes.
+decision/proposal rights. Revision 0016 adds explicitly attested lifecycle and
+bounded execution writes; 0017/0018 add immutable human requests and guarded
+outcomes. Revision 0019 adds function-only cancellation authority. Provisioning
+itself creates no account, position, order, credential or entry approval.
 """
 
 from __future__ import annotations
@@ -296,6 +298,7 @@ def _verify_dormant_privileges(connection):
         [("0016_paper_lifecycle",)],
         [("0017_paper_human_orders",)],
         [("0018_paper_human_finish_guard",)],
+        [("0019_paper_cancellation",)],
     ):
         for group, functions in _COMMAND_FUNCTIONS.items():
             expected.add(("schema", "public", group, "USAGE", False))
@@ -306,6 +309,7 @@ def _verify_dormant_privileges(connection):
             [("0016_paper_lifecycle",)],
             [("0017_paper_human_orders",)],
             [("0018_paper_human_finish_guard",)],
+            [("0019_paper_cancellation",)],
         ):
             expected.add(
                 (
@@ -386,6 +390,7 @@ def _verify_dormant_privileges(connection):
             [("0016_paper_lifecycle",)],
             [("0017_paper_human_orders",)],
             [("0018_paper_human_finish_guard",)],
+            [("0019_paper_cancellation",)],
         ):
             expected.update(
                 ("relation", "public." + name, "atl_paper_execution", "SELECT", False)
@@ -435,7 +440,7 @@ def _verify_dormant_privileges(connection):
                     for column in columns.split(",")
                 )
         if revisions in ([("0016_paper_lifecycle",)], [("0017_paper_human_orders",)],
-                         [("0018_paper_human_finish_guard",)]):
+                         [("0018_paper_human_finish_guard",)], [("0019_paper_cancellation",)]):
             expected.add(("schema", "public", "atl_paper_watchdog", "USAGE", False))
             for group, functions in _FUNCTIONS_0016.items():
                 expected.update(("function", name, group, "EXECUTE", False) for name in functions)
@@ -465,7 +470,7 @@ def _verify_dormant_privileges(connection):
                     for column in columns.split(",")
                 )
         if revisions in ([("0017_paper_human_orders",)],
-                         [("0018_paper_human_finish_guard",)]):
+                         [("0018_paper_human_finish_guard",)], [("0019_paper_cancellation",)]):
             expected.update(
                 ("function", name, "atl_paper_execution", "EXECUTE", False)
                 for name in (
@@ -474,6 +479,18 @@ def _verify_dormant_privileges(connection):
                     "public.paper_human_proposal_create(uuid,uuid,bigint,text,text,timestampwithtimezone)",
                     "public.paper_human_operation_read(uuid)",
                     "public.paper_human_finish(uuid,uuid,bigint)",
+                )
+            )
+        if revisions == [("0019_paper_cancellation",)]:
+            expected.update(
+                ("function", name, "atl_paper_execution", "EXECUTE", False)
+                for name in (
+                    "public.paper_cancel_read(uuid)",
+                    "public.paper_cancel_claim(text,bigint,uuid,integer)",
+                    "public.paper_cancel_begin_lookup(uuid,uuid,bigint,text,bigint)",
+                    "public.paper_cancel_begin_delete(uuid,uuid,bigint,text,bigint,uuid)",
+                    "public.paper_cancel_record(uuid,uuid,bigint,text,bigint,jsonb)",
+                    "public.paper_cancel_finish(uuid,uuid,bigint,text,bigint)",
                 )
             )
     elif revisions not in ([], [("0012_trading_profile",)]):

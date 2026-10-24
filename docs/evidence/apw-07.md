@@ -27,7 +27,7 @@ Migration17 speichert die neue Quelle. Die letzte NULL-Erfolgs-Härtung liegt au
 
 Die vorhandenen15Minutenkerzen-/120Sekunden-Frischegrenzen bleiben unverändert. Positive echte Laufzeitfälle beginnen im UTC-Viertelstundenfenster; außerhalb belegter Frische bleiben Einstiege geschlossen, während Recovery weiterläuft. Testdaten und Venuezeitzone sind ausdrücklich synthetisch, SQL-Uhr/Ready-/Risk-/Submitguards unverändert. Tatsächliche Alpaca-/Jevfähigkeit bleibt eine spätere private menschliche Abnahme. Cancel und volle Materialbedienung folgen in APW-08/09.
 
-Gehaltene Dateien außerhalb dieses Pakets: Nutzer `apps/dashboard/angular.json`, APW-10 `apps/dashboard/package.json`, `package-lock.json`, `docs/evidence/apw-10.md`. TaskAPW-07 ist abgeschlossen, OpenSpec7/10; Issue38-Abgleich erfolgt unmittelbar im selben Durchlauf. Git-/CIzuordnung wird erst nach tatsächlicher Integration ergänzt.
+Gehaltene Dateien außerhalb dieses Pakets: Nutzer `apps/dashboard/angular.json`, APW-10 `apps/dashboard/package.json`, `package-lock.json`, `docs/evidence/apw-10.md`. TaskAPW-07 ist abgeschlossen, OpenSpec7/10; Issue38-Abgleich samt Read-back bestätigt, Wiederholung0Änderungen/10unverändert. Geprüfter Branchcommit16852af4855c45fb4e118ce78e8555c0184a128e regulär nach main78896a809b888c3d00b568e65235e18ea581d8fe integriert; Remotezuordnung und identischer Implementierungsbaum bestätigt. [CI40040855953 erfolgreich](https://github.com/fjure/agentic-trading-platform/actions/runs/40040855953).
 
 ## Safetycheckliste für diesen Umfang
 

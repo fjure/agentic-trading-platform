@@ -10,7 +10,7 @@ import hashlib
 import json
 import re
 import threading
-from dataclasses import replace
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation, localcontext
 from functools import wraps
@@ -73,6 +73,48 @@ class AlpacaPaperError(ValueError):
     def __init__(self, reason: str) -> None:
         self.reason = reason
         super().__init__(reason)
+
+
+@dataclass(frozen=True, slots=True)
+class CancelAttemptOutcome:
+    """Private normalized observation, never financial reconciliation authority."""
+
+    kind: str
+    observed_at: datetime
+    order: BrokerOrder | None = field(default=None, repr=False)
+    delete_attempted: bool = False
+    retry_after_seconds: int | None = None
+
+    def __post_init__(self):
+        if self.kind not in {
+            "OBSERVED", "ACCEPTED", "THROTTLED", "NOT_CANCELABLE", "UNKNOWN", "NOT_SENT",
+        }:
+            raise ValueError("INVALID_CANCEL_OUTCOME")
+        utc_time(self.observed_at)
+        if type(self.delete_attempted) is not bool:
+            raise ValueError("INVALID_CANCEL_OUTCOME")
+        if self.order is not None and type(self.order) is not BrokerOrder:
+            raise ValueError("INVALID_CANCEL_OUTCOME")
+        if self.retry_after_seconds is not None and (
+            type(self.retry_after_seconds) is not int or not 1 <= self.retry_after_seconds <= 60
+        ):
+            raise ValueError("INVALID_CANCEL_OUTCOME")
+
+    def as_record(self):
+        order = self.order
+        return {
+            "kind": self.kind,
+            "observedAt": self.observed_at.isoformat().replace("+00:00", "Z"),
+            "retryAfterSeconds": self.retry_after_seconds,
+            "deleteAttempted": self.delete_attempted,
+            "order": None if order is None else {
+                "clientOrderId": order.client_order_id,
+                "brokerOrderId": order.broker_order_id,
+                "status": order.status.value,
+                "requestedQuantity": decimal_string(order.requested_quantity),
+                "filledQuantity": decimal_string(order.filled_quantity),
+            },
+        }
 
 
 def _locked(method: Any) -> Any:
@@ -228,6 +270,7 @@ class AlpacaPaperBrokerAdapter:
         params: dict[str, str] | None = None,
         payload: dict[str, object] | None = None,
         before_io=None,
+        cancel_response=False,
     ) -> tuple[int, object | None]:
         static = {
             "/v2/account",
@@ -302,6 +345,8 @@ class AlpacaPaperBrokerAdapter:
                     body.extend(chunk)
                     if len(body) > _MAX_BODY:
                         raise AlpacaPaperError("INVALID_RESPONSE")
+                if cancel_response and method == "DELETE" and status in {204, 422, 429}:
+                    return status, None
                 if status in {204, 404} and not body:
                     return status, None
                 media = response.headers.get("content-type", "").split(";", 1)[0].strip().lower()
@@ -894,6 +939,71 @@ class AlpacaPaperBrokerAdapter:
         from packages.brokers.alpaca_activities import collect_evidence
 
         return collect_evidence(self, after=after, initial_history=initial_history)
+
+    @_locked
+    def cancel_with_outcome(
+        self, client_order_id: str, *, expected_broker_order_id: str | None,
+        on_lookup, before_delete, allow_delete: bool = True,
+    ) -> CancelAttemptOutcome:
+        """One audited lookup and at most one DELETE; retries belong to durable SQL.
+
+        The caller has already committed its LOOKUP marker. Callback exceptions
+        escape unchanged: an uncertain commit must never authorize another I/O.
+        """
+        if (not callable(on_lookup) or not callable(before_delete)
+                or type(allow_delete) is not bool or not _CLIENT_ID.fullmatch(client_order_id)):
+            raise AlpacaPaperError("INVALID_CANCEL_REQUEST")
+        if expected_broker_order_id is not None:
+            _uuid(expected_broker_order_id)
+        if client_order_id not in self._intents:
+            raise AlpacaPaperError("INVALID_CANCEL_REQUEST")
+        try:
+            order = self._lookup(client_order_id)
+            if (order is not None and expected_broker_order_id is not None
+                    and order.broker_order_id not in {None, expected_broker_order_id}):
+                raise IdempotencyConflict("broker and client order IDs disagree")
+        except (AlpacaPaperError, IdempotencyConflict):
+            outcome = CancelAttemptOutcome("UNKNOWN", self._now())
+            on_lookup(outcome)
+            return outcome
+        if order is None or order.broker_order_id is None or order.status is OrderStatus.UNKNOWN:
+            outcome = CancelAttemptOutcome("UNKNOWN", self._now())
+            on_lookup(outcome)
+            return outcome
+        observed = CancelAttemptOutcome("OBSERVED", self._now(), order)
+        on_lookup(observed)
+        if not allow_delete or order.status not in {
+            OrderStatus.ACKNOWLEDGED, OrderStatus.PARTIALLY_FILLED,
+        }:
+            return observed
+        attempted = False
+        callback_error = None
+
+        def authorize():
+            nonlocal attempted, callback_error
+            try:
+                before_delete()
+            except BaseException as error:
+                callback_error = error
+                raise
+            attempted = True
+
+        try:
+            status, _ = self._request(
+                "DELETE", f"/v2/orders/{order.broker_order_id}", before_io=authorize,
+                cancel_response=True,
+            )
+        except AlpacaPaperError:
+            if callback_error is not None:
+                raise
+            return CancelAttemptOutcome(
+                "UNKNOWN" if attempted else "NOT_SENT", self._now(), delete_attempted=attempted,
+            )
+        kind = {204: "ACCEPTED", 422: "NOT_CANCELABLE", 429: "THROTTLED"}.get(status, "UNKNOWN")
+        return CancelAttemptOutcome(
+            kind, self._now(), delete_attempted=True,
+            retry_after_seconds=5 if kind == "THROTTLED" else None,
+        )
 
     @_locked
     def cancel(self, client_order_id: str) -> BrokerOrder | None:
