@@ -86,6 +86,30 @@ class PaperClient:
         value = self._request("GET", "/trading-profile?trace=" + trace_id)
         return self._projection(dto.Profile, value)
 
+    def read_snapshot(self, trace_id):
+        dto.read_query([("trace", trace_id)], private=True)
+        return self._projection(dto.Snapshot, self._request("GET", "/snapshot?trace=" + trace_id))
+
+    def _read_page(self, resource, model, limit, cursor, trace_id):
+        from urllib.parse import urlencode
+
+        values = dto.read_arguments(limit, cursor, trace_id)
+        query = urlencode({key: value for key, value in values.items() if value is not None})
+        return self._projection(model, self._request("GET", "/" + resource + "?" + query))
+
+    def read_orders(self, limit, cursor, trace_id):
+        return self._read_page("orders", dto.OrderPage, limit, cursor, trace_id)
+
+    def read_fills(self, limit, cursor, trace_id):
+        return self._read_page("fills", dto.FillPage, limit, cursor, trace_id)
+
+    def read_operations(self, limit, cursor, trace_id):
+        return self._read_page("operations", dto.OperationPage, limit, cursor, trace_id)
+
+    def read_trace(self, trace_id):
+        dto.read_query([("trace", trace_id)], private=True)
+        return self._projection(dto.TraceView, self._request("GET", "/traces/" + trace_id))
+
     def save_profile(self, payload, actor_id, key, trace_id):
         payload = dto.ProfileUpdate.model_validate(payload).model_dump()
         value = self._request("PUT", "/trading-profile", {

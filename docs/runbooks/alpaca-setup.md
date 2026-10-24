@@ -1,6 +1,8 @@
 # Alpaca-Paperkonto für das lokale Lab vorbereiten
 
-Diese Anleitung bereitet ein Alpaca-Paperkonto für einen menschlich kontrollierten Lab-Ablauf vor. Im Dashboard gibt es **Übersicht → Demo & Einrichtung → Alpaca einrichten**. Der Dialog speichert die private Konfiguration und aktiviert keinen Handel. Der neue Ablauf trennt Speichern, Kontoprüfung, finanzielle Vorbereitung und Betriebsfreigabe. Seine geführte Oberfläche ist noch in Umsetzung; der aktuelle Dialog führt beim Speichern keine Kontoprüfung aus. Für sichtbare Trades ohne Konto zunächst die [Dashboard-Demo](dashboard-demo.md) verwenden; der separate Paper-Smoke bleibt in [paper-smoke.md](paper-smoke.md) beschrieben.
+Diese Anleitung bereitet ein Alpaca-Paperkonto für einen menschlich kontrollierten Lab-Ablauf vor. Im Dashboard gibt es **Übersicht → Demo & Einrichtung → Alpaca einrichten**. Der Dialog speichert die private Konfiguration und aktiviert keinen Handel. Der neue Ablauf trennt Speichern, Kontoprüfung, finanzielle Vorbereitung und Betriebsfreigabe. Seine geführte Oberfläche ist in APW-09 lokal abgenommen; der aktuelle Dialog führt beim Speichern keine Kontoprüfung aus. Für sichtbare Trades ohne Konto zunächst die [Dashboard-Demo](dashboard-demo.md) verwenden; der separate Paper-Smoke bleibt in [paper-smoke.md](paper-smoke.md) beschrieben.
+
+APW-09 ergänzt denselben privaten Dialog im eigenen Bereich **Alpaca Paper → Paper-Schlüssel einrichten** und führt danach durch die ausdrückliche Prüfung, Vorbereitung und Freigabe. Die lokale Browserabnahme ist bestanden; [Bedienfolge und aktueller Prüfstand](paper-workflow.md). Die folgenden manuellen Dateihinweise gehören zum separaten bisherigen Smokeablauf und sind für den neuen normalen Dashboardablauf nicht erforderlich.
 
 ## 1. Paperkonto bei Alpaca anlegen
 

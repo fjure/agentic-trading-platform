@@ -1,0 +1,16 @@
+{
+  "namespace": "alpaca-paper",
+  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "complete": false,
+  "items": [
+    {
+      "eventId": "paper-trace:0123456789abcdef",
+      "occurredAt": "2026-10-24T01:00:00Z",
+      "role": "EXECUTION",
+      "action": "CANCEL_LOOKUP",
+      "entityId": "12345678-1234-4234-8234-123456789012",
+      "entityVersion": 1,
+      "reasonCodes": []
+    }
+  ]
+}

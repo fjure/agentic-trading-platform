@@ -13,12 +13,17 @@ import { Observable }                                        from 'rxjs';
 
 import { PaperCancelRequest } from '../model/models';
 import { PaperControlRequest } from '../model/models';
+import { PaperFillPage } from '../model/models';
 import { PaperLimitOrderRequest } from '../model/models';
 import { PaperOperation } from '../model/models';
+import { PaperOperationPage } from '../model/models';
+import { PaperOrderPage } from '../model/models';
 import { PaperPrepareRequest } from '../model/models';
 import { PaperProblem } from '../model/models';
+import { PaperSnapshot } from '../model/models';
 import { PaperStartRequest } from '../model/models';
 import { PaperStatus } from '../model/models';
+import { PaperTrace } from '../model/models';
 import { PaperTradingProfile } from '../model/models';
 import { PaperTradingProfileUpdateRequest } from '../model/models';
 import { PaperVerifyRequest } from '../model/models';
@@ -73,6 +78,13 @@ export interface PaperServiceInterface {
     getPaperOperation(operationId: string, traceparent?: string, extraHttpRequestParams?: any): Observable<PaperOperation>;
 
     /**
+     * Read stored Paper snapshot
+     * REQ-APW-002/005/007/008/010; APW-09; T024; ADR-APW-006. Authenticated fixed alpaca-paper namespace. Stored data only: no GET contacts a provider or changes financial state. Bounded explicit allowlists exclude credentials, private provider identities and raw payloads.
+     * @endpoint get /api/v1/paper/snapshot
+     */
+    getPaperSnapshot(extraHttpRequestParams?: any): Observable<PaperSnapshot>;
+
+    /**
      * Read isolated public paper state without provider I/O
      * REQ-APW-002/005/006/007/010; APW-01. Authenticated loopback, exact same Origin and CSRF boundaries apply. Public fields are strict allowlists; no credentials or provider payloads. This endpoint reads only the isolated public projection.
      * @endpoint get /api/v1/paper/status
@@ -81,12 +93,47 @@ export interface PaperServiceInterface {
     getPaperStatus(traceparent?: string, extraHttpRequestParams?: any): Observable<PaperStatus>;
 
     /**
+     * Read stored Paper traces
+     * REQ-APW-002/005/007/008/010; APW-09; T024; ADR-APW-006. Authenticated fixed alpaca-paper namespace. Stored data only: no GET contacts a provider or changes financial state. Bounded explicit allowlists exclude credentials, private provider identities and raw payloads.
+     * @endpoint get /api/v1/paper/traces/{traceId}
+     * @param traceId 
+     */
+    getPaperTrace(traceId: string, extraHttpRequestParams?: any): Observable<PaperTrace>;
+
+    /**
      * Read actual versioned isolated Paper settings
      * REQ-APW-005/010; APW-05; T-APW-023. Authenticated same-origin isolated Paper settings. No credentials, private identity, provider payloads or provider I/O. A save durably closes entry gates; only a later explicit START can request activation.
      * @endpoint get /api/v1/paper/trading-profile
      * @param traceparent W3C Trace Context; absent or invalid input is replaced by a server trace.
      */
     getPaperTradingProfile(traceparent?: string, extraHttpRequestParams?: any): Observable<PaperTradingProfile>;
+
+    /**
+     * Read stored Paper fills
+     * REQ-APW-002/005/007/008/010; APW-09; T024; ADR-APW-006. Authenticated fixed alpaca-paper namespace. Stored data only: no GET contacts a provider or changes financial state. Bounded explicit allowlists exclude credentials, private provider identities and raw payloads.
+     * @endpoint get /api/v1/paper/fills
+     * @param limit 
+     * @param cursor 
+     */
+    listPaperFills(limit?: number, cursor?: string, extraHttpRequestParams?: any): Observable<PaperFillPage>;
+
+    /**
+     * Read stored Paper operations
+     * REQ-APW-002/005/007/008/010; APW-09; T024; ADR-APW-006. Authenticated fixed alpaca-paper namespace. Stored data only: no GET contacts a provider or changes financial state. Bounded explicit allowlists exclude credentials, private provider identities and raw payloads. ACCEPTED/RUNNING operations are listed before terminal history, then acceptedAt and operationId descending; cursors retain this priority.
+     * @endpoint get /api/v1/paper/operations
+     * @param limit 
+     * @param cursor 
+     */
+    listPaperOperations(limit?: number, cursor?: string, extraHttpRequestParams?: any): Observable<PaperOperationPage>;
+
+    /**
+     * Read stored Paper orders
+     * REQ-APW-002/005/007/008/010; APW-09; T024; ADR-APW-006. Authenticated fixed alpaca-paper namespace. Stored data only: no GET contacts a provider or changes financial state. Bounded explicit allowlists exclude credentials, private provider identities and raw payloads.
+     * @endpoint get /api/v1/paper/orders
+     * @param limit 
+     * @param cursor 
+     */
+    listPaperOrders(limit?: number, cursor?: string, extraHttpRequestParams?: any): Observable<PaperOrderPage>;
 
     /**
      * Request one-time immutable paper basis preparation

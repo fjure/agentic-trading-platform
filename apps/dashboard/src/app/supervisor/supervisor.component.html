@@ -2,31 +2,33 @@
   <span class="brand-mark" aria-hidden="true">ATL</span>
   <span class="brand-name">Agentic Trading Lab</span>
   <span class="topbar-spacer"></span>
-  <span class="connection-pill" [class.connected]="store.connectionStatus() === 'connected'">{{ connectionLabel() }}</span>
+  @if (paperActive()) { <span class="connection-pill">Alpaca Paper · eigener Datenstatus</span> }
+  @else { <span class="connection-pill" [class.connected]="store.connectionStatus() === 'connected'">{{ connectionLabel() }}</span> }
 </mat-toolbar>
 
 <div class="shell">
   <aside class="sidebar" aria-label="Hauptnavigation">
     <div class="sidebar-heading">SUPERVISION</div>
     <nav>
+      <button mat-button type="button" [class.active]="paperActive()" [attr.aria-current]="paperActive() ? 'page' : null" (click)="selectPaper()">Alpaca Paper</button>
       @for (nav of navigation; track nav.view) {
-        <button mat-button type="button" [class.active]="active() === nav.view" [attr.aria-current]="active() === nav.view ? 'page' : null" (click)="select(nav.view)">{{ nav.label }}</button>
+        <button mat-button type="button" [class.active]="!paperActive() && active() === nav.view" [attr.aria-current]="!paperActive() && active() === nav.view ? 'page' : null" (click)="select(nav.view)">{{ nav.label }}</button>
       }
     </nav>
-    <div class="sidebar-foot">Lokale Paper-Umgebung<br>Paper-Kontrolle</div>
+    <div class="sidebar-foot">Getrennter Alpaca-Paperbereich<br>Fake-Supervisor und Demo erhalten</div>
   </aside>
 
   <main class="main">
     <header class="page-heading">
-      <div><div class="eyebrow">OPERATIONS / SUPERVISOR</div><h1>Paper-Supervisor</h1><p>Kontrollzustand, Historie und Trace-Evidenz</p></div>
-      @if (store.authenticated()) { <button mat-stroked-button type="button" (click)="store.refresh()">Aktualisieren</button> }
+      <div><div class="eyebrow">{{ paperActive() ? 'ALPACA PAPER / EIGENER LEDGER' : 'FAKE / SUPERVISOR' }}</div><h1>{{ paperActive() ? 'Alpaca Paper' : 'Paper-Supervisor' }}</h1><p>Kontrollzustand, Historie und Trace-Evidenz</p></div>
+      @if (store.authenticated() && !paperActive()) { <button mat-stroked-button type="button" (click)="store.refresh()">Aktualisieren</button> }
     </header>
 
-    @if (store.connectionStatus() === 'stale' || store.connectionStatus() === 'disconnected') {
+    @if (!paperActive() && (store.connectionStatus() === 'stale' || store.connectionStatus() === 'disconnected')) {
       <div class="state-banner" role="status">{{ connectionLabel() }}. Angezeigte Werte sind möglicherweise veraltet. Letzter Datenstand: {{ store.snapshot()?.asOf || 'nicht verfügbar' }}.</div>
     }
-    @if (store.error(); as error) { <div class="error-banner" role="alert">{{ error }}</div> }
-    @if (store.pendingCommand()) {
+    @if (!paperActive() && store.error()) { <div class="error-banner" role="alert">{{ store.error() }}</div> }
+    @if (!paperActive() && store.pendingCommand()) {
       <div class="state-banner" role="status">Kontrollaktion ungeklärt. Denselben Vorgang mit unverändertem Schlüssel erneut prüfen. <button mat-stroked-button type="button" (click)="store.retryPending()">Vorgang erneut prüfen</button></div>
     }
 
@@ -42,7 +44,9 @@
         </mat-card-content>
       </mat-card>
     } @else {
-      @if (active() === 'overview') {
+      @if (paperActive()) {
+        <atl-paper-workflow (sessionLost)="paperSessionLost()" />
+      } @else if (active() === 'overview') {
         <atl-demo-setup />
         @if (store.snapshot(); as snapshot) {
           @if (store.mode() ?? snapshot.mode; as mode) {

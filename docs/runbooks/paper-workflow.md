@@ -1,6 +1,22 @@
 # Alpaca-Paperworkflow
 
-Stand22.10.2026: Kontoprüfung, einmalige finanzielle Vorbereitung und begrenzte LIMIT-Planung sind lokal abgenommen. Der Paperlebenszyklus ist in APW-05 lokal abgenommen; menschliche LIMIT-Anfragen sind in APW-07 als Backendpfad abgenommen; Cancels und die Bedienoberfläche folgen in APW-08/09; diese Anleitung behauptet noch keinen vollständig bedienbaren Handelsablauf. Das normale Lab startet weiterhin inaktiv. Die vollständige Offline- und spätere private menschliche Providerabnahme werden in APW-10 getrennt dokumentiert.
+Stand24.10.2026: Kontoprüfung, einmalige finanzielle Vorbereitung, LIMIT-Planung, Paperlebenszyklus, menschliche LIMIT-Anfragen sowie Cancels/Recovery sind in APW-01bis08 abgenommen. APW-09 ergänzt die lokal abgenommene Materialbedienung und getrennte dauerhafte Paper-Leseansichten einschließlich Browser-/Betriebsprüfung. Das normale Lab startet weiterhin inaktiv. Die vollständige Offline- und spätere private menschliche Providerabnahme werden in APW-10 getrennt dokumentiert.
+
+## Geführter Bereich Alpaca Paper
+
+Nach der lokalen Anmeldung **Alpaca Paper** in der Navigation öffnen. Der Banner kennzeichnet den eigenen Paperledger; Fake-/Demoansichten bleiben separat erreichbar.
+
+1. **Alpaca-Konto eröffnen** öffnet die externe Kontoeröffnung. Im Alpaca-Dashboard ausdrücklich Paper wählen. Danach **Paper-Schlüssel einrichten** verwenden. Der private Dialog liest gespeicherte Schlüssel niemals zurück und leert seine Felder bei Abschluss oder Sessionverlust. Speichern erteilt keine Handelsfreigabe.
+2. **Verbindung prüfen** anfordern und den tatsächlichen Vorgangsabschluss abwarten. `ACCEPTED` oder `RUNNING` bedeutet noch keinen Erfolg. Ein Blocker bleibt mit öffentlichem Fehlercode sichtbar.
+3. Bei bestätigter Verbindung **Paperledger vorbereiten** anfordern. Es wird ausschließlich die einmalige tatsächlich belegte Basis übernommen. Bestehende Volumes oder Bestände nicht zurücksetzen. Reload verwendet die gespeicherte passende Verifikations-ID.
+4. Riskbudget in USD und eine Variante wählen, den dargestellten Gebührenumfang bestätigen und **Paperprofil speichern**. Das Budget ist von Broker-Cash getrennt. Speichern pausiert neue Einstiege.
+5. Symbole auswählen und **Paperstart bestätigen**. Der Dialog zeigt die aktuellen Versionen und die ursprüngliche kurze Gültigkeit. Das Backend prüft alle Voraussetzungen; eine sichtbare Anforderung behauptet keine Freigabe. Nach Ablauf, Neustart oder Versionswechsel wird nicht automatisch neu gestartet.
+6. Für einen manuellen LIMIT-Auftrag Symbol, BUY/SELL, exakte Menge und Preis eingeben und den Dialog prüfen. Die Anfrage läuft durch denselben Risk-/Reservationspfad. Ungültige Preise oder Mengen werden nicht automatisch korrigiert. SELL eröffnet keinen Shortbestand.
+7. Bei eigener offener Order eine Cancelanforderung bestätigen. Pending oder eine angenommene Anfrage bedeutet noch keine Stornierung. Gewinnt ein Fill, bleibt die Order sichtbar FILLED; unbekannte Wirkung behält ihre Verpflichtung. Pause, Stop und Kill sind unabhängig von einer laufenden Anforderung verfügbar. Kill liquidiert keine Positionen.
+
+**Paper aktualisieren** und periodisches Nachladen lesen ausschließlich gespeicherte Daten. Quote, Fähigkeit und Session zeigen ihre tatsächlichen Belegzeiten; veraltete Belege öffnen keine Gates. Kostenbasis bleibt exakt, unbekannte Gebühren bleiben unbekannt. Historien können seitenweise nachgeladen werden; gekürzte Traceauszüge sind gekennzeichnet. Vorgänge werden nach Reload serverseitig wiedergefunden. Bei ungeklärter Transportantwort bleibt eine Wiederholung innerhalb derselben Sitzung an denselben Schlüssel, Inhalt und Ablaufzeitpunkt gebunden. Ein Reload erfindet keine Ersatzanforderung.
+
+Bei Sessionverlust verschwinden Formulare und private Dialoge; erneut lokal anmelden und den gespeicherten Zustand lesen. Laufende Recovery bleibt serverseitig bestehen. Die [offizielle Paper-Anleitung](https://docs.alpaca.markets/us/docs/paper-trading) und der externe Kontoeröffnungslink wurden am24.10.2026 lesend geprüft; diese Prüfung ist kein tatsächlicher Providerlauf.
 
 ## Einrichtung und Zustand
 
@@ -41,4 +57,4 @@ HTTP202 bedeutet angenommen, nicht ausgeführt. Der dauerhafte Vorgang liefert e
 
 Ein tatsächlicher Fill kann die gebundene Portfolio-Version verändern und damit die alte Freigabe schließen. Neue Orders benötigen dann einen neuen expliziten START mit aktuellen Belegen. Ein bereits belegter Auftrag kann nach Pause, Rotation oder Neustart abgeschlossen werden, ohne neuen START oder neuen Brokerrequest. Mit den derzeitigen15Minutenkerzen-/120Sekunden-Frischegrenzen bleiben neue Einstiege außerhalb eines frischen belegten Datenfensters geschlossen; Recovery läuft weiter. Diese Grenzen wurden für Tests nicht gelockert.
 
-Die vollständige Materialbedienung für diese Backendfunktion folgt in APW-09; Cancellation folgt in APW-08. [Lokale Abnahme und Betriebsgrenzen](../evidence/apw-07.md).
+Die Materialbedienung ist in APW-09 lokal abgenommen. Cancellation und Recovery sind in APW-08 abgenommen. [Menschlicher Backendpfad](../evidence/apw-07.md), [Cancelabnahme](../evidence/apw-08.md) und [Dashboardprüfstand](../evidence/apw-09.md).

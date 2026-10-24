@@ -89,12 +89,17 @@ test('Chromium click → canonical API → persistent PostgreSQL: budgets, trace
       await dialog.getByLabel('API Secret', { exact: true }).fill('synthetic-demo-canary-secret');
       await dialog.getByLabel('Erwartete Account UUID').fill('2bc296c4-e33d-4fea-a6cd-292e51498204');
     }
-    const saved = page.waitForResponse(r => r.url().endsWith(`/api/v1/integrations/${provider}`) && r.request().method() === 'PUT');
+    // Read the real reply as soon as its headers arrive, before the completed
+    // click can detach the dialog and Chromium can release the response body.
+    // Retain only status/boolean evidence, never a credential-bearing payload.
+    const saved = page.waitForResponse(r => r.url().endsWith(`/api/v1/integrations/${provider}`) && r.request().method() === 'PUT').then(async response => ({
+      status: response.status(), leaksCanary: (await response.text()).includes('synthetic-demo-canary'),
+    }));
     await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
     const savedReply = await saved;
-    expect(savedReply.status()).toBe(200);
+    expect(savedReply.status).toBe(200);
     // Avoid printing any body even if a future regression echoes credentials.
-    expect((await savedReply.text()).includes('synthetic-demo-canary')).toBe(false);
+    expect(savedReply.leaksCanary).toBe(false);
     await expect(dialog).toHaveCount(0);
     await demo(page).getByRole('button', { name: provider === 'alpaca' ? 'Alpaca einrichten' : 'Jev einrichten' }).click();
     // Boolean-only comparisons keep a failed assertion from exposing field values.

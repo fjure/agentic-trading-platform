@@ -13,6 +13,7 @@ from pydantic import Field
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
 
+from services.control_api import paper_dto as dto
 from services.control_api.app import _body
 from services.control_api.auth import AuthDenied
 from services.control_api.paper_commands import PaperCommandError, PaperCommands
@@ -94,6 +95,28 @@ def create_private_paper_app(commands):
         if not re.fullmatch(r"[0-9a-f]{32}", trace):
             raise ValueError()
         return await run_in_threadpool(commands.read_status, trace)
+
+    @app.get("/snapshot")
+    async def snapshot(request: Request):
+        values = dto.read_query(request.query_params.multi_items(), private=True)
+        return await run_in_threadpool(commands.read_snapshot, values["trace"])
+
+    def add_page(resource):
+        async def page(request: Request):
+            values = dto.read_query(request.query_params.multi_items(), private=True, paged=True)
+            return await run_in_threadpool(getattr(commands, "read_" + resource),
+                                          values["limit"], values["cursor"], values["trace"])
+
+        app.add_api_route("/" + resource, page, methods=["GET"])
+
+    for resource in ("orders", "fills", "operations"):
+        add_page(resource)
+
+    @app.get("/traces/{trace_id}")
+    async def trace_view(request: Request, trace_id: str):
+        dto.read_query(request.query_params.multi_items())
+        dto.read_query([("trace", trace_id)], private=True)
+        return await run_in_threadpool(commands.read_trace, trace_id)
 
     @app.get("/operations/{operation_id}")
     async def operation(operation_id: str):

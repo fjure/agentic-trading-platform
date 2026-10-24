@@ -8,42 +8,15 @@
       "pattern": "^-?(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$",
       "example": "123.45"
     },
-    "PaperCancelRequest": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "accountGeneration",
-        "confirmation"
-      ],
-      "properties": {
-        "accountGeneration": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "confirmation": {
-          "type": "string",
-          "const": "CANCEL_PAPER_ORDER"
-        }
-      }
+    "TraceId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "example": "4bf92f3577b34da6a3ce929d0e0e4736"
     },
-    "PaperControlRequest": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "action"
-      ],
-      "properties": {
-        "action": {
-          "type": "string",
-          "enum": [
-            "PAUSE",
-            "STOP",
-            "KILL"
-          ]
-        }
-      },
-      "description": "Safety controls are independent of setup, credential, policy and provider readiness. PAUSE/KILL durably close the entry latch before acknowledgement. STOP also ends strategy planning; recovery continues. None liquidates holdings."
+    "PositiveBudget": {
+      "type": "string",
+      "pattern": "^(?=.*[1-9])(?:(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,18})?|1000000(?:\\.0{1,18})?)$",
+      "description": "Exact positive decimal USD amount no greater than 1000000."
     },
     "PaperErrorCode": {
       "type": "string",
@@ -88,6 +61,38 @@
       ],
       "description": "Stable allowlisted public failure code. Never contains provider text, credentials, account UUID, paths or exception messages."
     },
+    "PaperOperationType": {
+      "type": "string",
+      "enum": [
+        "VERIFY_CONNECTION",
+        "PREPARE_LEDGER",
+        "START",
+        "PAUSE",
+        "STOP",
+        "KILL",
+        "PLACE_LIMIT_ORDER",
+        "CANCEL_ORDER"
+      ]
+    },
+    "PaperSymbol": {
+      "type": "string",
+      "enum": [
+        "SPY",
+        "QQQ"
+      ]
+    },
+    "PaperQuantity": {
+      "type": "string",
+      "maxLength": 30,
+      "pattern": "^(?=.*[1-9])(?:0|[1-9][0-9]{0,19})(?:\\.[0-9]{1,9})?$",
+      "description": "Strictly positive exact decimal shares; at most nine fractional digits. Fractional DAY LIMIT additionally requires fresh certified asset capability."
+    },
+    "PaperLimitPrice": {
+      "type": "string",
+      "maxLength": 28,
+      "pattern": "^(?=.*[1-9])(?:0|[1-9][0-9]{0,19})(?:\\.[0-9]{1,6})?$",
+      "description": "Positive exact USD price; current asset tick policy is checked before planning."
+    },
     "PaperGenerationRequest": {
       "type": "object",
       "additionalProperties": false,
@@ -107,6 +112,153 @@
           "maximum": 9007199254740991
         }
       }
+    },
+    "PaperVerifyRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "credentialGeneration"
+      ],
+      "properties": {
+        "credentialGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "PaperPrepareRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "credentialGeneration",
+        "accountGeneration",
+        "verificationOperationId"
+      ],
+      "properties": {
+        "credentialGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "verificationOperationId": {
+          "type": "string",
+          "format": "uuid",
+          "maxLength": 36
+        }
+      }
+    },
+    "PaperStartRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "credentialGeneration",
+        "accountGeneration",
+        "policyVersion",
+        "profileVersion",
+        "limitPolicyVersion",
+        "symbols",
+        "expiresAt",
+        "riskBudget",
+        "currency",
+        "strategy",
+        "confirmation",
+        "budgetVersion"
+      ],
+      "properties": {
+        "credentialGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "profileVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "limitPolicyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "symbols": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/PaperSymbol"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          },
+          "description": "JSON array with unique elements. Double negation preserves JSON Schema uniqueness while the pinned Angular generator retains the array wire type."
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "riskBudget": {
+          "$ref": "#/$defs/PositiveBudget"
+        },
+        "currency": {
+          "type": "string",
+          "const": "USD"
+        },
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "mock-neutral",
+            "neutral-baseline",
+            "jev"
+          ]
+        },
+        "confirmation": {
+          "type": "string",
+          "const": "START_PAPER"
+        },
+        "budgetVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "PaperControlRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "PAUSE",
+            "STOP",
+            "KILL"
+          ]
+        }
+      },
+      "description": "Safety controls are independent of setup, credential, policy and provider readiness. PAUSE/KILL durably close the entry latch before acknowledgement. STOP also ends strategy planning; recovery continues. None liquidates holdings."
     },
     "PaperLimitOrderRequest": {
       "type": "object",
@@ -209,11 +361,24 @@
       },
       "description": "Immutable human request; no direct broker submit. Uses the shared deterministic proposal, risk, reservation and execution path. SELL cannot exceed free long holdings. Server binds request ID and trace; no synthetic model decision. No notional, MARKET or fallback order."
     },
-    "PaperLimitPrice": {
-      "type": "string",
-      "maxLength": 28,
-      "pattern": "^(?=.*[1-9])(?:0|[1-9][0-9]{0,19})(?:\\.[0-9]{1,6})?$",
-      "description": "Positive exact USD price; current asset tick policy is checked before planning."
+    "PaperCancelRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accountGeneration",
+        "confirmation"
+      ],
+      "properties": {
+        "accountGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "confirmation": {
+          "type": "string",
+          "const": "CANCEL_PAPER_ORDER"
+        }
+      }
     },
     "PaperOperation": {
       "type": "object",
@@ -313,178 +478,6 @@
               "$ref": "#/$defs/PaperErrorCode"
             }
           }
-        }
-      }
-    },
-    "PaperOperationType": {
-      "type": "string",
-      "enum": [
-        "VERIFY_CONNECTION",
-        "PREPARE_LEDGER",
-        "START",
-        "PAUSE",
-        "STOP",
-        "KILL",
-        "PLACE_LIMIT_ORDER",
-        "CANCEL_ORDER"
-      ]
-    },
-    "PaperPrepareRequest": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "credentialGeneration",
-        "accountGeneration",
-        "verificationOperationId"
-      ],
-      "properties": {
-        "credentialGeneration": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "accountGeneration": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "verificationOperationId": {
-          "type": "string",
-          "format": "uuid",
-          "maxLength": 36
-        }
-      }
-    },
-    "PaperProblem": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "type",
-        "title",
-        "status",
-        "code",
-        "traceId"
-      ],
-      "properties": {
-        "type": {
-          "type": "string",
-          "const": "urn:agentic-trading-lab:paper-problem"
-        },
-        "title": {
-          "type": "string",
-          "const": "Paper workflow request failed"
-        },
-        "status": {
-          "type": "integer",
-          "enum": [
-            400,
-            401,
-            403,
-            404,
-            409,
-            503
-          ]
-        },
-        "code": {
-          "$ref": "#/$defs/PaperErrorCode"
-        },
-        "traceId": {
-          "$ref": "#/$defs/TraceId"
-        }
-      }
-    },
-    "PaperQuantity": {
-      "type": "string",
-      "maxLength": 30,
-      "pattern": "^(?=.*[1-9])(?:0|[1-9][0-9]{0,19})(?:\\.[0-9]{1,9})?$",
-      "description": "Strictly positive exact decimal shares; at most nine fractional digits. Fractional DAY LIMIT additionally requires fresh certified asset capability."
-    },
-    "PaperStartRequest": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "credentialGeneration",
-        "accountGeneration",
-        "policyVersion",
-        "profileVersion",
-        "limitPolicyVersion",
-        "symbols",
-        "expiresAt",
-        "riskBudget",
-        "currency",
-        "strategy",
-        "confirmation",
-        "budgetVersion"
-      ],
-      "properties": {
-        "credentialGeneration": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "accountGeneration": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "policyVersion": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "profileVersion": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "limitPolicyVersion": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "symbols": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 2,
-          "items": {
-            "$ref": "#/$defs/PaperSymbol"
-          },
-          "not": {
-            "not": {
-              "uniqueItems": true
-            }
-          },
-          "description": "JSON array with unique elements. Double negation preserves JSON Schema uniqueness while the pinned Angular generator retains the array wire type."
-        },
-        "expiresAt": {
-          "type": "string",
-          "format": "date-time",
-          "pattern": "Z$",
-          "maxLength": 30
-        },
-        "riskBudget": {
-          "$ref": "#/$defs/PositiveBudget"
-        },
-        "currency": {
-          "type": "string",
-          "const": "USD"
-        },
-        "strategy": {
-          "type": "string",
-          "enum": [
-            "mock-neutral",
-            "neutral-baseline",
-            "jev"
-          ]
-        },
-        "confirmation": {
-          "type": "string",
-          "const": "START_PAPER"
-        },
-        "budgetVersion": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
         }
       }
     },
@@ -648,12 +641,43 @@
         }
       }
     },
-    "PaperSymbol": {
-      "type": "string",
-      "enum": [
-        "SPY",
-        "QQQ"
-      ]
+    "PaperProblem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "title",
+        "status",
+        "code",
+        "traceId"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "urn:agentic-trading-lab:paper-problem"
+        },
+        "title": {
+          "type": "string",
+          "const": "Paper workflow request failed"
+        },
+        "status": {
+          "type": "integer",
+          "enum": [
+            400,
+            401,
+            403,
+            404,
+            409,
+            503
+          ]
+        },
+        "code": {
+          "$ref": "#/$defs/PaperErrorCode"
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        }
+      }
     },
     "PaperTradeProposal": {
       "type": "object",
@@ -836,30 +860,6 @@
           }
         }
       }
-    },
-    "PaperVerifyRequest": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "credentialGeneration"
-      ],
-      "properties": {
-        "credentialGeneration": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        }
-      }
-    },
-    "PositiveBudget": {
-      "type": "string",
-      "pattern": "^(?=.*[1-9])(?:(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,18})?|1000000(?:\\.0{1,18})?)$",
-      "description": "Exact positive decimal USD amount no greater than 1000000."
-    },
-    "TraceId": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{32}$",
-      "example": "4bf92f3577b34da6a3ce929d0e0e4736"
     },
     "PaperFeeAttestation": {
       "type": "object",
@@ -1169,6 +1169,1072 @@
         }
       },
       "description": "Create at expectedProfileVersion zero or update the exact existing version. Immutable actor/key/body replay is idempotent; conflicting reuse or stale bindings are refused. Explicit fee-scope confirmation is version bound. Save closes gates without activating a workflow or contacting providers."
+    },
+    "PaperReadId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$"
+    },
+    "PaperReadTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "maxLength": 30
+    },
+    "PaperReadVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "PaperReadDecimal": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$",
+      "example": "123.45",
+      "maxLength": 40
+    },
+    "PaperReadNonnegativeDecimal": {
+      "type": "string",
+      "maxLength": 39,
+      "pattern": "^(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+    },
+    "PaperReadPositiveDecimal": {
+      "type": "string",
+      "maxLength": 39,
+      "pattern": "^(?=.*[1-9])(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+    },
+    "PaperReadCursor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "description": "Opaque keyset cursor bound to the alpaca-paper namespace, resource and account context. Never parse or persist provider identifiers. Malformed tokens return INVALID_REQUEST; changed context returns VERSION_CONFLICT."
+    },
+    "PaperPortfolio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "currency",
+        "equity",
+        "cash",
+        "exposure",
+        "ledgerVersion",
+        "asOf",
+        "quality",
+        "reconciliation"
+      ],
+      "properties": {
+        "currency": {
+          "type": "string",
+          "const": "USD"
+        },
+        "equity": {
+          "$ref": "#/$defs/PaperReadNonnegativeDecimal"
+        },
+        "cash": {
+          "$ref": "#/$defs/PaperReadNonnegativeDecimal"
+        },
+        "exposure": {
+          "$ref": "#/$defs/PaperReadNonnegativeDecimal"
+        },
+        "ledgerVersion": {
+          "$ref": "#/$defs/PaperReadVersion"
+        },
+        "asOf": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "quality": {
+          "type": "string",
+          "enum": [
+            "VALID",
+            "STALE",
+            "GAP",
+            "CONFLICT",
+            "INVALID"
+          ]
+        },
+        "reconciliation": {
+          "type": "string",
+          "enum": [
+            "CURRENT",
+            "PENDING",
+            "MISMATCH"
+          ]
+        }
+      }
+    },
+    "PaperPosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "symbol",
+        "quantity",
+        "averagePrice",
+        "costBasis",
+        "realizedPnl",
+        "ledgerVersion"
+      ],
+      "properties": {
+        "symbol": {
+          "$ref": "#/$defs/PaperSymbol"
+        },
+        "quantity": {
+          "$ref": "#/$defs/PaperReadNonnegativeDecimal"
+        },
+        "averagePrice": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 39,
+          "pattern": "^(?=.*[1-9])(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+        },
+        "costBasis": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 39,
+          "pattern": "^(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+        },
+        "realizedPnl": {
+          "$ref": "#/$defs/PaperReadDecimal"
+        },
+        "ledgerVersion": {
+          "$ref": "#/$defs/PaperReadVersion"
+        }
+      },
+      "description": "Stored position. costBasis is the exact matching ledger-version cost-basis evidence, or null; never quantity multiplied by the rounded average price."
+    },
+    "PaperQuoteEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quoteId",
+        "sourceId",
+        "bid",
+        "ask",
+        "observedAt",
+        "providerTime",
+        "validUntil",
+        "sourceCapabilityVersion"
+      ],
+      "properties": {
+        "quoteId": {
+          "$ref": "#/$defs/PaperReadId"
+        },
+        "sourceId": {
+          "type": "string",
+          "const": "alpaca-market-data:iex"
+        },
+        "bid": {
+          "$ref": "#/$defs/PaperReadPositiveDecimal"
+        },
+        "ask": {
+          "$ref": "#/$defs/PaperReadPositiveDecimal"
+        },
+        "observedAt": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "providerTime": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "validUntil": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "sourceCapabilityVersion": {
+          "$ref": "#/$defs/PaperReadVersion"
+        }
+      },
+      "description": "Actual stored quote; timestamps are not renewed by GET. validUntil is the earlier of its stored proof validity and observedAt plus 30 seconds. Expired evidence remains visibly expired."
+    },
+    "PaperCapabilityEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "observedAt",
+        "validUntil",
+        "limitOrderConfirmed",
+        "fractionalConfirmed",
+        "quantityStep",
+        "priceTick"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "#/$defs/PaperReadVersion"
+        },
+        "observedAt": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "validUntil": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "limitOrderConfirmed": {
+          "type": "boolean"
+        },
+        "fractionalConfirmed": {
+          "type": "boolean"
+        },
+        "quantityStep": {
+          "$ref": "#/$defs/PaperReadPositiveDecimal"
+        },
+        "priceTick": {
+          "$ref": "#/$defs/PaperReadPositiveDecimal"
+        }
+      }
+    },
+    "PaperSessionEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "open",
+        "observedAt",
+        "validUntil",
+        "startsAt",
+        "endsAt"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "#/$defs/PaperReadVersion"
+        },
+        "open": {
+          "type": "boolean"
+        },
+        "observedAt": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "validUntil": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "startsAt": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "endsAt": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        }
+      }
+    },
+    "PaperMarketEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "symbol",
+        "marketStateId",
+        "quote",
+        "capability",
+        "session"
+      ],
+      "properties": {
+        "symbol": {
+          "$ref": "#/$defs/PaperSymbol"
+        },
+        "marketStateId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$"
+        },
+        "quote": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "quoteId",
+            "sourceId",
+            "bid",
+            "ask",
+            "observedAt",
+            "providerTime",
+            "validUntil",
+            "sourceCapabilityVersion"
+          ],
+          "properties": {
+            "quoteId": {
+              "$ref": "#/$defs/PaperReadId"
+            },
+            "sourceId": {
+              "type": "string",
+              "const": "alpaca-market-data:iex"
+            },
+            "bid": {
+              "$ref": "#/$defs/PaperReadPositiveDecimal"
+            },
+            "ask": {
+              "$ref": "#/$defs/PaperReadPositiveDecimal"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "providerTime": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "validUntil": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "sourceCapabilityVersion": {
+              "$ref": "#/$defs/PaperReadVersion"
+            }
+          },
+          "description": "Actual stored quote; timestamps are not renewed by GET. validUntil is the earlier of its stored proof validity and observedAt plus 30 seconds. Expired evidence remains visibly expired."
+        },
+        "capability": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "observedAt",
+            "validUntil",
+            "limitOrderConfirmed",
+            "fractionalConfirmed",
+            "quantityStep",
+            "priceTick"
+          ],
+          "properties": {
+            "version": {
+              "$ref": "#/$defs/PaperReadVersion"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "validUntil": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "limitOrderConfirmed": {
+              "type": "boolean"
+            },
+            "fractionalConfirmed": {
+              "type": "boolean"
+            },
+            "quantityStep": {
+              "$ref": "#/$defs/PaperReadPositiveDecimal"
+            },
+            "priceTick": {
+              "$ref": "#/$defs/PaperReadPositiveDecimal"
+            }
+          }
+        },
+        "session": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "open",
+            "observedAt",
+            "validUntil",
+            "startsAt",
+            "endsAt"
+          ],
+          "properties": {
+            "version": {
+              "$ref": "#/$defs/PaperReadVersion"
+            },
+            "open": {
+              "type": "boolean"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "validUntil": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "startsAt": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "endsAt": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            }
+          }
+        }
+      }
+    },
+    "PaperSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "observedAt",
+        "verificationOperationId",
+        "status",
+        "profile",
+        "portfolio",
+        "positions",
+        "markets"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "const": "alpaca-paper"
+        },
+        "observedAt": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "verificationOperationId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "status": {
+          "$ref": "#/$defs/PaperStatus"
+        },
+        "profile": {
+          "$ref": "#/$defs/PaperTradingProfile"
+        },
+        "portfolio": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "currency",
+            "equity",
+            "cash",
+            "exposure",
+            "ledgerVersion",
+            "asOf",
+            "quality",
+            "reconciliation"
+          ],
+          "properties": {
+            "currency": {
+              "type": "string",
+              "const": "USD"
+            },
+            "equity": {
+              "$ref": "#/$defs/PaperReadNonnegativeDecimal"
+            },
+            "cash": {
+              "$ref": "#/$defs/PaperReadNonnegativeDecimal"
+            },
+            "exposure": {
+              "$ref": "#/$defs/PaperReadNonnegativeDecimal"
+            },
+            "ledgerVersion": {
+              "$ref": "#/$defs/PaperReadVersion"
+            },
+            "asOf": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "quality": {
+              "type": "string",
+              "enum": [
+                "VALID",
+                "STALE",
+                "GAP",
+                "CONFLICT",
+                "INVALID"
+              ]
+            },
+            "reconciliation": {
+              "type": "string",
+              "enum": [
+                "CURRENT",
+                "PENDING",
+                "MISMATCH"
+              ]
+            }
+          }
+        },
+        "positions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/PaperPosition"
+          }
+        },
+        "markets": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/PaperMarketEvidence"
+          }
+        }
+      },
+      "description": "Stored Paper projections only; GET performs no provider I/O. observedAt is query time, portfolio.asOf is financial-source time and status.reconciledAt is actual reconciliation time. No financial basis is represented by null portfolio and positions; an actual flat book has an empty positions array. Missing market proofs are null; stale proof timestamps remain unchanged.",
+      "not": {
+        "anyOf": [
+          {
+            "properties": {
+              "portfolio": {
+                "const": null
+              },
+              "positions": {
+                "type": "array"
+              }
+            }
+          },
+          {
+            "properties": {
+              "portfolio": {
+                "type": "object"
+              },
+              "positions": {
+                "const": null
+              }
+            }
+          }
+        ]
+      }
+    },
+    "PaperCancelOverlay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "requestedAt",
+        "nextAttemptAt",
+        "deleteAttempts"
+      ],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "READY",
+            "BACKOFF",
+            "LOOKUP_ONLY",
+            "FINISHED"
+          ]
+        },
+        "requestedAt": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "nextAttemptAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "deleteAttempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        }
+      },
+      "description": "Independent durable cancellation obligation. FINISHED means the obligation is resolved; the actual order may be FILLED rather than CANCELED. Never replace the broker order status with this overlay."
+    },
+    "PaperOrder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "orderId",
+        "clientOrderId",
+        "proposalId",
+        "proposalSource",
+        "decisionId",
+        "humanRequestId",
+        "traceId",
+        "symbol",
+        "side",
+        "orderType",
+        "timeInForce",
+        "session",
+        "quantity",
+        "limitPrice",
+        "status",
+        "filledQuantity",
+        "averageFillPrice",
+        "updatedAt",
+        "cancel"
+      ],
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "clientOrderId": {
+          "$ref": "#/$defs/PaperReadId"
+        },
+        "proposalId": {
+          "$ref": "#/$defs/PaperReadId"
+        },
+        "proposalSource": {
+          "type": "string",
+          "enum": [
+            "MODEL_DECISION",
+            "HUMAN_REQUEST"
+          ]
+        },
+        "decisionId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$"
+        },
+        "humanRequestId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        },
+        "symbol": {
+          "$ref": "#/$defs/PaperSymbol"
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "BUY",
+            "SELL"
+          ]
+        },
+        "orderType": {
+          "type": "string",
+          "enum": [
+            "MARKET",
+            "LIMIT"
+          ]
+        },
+        "timeInForce": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "DAY",
+            null
+          ]
+        },
+        "session": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "REGULAR",
+            null
+          ]
+        },
+        "quantity": {
+          "$ref": "#/$defs/PaperReadPositiveDecimal"
+        },
+        "limitPrice": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 39,
+          "pattern": "^(?=.*[1-9])(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "CREATED",
+            "RISK_RESERVED",
+            "SUBMITTING",
+            "ACKNOWLEDGED",
+            "PARTIALLY_FILLED",
+            "FILLED",
+            "REJECTED",
+            "CANCEL_PENDING",
+            "CANCELED",
+            "UNKNOWN"
+          ]
+        },
+        "filledQuantity": {
+          "$ref": "#/$defs/PaperReadNonnegativeDecimal"
+        },
+        "averageFillPrice": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 39,
+          "pattern": "^(?=.*[1-9])(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "cancel": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "requestedAt",
+            "nextAttemptAt",
+            "deleteAttempts"
+          ],
+          "properties": {
+            "state": {
+              "type": "string",
+              "enum": [
+                "READY",
+                "BACKOFF",
+                "LOOKUP_ONLY",
+                "FINISHED"
+              ]
+            },
+            "requestedAt": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "nextAttemptAt": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time",
+              "pattern": "Z$",
+              "maxLength": 30
+            },
+            "deleteAttempts": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            }
+          },
+          "description": "Independent durable cancellation obligation. FINISHED means the obligation is resolved; the actual order may be FILLED rather than CANCELED. Never replace the broker order status with this overlay."
+        }
+      },
+      "description": "Own stored order with exclusive genuine proposal provenance. Historical MARKET orders retain their actual type; DAY and REGULAR are emitted only with stored policy proof, otherwise null. No provider order/account identifier is exposed.",
+      "not": {
+        "anyOf": [
+          {
+            "properties": {
+              "proposalSource": {
+                "const": "HUMAN_REQUEST"
+              },
+              "decisionId": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "properties": {
+              "proposalSource": {
+                "const": "HUMAN_REQUEST"
+              },
+              "humanRequestId": {
+                "const": null
+              }
+            }
+          },
+          {
+            "properties": {
+              "proposalSource": {
+                "const": "MODEL_DECISION"
+              },
+              "humanRequestId": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "properties": {
+              "proposalSource": {
+                "const": "MODEL_DECISION"
+              },
+              "decisionId": {
+                "const": null
+              }
+            }
+          },
+          {
+            "properties": {
+              "orderType": {
+                "const": "LIMIT"
+              },
+              "limitPrice": {
+                "const": null
+              }
+            }
+          },
+          {
+            "properties": {
+              "orderType": {
+                "const": "MARKET"
+              },
+              "limitPrice": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "PaperFill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fillId",
+        "orderId",
+        "symbol",
+        "side",
+        "quantity",
+        "price",
+        "occurredAt",
+        "fee",
+        "currency",
+        "traceId"
+      ],
+      "properties": {
+        "fillId": {
+          "$ref": "#/$defs/PaperReadId"
+        },
+        "orderId": {
+          "type": "string",
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "symbol": {
+          "$ref": "#/$defs/PaperSymbol"
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "BUY",
+            "SELL"
+          ]
+        },
+        "quantity": {
+          "$ref": "#/$defs/PaperReadPositiveDecimal"
+        },
+        "price": {
+          "$ref": "#/$defs/PaperReadPositiveDecimal"
+        },
+        "occurredAt": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "fee": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 39,
+          "pattern": "^(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+        },
+        "currency": {
+          "type": "string",
+          "const": "USD"
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        }
+      },
+      "description": "Local reconciled fill evidence reference, not a provider activity ID. fee is null unless an explicit per-fill fee proof exists; unknown fees are never represented by an invented zero."
+    },
+    "PaperTraceEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "eventId",
+        "occurredAt",
+        "role",
+        "action",
+        "entityId",
+        "entityVersion",
+        "reasonCodes"
+      ],
+      "properties": {
+        "eventId": {
+          "$ref": "#/$defs/PaperReadId"
+        },
+        "occurredAt": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "CONTROL_API",
+            "WORKER",
+            "EXECUTION",
+            "WATCHDOG",
+            "SYSTEM"
+          ]
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "OPERATION_ACCEPTED",
+            "OPERATION_UPDATED",
+            "PROPOSAL_CREATED",
+            "RISK_APPROVED",
+            "RISK_REJECTED",
+            "ORDER_UPDATED",
+            "EXECUTION_REPORTED",
+            "RECONCILIATION_OBSERVED",
+            "CANCEL_LOOKUP",
+            "CANCEL_DELETE",
+            "CANCEL_OBSERVED"
+          ]
+        },
+        "entityId": {
+          "$ref": "#/$defs/PaperReadId"
+        },
+        "entityVersion": {
+          "$ref": "#/$defs/PaperReadVersion"
+        },
+        "reasonCodes": {
+          "type": "array",
+          "maxItems": 37,
+          "items": {
+            "$ref": "#/$defs/PaperErrorCode"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "PaperTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "traceId",
+        "complete",
+        "items"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "const": "alpaca-paper"
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/PaperTraceEvent"
+          }
+        }
+      },
+      "description": "Explicit typed-source trace projection with at most 32 safe events. complete=false marks a bounded excerpt. Roles, semantic actions and canonical reason codes are mapped from reviewed sources; no raw audit actor/action/text, prompts, provider payloads or account/activity identifiers are forwarded. Unmapped reasons are omitted."
+    },
+    "PaperOrderPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "items",
+        "nextCursor"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "const": "alpaca-paper"
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/PaperOrder"
+          }
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Opaque keyset cursor bound to the alpaca-paper namespace, resource and account context. Never parse or persist provider identifiers. Malformed tokens return INVALID_REQUEST; changed context returns VERSION_CONFLICT."
+        }
+      }
+    },
+    "PaperFillPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "items",
+        "nextCursor"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "const": "alpaca-paper"
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/PaperFill"
+          }
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Opaque keyset cursor bound to the alpaca-paper namespace, resource and account context. Never parse or persist provider identifiers. Malformed tokens return INVALID_REQUEST; changed context returns VERSION_CONFLICT."
+        }
+      }
+    },
+    "PaperOperationPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "items",
+        "nextCursor"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "const": "alpaca-paper"
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/PaperOperation"
+          }
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Opaque keyset cursor bound to the alpaca-paper namespace, resource and account context. Never parse or persist provider identifiers. Malformed tokens return INVALID_REQUEST; changed context returns VERSION_CONFLICT."
+        }
+      },
+      "description": "Reloadable original receipts. ACCEPTED and RUNNING operations precede terminal operations; each group is ordered by acceptedAt and operationId descending. The opaque keyset cursor includes this priority and account context. A recent terminal history must not hide unresolved work."
     }
   },
   "$ref": "#/$defs/PaperStatus"

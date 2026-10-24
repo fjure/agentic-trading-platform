@@ -1632,6 +1632,435 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PaperCancelRequest'
+  /api/v1/paper/snapshot:
+    get:
+      tags:
+      - Paper
+      operationId: getPaperSnapshot
+      summary: Read stored Paper snapshot
+      description: 'REQ-APW-002/005/007/008/010; APW-09; T024; ADR-APW-006. Authenticated fixed alpaca-paper namespace.
+        Stored data only: no GET contacts a provider or changes financial state. Bounded explicit allowlists exclude
+        credentials, private provider identities and raw payloads.'
+      parameters: []
+      responses:
+        '200':
+          description: Stored Paper projection; no provider I/O
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperSnapshot'
+              example:
+                namespace: alpaca-paper
+                observedAt: '2026-10-24T01:00:00Z'
+                verificationOperationId: 12345678-1234-4234-8234-123456789012
+                status:
+                  namespace: alpaca-paper
+                  environment: PAPER
+                  setupState: PREPARED
+                  operatingState: PAUSED
+                  entryGateOpen: false
+                  credentialGeneration: 1
+                  accountGeneration: 1
+                  accountLabel: paper-11111111
+                  currency: USD
+                  verifiedAt: '2026-10-24T01:00:00Z'
+                  reconciledAt: '2026-10-24T01:00:00Z'
+                  observedAt: '2026-10-24T01:00:00Z'
+                  marketDataFeed: IEX
+                  providerVerification: CONFIRMED
+                  blockers:
+                  - ENTRY_PAUSED
+                  traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+                  cash: '99992.5'
+                  riskBudget: '100'
+                profile:
+                  namespace: alpaca-paper
+                  configured: true
+                  currency: USD
+                  riskBudget: '100'
+                  strategy: mock-neutral
+                  strategyVersion: mock-neutral.v1
+                  credentialGeneration: 1
+                  accountGeneration: 1
+                  policyVersion: 1
+                  profileVersion: 1
+                  budgetVersion: 1
+                  limitPolicyVersion: 1
+                  feeAttestation:
+                    scope: alpaca-paper-direct-retail-us-equity-zero-v1
+                    confirmed: true
+                  traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+                portfolio:
+                  currency: USD
+                  equity: '100000'
+                  cash: '99992.5'
+                  exposure: '7.5'
+                  ledgerVersion: 2
+                  asOf: '2026-10-24T01:00:00Z'
+                  quality: VALID
+                  reconciliation: CURRENT
+                positions:
+                - symbol: SPY
+                  quantity: '0.5'
+                  averagePrice: '15'
+                  costBasis: '7.5'
+                  realizedPnl: '0'
+                  ledgerVersion: 2
+                markets:
+                - symbol: SPY
+                  marketStateId: paper-state-1
+                  quote:
+                    quoteId: paper-quote-1
+                    sourceId: alpaca-market-data:iex
+                    bid: '14.99'
+                    ask: '15'
+                    observedAt: '2026-10-24T01:00:00Z'
+                    providerTime: '2026-10-24T01:00:00Z'
+                    validUntil: '2026-10-24T01:00:30Z'
+                    sourceCapabilityVersion: 1
+                  capability:
+                    version: 1
+                    observedAt: '2026-10-24T01:00:00Z'
+                    validUntil: '2026-10-24T01:02:00Z'
+                    limitOrderConfirmed: true
+                    fractionalConfirmed: true
+                    quantityStep: '0.000000001'
+                    priceTick: '0.01'
+                  session:
+                    version: 1
+                    open: false
+                    observedAt: '2026-10-24T01:00:00Z'
+                    validUntil: '2026-10-24T01:02:00Z'
+                    startsAt: '2026-10-23T13:30:00Z'
+                    endsAt: '2026-10-23T20:00:00Z'
+        '400':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '409':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+  /api/v1/paper/orders:
+    get:
+      tags:
+      - Paper
+      operationId: listPaperOrders
+      summary: Read stored Paper orders
+      description: 'REQ-APW-002/005/007/008/010; APW-09; T024; ADR-APW-006. Authenticated fixed alpaca-paper namespace.
+        Stored data only: no GET contacts a provider or changes financial state. Bounded explicit allowlists exclude
+        credentials, private provider identities and raw payloads.'
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 25
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/PaperReadCursor'
+      responses:
+        '200':
+          description: Stored Paper projection; no provider I/O
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperOrderPage'
+              example:
+                namespace: alpaca-paper
+                items:
+                - orderId: 12345678-1234-4234-8234-123456789012
+                  clientOrderId: paper-human-client-1
+                  proposalId: paper-proposal-1
+                  proposalSource: HUMAN_REQUEST
+                  decisionId: null
+                  humanRequestId: 12345678-1234-4234-8234-123456789012
+                  traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+                  symbol: SPY
+                  side: BUY
+                  orderType: LIMIT
+                  timeInForce: DAY
+                  session: REGULAR
+                  quantity: '1'
+                  limitPrice: '15'
+                  status: PARTIALLY_FILLED
+                  filledQuantity: '0.5'
+                  averageFillPrice: '15'
+                  updatedAt: '2026-10-24T01:00:00Z'
+                  cancel:
+                    state: LOOKUP_ONLY
+                    requestedAt: '2026-10-24T01:00:00Z'
+                    nextAttemptAt: '2026-10-24T01:00:01Z'
+                    deleteAttempts: 1
+                nextCursor: null
+        '400':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '409':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+  /api/v1/paper/fills:
+    get:
+      tags:
+      - Paper
+      operationId: listPaperFills
+      summary: Read stored Paper fills
+      description: 'REQ-APW-002/005/007/008/010; APW-09; T024; ADR-APW-006. Authenticated fixed alpaca-paper namespace.
+        Stored data only: no GET contacts a provider or changes financial state. Bounded explicit allowlists exclude
+        credentials, private provider identities and raw payloads.'
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 25
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/PaperReadCursor'
+      responses:
+        '200':
+          description: Stored Paper projection; no provider I/O
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperFillPage'
+              example:
+                namespace: alpaca-paper
+                items:
+                - fillId: paper-activity:0123456789abcdef
+                  orderId: 12345678-1234-4234-8234-123456789012
+                  symbol: SPY
+                  side: BUY
+                  quantity: '0.5'
+                  price: '15'
+                  occurredAt: '2026-10-24T01:00:00Z'
+                  fee: null
+                  currency: USD
+                  traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+                nextCursor: null
+        '400':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '409':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+  /api/v1/paper/operations:
+    get:
+      tags:
+      - Paper
+      operationId: listPaperOperations
+      summary: Read stored Paper operations
+      description: 'REQ-APW-002/005/007/008/010; APW-09; T024; ADR-APW-006. Authenticated fixed alpaca-paper namespace.
+        Stored data only: no GET contacts a provider or changes financial state. Bounded explicit allowlists exclude
+        credentials, private provider identities and raw payloads. ACCEPTED/RUNNING operations are listed before terminal
+        history, then acceptedAt and operationId descending; cursors retain this priority.'
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 25
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/PaperReadCursor'
+      responses:
+        '200':
+          description: Stored Paper projection; no provider I/O
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperOperationPage'
+              example:
+                namespace: alpaca-paper
+                items:
+                - operationId: 12345678-1234-4234-8234-123456789012
+                  operationType: VERIFY_CONNECTION
+                  status: ACCEPTED
+                  idempotencyKey: synthetic-paper-verify-01
+                  acceptedGeneration: 1
+                  acceptedAt: '2026-10-20T10:00:00Z'
+                  updatedAt: '2026-10-20T10:00:00Z'
+                  traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+                nextCursor: null
+        '400':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '409':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+  /api/v1/paper/traces/{traceId}:
+    get:
+      tags:
+      - Paper
+      operationId: getPaperTrace
+      summary: Read stored Paper traces
+      description: 'REQ-APW-002/005/007/008/010; APW-09; T024; ADR-APW-006. Authenticated fixed alpaca-paper namespace.
+        Stored data only: no GET contacts a provider or changes financial state. Bounded explicit allowlists exclude
+        credentials, private provider identities and raw payloads.'
+      parameters:
+      - name: traceId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/TraceId'
+      responses:
+        '200':
+          description: Stored Paper projection; no provider I/O
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperTrace'
+              example:
+                namespace: alpaca-paper
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+                complete: false
+                items:
+                - eventId: paper-trace:0123456789abcdef
+                  occurredAt: '2026-10-24T01:00:00Z'
+                  role: EXECUTION
+                  action: CANCEL_LOOKUP
+                  entityId: 12345678-1234-4234-8234-123456789012
+                  entityVersion: 1
+                  reasonCodes: []
+        '400':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '401':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '403':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '409':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
+        '503':
+          description: Safe bounded Paper request failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PaperProblem'
 components:
   securitySchemes:
     LocalSession:
@@ -4145,3 +4574,805 @@ components:
       description: Create at expectedProfileVersion zero or update the exact existing version. Immutable actor/key/body
         replay is idempotent; conflicting reuse or stale bindings are refused. Explicit fee-scope confirmation
         is version bound. Save closes gates without activating a workflow or contacting providers.
+    PaperReadId:
+      type: string
+      minLength: 1
+      maxLength: 255
+      pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$
+    PaperReadTimestamp:
+      type: string
+      format: date-time
+      pattern: Z$
+      maxLength: 30
+    PaperReadVersion:
+      type: integer
+      minimum: 1
+      maximum: 9007199254740991
+    PaperReadDecimal:
+      type: string
+      pattern: ^-?(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+      example: '123.45'
+      maxLength: 40
+    PaperReadNonnegativeDecimal:
+      type: string
+      maxLength: 39
+      pattern: ^(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+    PaperReadPositiveDecimal:
+      type: string
+      maxLength: 39
+      pattern: ^(?=.*[1-9])(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+    PaperReadCursor:
+      type: string
+      minLength: 1
+      maxLength: 1024
+      pattern: ^[A-Za-z0-9_-]+$
+      description: Opaque keyset cursor bound to the alpaca-paper namespace, resource and account context. Never parse
+        or persist provider identifiers. Malformed tokens return INVALID_REQUEST; changed context returns VERSION_CONFLICT.
+    PaperPortfolio:
+      type: object
+      additionalProperties: false
+      required:
+      - currency
+      - equity
+      - cash
+      - exposure
+      - ledgerVersion
+      - asOf
+      - quality
+      - reconciliation
+      properties:
+        currency:
+          type: string
+          const: USD
+        equity:
+          $ref: '#/components/schemas/PaperReadNonnegativeDecimal'
+        cash:
+          $ref: '#/components/schemas/PaperReadNonnegativeDecimal'
+        exposure:
+          $ref: '#/components/schemas/PaperReadNonnegativeDecimal'
+        ledgerVersion:
+          $ref: '#/components/schemas/PaperReadVersion'
+        asOf:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        quality:
+          type: string
+          enum:
+          - VALID
+          - STALE
+          - GAP
+          - CONFLICT
+          - INVALID
+        reconciliation:
+          type: string
+          enum:
+          - CURRENT
+          - PENDING
+          - MISMATCH
+    PaperPosition:
+      type: object
+      additionalProperties: false
+      required:
+      - symbol
+      - quantity
+      - averagePrice
+      - costBasis
+      - realizedPnl
+      - ledgerVersion
+      properties:
+        symbol:
+          $ref: '#/components/schemas/PaperSymbol'
+        quantity:
+          $ref: '#/components/schemas/PaperReadNonnegativeDecimal'
+        averagePrice:
+          type:
+          - string
+          - 'null'
+          maxLength: 39
+          pattern: ^(?=.*[1-9])(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+        costBasis:
+          type:
+          - string
+          - 'null'
+          maxLength: 39
+          pattern: ^(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+        realizedPnl:
+          $ref: '#/components/schemas/PaperReadDecimal'
+        ledgerVersion:
+          $ref: '#/components/schemas/PaperReadVersion'
+      description: Stored position. costBasis is the exact matching ledger-version cost-basis evidence, or null; never
+        quantity multiplied by the rounded average price.
+    PaperQuoteEvidence:
+      type: object
+      additionalProperties: false
+      required:
+      - quoteId
+      - sourceId
+      - bid
+      - ask
+      - observedAt
+      - providerTime
+      - validUntil
+      - sourceCapabilityVersion
+      properties:
+        quoteId:
+          $ref: '#/components/schemas/PaperReadId'
+        sourceId:
+          type: string
+          const: alpaca-market-data:iex
+        bid:
+          $ref: '#/components/schemas/PaperReadPositiveDecimal'
+        ask:
+          $ref: '#/components/schemas/PaperReadPositiveDecimal'
+        observedAt:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        providerTime:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        validUntil:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        sourceCapabilityVersion:
+          $ref: '#/components/schemas/PaperReadVersion'
+      description: Actual stored quote; timestamps are not renewed by GET. validUntil is the earlier of its stored proof
+        validity and observedAt plus 30 seconds. Expired evidence remains visibly expired.
+    PaperCapabilityEvidence:
+      type: object
+      additionalProperties: false
+      required:
+      - version
+      - observedAt
+      - validUntil
+      - limitOrderConfirmed
+      - fractionalConfirmed
+      - quantityStep
+      - priceTick
+      properties:
+        version:
+          $ref: '#/components/schemas/PaperReadVersion'
+        observedAt:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        validUntil:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        limitOrderConfirmed:
+          type: boolean
+        fractionalConfirmed:
+          type: boolean
+        quantityStep:
+          $ref: '#/components/schemas/PaperReadPositiveDecimal'
+        priceTick:
+          $ref: '#/components/schemas/PaperReadPositiveDecimal'
+    PaperSessionEvidence:
+      type: object
+      additionalProperties: false
+      required:
+      - version
+      - open
+      - observedAt
+      - validUntil
+      - startsAt
+      - endsAt
+      properties:
+        version:
+          $ref: '#/components/schemas/PaperReadVersion'
+        open:
+          type: boolean
+        observedAt:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        validUntil:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        startsAt:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        endsAt:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+    PaperMarketEvidence:
+      type: object
+      additionalProperties: false
+      required:
+      - symbol
+      - marketStateId
+      - quote
+      - capability
+      - session
+      properties:
+        symbol:
+          $ref: '#/components/schemas/PaperSymbol'
+        marketStateId:
+          type:
+          - string
+          - 'null'
+          minLength: 1
+          maxLength: 255
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$
+        quote:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - quoteId
+          - sourceId
+          - bid
+          - ask
+          - observedAt
+          - providerTime
+          - validUntil
+          - sourceCapabilityVersion
+          properties:
+            quoteId:
+              $ref: '#/components/schemas/PaperReadId'
+            sourceId:
+              type: string
+              const: alpaca-market-data:iex
+            bid:
+              $ref: '#/components/schemas/PaperReadPositiveDecimal'
+            ask:
+              $ref: '#/components/schemas/PaperReadPositiveDecimal'
+            observedAt:
+              $ref: '#/components/schemas/PaperReadTimestamp'
+            providerTime:
+              $ref: '#/components/schemas/PaperReadTimestamp'
+            validUntil:
+              $ref: '#/components/schemas/PaperReadTimestamp'
+            sourceCapabilityVersion:
+              $ref: '#/components/schemas/PaperReadVersion'
+          description: Actual stored quote; timestamps are not renewed by GET. validUntil is the earlier of its stored
+            proof validity and observedAt plus 30 seconds. Expired evidence remains visibly expired.
+        capability:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - version
+          - observedAt
+          - validUntil
+          - limitOrderConfirmed
+          - fractionalConfirmed
+          - quantityStep
+          - priceTick
+          properties:
+            version:
+              $ref: '#/components/schemas/PaperReadVersion'
+            observedAt:
+              $ref: '#/components/schemas/PaperReadTimestamp'
+            validUntil:
+              $ref: '#/components/schemas/PaperReadTimestamp'
+            limitOrderConfirmed:
+              type: boolean
+            fractionalConfirmed:
+              type: boolean
+            quantityStep:
+              $ref: '#/components/schemas/PaperReadPositiveDecimal'
+            priceTick:
+              $ref: '#/components/schemas/PaperReadPositiveDecimal'
+        session:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - version
+          - open
+          - observedAt
+          - validUntil
+          - startsAt
+          - endsAt
+          properties:
+            version:
+              $ref: '#/components/schemas/PaperReadVersion'
+            open:
+              type: boolean
+            observedAt:
+              $ref: '#/components/schemas/PaperReadTimestamp'
+            validUntil:
+              $ref: '#/components/schemas/PaperReadTimestamp'
+            startsAt:
+              $ref: '#/components/schemas/PaperReadTimestamp'
+            endsAt:
+              $ref: '#/components/schemas/PaperReadTimestamp'
+    PaperSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+      - namespace
+      - observedAt
+      - verificationOperationId
+      - status
+      - profile
+      - portfolio
+      - positions
+      - markets
+      properties:
+        namespace:
+          type: string
+          const: alpaca-paper
+        observedAt:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        verificationOperationId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          maxLength: 36
+        status:
+          $ref: '#/components/schemas/PaperStatus'
+        profile:
+          $ref: '#/components/schemas/PaperTradingProfile'
+        portfolio:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - currency
+          - equity
+          - cash
+          - exposure
+          - ledgerVersion
+          - asOf
+          - quality
+          - reconciliation
+          properties:
+            currency:
+              type: string
+              const: USD
+            equity:
+              $ref: '#/components/schemas/PaperReadNonnegativeDecimal'
+            cash:
+              $ref: '#/components/schemas/PaperReadNonnegativeDecimal'
+            exposure:
+              $ref: '#/components/schemas/PaperReadNonnegativeDecimal'
+            ledgerVersion:
+              $ref: '#/components/schemas/PaperReadVersion'
+            asOf:
+              $ref: '#/components/schemas/PaperReadTimestamp'
+            quality:
+              type: string
+              enum:
+              - VALID
+              - STALE
+              - GAP
+              - CONFLICT
+              - INVALID
+            reconciliation:
+              type: string
+              enum:
+              - CURRENT
+              - PENDING
+              - MISMATCH
+        positions:
+          type:
+          - array
+          - 'null'
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/PaperPosition'
+        markets:
+          type: array
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/PaperMarketEvidence'
+      description: Stored Paper projections only; GET performs no provider I/O. observedAt is query time, portfolio.asOf
+        is financial-source time and status.reconciledAt is actual reconciliation time. No financial basis is represented
+        by null portfolio and positions; an actual flat book has an empty positions array. Missing market proofs are
+        null; stale proof timestamps remain unchanged.
+      not:
+        anyOf:
+        - properties:
+            portfolio:
+              const: null
+            positions:
+              type: array
+        - properties:
+            portfolio:
+              type: object
+            positions:
+              const: null
+    PaperCancelOverlay:
+      type: object
+      additionalProperties: false
+      required:
+      - state
+      - requestedAt
+      - nextAttemptAt
+      - deleteAttempts
+      properties:
+        state:
+          type: string
+          enum:
+          - READY
+          - BACKOFF
+          - LOOKUP_ONLY
+          - FINISHED
+        requestedAt:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        nextAttemptAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: Z$
+          maxLength: 30
+        deleteAttempts:
+          type: integer
+          minimum: 0
+          maximum: 3
+      description: Independent durable cancellation obligation. FINISHED means the obligation is resolved; the actual
+        order may be FILLED rather than CANCELED. Never replace the broker order status with this overlay.
+    PaperOrder:
+      type: object
+      additionalProperties: false
+      required:
+      - orderId
+      - clientOrderId
+      - proposalId
+      - proposalSource
+      - decisionId
+      - humanRequestId
+      - traceId
+      - symbol
+      - side
+      - orderType
+      - timeInForce
+      - session
+      - quantity
+      - limitPrice
+      - status
+      - filledQuantity
+      - averageFillPrice
+      - updatedAt
+      - cancel
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          maxLength: 36
+        clientOrderId:
+          $ref: '#/components/schemas/PaperReadId'
+        proposalId:
+          $ref: '#/components/schemas/PaperReadId'
+        proposalSource:
+          type: string
+          enum:
+          - MODEL_DECISION
+          - HUMAN_REQUEST
+        decisionId:
+          type:
+          - string
+          - 'null'
+          minLength: 1
+          maxLength: 255
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$
+        humanRequestId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          maxLength: 36
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+        symbol:
+          $ref: '#/components/schemas/PaperSymbol'
+        side:
+          type: string
+          enum:
+          - BUY
+          - SELL
+        orderType:
+          type: string
+          enum:
+          - MARKET
+          - LIMIT
+        timeInForce:
+          type:
+          - string
+          - 'null'
+          enum:
+          - DAY
+          - null
+        session:
+          type:
+          - string
+          - 'null'
+          enum:
+          - REGULAR
+          - null
+        quantity:
+          $ref: '#/components/schemas/PaperReadPositiveDecimal'
+        limitPrice:
+          type:
+          - string
+          - 'null'
+          maxLength: 39
+          pattern: ^(?=.*[1-9])(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+        status:
+          type: string
+          enum:
+          - CREATED
+          - RISK_RESERVED
+          - SUBMITTING
+          - ACKNOWLEDGED
+          - PARTIALLY_FILLED
+          - FILLED
+          - REJECTED
+          - CANCEL_PENDING
+          - CANCELED
+          - UNKNOWN
+        filledQuantity:
+          $ref: '#/components/schemas/PaperReadNonnegativeDecimal'
+        averageFillPrice:
+          type:
+          - string
+          - 'null'
+          maxLength: 39
+          pattern: ^(?=.*[1-9])(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+        updatedAt:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        cancel:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - state
+          - requestedAt
+          - nextAttemptAt
+          - deleteAttempts
+          properties:
+            state:
+              type: string
+              enum:
+              - READY
+              - BACKOFF
+              - LOOKUP_ONLY
+              - FINISHED
+            requestedAt:
+              $ref: '#/components/schemas/PaperReadTimestamp'
+            nextAttemptAt:
+              type:
+              - string
+              - 'null'
+              format: date-time
+              pattern: Z$
+              maxLength: 30
+            deleteAttempts:
+              type: integer
+              minimum: 0
+              maximum: 3
+          description: Independent durable cancellation obligation. FINISHED means the obligation is resolved; the actual
+            order may be FILLED rather than CANCELED. Never replace the broker order status with this overlay.
+      description: Own stored order with exclusive genuine proposal provenance. Historical MARKET orders retain their
+        actual type; DAY and REGULAR are emitted only with stored policy proof, otherwise null. No provider order/account
+        identifier is exposed.
+      not:
+        anyOf:
+        - properties:
+            proposalSource:
+              const: HUMAN_REQUEST
+            decisionId:
+              type: string
+        - properties:
+            proposalSource:
+              const: HUMAN_REQUEST
+            humanRequestId:
+              const: null
+        - properties:
+            proposalSource:
+              const: MODEL_DECISION
+            humanRequestId:
+              type: string
+        - properties:
+            proposalSource:
+              const: MODEL_DECISION
+            decisionId:
+              const: null
+        - properties:
+            orderType:
+              const: LIMIT
+            limitPrice:
+              const: null
+        - properties:
+            orderType:
+              const: MARKET
+            limitPrice:
+              type: string
+    PaperFill:
+      type: object
+      additionalProperties: false
+      required:
+      - fillId
+      - orderId
+      - symbol
+      - side
+      - quantity
+      - price
+      - occurredAt
+      - fee
+      - currency
+      - traceId
+      properties:
+        fillId:
+          $ref: '#/components/schemas/PaperReadId'
+        orderId:
+          type: string
+          format: uuid
+          maxLength: 36
+        symbol:
+          $ref: '#/components/schemas/PaperSymbol'
+        side:
+          type: string
+          enum:
+          - BUY
+          - SELL
+        quantity:
+          $ref: '#/components/schemas/PaperReadPositiveDecimal'
+        price:
+          $ref: '#/components/schemas/PaperReadPositiveDecimal'
+        occurredAt:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        fee:
+          type:
+          - string
+          - 'null'
+          maxLength: 39
+          pattern: ^(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+        currency:
+          type: string
+          const: USD
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+      description: Local reconciled fill evidence reference, not a provider activity ID. fee is null unless an explicit
+        per-fill fee proof exists; unknown fees are never represented by an invented zero.
+    PaperTraceEvent:
+      type: object
+      additionalProperties: false
+      required:
+      - eventId
+      - occurredAt
+      - role
+      - action
+      - entityId
+      - entityVersion
+      - reasonCodes
+      properties:
+        eventId:
+          $ref: '#/components/schemas/PaperReadId'
+        occurredAt:
+          $ref: '#/components/schemas/PaperReadTimestamp'
+        role:
+          type: string
+          enum:
+          - CONTROL_API
+          - WORKER
+          - EXECUTION
+          - WATCHDOG
+          - SYSTEM
+        action:
+          type: string
+          enum:
+          - OPERATION_ACCEPTED
+          - OPERATION_UPDATED
+          - PROPOSAL_CREATED
+          - RISK_APPROVED
+          - RISK_REJECTED
+          - ORDER_UPDATED
+          - EXECUTION_REPORTED
+          - RECONCILIATION_OBSERVED
+          - CANCEL_LOOKUP
+          - CANCEL_DELETE
+          - CANCEL_OBSERVED
+        entityId:
+          $ref: '#/components/schemas/PaperReadId'
+        entityVersion:
+          $ref: '#/components/schemas/PaperReadVersion'
+        reasonCodes:
+          type: array
+          maxItems: 37
+          items:
+            $ref: '#/components/schemas/PaperErrorCode'
+          not:
+            not:
+              uniqueItems: true
+    PaperTrace:
+      type: object
+      additionalProperties: false
+      required:
+      - namespace
+      - traceId
+      - complete
+      - items
+      properties:
+        namespace:
+          type: string
+          const: alpaca-paper
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+        complete:
+          type: boolean
+        items:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/PaperTraceEvent'
+      description: Explicit typed-source trace projection with at most 32 safe events. complete=false marks a bounded
+        excerpt. Roles, semantic actions and canonical reason codes are mapped from reviewed sources; no raw audit actor/action/text,
+        prompts, provider payloads or account/activity identifiers are forwarded. Unmapped reasons are omitted.
+    PaperOrderPage:
+      type: object
+      additionalProperties: false
+      required:
+      - namespace
+      - items
+      - nextCursor
+      properties:
+        namespace:
+          type: string
+          const: alpaca-paper
+        items:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/PaperOrder'
+        nextCursor:
+          type:
+          - string
+          - 'null'
+          minLength: 1
+          maxLength: 1024
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Opaque keyset cursor bound to the alpaca-paper namespace, resource and account context. Never
+            parse or persist provider identifiers. Malformed tokens return INVALID_REQUEST; changed context returns
+            VERSION_CONFLICT.
+    PaperFillPage:
+      type: object
+      additionalProperties: false
+      required:
+      - namespace
+      - items
+      - nextCursor
+      properties:
+        namespace:
+          type: string
+          const: alpaca-paper
+        items:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/PaperFill'
+        nextCursor:
+          type:
+          - string
+          - 'null'
+          minLength: 1
+          maxLength: 1024
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Opaque keyset cursor bound to the alpaca-paper namespace, resource and account context. Never
+            parse or persist provider identifiers. Malformed tokens return INVALID_REQUEST; changed context returns
+            VERSION_CONFLICT.
+    PaperOperationPage:
+      type: object
+      additionalProperties: false
+      required:
+      - namespace
+      - items
+      - nextCursor
+      properties:
+        namespace:
+          type: string
+          const: alpaca-paper
+        items:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/PaperOperation'
+        nextCursor:
+          type:
+          - string
+          - 'null'
+          minLength: 1
+          maxLength: 1024
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Opaque keyset cursor bound to the alpaca-paper namespace, resource and account context. Never
+            parse or persist provider identifiers. Malformed tokens return INVALID_REQUEST; changed context returns
+            VERSION_CONFLICT.
+      description: Reloadable original receipts. ACCEPTED and RUNNING operations precede terminal operations; each group
+        is ordered by acceptedAt and operationId descending. The opaque keyset cursor includes this priority and account
+        context. A recent terminal history must not hide unresolved work.

@@ -44,7 +44,7 @@ def guest():
     with psycopg.connect(dbname=f.database, **f.common) as c:
         _verify_dormant_privileges(c)
         assert c.execute("SELECT version_num FROM alembic_version").fetchone() == (
-            "0019_paper_cancellation",
+            "0020_paper_read_models",
         )
         for name in ("paper_limit_policies", "paper_quote_observations"):
             for mutation in (

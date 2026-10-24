@@ -1,0 +1,99 @@
+{
+  "namespace": "alpaca-paper",
+  "observedAt": "2026-10-24T01:00:00Z",
+  "verificationOperationId": "12345678-1234-4234-8234-123456789012",
+  "status": {
+    "namespace": "alpaca-paper",
+    "environment": "PAPER",
+    "setupState": "PREPARED",
+    "operatingState": "PAUSED",
+    "entryGateOpen": false,
+    "credentialGeneration": 1,
+    "accountGeneration": 1,
+    "accountLabel": "paper-11111111",
+    "currency": "USD",
+    "verifiedAt": "2026-10-24T01:00:00Z",
+    "reconciledAt": "2026-10-24T01:00:00Z",
+    "observedAt": "2026-10-24T01:00:00Z",
+    "marketDataFeed": "IEX",
+    "providerVerification": "CONFIRMED",
+    "blockers": [
+      "ENTRY_PAUSED"
+    ],
+    "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+    "cash": "99992.5",
+    "riskBudget": "100"
+  },
+  "profile": {
+    "namespace": "alpaca-paper",
+    "configured": true,
+    "currency": "USD",
+    "riskBudget": "100",
+    "strategy": "mock-neutral",
+    "strategyVersion": "mock-neutral.v1",
+    "credentialGeneration": 1,
+    "accountGeneration": 1,
+    "policyVersion": 1,
+    "profileVersion": 1,
+    "budgetVersion": 1,
+    "limitPolicyVersion": 1,
+    "feeAttestation": {
+      "scope": "alpaca-paper-direct-retail-us-equity-zero-v1",
+      "confirmed": true
+    },
+    "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
+  },
+  "portfolio": {
+    "currency": "USD",
+    "equity": "100000",
+    "cash": "99992.5",
+    "exposure": "7.5",
+    "ledgerVersion": 2,
+    "asOf": "2026-10-24T01:00:00Z",
+    "quality": "VALID",
+    "reconciliation": "CURRENT"
+  },
+  "positions": [
+    {
+      "symbol": "SPY",
+      "quantity": "0.5",
+      "averagePrice": "15",
+      "costBasis": "7.5",
+      "realizedPnl": "0",
+      "ledgerVersion": 2
+    }
+  ],
+  "markets": [
+    {
+      "symbol": "SPY",
+      "marketStateId": "paper-state-1",
+      "quote": {
+        "quoteId": "paper-quote-1",
+        "sourceId": "alpaca-market-data:iex",
+        "bid": "14.99",
+        "ask": "15",
+        "observedAt": "2026-10-24T01:00:00Z",
+        "providerTime": "2026-10-24T01:00:00Z",
+        "validUntil": "2026-10-24T01:00:30Z",
+        "sourceCapabilityVersion": 1
+      },
+      "capability": {
+        "version": 1,
+        "observedAt": "2026-10-24T01:00:00Z",
+        "validUntil": "2026-10-24T01:02:00Z",
+        "limitOrderConfirmed": true,
+        "fractionalConfirmed": true,
+        "quantityStep": "0.000000001",
+        "priceTick": "0.01"
+      },
+      "session": {
+        "version": 1,
+        "open": false,
+        "observedAt": "2026-10-24T01:00:00Z",
+        "validUntil": "2026-10-24T01:02:00Z",
+        "startsAt": "2026-10-23T13:30:00Z",
+        "endsAt": "2026-10-23T20:00:00Z"
+      }
+    }
+  ]
+}
