@@ -1,6 +1,6 @@
 # APW-08: dauerhafte Cancelanforderungen und Recovery
 
-Stand 24.10.2026: APW-08 ist vollständig lokal abgenommen, OpenSpec 8/10. Issue39-Sync/Read-back ist bestätigt (1Änderung/9unverändert; Wiederholung0Änderungen/10unverändert). Geprüfte Git-/CIintegration folgt im selben Durchlauf. Ein tatsächlicher Alpaca-Providerlauf bleibt unverifiziert.
+Stand 24.10.2026: APW-08 ist vollständig lokal abgenommen, OpenSpec 8/10. Issue39-Sync/Read-back ist bestätigt (1Änderung/9unverändert; Wiederholung0Änderungen/10unverändert). Geprüfte Integration: Issuebranch `6901bc41c34a8e08ef8d200870f436076edb1b23`, regulärer main-Merge `b62f7ad4a7a0c7d6becabde0dd0b71e05e2c2d33`; Remote-SHAs und gleicher Implementierungsbaum bestätigt. [CI40079710679](https://github.com/fjure/agentic-trading-platform/actions/runs/40079710679) erfolgreich. Ein tatsächlicher Alpaca-Providerlauf bleibt unverifiziert.
 
 Die unabhängige Cancelspur speichert eine Verpflichtung je eigener Order mit unveränderlichen Anfrage-/Killlinks, eigenen Leases und eingezäunten LOOKUP-/DELETE-Versuchen. HTTP-I/O liegt außerhalb finanzieller SQL-Kontosperren. Ein separater Executiontakt und eigener kurzlebiger Brokeradapter verhindern Blockierung durch den gemeinsamen Entry-/Manualtakt. Pending, tatsächliche Terminalwirkung und finanzielle Erledigung bleiben getrennt. Unklare mögliche Wirkungen bleiben lookup-only, ausschließlich ein exakt dokumentiertes 429 erlaubt innerhalb des dauerhaften Dreiversuchslimits einen erneuten frisch autorisierten Versuch.
 

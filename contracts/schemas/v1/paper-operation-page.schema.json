@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/paper-operation-page.schema.json",
+  "title": "PaperOperationPage v1",
+  "$defs": {
+    "PaperOperationPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "items",
+        "nextCursor"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "const": "alpaca-paper"
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/PaperOperation"
+          }
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Opaque keyset cursor bound to the alpaca-paper namespace, resource and account context. Never parse or persist provider identifiers. Malformed tokens return INVALID_REQUEST; changed context returns VERSION_CONFLICT."
+        }
+      },
+      "description": "Reloadable original receipts. ACCEPTED and RUNNING operations precede terminal operations; each group is ordered by acceptedAt and operationId descending. The opaque keyset cursor includes this priority and account context. A recent terminal history must not hide unresolved work."
+    },
+    "PaperOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operationId",
+        "operationType",
+        "status",
+        "idempotencyKey",
+        "acceptedGeneration",
+        "acceptedAt",
+        "updatedAt",
+        "traceId"
+      ],
+      "properties": {
+        "operationId": {
+          "type": "string",
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "operationType": {
+          "$ref": "#/$defs/PaperOperationType"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ACCEPTED",
+            "RUNNING",
+            "SUCCEEDED",
+            "BLOCKED",
+            "FAILED"
+          ]
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        },
+        "acceptedGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "acceptedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        },
+        "errorCode": {
+          "$ref": "#/$defs/PaperErrorCode"
+        },
+        "orderId": {
+          "type": "string",
+          "format": "uuid",
+          "maxLength": 36
+        }
+      },
+      "description": "Persisted asynchronous command projection. ACCEPTED is durable receipt only, never trading approval or proof of broker success. CANCEL_ORDER may remain RUNNING while its order is CANCEL_PENDING; reservations remain until terminal reconciliation. Idempotent replay never creates a second obligation.",
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "BLOCKED",
+              "FAILED"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "errorCode"
+        ],
+        "properties": {
+          "errorCode": {
+            "$ref": "#/$defs/PaperErrorCode"
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "errorCode"
+          ],
+          "properties": {
+            "errorCode": {
+              "$ref": "#/$defs/PaperErrorCode"
+            }
+          }
+        }
+      }
+    },
+    "PaperOperationType": {
+      "type": "string",
+      "enum": [
+        "VERIFY_CONNECTION",
+        "PREPARE_LEDGER",
+        "START",
+        "PAUSE",
+        "STOP",
+        "KILL",
+        "PLACE_LIMIT_ORDER",
+        "CANCEL_ORDER"
+      ]
+    },
+    "TraceId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "example": "4bf92f3577b34da6a3ce929d0e0e4736"
+    },
+    "PaperErrorCode": {
+      "type": "string",
+      "enum": [
+        "INVALID_REQUEST",
+        "AUTHENTICATION_REQUIRED",
+        "ORIGIN_REJECTED",
+        "IDEMPOTENCY_CONFLICT",
+        "OPERATION_NOT_FOUND",
+        "ORDER_NOT_FOUND",
+        "VERSION_CONFLICT",
+        "CREDENTIALS_MISSING",
+        "CREDENTIALS_INVALID",
+        "ACCOUNT_IDENTITY_MISMATCH",
+        "ACCOUNT_BLOCKED",
+        "CURRENCY_UNSUPPORTED",
+        "MARKET_DATA_UNAVAILABLE",
+        "OPEN_ORDERS_PRESENT",
+        "UNSUPPORTED_POSITION",
+        "COST_BASIS_MISSING",
+        "SNAPSHOT_CHANGED",
+        "LEDGER_ALREADY_BOUND",
+        "LEDGER_NOT_PREPARED",
+        "CONNECTION_NOT_VERIFIED",
+        "APPROVAL_EXPIRED",
+        "ENTRY_PAUSED",
+        "KILL_SWITCH_ACTIVE",
+        "SESSION_CLOSED",
+        "STALE_QUOTE",
+        "CAPABILITY_UNCONFIRMED",
+        "BUDGET_EXCEEDED",
+        "INSUFFICIENT_POSITION",
+        "MINIMUM_QUANTITY",
+        "POLICY_MISMATCH",
+        "RECONCILIATION_REQUIRED",
+        "BROKER_STATUS_UNKNOWN",
+        "EXTERNAL_ACTIVITY",
+        "PROVIDER_RATE_LIMITED",
+        "PROVIDER_UNAVAILABLE",
+        "PROVIDER_REJECTED",
+        "TEMPORARILY_UNAVAILABLE"
+      ],
+      "description": "Stable allowlisted public failure code. Never contains provider text, credentials, account UUID, paths or exception messages."
+    }
+  },
+  "$ref": "#/$defs/PaperOperationPage"
+}

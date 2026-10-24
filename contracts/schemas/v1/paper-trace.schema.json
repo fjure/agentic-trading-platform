@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/paper-trace.schema.json",
+  "title": "PaperTrace v1",
+  "$defs": {
+    "PaperTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "traceId",
+        "complete",
+        "items"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "const": "alpaca-paper"
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/PaperTraceEvent"
+          }
+        }
+      },
+      "description": "Explicit typed-source trace projection with at most 32 safe events. complete=false marks a bounded excerpt. Roles, semantic actions and canonical reason codes are mapped from reviewed sources; no raw audit actor/action/text, prompts, provider payloads or account/activity identifiers are forwarded. Unmapped reasons are omitted."
+    },
+    "TraceId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "example": "4bf92f3577b34da6a3ce929d0e0e4736"
+    },
+    "PaperTraceEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "eventId",
+        "occurredAt",
+        "role",
+        "action",
+        "entityId",
+        "entityVersion",
+        "reasonCodes"
+      ],
+      "properties": {
+        "eventId": {
+          "$ref": "#/$defs/PaperReadId"
+        },
+        "occurredAt": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "CONTROL_API",
+            "WORKER",
+            "EXECUTION",
+            "WATCHDOG",
+            "SYSTEM"
+          ]
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "OPERATION_ACCEPTED",
+            "OPERATION_UPDATED",
+            "PROPOSAL_CREATED",
+            "RISK_APPROVED",
+            "RISK_REJECTED",
+            "ORDER_UPDATED",
+            "EXECUTION_REPORTED",
+            "RECONCILIATION_OBSERVED",
+            "CANCEL_LOOKUP",
+            "CANCEL_DELETE",
+            "CANCEL_OBSERVED"
+          ]
+        },
+        "entityId": {
+          "$ref": "#/$defs/PaperReadId"
+        },
+        "entityVersion": {
+          "$ref": "#/$defs/PaperReadVersion"
+        },
+        "reasonCodes": {
+          "type": "array",
+          "maxItems": 37,
+          "items": {
+            "$ref": "#/$defs/PaperErrorCode"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "PaperReadId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$"
+    },
+    "PaperReadTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "maxLength": 30
+    },
+    "PaperReadVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "PaperErrorCode": {
+      "type": "string",
+      "enum": [
+        "INVALID_REQUEST",
+        "AUTHENTICATION_REQUIRED",
+        "ORIGIN_REJECTED",
+        "IDEMPOTENCY_CONFLICT",
+        "OPERATION_NOT_FOUND",
+        "ORDER_NOT_FOUND",
+        "VERSION_CONFLICT",
+        "CREDENTIALS_MISSING",
+        "CREDENTIALS_INVALID",
+        "ACCOUNT_IDENTITY_MISMATCH",
+        "ACCOUNT_BLOCKED",
+        "CURRENCY_UNSUPPORTED",
+        "MARKET_DATA_UNAVAILABLE",
+        "OPEN_ORDERS_PRESENT",
+        "UNSUPPORTED_POSITION",
+        "COST_BASIS_MISSING",
+        "SNAPSHOT_CHANGED",
+        "LEDGER_ALREADY_BOUND",
+        "LEDGER_NOT_PREPARED",
+        "CONNECTION_NOT_VERIFIED",
+        "APPROVAL_EXPIRED",
+        "ENTRY_PAUSED",
+        "KILL_SWITCH_ACTIVE",
+        "SESSION_CLOSED",
+        "STALE_QUOTE",
+        "CAPABILITY_UNCONFIRMED",
+        "BUDGET_EXCEEDED",
+        "INSUFFICIENT_POSITION",
+        "MINIMUM_QUANTITY",
+        "POLICY_MISMATCH",
+        "RECONCILIATION_REQUIRED",
+        "BROKER_STATUS_UNKNOWN",
+        "EXTERNAL_ACTIVITY",
+        "PROVIDER_RATE_LIMITED",
+        "PROVIDER_UNAVAILABLE",
+        "PROVIDER_REJECTED",
+        "TEMPORARILY_UNAVAILABLE"
+      ],
+      "description": "Stable allowlisted public failure code. Never contains provider text, credentials, account UUID, paths or exception messages."
+    }
+  },
+  "$ref": "#/$defs/PaperTrace"
+}

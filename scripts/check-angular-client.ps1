@@ -121,13 +121,24 @@ if (-not $SkipCompile) {
     $fixtures += "import type { PaperStatus } from './generated-a/model/paperStatus';"
     $fixtures += "import type { PaperTradingProfile } from './generated-a/model/paperTradingProfile';"
     $fixtures += "import type { PaperTradingProfileUpdateRequest } from './generated-a/model/paperTradingProfileUpdateRequest';"
+    $fixtures += "import type { PaperSnapshot } from './generated-a/model/paperSnapshot';"
+    $fixtures += "import type { PaperOrderPage } from './generated-a/model/paperOrderPage';"
+    $fixtures += "import type { PaperFillPage } from './generated-a/model/paperFillPage';"
+    $fixtures += "import type { PaperOperationPage } from './generated-a/model/paperOperationPage';"
+    $fixtures += "import type { PaperTrace } from './generated-a/model/paperTrace';"
     foreach ($paperFixture in @(
         @('paper-trade-proposal.valid.json', 'PaperTradeProposal'),
         @('paper-operation.valid.json', 'PaperOperation'),
         @('paper-workflow.valid.json', 'PaperStatus'),
         @('paper-trading-profile.valid.json', 'PaperTradingProfile'),
         @('paper-trading-profile.configured.valid.json', 'PaperTradingProfile'),
-        @('paper-trading-profile-update-request.valid.json', 'PaperTradingProfileUpdateRequest')
+        @('paper-trading-profile-update-request.valid.json', 'PaperTradingProfileUpdateRequest'),
+        @('paper-snapshot.valid.json', 'PaperSnapshot'),
+        @('paper-snapshot.unconfigured.valid.json', 'PaperSnapshot'),
+        @('paper-order-page.valid.json', 'PaperOrderPage'),
+        @('paper-fill-page.valid.json', 'PaperFillPage'),
+        @('paper-operation-page.valid.json', 'PaperOperationPage'),
+        @('paper-trace.valid.json', 'PaperTrace')
     )) {
         $fixturePath = Join-Path $root ('contracts/examples/v1/' + $paperFixture[0])
         $literal = Get-Content -LiteralPath $fixturePath -Raw

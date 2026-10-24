@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/paper-order-page.schema.json",
+  "title": "PaperOrderPage v1",
+  "$defs": {
+    "PaperOrderPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "items",
+        "nextCursor"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "const": "alpaca-paper"
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/PaperOrder"
+          }
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Opaque keyset cursor bound to the alpaca-paper namespace, resource and account context. Never parse or persist provider identifiers. Malformed tokens return INVALID_REQUEST; changed context returns VERSION_CONFLICT."
+        }
+      }
+    },
+    "PaperOrder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "orderId",
+        "clientOrderId",
+        "proposalId",
+        "proposalSource",
+        "decisionId",
+        "humanRequestId",
+        "traceId",
+        "symbol",
+        "side",
+        "orderType",
+        "timeInForce",
+        "session",
+        "quantity",
+        "limitPrice",
+        "status",
+        "filledQuantity",
+        "averageFillPrice",
+        "updatedAt",
+        "cancel"
+      ],
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "clientOrderId": {
+          "$ref": "#/$defs/PaperReadId"
+        },
+        "proposalId": {
+          "$ref": "#/$defs/PaperReadId"
+        },
+        "proposalSource": {
+          "type": "string",
+          "enum": [
+            "MODEL_DECISION",
+            "HUMAN_REQUEST"
+          ]
+        },
+        "decisionId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$"
+        },
+        "humanRequestId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        },
+        "symbol": {
+          "$ref": "#/$defs/PaperSymbol"
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "BUY",
+            "SELL"
+          ]
+        },
+        "orderType": {
+          "type": "string",
+          "enum": [
+            "MARKET",
+            "LIMIT"
+          ]
+        },
+        "timeInForce": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "DAY",
+            null
+          ]
+        },
+        "session": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "REGULAR",
+            null
+          ]
+        },
+        "quantity": {
+          "$ref": "#/$defs/PaperReadPositiveDecimal"
+        },
+        "limitPrice": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 39,
+          "pattern": "^(?=.*[1-9])(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "CREATED",
+            "RISK_RESERVED",
+            "SUBMITTING",
+            "ACKNOWLEDGED",
+            "PARTIALLY_FILLED",
+            "FILLED",
+            "REJECTED",
+            "CANCEL_PENDING",
+            "CANCELED",
+            "UNKNOWN"
+          ]
+        },
+        "filledQuantity": {
+          "$ref": "#/$defs/PaperReadNonnegativeDecimal"
+        },
+        "averageFillPrice": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 39,
+          "pattern": "^(?=.*[1-9])(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "cancel": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "requestedAt",
+            "nextAttemptAt",
+            "deleteAttempts"
+          ],
+          "properties": {
+            "state": {
+              "type": "string",
+              "enum": [
+                "READY",
+                "BACKOFF",
+                "LOOKUP_ONLY",
+                "FINISHED"
+              ]
+            },
+            "requestedAt": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "nextAttemptAt": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time",
+              "pattern": "Z$",
+              "maxLength": 30
+            },
+            "deleteAttempts": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            }
+          },
+          "description": "Independent durable cancellation obligation. FINISHED means the obligation is resolved; the actual order may be FILLED rather than CANCELED. Never replace the broker order status with this overlay."
+        }
+      },
+      "description": "Own stored order with exclusive genuine proposal provenance. Historical MARKET orders retain their actual type; DAY and REGULAR are emitted only with stored policy proof, otherwise null. No provider order/account identifier is exposed.",
+      "not": {
+        "anyOf": [
+          {
+            "properties": {
+              "proposalSource": {
+                "const": "HUMAN_REQUEST"
+              },
+              "decisionId": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "properties": {
+              "proposalSource": {
+                "const": "HUMAN_REQUEST"
+              },
+              "humanRequestId": {
+                "const": null
+              }
+            }
+          },
+          {
+            "properties": {
+              "proposalSource": {
+                "const": "MODEL_DECISION"
+              },
+              "humanRequestId": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "properties": {
+              "proposalSource": {
+                "const": "MODEL_DECISION"
+              },
+              "decisionId": {
+                "const": null
+              }
+            }
+          },
+          {
+            "properties": {
+              "orderType": {
+                "const": "LIMIT"
+              },
+              "limitPrice": {
+                "const": null
+              }
+            }
+          },
+          {
+            "properties": {
+              "orderType": {
+                "const": "MARKET"
+              },
+              "limitPrice": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "PaperReadId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$"
+    },
+    "TraceId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "example": "4bf92f3577b34da6a3ce929d0e0e4736"
+    },
+    "PaperSymbol": {
+      "type": "string",
+      "enum": [
+        "SPY",
+        "QQQ"
+      ]
+    },
+    "PaperReadPositiveDecimal": {
+      "type": "string",
+      "maxLength": 39,
+      "pattern": "^(?=.*[1-9])(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+    },
+    "PaperReadNonnegativeDecimal": {
+      "type": "string",
+      "maxLength": 39,
+      "pattern": "^(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+    },
+    "PaperReadTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "maxLength": 30
+    }
+  },
+  "$ref": "#/$defs/PaperOrderPage"
+}

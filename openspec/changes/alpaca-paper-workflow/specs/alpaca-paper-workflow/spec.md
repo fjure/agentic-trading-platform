@@ -123,6 +123,12 @@ Das Dashboard SHALL einen dauerhaft markierten Alpaca-Paperbereich mit Kontoprü
 - **WHEN** die Sitzung abläuft oder die Verbindung abreißt
 - **THEN** werden Formulare geleert und unbestätigte Controls gesperrt; laufende Reconciliation und unabhängige Pause bleiben möglich und ein Reload behauptet keinen neuen Start.
 
+#### Scenario: T-APW-024 Getrennte dauerhafte Paper-Leseprojektion
+- **WHEN** der Mensch den Paperbereich öffnet, neu lädt oder Orders, Fills, Vorgänge und eine Tracekette nachliest
+- **THEN** liefern additive authentifizierte GETs unter `/api/v1/paper/snapshot`, `/api/v1/paper/orders`, `/api/v1/paper/fills`, `/api/v1/paper/operations` und `/api/v1/paper/traces/{traceId}` ausschließlich bestätigte gespeicherte Daten des isolierten Paperledgers. Kein GET führt Provider-I/O, Credentialzugriff oder neue Handelsfreigabe aus.
+- **AND** zeigen Snapshot und Detailseiten Geld/Mengen als exakte Decimalstrings, technische Zeiten in UTC, aktuelle beziehungsweise veraltete Markt-/Quote-/Capability-/Reconciliationbelege, echte Pending-/Terminalzustände und ehrliche MODEL-/HUMAN-Quellen. Fehlende Belege werden nicht durch Werte ersetzt.
+- **AND** besitzen Historien begrenzte Seiten und kontextgebundene Cursor, Reload findet offene Vorgänge serverseitig wieder und listet sie vor abgeschlossenen Vorgängen, und begrenzte Traceauszüge kennzeichnen fehlende Fortsetzung ausdrücklich. Fake-/Demodaten, private Providerkonto-/Aktivitätsidentitäten, Credentials und rohe Audit-/Providerpayloads bleiben ausgeschlossen. Nur feste minimalprivilegierte Paper-Leseports vermitteln die Projektionen; keine neuen direkten Finanztabellenrechte entstehen.
+
 ### Requirement: REQ-APW-011 Reproduzierbare sichere Abnahme
 Die Implementierung SHALL additive Vertrags-/Clientintegrität, reale lokale SQL-/Browserketten sowie Broker-Recovery- und Safetynegativfälle nachweisen. Entwicklungsagenten MUST ausschließlich synthetische Credentials und lokale Providerdoubles ohne externe Orders verwenden. Tatsächliche Alpaca-Funktion MUST bis zur privaten menschlichen Prüfung als unverifiziert ausgewiesen bleiben; Issue-Drift MUST den Abschluss blockieren.
 

@@ -1,0 +1,32 @@
+{
+  "namespace": "alpaca-paper",
+  "items": [
+    {
+      "orderId": "12345678-1234-4234-8234-123456789012",
+      "clientOrderId": "paper-human-client-1",
+      "proposalId": "paper-proposal-1",
+      "proposalSource": "HUMAN_REQUEST",
+      "decisionId": null,
+      "humanRequestId": "12345678-1234-4234-8234-123456789012",
+      "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+      "symbol": "SPY",
+      "side": "BUY",
+      "orderType": "LIMIT",
+      "timeInForce": "DAY",
+      "session": "REGULAR",
+      "quantity": "1",
+      "limitPrice": "15",
+      "status": "PARTIALLY_FILLED",
+      "filledQuantity": "0.5",
+      "averageFillPrice": "15",
+      "updatedAt": "2026-10-24T01:00:00Z",
+      "cancel": {
+        "state": "LOOKUP_ONLY",
+        "requestedAt": "2026-10-24T01:00:00Z",
+        "nextAttemptAt": "2026-10-24T01:00:01Z",
+        "deleteAttempts": 1
+      }
+    }
+  ],
+  "nextCursor": null
+}

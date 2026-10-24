@@ -1,0 +1,824 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/paper-snapshot.schema.json",
+  "title": "PaperSnapshot v1",
+  "$defs": {
+    "PaperSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "observedAt",
+        "verificationOperationId",
+        "status",
+        "profile",
+        "portfolio",
+        "positions",
+        "markets"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "const": "alpaca-paper"
+        },
+        "observedAt": {
+          "$ref": "#/$defs/PaperReadTimestamp"
+        },
+        "verificationOperationId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "maxLength": 36
+        },
+        "status": {
+          "$ref": "#/$defs/PaperStatus"
+        },
+        "profile": {
+          "$ref": "#/$defs/PaperTradingProfile"
+        },
+        "portfolio": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "currency",
+            "equity",
+            "cash",
+            "exposure",
+            "ledgerVersion",
+            "asOf",
+            "quality",
+            "reconciliation"
+          ],
+          "properties": {
+            "currency": {
+              "type": "string",
+              "const": "USD"
+            },
+            "equity": {
+              "$ref": "#/$defs/PaperReadNonnegativeDecimal"
+            },
+            "cash": {
+              "$ref": "#/$defs/PaperReadNonnegativeDecimal"
+            },
+            "exposure": {
+              "$ref": "#/$defs/PaperReadNonnegativeDecimal"
+            },
+            "ledgerVersion": {
+              "$ref": "#/$defs/PaperReadVersion"
+            },
+            "asOf": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "quality": {
+              "type": "string",
+              "enum": [
+                "VALID",
+                "STALE",
+                "GAP",
+                "CONFLICT",
+                "INVALID"
+              ]
+            },
+            "reconciliation": {
+              "type": "string",
+              "enum": [
+                "CURRENT",
+                "PENDING",
+                "MISMATCH"
+              ]
+            }
+          }
+        },
+        "positions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/PaperPosition"
+          }
+        },
+        "markets": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/PaperMarketEvidence"
+          }
+        }
+      },
+      "description": "Stored Paper projections only; GET performs no provider I/O. observedAt is query time, portfolio.asOf is financial-source time and status.reconciledAt is actual reconciliation time. No financial basis is represented by null portfolio and positions; an actual flat book has an empty positions array. Missing market proofs are null; stale proof timestamps remain unchanged.",
+      "not": {
+        "anyOf": [
+          {
+            "properties": {
+              "portfolio": {
+                "const": null
+              },
+              "positions": {
+                "type": "array"
+              }
+            }
+          },
+          {
+            "properties": {
+              "portfolio": {
+                "type": "object"
+              },
+              "positions": {
+                "const": null
+              }
+            }
+          }
+        ]
+      }
+    },
+    "PaperReadTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "maxLength": 30
+    },
+    "PaperStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "environment",
+        "setupState",
+        "operatingState",
+        "entryGateOpen",
+        "credentialGeneration",
+        "accountGeneration",
+        "accountLabel",
+        "currency",
+        "verifiedAt",
+        "reconciledAt",
+        "observedAt",
+        "marketDataFeed",
+        "providerVerification",
+        "blockers",
+        "traceId"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "const": "alpaca-paper"
+        },
+        "environment": {
+          "type": "string",
+          "const": "PAPER"
+        },
+        "setupState": {
+          "type": "string",
+          "enum": [
+            "NOT_CONFIGURED",
+            "SAVED",
+            "VERIFIED",
+            "PREPARED"
+          ]
+        },
+        "operatingState": {
+          "type": "string",
+          "enum": [
+            "DISABLED",
+            "PAUSED",
+            "RUNNING",
+            "STOPPED",
+            "HALTED"
+          ]
+        },
+        "entryGateOpen": {
+          "type": "boolean"
+        },
+        "credentialGeneration": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "accountGeneration": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "accountLabel": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^paper-[0-9a-f]{8}$",
+          "maxLength": 14
+        },
+        "currency": {
+          "type": "string",
+          "const": "USD"
+        },
+        "cash": {
+          "$ref": "#/$defs/Decimal"
+        },
+        "riskBudget": {
+          "$ref": "#/$defs/PositiveBudget"
+        },
+        "verifiedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "reconciledAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 30
+        },
+        "marketDataFeed": {
+          "type": "string",
+          "enum": [
+            "UNVERIFIED",
+            "IEX",
+            "SIP"
+          ]
+        },
+        "providerVerification": {
+          "type": "string",
+          "enum": [
+            "UNVERIFIED",
+            "CONFIRMED"
+          ]
+        },
+        "blockers": {
+          "type": "array",
+          "maxItems": 37,
+          "items": {
+            "$ref": "#/$defs/PaperErrorCode"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          },
+          "description": "JSON array with unique elements. Double negation preserves JSON Schema uniqueness while the pinned Angular generator retains the array wire type."
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        }
+      },
+      "if": {
+        "properties": {
+          "entryGateOpen": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "setupState": {
+            "const": "PREPARED"
+          },
+          "operatingState": {
+            "const": "RUNNING"
+          },
+          "providerVerification": {
+            "const": "CONFIRMED"
+          },
+          "blockers": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    "Decimal": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$",
+      "example": "123.45"
+    },
+    "PositiveBudget": {
+      "type": "string",
+      "pattern": "^(?=.*[1-9])(?:(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,18})?|1000000(?:\\.0{1,18})?)$",
+      "description": "Exact positive decimal USD amount no greater than 1000000."
+    },
+    "PaperErrorCode": {
+      "type": "string",
+      "enum": [
+        "INVALID_REQUEST",
+        "AUTHENTICATION_REQUIRED",
+        "ORIGIN_REJECTED",
+        "IDEMPOTENCY_CONFLICT",
+        "OPERATION_NOT_FOUND",
+        "ORDER_NOT_FOUND",
+        "VERSION_CONFLICT",
+        "CREDENTIALS_MISSING",
+        "CREDENTIALS_INVALID",
+        "ACCOUNT_IDENTITY_MISMATCH",
+        "ACCOUNT_BLOCKED",
+        "CURRENCY_UNSUPPORTED",
+        "MARKET_DATA_UNAVAILABLE",
+        "OPEN_ORDERS_PRESENT",
+        "UNSUPPORTED_POSITION",
+        "COST_BASIS_MISSING",
+        "SNAPSHOT_CHANGED",
+        "LEDGER_ALREADY_BOUND",
+        "LEDGER_NOT_PREPARED",
+        "CONNECTION_NOT_VERIFIED",
+        "APPROVAL_EXPIRED",
+        "ENTRY_PAUSED",
+        "KILL_SWITCH_ACTIVE",
+        "SESSION_CLOSED",
+        "STALE_QUOTE",
+        "CAPABILITY_UNCONFIRMED",
+        "BUDGET_EXCEEDED",
+        "INSUFFICIENT_POSITION",
+        "MINIMUM_QUANTITY",
+        "POLICY_MISMATCH",
+        "RECONCILIATION_REQUIRED",
+        "BROKER_STATUS_UNKNOWN",
+        "EXTERNAL_ACTIVITY",
+        "PROVIDER_RATE_LIMITED",
+        "PROVIDER_UNAVAILABLE",
+        "PROVIDER_REJECTED",
+        "TEMPORARILY_UNAVAILABLE"
+      ],
+      "description": "Stable allowlisted public failure code. Never contains provider text, credentials, account UUID, paths or exception messages."
+    },
+    "TraceId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "example": "4bf92f3577b34da6a3ce929d0e0e4736"
+    },
+    "PaperTradingProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "configured",
+        "currency",
+        "riskBudget",
+        "strategy",
+        "strategyVersion",
+        "credentialGeneration",
+        "accountGeneration",
+        "policyVersion",
+        "profileVersion",
+        "budgetVersion",
+        "limitPolicyVersion",
+        "feeAttestation",
+        "traceId"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "const": "alpaca-paper"
+        },
+        "configured": {
+          "type": "boolean"
+        },
+        "currency": {
+          "type": "string",
+          "const": "USD"
+        },
+        "riskBudget": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(?=.*[1-9])(?:(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,18})?|1000000(?:\\.0{1,18})?)$"
+        },
+        "strategy": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "mock-neutral",
+            "neutral-baseline",
+            "jev",
+            null
+          ]
+        },
+        "strategyVersion": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "mock-neutral.v1",
+            "neutral-baseline.v1",
+            "jev.v1",
+            null
+          ]
+        },
+        "credentialGeneration": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "accountGeneration": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "profileVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "budgetVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "limitPolicyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "feeAttestation": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "scope",
+            "confirmed"
+          ],
+          "properties": {
+            "scope": {
+              "type": "string",
+              "const": "alpaca-paper-direct-retail-us-equity-zero-v1"
+            },
+            "confirmed": {
+              "type": "boolean",
+              "const": true
+            }
+          }
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        }
+      },
+      "description": "Versioned isolated Paper settings. Unconfigured means no saved budget, strategy or fee attestation; policyVersion is zero only when no authoritative risk policy exists. Configured credential/account generations are the stored profile bindings and never silently rebind on rotation. Saving closes entry gates and never activates trading. strategyVersion names the stored strategy mapping, not a model run version.",
+      "if": {
+        "properties": {
+          "configured": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "namespace": {},
+          "configured": {},
+          "currency": {},
+          "riskBudget": {
+            "type": "null"
+          },
+          "strategy": {
+            "type": "null"
+          },
+          "strategyVersion": {
+            "type": "null"
+          },
+          "credentialGeneration": {
+            "const": 0
+          },
+          "accountGeneration": {
+            "const": 0
+          },
+          "policyVersion": {},
+          "profileVersion": {
+            "const": 0
+          },
+          "budgetVersion": {
+            "const": 0
+          },
+          "limitPolicyVersion": {},
+          "feeAttestation": {
+            "type": "null"
+          },
+          "traceId": {}
+        }
+      },
+      "else": {
+        "properties": {
+          "namespace": {},
+          "configured": {},
+          "currency": {},
+          "riskBudget": {
+            "type": "string"
+          },
+          "strategy": {
+            "type": "string"
+          },
+          "strategyVersion": {
+            "type": "string"
+          },
+          "credentialGeneration": {
+            "minimum": 1
+          },
+          "accountGeneration": {
+            "minimum": 1
+          },
+          "policyVersion": {
+            "minimum": 1
+          },
+          "profileVersion": {
+            "minimum": 1
+          },
+          "budgetVersion": {
+            "minimum": 1
+          },
+          "limitPolicyVersion": {},
+          "feeAttestation": {
+            "type": "object"
+          },
+          "traceId": {}
+        }
+      },
+      "not": {
+        "anyOf": [
+          {
+            "properties": {
+              "strategy": {
+                "const": "mock-neutral"
+              },
+              "strategyVersion": {
+                "not": {
+                  "const": "mock-neutral.v1"
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "strategy": {
+                "const": "neutral-baseline"
+              },
+              "strategyVersion": {
+                "not": {
+                  "const": "neutral-baseline.v1"
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "strategy": {
+                "const": "jev"
+              },
+              "strategyVersion": {
+                "not": {
+                  "const": "jev.v1"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "PaperReadNonnegativeDecimal": {
+      "type": "string",
+      "maxLength": 39,
+      "pattern": "^(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+    },
+    "PaperReadVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "PaperPosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "symbol",
+        "quantity",
+        "averagePrice",
+        "costBasis",
+        "realizedPnl",
+        "ledgerVersion"
+      ],
+      "properties": {
+        "symbol": {
+          "$ref": "#/$defs/PaperSymbol"
+        },
+        "quantity": {
+          "$ref": "#/$defs/PaperReadNonnegativeDecimal"
+        },
+        "averagePrice": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 39,
+          "pattern": "^(?=.*[1-9])(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+        },
+        "costBasis": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 39,
+          "pattern": "^(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+        },
+        "realizedPnl": {
+          "$ref": "#/$defs/PaperReadDecimal"
+        },
+        "ledgerVersion": {
+          "$ref": "#/$defs/PaperReadVersion"
+        }
+      },
+      "description": "Stored position. costBasis is the exact matching ledger-version cost-basis evidence, or null; never quantity multiplied by the rounded average price."
+    },
+    "PaperSymbol": {
+      "type": "string",
+      "enum": [
+        "SPY",
+        "QQQ"
+      ]
+    },
+    "PaperReadDecimal": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$",
+      "example": "123.45",
+      "maxLength": 40
+    },
+    "PaperMarketEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "symbol",
+        "marketStateId",
+        "quote",
+        "capability",
+        "session"
+      ],
+      "properties": {
+        "symbol": {
+          "$ref": "#/$defs/PaperSymbol"
+        },
+        "marketStateId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$"
+        },
+        "quote": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "quoteId",
+            "sourceId",
+            "bid",
+            "ask",
+            "observedAt",
+            "providerTime",
+            "validUntil",
+            "sourceCapabilityVersion"
+          ],
+          "properties": {
+            "quoteId": {
+              "$ref": "#/$defs/PaperReadId"
+            },
+            "sourceId": {
+              "type": "string",
+              "const": "alpaca-market-data:iex"
+            },
+            "bid": {
+              "$ref": "#/$defs/PaperReadPositiveDecimal"
+            },
+            "ask": {
+              "$ref": "#/$defs/PaperReadPositiveDecimal"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "providerTime": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "validUntil": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "sourceCapabilityVersion": {
+              "$ref": "#/$defs/PaperReadVersion"
+            }
+          },
+          "description": "Actual stored quote; timestamps are not renewed by GET. validUntil is the earlier of its stored proof validity and observedAt plus 30 seconds. Expired evidence remains visibly expired."
+        },
+        "capability": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "observedAt",
+            "validUntil",
+            "limitOrderConfirmed",
+            "fractionalConfirmed",
+            "quantityStep",
+            "priceTick"
+          ],
+          "properties": {
+            "version": {
+              "$ref": "#/$defs/PaperReadVersion"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "validUntil": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "limitOrderConfirmed": {
+              "type": "boolean"
+            },
+            "fractionalConfirmed": {
+              "type": "boolean"
+            },
+            "quantityStep": {
+              "$ref": "#/$defs/PaperReadPositiveDecimal"
+            },
+            "priceTick": {
+              "$ref": "#/$defs/PaperReadPositiveDecimal"
+            }
+          }
+        },
+        "session": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "open",
+            "observedAt",
+            "validUntil",
+            "startsAt",
+            "endsAt"
+          ],
+          "properties": {
+            "version": {
+              "$ref": "#/$defs/PaperReadVersion"
+            },
+            "open": {
+              "type": "boolean"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "validUntil": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "startsAt": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            },
+            "endsAt": {
+              "$ref": "#/$defs/PaperReadTimestamp"
+            }
+          }
+        }
+      }
+    },
+    "PaperReadId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$"
+    },
+    "PaperReadPositiveDecimal": {
+      "type": "string",
+      "maxLength": 39,
+      "pattern": "^(?=.*[1-9])(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+    }
+  },
+  "$ref": "#/$defs/PaperSnapshot"
+}

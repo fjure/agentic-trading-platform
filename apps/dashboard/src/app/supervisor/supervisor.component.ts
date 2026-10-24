@@ -11,6 +11,7 @@ import { firstValueFrom } from 'rxjs';
 import type { Resource } from '../state/supervisor.models';
 import { SupervisorStore } from '../state/supervisor.store';
 import { DemoSetupComponent } from '../demo-setup/demo-setup.component';
+import { PaperWorkflowComponent } from '../paper-workflow/paper-workflow.component';
 
 type View = 'overview' | Resource;
 type FieldSpec = readonly [label: string, path: string];
@@ -84,7 +85,7 @@ export class ConfirmDialogComponent { readonly data = inject<DialogData>(MAT_DIA
 
 @Component({
   selector: 'atl-supervisor',
-  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatTableModule, MatToolbarModule, DemoSetupComponent],
+  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatTableModule, MatToolbarModule, DemoSetupComponent, PaperWorkflowComponent],
   templateUrl: './supervisor.component.html',
   styleUrl: './supervisor.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -93,6 +94,7 @@ export class SupervisorComponent implements OnInit {
   readonly store = inject(SupervisorStore);
   private readonly dialog = inject(MatDialog);
   readonly active = signal<View>('overview');
+  readonly paperActive = signal(typeof location !== 'undefined' && location.hash === '#alpaca-paper');
   readonly expandedId = signal<string | null>(null);
   readonly traceSearchBusy = signal(false);
   readonly activationCode = new FormControl('', { nonNullable: true });
@@ -145,10 +147,19 @@ export class SupervisorComponent implements OnInit {
   }
 
   async select(view: View): Promise<void> {
+    this.paperActive.set(false);
+    history.replaceState(null, '', location.pathname + location.search);
     this.active.set(view);
     this.expandedId.set(null);
     if (view !== 'overview' && !this.store.pages()[view].items.length) await this.store.loadPage(view);
   }
+
+  selectPaper(): void {
+    this.paperActive.set(true);
+    history.replaceState(null, '', '#alpaca-paper');
+  }
+
+  paperSessionLost(): void { void this.store.refresh(); }
 
   async loadMore(): Promise<void> {
     const view = this.active();

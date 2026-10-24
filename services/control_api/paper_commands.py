@@ -90,6 +90,33 @@ class PaperCommands:
     def read_profile(self, trace_id):
         return self._call("SELECT public.paper_trading_profile_get(:trace)", {"trace": trace_id})
 
+    def read_snapshot(self, trace_id):
+        dto.read_query([("trace", trace_id)], private=True)
+        return self._call("SELECT public.paper_snapshot(:trace)", {"trace": trace_id})
+
+    def _read_page(self, statement, limit, cursor, trace_id):
+        values = dto.read_arguments(limit, cursor, trace_id)
+        return self._call(statement, values)
+
+    def read_orders(self, limit, cursor, trace_id):
+        return self._read_page(
+            "SELECT public.paper_orders(:limit,:cursor,:trace)", limit, cursor, trace_id,
+        )
+
+    def read_fills(self, limit, cursor, trace_id):
+        return self._read_page(
+            "SELECT public.paper_fills(:limit,:cursor,:trace)", limit, cursor, trace_id,
+        )
+
+    def read_operations(self, limit, cursor, trace_id):
+        return self._read_page(
+            "SELECT public.paper_operations(:limit,:cursor,:trace)", limit, cursor, trace_id,
+        )
+
+    def read_trace(self, trace_id):
+        dto.read_query([("trace", trace_id)], private=True)
+        return self._call("SELECT public.paper_trace(:trace)", {"trace": trace_id})
+
     def save_profile(self, payload, actor_id, key, trace_id):
         try:
             payload = dto.ProfileUpdate.model_validate(payload).model_dump()

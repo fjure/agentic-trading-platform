@@ -38,8 +38,10 @@ def register_paper_routes(app, *, paper, body_reader, key_reader):
             if paper is None:
                 return paper_problem(503, "TEMPORARILY_UNAVAILABLE", request.state.trace_id)
             result = await run_in_threadpool(getattr(paper, method), *args)
-            response_model = (dto.Profile if method in {"read_profile", "save_profile"}
-                              else dto.Status if method == "read_status" else dto.Operation)
+            response_model = dto.READ_MODELS.get(method) or (
+                dto.Profile if method in {"read_profile", "save_profile"}
+                else dto.Status if method == "read_status" else dto.Operation
+            )
             try:
                 result = response_model.model_validate(result).model_dump(exclude_unset=True)
             except ValueError:
@@ -55,6 +57,41 @@ def register_paper_routes(app, *, paper, body_reader, key_reader):
     @app.get("/api/v1/paper/status", operation_id="getPaperStatus")
     async def status(request: Request):
         return await execute(request, "read_status", request.state.trace_id)
+
+    @app.get("/api/v1/paper/snapshot", operation_id="getPaperSnapshot")
+    async def snapshot(request: Request):
+        try:
+            dto.read_query(request.query_params.multi_items())
+        except ValueError:
+            return paper_problem(400, "INVALID_REQUEST", request.state.trace_id)
+        return await execute(request, "read_snapshot", request.state.trace_id)
+
+    def add_page(resource, operation_id):
+        async def page(request: Request):
+            try:
+                values = dto.read_query(request.query_params.multi_items(), paged=True)
+            except ValueError:
+                return paper_problem(400, "INVALID_REQUEST", request.state.trace_id)
+            return await execute(request, "read_" + resource, values["limit"],
+                                 values["cursor"], request.state.trace_id)
+
+        app.add_api_route("/api/v1/paper/" + resource, page, methods=["GET"],
+                          operation_id=operation_id)
+
+    for resource, operation_id in (
+        ("orders", "listPaperOrders"), ("fills", "listPaperFills"),
+        ("operations", "listPaperOperations"),
+    ):
+        add_page(resource, operation_id)
+
+    @app.get("/api/v1/paper/traces/{traceId}", operation_id="getPaperTrace")
+    async def trace_view(request: Request, traceId: str):
+        try:
+            dto.read_query(request.query_params.multi_items())
+            dto.read_query([("trace", traceId)], private=True)
+        except ValueError:
+            return paper_problem(400, "INVALID_REQUEST", request.state.trace_id)
+        return await execute(request, "read_trace", traceId)
 
     @app.get("/api/v1/paper/trading-profile", operation_id="getPaperTradingProfile")
     async def profile(request: Request):

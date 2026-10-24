@@ -6,7 +6,8 @@ Revision 0014 permits audited reconciliation writes to an existing basis.
 Revision 0015 adds immutable LIMIT/quote/plan ports and bounded worker job and
 decision/proposal rights. Revision 0016 adds explicitly attested lifecycle and
 bounded execution writes; 0017/0018 add immutable human requests and guarded
-outcomes. Revision 0019 adds function-only cancellation authority. Provisioning
+outcomes. Revision 0019 adds function-only cancellation authority; 0020 adds five
+API-only stored-data projections. Provisioning
 itself creates no account, position, order, credential or entry approval.
 """
 
@@ -299,6 +300,7 @@ def _verify_dormant_privileges(connection):
         [("0017_paper_human_orders",)],
         [("0018_paper_human_finish_guard",)],
         [("0019_paper_cancellation",)],
+        [("0020_paper_read_models",)],
     ):
         for group, functions in _COMMAND_FUNCTIONS.items():
             expected.add(("schema", "public", group, "USAGE", False))
@@ -310,6 +312,7 @@ def _verify_dormant_privileges(connection):
             [("0017_paper_human_orders",)],
             [("0018_paper_human_finish_guard",)],
             [("0019_paper_cancellation",)],
+            [("0020_paper_read_models",)],
         ):
             expected.add(
                 (
@@ -391,6 +394,7 @@ def _verify_dormant_privileges(connection):
             [("0017_paper_human_orders",)],
             [("0018_paper_human_finish_guard",)],
             [("0019_paper_cancellation",)],
+            [("0020_paper_read_models",)],
         ):
             expected.update(
                 ("relation", "public." + name, "atl_paper_execution", "SELECT", False)
@@ -439,8 +443,13 @@ def _verify_dormant_privileges(connection):
                     )
                     for column in columns.split(",")
                 )
-        if revisions in ([("0016_paper_lifecycle",)], [("0017_paper_human_orders",)],
-                         [("0018_paper_human_finish_guard",)], [("0019_paper_cancellation",)]):
+        if revisions in (
+            [("0016_paper_lifecycle",)],
+            [("0017_paper_human_orders",)],
+            [("0018_paper_human_finish_guard",)],
+            [("0019_paper_cancellation",)],
+            [("0020_paper_read_models",)],
+        ):
             expected.add(("schema", "public", "atl_paper_watchdog", "USAGE", False))
             for group, functions in _FUNCTIONS_0016.items():
                 expected.update(("function", name, group, "EXECUTE", False) for name in functions)
@@ -454,8 +463,13 @@ def _verify_dormant_privileges(connection):
             ):
                 for relation, columns in relations.items():
                     expected.update(
-                        ("column", "public." + relation + "." + column,
-                         "atl_paper_execution", privilege, False)
+                        (
+                            "column",
+                            "public." + relation + "." + column,
+                            "atl_paper_execution",
+                            privilege,
+                            False,
+                        )
                         for column in columns.split(",")
                     )
             for relation, columns in _EXECUTION_UPDATE_0016.items():
@@ -469,8 +483,12 @@ def _verify_dormant_privileges(connection):
                     )
                     for column in columns.split(",")
                 )
-        if revisions in ([("0017_paper_human_orders",)],
-                         [("0018_paper_human_finish_guard",)], [("0019_paper_cancellation",)]):
+        if revisions in (
+            [("0017_paper_human_orders",)],
+            [("0018_paper_human_finish_guard",)],
+            [("0019_paper_cancellation",)],
+            [("0020_paper_read_models",)],
+        ):
             expected.update(
                 ("function", name, "atl_paper_execution", "EXECUTE", False)
                 for name in (
@@ -481,7 +499,7 @@ def _verify_dormant_privileges(connection):
                     "public.paper_human_finish(uuid,uuid,bigint)",
                 )
             )
-        if revisions == [("0019_paper_cancellation",)]:
+        if revisions in ([("0019_paper_cancellation",)], [("0020_paper_read_models",)]):
             expected.update(
                 ("function", name, "atl_paper_execution", "EXECUTE", False)
                 for name in (
@@ -491,6 +509,17 @@ def _verify_dormant_privileges(connection):
                     "public.paper_cancel_begin_delete(uuid,uuid,bigint,text,bigint,uuid)",
                     "public.paper_cancel_record(uuid,uuid,bigint,text,bigint,jsonb)",
                     "public.paper_cancel_finish(uuid,uuid,bigint,text,bigint)",
+                )
+            )
+        if revisions == [("0020_paper_read_models",)]:
+            expected.update(
+                ("function", name, "atl_paper_control_api", "EXECUTE", False)
+                for name in (
+                    "public.paper_snapshot(text)",
+                    "public.paper_trace(text)",
+                    "public.paper_orders(integer,text,text)",
+                    "public.paper_fills(integer,text,text)",
+                    "public.paper_operations(integer,text,text)",
                 )
             )
     elif revisions not in ([], [("0012_trading_profile",)]):

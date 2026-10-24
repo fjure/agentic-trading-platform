@@ -39,6 +39,8 @@ Launcher und Anwendungsbootstrap unterstützen auch Windows PowerShell 5.1. Für
 
 Im selben Abschnitt kannst du Alpaca und Jev über eigene Dialoge vorbereiten und ein zusätzliches Paperbudget speichern. **Gespeichert** bestätigt noch keine Providerverbindung oder Handelsfreigabe. Für die Demo brauchst du kein Konto und keine Schlüssel.
 
+Der eigene Bereich **Alpaca Paper** führt durch Kontoeröffnung, private Schlüsseleingabe, Verbindungstest, einmalige Bestandsübernahme und Paperprofil. Erst ein gesondert bestätigter Paperstart kann neue Einstiege freigeben. Dort stehen auch manuelle LIMIT-Aufträge, Cancelanforderungen, gespeicherte Vorgänge, Cash, Positionen, Orders, Fills und Tracebelege zur Verfügung. Fake-Supervisor und Demo bleiben getrennt. Die durchgehende Offlineabnahme dieses neuen Bereichs wird noch abgeschlossen; ein echter Alpaca-Providerlauf bleibt der späteren privaten menschlichen Prüfung vorbehalten. [Paperworkflow bedienen](docs/runbooks/paper-workflow.md)
+
 | Anzeige | Erwartetes Verhalten im normalen Fake-Lab |
 |---|---|
 | Modus / neue Einstiege | `DISABLED`, Einstiege pausiert |
