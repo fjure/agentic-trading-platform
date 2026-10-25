@@ -3,8 +3,9 @@
 Nachtrag des Hauptautors25.10.2026 nach dem unabhängigen lokalen Review:
 OpenSpec Apply bestätigt10/10 und `all_done`; Issue41 geschlossen, alle10Issues
 zurückgelesen und idempotente Wiederholung0Updates/10unverändert. Die unten
-genannten9/10bezeichnen den früheren Reviewzeitpunkt. Git-/CI-Abschluss folgt
-nach gesonderter geprüfter Integration; keine Archivierung oder Spec-Synchronisation.
+genannten9/10bezeichnen den früheren Reviewzeitpunkt. Implementierungsmerge1c686cd
+und zugehörige CI40177274551 sind erfolgreich verifiziert; siehe Abschlussnachtrag.
+Keine Archivierung oder Spec-Synchronisation.
 
 Stand 25.10.2026. Change: `alpaca-paper-workflow`, ADR-APW-007. **Lokaler Offline-Verifikationsreview abgeschlossen; keine verbleibenden konkreten P1/P2.** OpenSpec meldet zum Reviewzeitpunkt9/10 Tasks; der Hauptautor setzt APW-10 erst im anschließenden autorisierten Abschluss auf erledigt. Kein Spec-Sync, keine Archivierung. Dieser Bericht ändert keine Tasks, Produktivquellen oder angewandten Migrationen.
 
@@ -153,3 +154,15 @@ Gleichlaufprüfung beibehalten; fehlende Images nicht durch beliebige Tags erset
 | Kohärenz | Finaler positiver Runtime-/Support-Harness unabhängig gelesen: keine verbleibenden konkreten P1/P2; Testwerkzeuge/Dependencyumfang/Runbook/Anforderungen kohärent; nur anschließender Issue-/Git-/CI-Abschluss offen |
 
 Der unabhängige lokale Review ergibt keine verbleibende konkrete sicherheits- oder vertragsrelevante Abweichung und keinen lokalen Implementierungsblocker. Die dokumentierten Requirements sind vollständig, die geprüften Ergebnisse korrekt abgegrenzt und die Implementierungs-/Testgrenzen kohärent. Der Hauptautor kann nach vorgeschriebenem Issue-Sync und geprüftem Commit-/Push-/Merge-/CI-Read-back den Taskabschluss ausführen; dieser Bericht führt keine solche Mutation oder Archivierung aus. Noch nicht erfolgte externe Schritte werden nicht als bestanden behauptet. Tatsächliche Alpaca-Funktion bleibt ausdrücklich menschlich unverifiziert; Entwickler verwenden weiterhin keine echten Keys oder Providerorders.
+
+## Nachtrag: externer Abschluss
+
+Der Hauptautor hat OpenSpec10/10, alle10geschlossenen Issues mit vollständigem
+Read-back und Wiederholung0Updates sowie die reguläre Remoteintegration geprüft.
+Implementierungsbranch `5ee178ba5fc7435fef21d40268c691eacab80b81`, main `1c686cda9b47cf0da99b24b6d27bac6fb65a72fd`,
+bytegleicher Baum `e4aa6c9c93d38cbff8d816e13510c5791556fe49`;
+[CI40177274551](https://github.com/fjure/agentic-trading-platform/actions/runs/40177274551) abgeschlossen mit **success**
+für genau diesen Merge. Die früher im Bericht offenen externen Schritte sind
+damit für den Implementierungsstand belegt. Spätere reine Nachweiscommits
+ändern dessen Code nicht und werden nicht selbstreferenziert. T020 bleibt
+ausdrücklich menschlich unverifiziert; keine Archivierung/Spec-Synchronisation.

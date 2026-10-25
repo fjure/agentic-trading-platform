@@ -18,9 +18,10 @@ OpenSpec-Change: `alpaca-paper-workflow`. Fachliche Source of Truth:
 | APW-09 Oberfläche | [Material-UI und Leseverträge](apw-09.md) |
 | APW-10 Gesamtkette | [Aktuelle Prüfevidenz](apw-10.md), [Prozessuhr](apw-10-clock.md) und [unabhängige Verifikation](apw-10-verification.md) |
 
-Stand25.10.2026: APW-01bis09 abgeschlossen und integriert; APW-10 besitzt
-tatsächliche Browser-/SQL-/Modell-/UTC-/Prozesscrashnachweise. Die breite finale
-SQLregression ist belegt; Git-/CI-Abschluss ist noch offen. Alle10Tasks sind lokal umgesetzt. Überlappende Testzahlen
+Stand25.10.2026: Alle10Tasks lokal abgenommen, Issues geschlossen und regulär
+integriert. APW-10-Implementierungsbranch5ee178b und main1c686cd besitzen denselben
+geprüften Dateibaum; CI40177274551 erfolgreich. Tatsächliche HUMAN-/MODEL-/UTC-
+und OS-Crashketten sowie bestehende SQL-/Recoveryregression sind belegt. Überlappende Testzahlen
 werden nicht addiert. Die [Integrationszuordnung](../development/git-paper-workflow-integrations.json)
 und der [Issue-Read-back](../development/github-paper-workflow-issue-sync.json)
 enthalten die jeweils tatsächlich bestätigten Stände.

@@ -1,6 +1,9 @@
 # APW-10: Durchgehende Offlinezertifizierung und Betriebsabnahme
 
-Stand21.10.2026: vorbereitende Teilevidenz. Task und Issue offen; die vollständige Handels-/Browser-/Recoveryabnahme ist noch nicht durchgeführt.
+Stand25.10.2026: Offlineabnahme abgeschlossen, OpenSpec10/10, Issue41 geschlossen,
+Implementierungsmerge1c686cd und CI40177274551 erfolgreich verifiziert. Die
+folgenden datierten Zwischenstände dokumentieren auch frühere offene Prüfungen;
+maßgeblich sind die tatsächlichen Schlussresultate und der Integrationsabschluss.
 
 ## Entwicklungsabhängigkeiten
 
@@ -134,3 +137,20 @@ Issue41 ist geschlossen; vollständiger10-Issue-Read-back bestätigt. Idempotent
 Wiederholung:0erstellt/0aktualisiert/10unverändert. Die Git-/CI-Integration wird
 im folgenden Abschluss nachgeführt. Der tatsächliche Remote-main wurde zuvor
 erneut als698219b eingelesen; keine ungeprüfte Zwischenänderung.
+
+## Verifizierter Integrationsabschluss
+
+Implementierungscommit `5ee178ba5fc7435fef21d40268c691eacab80b81` auf dem eigenen Issue41-Branch,
+regulärer main-Merge `1c686cda9b47cf0da99b24b6d27bac6fb65a72fd` und beide Remote-SHAs
+zurückgelesen. Beide Bäume: `e4aa6c9c93d38cbff8d816e13510c5791556fe49`.
+[CI40177274551](https://github.com/fjure/agentic-trading-platform/actions/runs/40177274551) tatsächlich **success**,
+Head-SHA entspricht exakt dem Implementierungsmerge. Alle10Issues abgeschlossen,
+Read-back10 und idempotente Wiederholung0Updates/10unverändert. Normalbetrieb:
+13Services gesund;2bestehende finanzielle Datenbanken über jeweils9Tabellen
+unverändert. Sourcescan711/0. Die fremde `angular.json`-Änderung blieb ungestaged.
+
+Diese Abschlussreferenzen werden mit einem ausschließlich dokumentarischen
+Nachweiscommit auf demselben Issuebranch nachgeführt; die gespeicherten SHAs
+bezeichnen bewusst den bereits geprüften Implementierungsstand. Keine erneute
+fachliche Änderung, echte Providerorder, Spec-Synchronisation oder Archivierung.
+T020 bleibt die gesonderte private menschliche Providerabnahme.
