@@ -57,6 +57,31 @@ def host(guest_path=None, expected_marker=None, support_paths=(), guest_args=())
     expected_marker = expected_marker or (
         "PASS: isolated Paper provisioning, privileges, drift and no financial basis"
     )
+    clock_mode = os.environ.get("PAPER_INTEGRATION_TEST_CLOCK", "0")
+    if clock_mode not in {"0", "1"}:
+        raise ValueError("invalid isolated integration clock selection")
+    postgres_image = POSTGRES
+    python_image = "agentic-trading-lab-dev-build-smoke:latest"
+    postgres_clock, python_clock = [], []
+    if clock_mode == "1":
+        from tests.integration.paper_clock.runtime import (
+            POSTGRES_IMAGE,
+            PYTHON_IMAGE,
+            clock_environment,
+            shared_offset,
+        )
+
+        offset = shared_offset()
+        postgres_image, python_image = POSTGRES_IMAGE, PYTHON_IMAGE
+
+        def clock_args(python=False):
+            return [item for key, value in clock_environment(offset, python=python).items()
+                    for item in ("--env", key + "=" + value)]
+
+        postgres_clock = clock_args() + [
+            "--env", "POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale=C.UTF-8",
+        ]
+        python_clock = clock_args(python=True)
     tag = "atl-paper-probe-" + uuid.uuid4().hex[:16]
     network, container = tag + "-net", tag + "-pg"
 
@@ -112,7 +137,8 @@ def host(guest_path=None, expected_marker=None, support_paths=(), guest_args=())
             "POSTGRES_DB=lab",
             "--env",
             "POSTGRES_HOST_AUTH_METHOD=trust",
-            POSTGRES,
+            *postgres_clock,
+            postgres_image,
         )
         container_created = True
         for _ in range(60):
@@ -159,7 +185,8 @@ def host(guest_path=None, expected_marker=None, support_paths=(), guest_args=())
             "/opt/lab",
             "--entrypoint",
             "python",
-            "agentic-trading-lab-dev-build-smoke:latest",
+            *python_clock,
+            python_image,
             "test_paper_provision.py",
             "guest",
             *guest_args,

@@ -4,7 +4,7 @@
   "changeId": "alpaca-paper-workflow",
   "transport": "official-gh-cli-authorized-fallback",
   "status": "synchronized-read-back-verified",
-  "lastReadBackAt": "2026-10-24T20:38:56.285571+00:00",
+  "lastReadBackAt": "2026-10-25T08:33:43.629391+00:00",
   "tasks": [
     {
       "taskId": "APW-01",
@@ -13,7 +13,7 @@
       "state": "closed",
       "contentHash": "a93643d980fa1492f39b2be04e0964edd72329b4a0f6cf8c1b59cf4830436921",
       "dependencies": [],
-      "syncedAt": "2026-10-24T20:38:51.240685+00:00"
+      "syncedAt": "2026-10-25T08:33:38.805829+00:00"
     },
     {
       "taskId": "APW-02",
@@ -24,7 +24,7 @@
       "dependencies": [
         "APW-01"
       ],
-      "syncedAt": "2026-10-24T20:38:51.753853+00:00"
+      "syncedAt": "2026-10-25T08:33:39.267847+00:00"
     },
     {
       "taskId": "APW-03",
@@ -36,7 +36,7 @@
         "APW-01",
         "APW-02"
       ],
-      "syncedAt": "2026-10-24T20:38:52.280342+00:00"
+      "syncedAt": "2026-10-25T08:33:39.725901+00:00"
     },
     {
       "taskId": "APW-04",
@@ -48,7 +48,7 @@
         "APW-02",
         "APW-03"
       ],
-      "syncedAt": "2026-10-24T20:38:52.752827+00:00"
+      "syncedAt": "2026-10-25T08:33:40.164857+00:00"
     },
     {
       "taskId": "APW-05",
@@ -60,7 +60,7 @@
         "APW-03",
         "APW-04"
       ],
-      "syncedAt": "2026-10-24T20:38:53.240635+00:00"
+      "syncedAt": "2026-10-25T08:33:40.618945+00:00"
     },
     {
       "taskId": "APW-06",
@@ -73,7 +73,7 @@
         "APW-03",
         "APW-04"
       ],
-      "syncedAt": "2026-10-24T20:38:53.759259+00:00"
+      "syncedAt": "2026-10-25T08:33:41.061129+00:00"
     },
     {
       "taskId": "APW-07",
@@ -87,7 +87,7 @@
         "APW-05",
         "APW-06"
       ],
-      "syncedAt": "2026-10-24T20:38:54.311441+00:00"
+      "syncedAt": "2026-10-25T08:33:41.697582+00:00"
     },
     {
       "taskId": "APW-08",
@@ -99,7 +99,7 @@
         "APW-05",
         "APW-07"
       ],
-      "syncedAt": "2026-10-24T20:38:54.723063+00:00"
+      "syncedAt": "2026-10-25T08:33:42.139984+00:00"
     },
     {
       "taskId": "APW-09",
@@ -115,14 +115,14 @@
         "APW-07",
         "APW-08"
       ],
-      "syncedAt": "2026-10-24T20:38:55.156677+00:00"
+      "syncedAt": "2026-10-25T08:33:42.594192+00:00"
     },
     {
       "taskId": "APW-10",
       "issueNumber": 41,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/41",
-      "state": "open",
-      "contentHash": "e6ac9d0f1b34d7b27e6bb102e710d73113cd59197f86885812690a7728ba5a0a",
+      "state": "closed",
+      "contentHash": "6030dfd59b4ac99fd485428b67a72deeb51f054cc8bb44c1eff3f93a7d7494eb",
       "dependencies": [
         "APW-02",
         "APW-03",
@@ -133,7 +133,7 @@
         "APW-08",
         "APW-09"
       ],
-      "syncedAt": "2026-10-24T20:38:55.617077+00:00"
+      "syncedAt": "2026-10-25T08:33:43.023578+00:00"
     }
   ],
   "lastSyncRun": {

@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "repository": "fjure/agentic-trading-platform",
   "changeId": "alpaca-paper-workflow",
-  "verifiedImplementationMainCommit": "b62f7ad4a7a0c7d6becabde0dd0b71e05e2c2d33",
-  "verifiedAt": "2026-10-24T09:01:12.351882Z",
+  "verifiedImplementationMainCommit": "698219b855f3dca3222a3618ec55fd3d0bb99dc5",
+  "verifiedAt": "2026-10-24T20:55:46.877954Z",
   "ci": {
-    "url": "https://github.com/fjure/agentic-trading-platform/actions/runs/40079710679",
+    "url": "https://github.com/fjure/agentic-trading-platform/actions/runs/40130809310",
     "conclusion": "success"
   },
   "issueIntegrations": [
@@ -80,7 +80,16 @@
       "mergeCommit": "b62f7ad4a7a0c7d6becabde0dd0b71e05e2c2d33",
       "remoteBranchVerified": true,
       "containedInVerifiedMain": true
+    },
+    {
+      "taskId": "APW-09",
+      "issueNumber": 40,
+      "branch": "codex/ptv-40-paper-dashboard",
+      "branchCommit": "f1561ec2015896c5457a90c3b0a51190979827e3",
+      "mergeCommit": "698219b855f3dca3222a3618ec55fd3d0bb99dc5",
+      "remoteBranchVerified": true,
+      "containedInVerifiedMain": true
     }
   ],
-  "note": "APW-01bis08 regulaer ohne Force-Push integriert; main-Baum entspricht exakt dem geprueften APW-08-Baum. CI40079710679 erfolgreich. APW-09 auf eigenem Issue40-Branch."
+  "note": "APW-01bis09 regulaer ohne Force-Push integriert; main-Baum entspricht exakt geprueftem APW-09-Baum. CI40130809310 erfolgreich. APW-10 auf eigenem Issue41-Branch."
 }

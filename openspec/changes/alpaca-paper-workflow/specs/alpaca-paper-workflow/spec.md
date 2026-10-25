@@ -135,6 +135,7 @@ Die Implementierung SHALL additive Vertrags-/Clientintegrität, reale lokale SQL
 #### Scenario: T-APW-019 Offline-Abnahme
 - **WHEN** die vollständige Abnahme mit lokalem Providerdouble und echter Datenbank läuft
 - **THEN** werden Browser→API→Execution→Order→Fill→Reconciliation einschließlich Crash/Cancel/Budget geprüft, kein erlaubter Providerhost kontaktiert und keine echten Keys gelesen.
+- **AND** beginnt die positive Kette ohne vorab eingerichtete Handelsbasis mit der tatsächlichen Browser-Einrichtung. Eine gemeinsame ausschließlich testseitige laufende Prozessuhr darf einen regulären Werktag simulieren, wenn SQL-/Python-Zeitgleichlauf, echte monotone Wartefristen und unveränderte produktive Kalender-/TTL-/Lease-/Freshness-/Riskgates gesondert nachgewiesen sind; Host-/Produktionsuhren und bestehende Volumes bleiben unverändert.
 
 #### Scenario: T-APW-020 Menschlicher Providerlauf
 - **WHEN** der Mensch später selbst in seiner Anwendung Paper aktiviert
