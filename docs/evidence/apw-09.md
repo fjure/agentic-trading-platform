@@ -1,6 +1,6 @@
 # APW-09: Materialbedienung und getrennte Paper-Leseansichten
 
-Stand24.10.2026: Umsetzung auf `codex/ptv-40-paper-dashboard`, OpenSpec9/10. APW-09 ist vollständig lokal abgenommen; Issue40 geschlossen und Read-back aller10Issues bestätigt:1Update/9unverändert, idempotente Wiederholung0Updates/10unverändert. Geprüfte Git-/CIintegration folgt im selben Durchlauf. APW-08 ist auf main `b62f7ad4a7a0c7d6becabde0dd0b71e05e2c2d33` mit erfolgreicher CI40079710679 integriert.
+Stand24.10.2026: Umsetzung auf `codex/ptv-40-paper-dashboard`, OpenSpec9/10. APW-09 ist vollständig lokal abgenommen; Issue40 geschlossen und Read-back aller10Issues bestätigt:1Update/9unverändert, idempotente Wiederholung0Updates/10unverändert. Geprüfte Integration: Issuebranch `f1561ec2015896c5457a90c3b0a51190979827e3`, regulärer main-Merge `698219b855f3dca3222a3618ec55fd3d0bb99dc5`; Remote-SHAs und identischer Implementierungsbaum bestätigt. [CI40130809310](https://github.com/fjure/agentic-trading-platform/actions/runs/40130809310) erfolgreich. APW-08 ist auf main `b62f7ad4a7a0c7d6becabde0dd0b71e05e2c2d33` mit erfolgreicher CI40079710679 integriert.
 
 ## Vertrag und Lesegrenzen
 

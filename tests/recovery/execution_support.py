@@ -396,9 +396,11 @@ def checks(ledger, execution_ledger, engine, now):
                 )
             )
 
-        @event.listens_for(execution_ledger.engine, "before_cursor_execute")
-        def pause_between_stages(_connection, _cursor, statement, _params, _context, _many):
-            if statement == "SELECT current_user" and not paused_after_commit:
+        @event.listens_for(execution_ledger.engine, "begin")
+        def pause_between_stages(_connection):
+            # Observe the transaction boundary itself. The identity query now
+            # includes database/login and must not control whether the race runs.
+            if not paused_after_commit:
                 with engine.connect() as observer:
                     persisted = observer.execute(
                         text("SELECT status FROM public.broker_orders WHERE intent_id=:id"),

@@ -46,7 +46,7 @@ Kommandoverarbeitung, Heartbeat und Reconciliation laufen getrennt. Providerwart
 
 Tagesbelege werden ohne Rebase erneuert. Die Ersttagsreferenz behält ihren ursprünglichen Beginn und Kapitalnenner; spätere Finanzierung wird ab diesem Beginn belegt. Nach UTC-Ablauf ist ein echter neuer Tagesstartbeleg erforderlich. Bei unverändertem Bestand darf eine neue unveränderliche Portfolio-Beobachtung dessen tatsächliche Reconciliationzeit dokumentieren, ohne Cash, Kostenbasis oder Anfangshistorie zu verändern.
 
-Versionierte Profile, Start-/Pause-/Stop-/Killtakte, fortlaufende Tagesbelege und nachvollziehbare Gebührenautorität sind implementiert. Menschliche Order-/Canceldialoge und die vollständige Browserabnahme folgen in APW-07bis10. Fehlende Voraussetzungen bleiben gesperrt. Keine Anleitung hier fordert Agenten zu echten Brokerorders auf; die spätere menschliche Alpaca-Abnahme bleibt privat und ausdrücklich vom lokalen Testdouble getrennt.
+Versionierte Profile, Start-/Pause-/Stop-/Killtakte, fortlaufende Tagesbelege und nachvollziehbare Gebührenautorität sind implementiert. Menschliche Order-/Canceldialoge sind in APW-09 abgenommen; die durchgehende Offlineabnahme wird in APW-10 dokumentiert. Fehlende Voraussetzungen bleiben gesperrt. Keine Anleitung hier fordert Agenten zu echten Brokerorders auf; die spätere menschliche Alpaca-Abnahme bleibt privat und ausdrücklich vom lokalen Testdouble getrennt.
 
 
 ## Menschliche LIMIT-Anforderung
@@ -58,3 +58,54 @@ HTTP202 bedeutet angenommen, nicht ausgeführt. Der dauerhafte Vorgang liefert e
 Ein tatsächlicher Fill kann die gebundene Portfolio-Version verändern und damit die alte Freigabe schließen. Neue Orders benötigen dann einen neuen expliziten START mit aktuellen Belegen. Ein bereits belegter Auftrag kann nach Pause, Rotation oder Neustart abgeschlossen werden, ohne neuen START oder neuen Brokerrequest. Mit den derzeitigen15Minutenkerzen-/120Sekunden-Frischegrenzen bleiben neue Einstiege außerhalb eines frischen belegten Datenfensters geschlossen; Recovery läuft weiter. Diese Grenzen wurden für Tests nicht gelockert.
 
 Die Materialbedienung ist in APW-09 lokal abgenommen. Cancellation und Recovery sind in APW-08 abgenommen. [Menschlicher Backendpfad](../evidence/apw-07.md), [Cancelabnahme](../evidence/apw-08.md) und [Dashboardprüfstand](../evidence/apw-09.md).
+
+## Offlineabnahme für die Entwicklung
+
+Voraussetzungen sind die projektbezogene Pythonumgebung, gepinnte Node-/Java-
+Contractwerkzeuge und installierte Dashboardabhängigkeiten, Docker Desktop mit
+den dokumentierten lokalen Python-/PostgreSQL-Basisimages sowie Playwrights
+gepinnter Chromiumstand. Image-/Quellenhashes und Compilerstand:
+[Testuhrnachweis](../evidence/apw-10-clock.md). Den Uhrbuild und seine echte
+Kompatibilitätsprüfung vor der Browserabnahme ausführen:
+
+```powershell
+./scripts/bootstrap-paper-test-clock.ps1
+.venv/Scripts/python.exe -m pytest tests/integration/test_paper_test_clock.py -q
+./scripts/test-paper-browser.ps1
+./scripts/test-paper-browser.ps1 -SkipBuild -Crash
+./scripts/test-paper-browser.ps1 -SkipBuild -Model
+./scripts/test-paper-browser.ps1 -SkipBuild -DayBoundary
+./scripts/test-paper-browser.ps1 -SkipBuild -SubmitCrash
+```
+
+Jeder Browseraufruf besitzt sein eigenes temporäres internes Docker-Netz und
+leere Datenbanken; die Szenarien nacheinander ausführen. Port4220 muss frei sein.
+Die Skripte greifen weder auf normale Datenbankvolumes noch auf private echte
+Providerdateien zu. Nur ihre eigenen benannten Container/Netze werden entfernt;
+bestehende Volumes bleiben erhalten. Fehlende gepinnte Images blockieren den
+Lauf. Keine fremden Tags, eingefrorene Uhr oder verlängerten Gates einsetzen.
+
+Die gemeinsame Testuhr verschiebt ausschließlich die ausgewählten Testprozesse
+mit normaler Geschwindigkeit. Hostzeit, monotone Wartefristen, IANA-Kalender,
+TTL, Lease- und Riskgrenzen bleiben erhalten. `-SkipBuild` setzt ausdrücklich den
+zuvor geprüften unveränderten Produktionsbuild voraus. `-Crash` beendet den
+Executionprozess bei einem dauerhaften Cancelversuch; `-SubmitCrash` prüft eine
+verlorene Submitantwort mit echter bestehender Kommando-Lease. Beide starten
+denselben Bestand mit neuem Owner/Fence und verwenden Recovery statt erneutem
+Senden. `-Model` prüft tatsächliche Worker-Provenienz; `-DayBoundary` läuft real
+über UTC-Mitternacht und prüft die abgelaufene Ersttagsreferenz.
+
+Ergebnis, notwendige ergänzende Safetyregressionen und Grenzen stehen in
+[APW-10](../evidence/apw-10.md) und der
+[Verifikationsmatrix](../evidence/apw-10-verification.md). Eine lokale
+Offlineabnahme bestätigt keine tatsächliche Alpaca-Providerfähigkeit; der
+spätere menschliche Providerlauf bleibt gesondert und privat.
+
+Historische SQL-Fixtures können ausdrücklich
+`PAPER_INTEGRATION_TEST_CLOCK=1` im aufrufenden Testprozess setzen. Der
+Wegwerf-Paperhost verwendet dann dieselben gepinnten Uhrimages und genau einen
+gemeinsamen laufenden Offset für PostgreSQL und Python. Der Default bleibt
+unverändert. Das vermeidet einen ungültigen Sonntags-Positivfall, ohne den
+korrekten `SESSION_CLOSED`-Produktionsschutz zu umgehen. Diese älteren
+synthetischen Venue-Fixtures ergänzen die neuen Browserfälle mit unveränderter
+IANA-New-York-Konfiguration; sie ersetzen sie nicht.
