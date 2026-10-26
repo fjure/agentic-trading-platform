@@ -72,6 +72,15 @@
       "mergeCommit": "d7cbe3c526b8cd3f39712d3855581e3530527622",
       "remoteVerified": true,
       "verifiedAt": "2026-10-26T13:09:04.179311+00:00"
+    },
+    {
+      "taskId": "BKT-09",
+      "issueNumber": 59,
+      "branch": "codex/ptv-59-backtest-acceptance",
+      "commit": "870acb5cbfedebd9e15f03848f80bdd2d6424417",
+      "mergeCommit": "b601d68cf7cd17f89a81192ecaf7805d23c78576",
+      "remoteVerified": true,
+      "verifiedAt": "2026-10-26T13:13:19.536976+00:00"
     }
   ]
 }

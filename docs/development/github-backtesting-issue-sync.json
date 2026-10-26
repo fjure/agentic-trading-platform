@@ -10,7 +10,7 @@
       "issueNumber": 51,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/51",
       "contentHash": "dd8cce95fa59632fee3191eb927f6e30b3dc4ab4e1c551d677fd4ceec5438ca4",
-      "syncedAt": "2026-10-26T13:09:06.518315+00:00",
+      "syncedAt": "2026-10-26T13:13:22.043641+00:00",
       "dependsOn": [],
       "state": "closed"
     },
@@ -19,7 +19,7 @@
       "issueNumber": 52,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/52",
       "contentHash": "77a5e248be6a7b7a92eb688429066c350d999092122814a95044a6896f2e87af",
-      "syncedAt": "2026-10-26T13:09:06.518315+00:00",
+      "syncedAt": "2026-10-26T13:13:22.043641+00:00",
       "dependsOn": [
         "BKT-01"
       ],
@@ -30,7 +30,7 @@
       "issueNumber": 53,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/53",
       "contentHash": "d2b1d1e27bcd8a68caa8d1d71caa052bcec9135b1837f498edd1ec836fa60e83",
-      "syncedAt": "2026-10-26T13:09:06.518315+00:00",
+      "syncedAt": "2026-10-26T13:13:22.043641+00:00",
       "dependsOn": [
         "BKT-02"
       ],
@@ -41,7 +41,7 @@
       "issueNumber": 54,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/54",
       "contentHash": "d176a4496d38d9210ca0a56bb6c50e3c175d8ac3ad39107bfbd415585fdbbf98",
-      "syncedAt": "2026-10-26T13:09:06.518315+00:00",
+      "syncedAt": "2026-10-26T13:13:22.043641+00:00",
       "dependsOn": [
         "BKT-02",
         "BKT-03"
@@ -53,7 +53,7 @@
       "issueNumber": 55,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/55",
       "contentHash": "c5c23ff7c53fd75fbfc2596c7ba07b3a92796a90e391318c2c7fef60670c1624",
-      "syncedAt": "2026-10-26T13:09:06.518315+00:00",
+      "syncedAt": "2026-10-26T13:13:22.043641+00:00",
       "dependsOn": [
         "BKT-03",
         "BKT-04"
@@ -65,7 +65,7 @@
       "issueNumber": 56,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/56",
       "contentHash": "31932c94c95194fa80ffde049ed110e2686bc275c44da5df5560fb073b187d09",
-      "syncedAt": "2026-10-26T13:09:06.518315+00:00",
+      "syncedAt": "2026-10-26T13:13:22.043641+00:00",
       "dependsOn": [
         "BKT-02",
         "BKT-03",
@@ -78,7 +78,7 @@
       "issueNumber": 57,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/57",
       "contentHash": "af0f7815611a500ca184131411e603526d984c077636d4d0c24654fd5cb4bcd3",
-      "syncedAt": "2026-10-26T13:09:06.518315+00:00",
+      "syncedAt": "2026-10-26T13:13:22.043641+00:00",
       "dependsOn": [
         "BKT-01",
         "BKT-06"
@@ -90,7 +90,7 @@
       "issueNumber": 58,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/58",
       "contentHash": "7be1e49ce0e9be5750c5f9cdc9dd69ab33b93ecadf0918d3fbcc9b6886ee6d97",
-      "syncedAt": "2026-10-26T13:09:06.518315+00:00",
+      "syncedAt": "2026-10-26T13:13:22.043641+00:00",
       "dependsOn": [
         "BKT-05",
         "BKT-07"
@@ -101,8 +101,8 @@
       "taskId": "BKT-09",
       "issueNumber": 59,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/59",
-      "contentHash": "42e1e38759caab45cacdedef82459fd60e26975fb6af76981f5c38f1537af8b5",
-      "syncedAt": "2026-10-26T13:09:06.518315+00:00",
+      "contentHash": "3cf888872f43fbf434ae9bfad52ca4591ba99b1ee68e49c0a4f97b11dae748fb",
+      "syncedAt": "2026-10-26T13:13:22.043641+00:00",
       "dependsOn": [
         "BKT-04",
         "BKT-05",
@@ -110,11 +110,11 @@
         "BKT-07",
         "BKT-08"
       ],
-      "state": "open"
+      "state": "closed"
     }
   ],
   "lastSyncRun": {
-    "syncedAt": "2026-10-26T13:09:06.518315+00:00",
+    "syncedAt": "2026-10-26T13:13:22.043641+00:00",
     "created": 0,
     "updated": 1,
     "unchanged": 8,
