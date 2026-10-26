@@ -7,7 +7,11 @@ from uuid import UUID
 
 from sqlalchemy import text
 
-from packages.backtesting.calendar import relevant_schedule_rows, schedule_windows
+from packages.backtesting.calendar import (
+    first_signal_knowledge,
+    relevant_schedule_rows,
+    schedule_windows,
+)
 from packages.backtesting.coverage import covering_proof, quality_at
 from packages.backtesting.models import BacktestBlocked, BacktestBudgetExceeded, Fold, WarmupBinding
 from packages.domain.models import utc_time
@@ -264,7 +268,11 @@ def materialize_fold(
     if any(len(rows) > MAX_REVISIONS for rows in (calendar_rows, quality_rows, coverage_proofs)):
         raise DatasetBudgetExceeded("metadata row budget exhausted")
     snapshot = frozen.snapshot
-    first_knowledge = fold.test_start + timedelta(minutes=15) + SIGNAL_DELAY
+    first_knowledge = first_signal_knowledge(
+        calendar_rows, fold.test_start, fold.test_end, snapshot, checkpoint
+    )
+    if first_knowledge is None:
+        raise DatasetBlocked("BLOCKED_CALENDAR_UNKNOWN", fold.test_start)
     _, planned = schedule_windows(
         calendar_rows,
         fold.training_start if warmup_count else fold.test_start,
@@ -316,7 +324,11 @@ def materialize_fold(
         visible = signals.visible(end, knowledge)
         by_start = {}
         for bar in visible:
-            if bar.identity.instrument_id != instrument_id or bar.identity.bar_start < warm_start:
+            if (
+                bar.identity.instrument_id != instrument_id
+                or bar.identity.provider != "alpaca"
+                or bar.identity.bar_start < warm_start
+            ):
                 continue
             if bar.identity.bar_start in by_start:
                 raise DatasetBlocked("BLOCKED_AMBIGUOUS_DATA", bar.identity.bar_start)
@@ -348,7 +360,9 @@ def materialize_fold(
         eligible = tuple(
             b
             for b in outcomes.visible(end, outcome_cutoff)
-            if b.identity.instrument_id == instrument_id and b.identity.bar_start == start
+            if b.identity.instrument_id == instrument_id
+            and b.identity.provider == "alpaca"
+            and b.identity.bar_start == start
         )
         if len(eligible) != 1:
             raise DatasetBlocked("BLOCKED_OUTCOME_MISSING", start)

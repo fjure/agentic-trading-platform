@@ -13,6 +13,10 @@ COPY services /opt/lab/services
 COPY packages /opt/lab/packages
 COPY config /opt/lab/config
 COPY alembic.ini /opt/lab/alembic.ini
+ARG SOURCE_REVISION=""
+RUN printf '%s' "$SOURCE_REVISION" > /opt/lab/git-revision
+COPY pyproject.toml uv.lock /opt/lab/
+RUN python -m services.runtime.backtesting stamp
 USER 10001:10001
 WORKDIR /opt/lab
 CMD ["python", "-m", "services.bootstrap"]
