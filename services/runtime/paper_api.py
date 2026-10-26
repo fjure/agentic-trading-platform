@@ -52,7 +52,7 @@ class ProfileContext(Context):
     payload: dict
 
 
-def create_private_paper_app(commands, *, research=None):
+def create_private_paper_app(commands, *, research=None, backtesting=None):
     app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None, redirect_slashes=False)
 
     @app.middleware("http")
@@ -180,6 +180,8 @@ def create_private_paper_app(commands, *, research=None):
             raise ValueError("INVALID_REQUEST")
         return values[0]
     register_research_routes(app, research=research, body_reader=_body, key_reader=research_key)
+    from services.control_api.backtest_routes import register_backtest_routes
+    register_backtest_routes(app, backtesting=backtesting, body_reader=_body, key_reader=research_key)
     return app
 
 
@@ -191,7 +193,12 @@ def run_private_paper_api(engine):
     from services.runtime.config import database_engine
 
     research_engine = database_engine("api", deployment="paper", isolated_research=True)
-    application = create_private_paper_app(commands, research=ResearchService(research_engine))
+    from services.runtime.backtesting import configured_service
+
+    application = create_private_paper_app(
+        commands, research=ResearchService(research_engine),
+        backtesting=configured_service(research_engine),
+    )
 
     def health_loop():
         while True:
