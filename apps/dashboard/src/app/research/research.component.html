@@ -1,0 +1,81 @@
+<section aria-labelledby="research-title">
+  <h2 id="research-title">Research</h2>
+  <p>Gespeicherte Marktdaten · IEX · raw · observed-as-of. Historische Publikationszeiten sind nicht nachgewiesen. IEX bildet nicht den Gesamtmarkt ab.</p>
+  @if (error()) { <p role="alert">{{ error() }}</p> }
+  @if (notice()) { <p role="status">{{ notice() }}</p> }
+  <mat-card>
+    <mat-card-header><mat-card-title>Quellen und Rechte</mat-card-title></mat-card-header>
+    <mat-card-content>
+      @if (catalog(); as catalog) {
+        <p>Beobachtet: {{ catalog.observedAt }} · Unvollständig: {{ catalog.incomplete }}</p>
+        @for (source of catalog.items; track source.sourceId) {
+          <article class="source"><strong>{{ source.sourceId }} · {{ source.kind }}</strong>
+            <p>{{ source.state }} · Lizenz: {{ source.licenseStatus }} · Provider: {{ source.providerVerification }} · Policy: {{ source.policyVersion ?? 'unbekannt' }}</p>
+            <p>{{ source.limitations.join(' · ') }}</p>
+          </article>
+        }
+      } @else { <p>Quellenstatus noch nicht verfügbar.</p> }
+      <p>Private Providerrechte bleiben bis zum belegten Status UNVERIFIED. Deaktivierte Erhebung verhindert das Lesen gespeicherter Daten nicht.</p>
+      <button mat-button (click)="refreshCatalog()" [disabled]="!authorized()">Quellen neu laden</button>
+    </mat-card-content>
+  </mat-card>
+  <mat-card>
+    <mat-card-header><mat-card-title>Historie und Wissensstand</mat-card-title></mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="loadBars()">
+        <div class="filters">
+          <mat-form-field><mat-label>Researchinstrument</mat-label><mat-select formControlName="instrumentId">
+            @for (instrument of instruments(); track instrument.instrumentId) { <mat-option [value]="instrument.instrumentId">{{ instrument.baseUnit }} · {{ instrument.venue }} · {{ instrument.currency }}</mat-option> }
+          </mat-select></mat-form-field>
+          <mat-form-field><mat-label>Researchintervall</mat-label><mat-select formControlName="interval"><mat-option value="15Min">15Min</mat-option><mat-option value="1Day">1Day</mat-option></mat-select></mat-form-field>
+          <mat-form-field><mat-label>Research Start UTC</mat-label><input matInput formControlName="start" placeholder="2026-10-23T13:30:00Z"></mat-form-field>
+          <mat-form-field><mat-label>Research Ende UTC exklusiv</mat-label><input matInput formControlName="end"></mat-form-field>
+          <mat-form-field><mat-label>Bewertung UTC</mat-label><input matInput formControlName="valuationAt"></mat-form-field>
+          <mat-form-field><mat-label>Wissensstand UTC</mat-label><input matInput formControlName="knowledgeAt"></mat-form-field>
+        </div>
+        <button mat-flat-button type="submit" [disabled]="loading() || !authorized() || form.invalid">Gespeicherte Historie abfragen</button>
+      </form>
+      @if (!instruments().length) { <p>Keine registrierten Researchinstrumente im Quellenkatalog.</p> }
+      @if (bars(); as page) {
+        <p>Bewertung: {{ page.snapshot.valuationAt }} · Wissen: {{ page.snapshot.knowledgeAt }} · Snapshot: {{ page.snapshot.snapshotAt }} / {{ page.snapshot.snapshotVersion }} · Datenversion: {{ page.dataVersion }} · Unvollständig: {{ page.incomplete }}</p>
+        @for (coverage of page.coverage; track $index) {
+          <p>Qualität: {{ coverage.status }} · Erwartet: {{ coverage.expected ?? 'unbekannt' }} · Beobachtet: {{ coverage.observed }} · Fehlend: {{ coverage.missing ?? 'unbekannt' }} · Ungeprüft: {{ coverage.unchecked }} · Kalender: {{ coverage.calendarVersion ?? 'unbekannt' }} · Regel: {{ coverage.qualityRuleVersion }}</p>
+        }
+        <div class="table-scroll"><table aria-label="Research OHLCV"><thead><tr><th>Start / Ende UTC</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>Volumen</th><th>Qualität / Evidenz</th></tr></thead><tbody>
+          @for (bar of page.items; track bar.barId) {
+            <tr><td>{{ bar.start }}<br>{{ bar.end }}</td><td>{{ bar.open }}</td><td>{{ bar.high }}</td><td>{{ bar.low }}</td><td>{{ bar.close }}</td><td>{{ bar.volume }}</td><td>{{ bar.quality }}<br><button mat-button (click)="showEvidence(bar.evidenceId)">Evidenz {{ bar.revision }}</button></td></tr>
+          } @empty { <tr><td colspan="7">Keine zum Wissensstand verfügbaren Bars. Es werden keine Kerzen ergänzt.</td></tr> }
+        </tbody></table></div>
+        @if (page.nextCursor) { <button mat-button (click)="loadBars(true)" [disabled]="loading()">Weitere Researchbars</button> }
+      }
+      @if (context(); as context) {
+        <h3>MarketContext</h3><p>{{ context.quality }} · Fehlende Quellen: {{ context.missingSources.join(', ') }} · Unvollständig: {{ context.incomplete }}</p>
+        <p>Preisänderung: {{ context.priceChange.value ?? context.priceChange.status }} {{ context.priceChange.reason ?? '' }} · Volatilität: {{ context.volatility.value ?? context.volatility.status }} {{ context.volatility.reason ?? '' }}</p>
+        <p>Berechnung: {{ context.priceChange.algorithmVersion }} · Snapshot: {{ context.snapshot.snapshotAt }} / {{ context.snapshot.snapshotVersion }} · Evidenzen: {{ context.evidenceIds.join(', ') || 'keine' }}</p>
+      }
+      @if (evidence(); as result) {
+        <article aria-label="Researchevidenz"><h3>Researchevidenz</h3><p>{{ result.evidence.evidenceId }} · {{ result.evidence.sourceId }} · {{ result.evidence.quality }}</p>
+          <p>Ereignis: {{ result.evidence.eventTime }} · Publikation: {{ result.evidence.publishedAt ?? 'unbekannt' }} · Verfügbar: {{ result.evidence.availableAt }} · Ingestion: {{ result.evidence.ingestedAt }}</p>
+          <p>{{ result.evidence.availabilityBasis }} · Referenz: {{ result.evidence.sourceReference }} · Revision: {{ result.evidence.dataRevision }} · Snapshot: {{ result.snapshot.snapshotAt }} / {{ result.snapshot.snapshotVersion }}</p>
+          <p class="fingerprint">Fingerprint: {{ result.evidence.fingerprint }}</p>
+        </article>
+      }
+    </mat-card-content>
+  </mat-card>
+  <mat-card>
+    <mat-card-header><mat-card-title>Researchimporte</mat-card-title></mat-card-header>
+    <mat-card-content>
+      <p>Ein expliziter Import erfasst Historie. Er aktiviert keinen Handel. Fehlende Credentials, Rechte oder deaktivierte Erhebung bleiben als blockierter Auftrag sichtbar.</p>
+      <div [formGroup]="form"><mat-form-field><mat-label>Importmodus</mat-label><mat-select formControlName="mode"><mat-option value="BACKFILL">BACKFILL</mat-option><mat-option value="UPDATE">UPDATE</mat-option></mat-select></mat-form-field></div>
+      <button mat-flat-button (click)="importHistory()" [disabled]="sending() || !authorized() || form.invalid">Historienimport ausdrücklich starten</button>
+      <button mat-button (click)="refreshJobs()" [disabled]="jobsLoading() || !authorized()">Importaufträge neu laden</button>
+      <p>{{ polling() ? 'Aktive Aufträge werden alle 5 Sekunden geprüft.' : 'Keine automatische Statusabfrage; manuelles Neuladen verfügbar.' }}</p>
+      @for (job of jobs(); track job.jobId) {
+        <article class="job"><strong>{{ job.status }} · {{ job.jobId }}</strong><p>{{ job.request.instrumentId }} · {{ job.request.interval }} · {{ job.request.start }} bis {{ job.request.end }}</p><p>Seiten: {{ job.pages }} · Bars: {{ job.bars }} · Versuche: {{ job.attempts }} · Fehler: {{ job.errorCode ?? 'keiner' }} · Retry UTC: {{ job.retryAt ?? 'keiner' }}</p><p>Aktualisiert: {{ job.updatedAt }}</p>
+          @if (job.status === 'PARTIAL' || job.status === 'BLOCKED') { <button mat-button (click)="resumeHistory(job)" [disabled]="sending() || !authorized()">Fortsetzung ausdrücklich starten</button> }
+        </article>
+      } @empty { <p>Keine Importaufträge geladen.</p> }
+      @if (jobsMore() && jobs().length < 200) { <button mat-button (click)="refreshJobs(true)" [disabled]="jobsLoading()">Weitere Importaufträge</button> }
+    </mat-card-content>
+  </mat-card>
+</section>

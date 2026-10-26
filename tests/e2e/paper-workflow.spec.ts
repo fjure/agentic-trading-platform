@@ -299,15 +299,16 @@ test('expired stored proofs remain visibly expired and cannot enable a manual or
 
 test('strict public projection rejects private extras invalid dates and forged human provenance', async ({ page, request }) => {
   const f = new PaperFixture(); f.running(); await f.install(page); await activate(page, request);
+  const paper = page.locator('atl-paper-workflow');
   f.orders[0].decisionId = 'fabricated-model-decision';
   await page.getByRole('button', { name: 'Paper aktualisieren' }).click();
-  await expect(page.getByRole('alert')).toContainText('öffentlichen Vertrag');
+  await expect(paper.getByRole('alert')).toContainText('öffentlichen Vertrag');
   f.orders = []; f.snapshot.observedAt = '2026-02-30T01:00:00Z'; f.malformed = true;
   await page.getByRole('button', { name: 'Paper aktualisieren' }).click();
-  await expect(page.getByRole('alert')).toContainText('öffentlichen Vertrag');
+  await expect(paper.getByRole('alert')).toContainText('öffentlichen Vertrag');
   f.malformed = false; f.snapshot = { ...f.snapshot, privateAccountId: 'private-canary' } as PaperSnapshot;
   await page.getByRole('button', { name: 'Paper aktualisieren' }).click();
-  await expect(page.getByRole('alert')).toContainText('öffentlichen Vertrag');
+  await expect(paper.getByRole('alert')).toContainText('öffentlichen Vertrag');
   expect(await page.locator('body').innerText()).not.toContain('private-canary');
   expect(f.writes).toHaveLength(0);
 });

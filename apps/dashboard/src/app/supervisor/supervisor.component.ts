@@ -12,6 +12,7 @@ import type { Resource } from '../state/supervisor.models';
 import { SupervisorStore } from '../state/supervisor.store';
 import { DemoSetupComponent } from '../demo-setup/demo-setup.component';
 import { PaperWorkflowComponent } from '../paper-workflow/paper-workflow.component';
+import { ResearchComponent } from '../research/research.component';
 
 type View = 'overview' | Resource;
 type FieldSpec = readonly [label: string, path: string];
@@ -85,7 +86,7 @@ export class ConfirmDialogComponent { readonly data = inject<DialogData>(MAT_DIA
 
 @Component({
   selector: 'atl-supervisor',
-  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatTableModule, MatToolbarModule, DemoSetupComponent, PaperWorkflowComponent],
+  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatTableModule, MatToolbarModule, DemoSetupComponent, PaperWorkflowComponent, ResearchComponent],
   templateUrl: './supervisor.component.html',
   styleUrl: './supervisor.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

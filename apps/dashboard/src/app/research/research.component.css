@@ -1,0 +1,11 @@
+:host { display: block; margin-block: 1.5rem; }
+mat-card { margin-block: 1rem; }
+mat-card-content { padding-top: 1rem; }
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .75rem; }
+button { margin: .25rem .5rem .25rem 0; }
+.source, .job { border-bottom: 1px solid #ccc; padding-block: .5rem; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+td, th { padding: .75rem; text-align: left; border-bottom: 1px solid #ccc; white-space: nowrap; }
+.fingerprint { overflow-wrap: anywhere; }
+[role="alert"] { color: #a32020; }
