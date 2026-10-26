@@ -43,7 +43,7 @@ def run(role):
     from packages.persistence.ledger import PostgresLedger
 
     ledger = PostgresLedger(engine=engine)
-    coordinator, tick = None, None
+    coordinator, tick, research = None, None, None
     threads = []
 
     def schedule(callback, *, health=False):
@@ -66,10 +66,22 @@ def run(role):
         from .paper_coordinator import PaperRuntimeCoordinator
 
         coordinator = PaperRuntimeCoordinator(config, ledger)
+        from .research import PaperResearchRuntime
+        research = PaperResearchRuntime(config, coordinator, stop)
         schedule(coordinator.command_tick)
         schedule(coordinator.cancel_tick)
         schedule(coordinator.heartbeat_tick, health=True)
         tick = coordinator.recovery_tick
+        # Research initialization is independent of all safety schedules. A SQL
+        # migration/grant failure must never prevent reconciliation or Kill.
+        def start_research():
+            try:
+                research.start()
+            except Exception:
+                research.close()
+        thread = Thread(target=start_research, daemon=True, name="research-start")
+        threads.append(thread)
+        thread.start()
     elif role == "worker":
         from sqlalchemy import text
 
@@ -115,4 +127,6 @@ def run(role):
             thread.join(timeout=5)
         if coordinator is not None:
             coordinator.close()
+        if research is not None:
+            research.close()
         engine.dispose()

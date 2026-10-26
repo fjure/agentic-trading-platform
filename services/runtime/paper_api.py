@@ -14,7 +14,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
 
 from services.control_api import paper_dto as dto
-from services.control_api.app import _body
+from services.control_api.app import _body, _trace
 from services.control_api.auth import AuthDenied
 from services.control_api.paper_commands import PaperCommandError, PaperCommands
 from services.control_api.paper_dto import DTO, Trace, Version, identity
@@ -52,7 +52,7 @@ class ProfileContext(Context):
     payload: dict
 
 
-def create_private_paper_app(commands):
+def create_private_paper_app(commands, *, research=None):
     app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None, redirect_slashes=False)
 
     @app.middleware("http")
@@ -65,6 +65,8 @@ def create_private_paper_app(commands):
         ):
             return JSONResponse({"code": "INVALID_REQUEST"}, status_code=400)
         try:
+            request.state.trace_id = _trace(request)
+            request.state.actor_id = "local-operator"
             response = await call_next(request)
         except Exception:
             response = JSONResponse({"code": "TEMPORARILY_UNAVAILABLE"}, status_code=503)
@@ -170,6 +172,14 @@ def create_private_paper_app(commands):
             "completed": await run_in_threadpool(commands.rotation_complete, value["generation"])
         }
 
+    from services.control_api.research_routes import register_research_routes
+    def research_key(request):
+        values = request.headers.getlist("idempotency-key")
+        import re
+        if len(values) != 1 or not re.fullmatch(r"[A-Za-z0-9._:-]{16,128}", values[0]):
+            raise ValueError("INVALID_REQUEST")
+        return values[0]
+    register_research_routes(app, research=research, body_reader=_body, key_reader=research_key)
     return app
 
 
@@ -177,6 +187,11 @@ def run_private_paper_api(engine):
     import uvicorn
 
     commands = PaperCommands(engine)
+    from services.control_api.research_service import ResearchService
+    from services.runtime.config import database_engine
+
+    research_engine = database_engine("api", deployment="paper", isolated_research=True)
+    application = create_private_paper_app(commands, research=ResearchService(research_engine))
 
     def health_loop():
         while True:
@@ -184,14 +199,25 @@ def run_private_paper_api(engine):
                 write_status("api", check_identity(engine, "api"))
             except Exception:
                 write_status("api", "UNAVAILABLE")
+            try:
+                from packages.observability.research import observe_jobs
+                with research_engine.connect() as connection:
+                    aggregates = observe_jobs(connection)
+                application.state.research_metrics.export_local(aggregates=aggregates)
+            except Exception:
+                # Research telemetry never changes control health or safety admission.
+                pass
             time.sleep(5)
 
     threading.Thread(target=health_loop, daemon=True).start()
-    uvicorn.run(
-        create_private_paper_app(commands),
-        host="0.0.0.0",
-        port=8012,
-        access_log=False,
-        log_config=None,
-        proxy_headers=False,
-    )
+    try:
+        uvicorn.run(
+            application,
+            host="0.0.0.0",
+            port=8012,
+            access_log=False,
+            log_config=None,
+            proxy_headers=False,
+        )
+    finally:
+        research_engine.dispose()
