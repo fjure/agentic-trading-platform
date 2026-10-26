@@ -1,0 +1,6 @@
+{
+  "assessmentId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+  "status": "ACCEPTED",
+  "eligibility": "NOT_EVALUATED",
+  "detailLink": "/api/v1/research/data-readiness/assessments/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+}

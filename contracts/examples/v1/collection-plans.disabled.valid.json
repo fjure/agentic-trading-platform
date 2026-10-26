@@ -1,0 +1,107 @@
+{
+  "items": [
+    {
+      "instrumentId": "11111111-1111-4111-8111-111111111111",
+      "symbol": "SPY",
+      "provider": "alpaca",
+      "feed": "iex",
+      "interval": "15Min",
+      "adjustment": "raw",
+      "enabled": false,
+      "version": 0,
+      "generation": 0,
+      "status": "DISABLED",
+      "reasons": [
+        "DEFAULT_DISABLED",
+        "RIGHTS_UNVERIFIED"
+      ],
+      "providerRights": {
+        "licenseStatus": "UNKNOWN",
+        "providerVerification": "UNVERIFIED",
+        "attestationRef": null,
+        "reason": "RIGHTS_UNVERIFIED"
+      },
+      "globalEnabled": false,
+      "nextDueAt": null,
+      "lastAttemptAt": null,
+      "lastJobId": null,
+      "outstandingStartedDispatches": 0,
+      "gaps": [],
+      "gapsComplete": true,
+      "metrics": [],
+      "windows": {
+        "barSignal": [],
+        "barOutcome": [],
+        "strictSignal": [],
+        "strictOutcome": [],
+        "completeExperiment": [],
+        "complete": true
+      },
+      "schedule": {
+        "calendarRefreshUtc": "00:05:00Z",
+        "calendarLookaheadDays": 7,
+        "firstBarDelaySeconds": 5,
+        "reobserveDelaySeconds": 240,
+        "tickSeconds": 5,
+        "recoveryHours": 24,
+        "overlapMinutes": 30,
+        "maxDuePerUtcDay": 100,
+        "maxOpenJobsTotal": 2,
+        "maxConcurrentHttpGets": 1
+      },
+      "updatedAt": null
+    },
+    {
+      "instrumentId": "22222222-2222-4222-8222-222222222222",
+      "symbol": "QQQ",
+      "provider": "alpaca",
+      "feed": "iex",
+      "interval": "15Min",
+      "adjustment": "raw",
+      "enabled": false,
+      "version": 0,
+      "generation": 0,
+      "status": "DISABLED",
+      "reasons": [
+        "DEFAULT_DISABLED",
+        "RIGHTS_UNVERIFIED"
+      ],
+      "providerRights": {
+        "licenseStatus": "UNKNOWN",
+        "providerVerification": "UNVERIFIED",
+        "attestationRef": null,
+        "reason": "RIGHTS_UNVERIFIED"
+      },
+      "globalEnabled": false,
+      "nextDueAt": null,
+      "lastAttemptAt": null,
+      "lastJobId": null,
+      "outstandingStartedDispatches": 0,
+      "gaps": [],
+      "gapsComplete": true,
+      "metrics": [],
+      "windows": {
+        "barSignal": [],
+        "barOutcome": [],
+        "strictSignal": [],
+        "strictOutcome": [],
+        "completeExperiment": [],
+        "complete": true
+      },
+      "schedule": {
+        "calendarRefreshUtc": "00:05:00Z",
+        "calendarLookaheadDays": 7,
+        "firstBarDelaySeconds": 5,
+        "reobserveDelaySeconds": 240,
+        "tickSeconds": 5,
+        "recoveryHours": 24,
+        "overlapMinutes": 30,
+        "maxDuePerUtcDay": 100,
+        "maxOpenJobsTotal": 2,
+        "maxConcurrentHttpGets": 1
+      },
+      "updatedAt": null
+    }
+  ],
+  "observedAt": "2026-10-23T00:00:00Z"
+}

@@ -167,6 +167,22 @@ if (-not $SkipCompile) {
     $fixtures += '// @ts-expect-error Unknown evidence kind must never typecheck.'
     $fixtures += 'const invalidResearchKind: ResearchEvidenceContent = { kind: "UNKNOWN", rawPayload: {} };'
     [IO.File]::WriteAllLines((Join-Path $tooling 'client-contract-fixtures.generated.ts'), $fixtures)
+    $readinessFixtures = Get-Content -LiteralPath (Join-Path $root 'contracts/examples/v1/readiness-fixtures.json') -Raw | ConvertFrom-Json -AsHashtable
+    foreach ($entry in $readinessFixtures.GetEnumerator()) {
+        $model = $entry.Value
+        if ($model -eq 'ReadinessCursor') {
+            $literal = Get-Content -LiteralPath (Join-Path $root ('contracts/examples/v1/' + $entry.Key)) -Raw
+            $fixtures += "const readinessFixture$fixtureIndex : string = $literal;"
+            $fixtureIndex++
+            continue
+        }
+        $modelFile = $model.Substring(0, 1).ToLowerInvariant() + $model.Substring(1)
+        $fixtures += "import type { $model as ReadinessFixtureType$fixtureIndex } from './generated-a/model/$modelFile';"
+        $literal = Get-Content -LiteralPath (Join-Path $root ('contracts/examples/v1/' + $entry.Key)) -Raw
+        $fixtures += "const readinessFixture$fixtureIndex : ReadinessFixtureType$fixtureIndex = $literal;"
+        $fixtureIndex++
+    }
+    [IO.File]::WriteAllLines((Join-Path $tooling 'client-contract-fixtures.generated.ts'), $fixtures)
     $tsc = Join-Path $tooling 'node_modules/.bin/tsc.cmd'
     if (-not (Test-Path -LiteralPath $tsc)) { throw 'Pinned TypeScript compiler is missing.' }
     & $tsc --project (Join-Path $tooling 'tsconfig.generated.json') --noEmit

@@ -1,0 +1,11 @@
+{
+  "marketEventAt": "2026-10-22T13:30:00Z",
+  "barCloseAt": "2026-10-22T13:45:00Z",
+  "providerPublishedAt": null,
+  "firstObservedAt": "2026-10-22T13:45:20Z",
+  "ingestedAt": "2026-10-22T13:46:15Z",
+  "commitConfirmedAt": "2026-10-22T13:46:15.001Z",
+  "commitVersion": 40,
+  "publicationEvidence": null,
+  "clockStatus": "COMPARABLE"
+}

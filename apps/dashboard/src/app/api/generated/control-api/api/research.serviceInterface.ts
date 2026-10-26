@@ -11,6 +11,15 @@ import { HttpHeaders }                                       from '@angular/comm
 
 import { Observable }                                        from 'rxjs';
 
+import { BacktestRequest } from '../model/models';
+import { CollectionPlan } from '../model/models';
+import { CollectionPlanPage } from '../model/models';
+import { CollectionPlanUpdate } from '../model/models';
+import { ReadinessAccepted } from '../model/models';
+import { ReadinessAssessment } from '../model/models';
+import { ReadinessCategory } from '../model/models';
+import { ReadinessFindingPage } from '../model/models';
+import { ReadinessProblem } from '../model/models';
 import { ResearchBarPage } from '../model/models';
 import { ResearchContext } from '../model/models';
 import { ResearchEvidenceResult } from '../model/models';
@@ -31,6 +40,15 @@ export interface ResearchServiceInterface {
     configuration: Configuration;
 
     /**
+     * Begrenzte snapshotgebundene Datenzulässigkeitsprüfung annehmen
+     * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. Die strikte bestehende BacktestRequest-Semantik einschließlich chronologischer disjunkter Folds, fast &lt; slow, maximal 12 Folds und 366 Tagen wird vor dem Einreihen geprüft. Gleicher Akteur, Operation, Schlüssel und kanonische Nutzlast liefern den ursprünglichen Receipt; andere Nutzlast ergibt 409. Höchstens 32 wartende Jobs und insgesamt ein aktiver Diagnose-/Backtestworker; erschöpfte Queue ergibt 429 ohne Jobanlage. Keine Seiteneffekte vor Prüfung von Authentifizierung, Origin, Körper und Protokoll.
+     * @endpoint post /api/v1/research/data-readiness/assessments
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param backtestRequest 
+     */
+    createReadinessAssessment(idempotencyKey: string, backtestRequest: BacktestRequest, extraHttpRequestParams?: any): Observable<ReadinessAccepted>;
+
+    /**
      * Request bounded historical ingestion
      * MDR-01/MDR-07; REQ-RCX-004, REQ-HMD-006. LocalSession, Same-Origin/CSRF and Idempotency-Key required. Accepts either the legacy-shaped explicit Research create request or an operator resume request, never trading permission. Repeating a create or resume idempotency key and canonical payload returns the original job with 202; changed payload returns409 IDEMPOTENCY_CONFLICT. Only PARTIAL/BLOCKED jobs can be resumed. No private cursor or raw transport data is returned.
      * @endpoint post /api/v1/research/ingestion-jobs
@@ -38,6 +56,14 @@ export interface ResearchServiceInterface {
      * @param researchJobAction 
      */
     createResearchIngestionJob(idempotencyKey: string, researchJobAction: ResearchJobAction, extraHttpRequestParams?: any): Observable<ResearchJob>;
+
+    /**
+     * Dauerhafte Diagnose und unveränderlichen Bericht mit separaten aktuellen Warnungen lesen
+     * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. Der Bericht bleibt unveränderlich; currentRevocation wird beim Lesen separat ermittelt und verändert weder reportHash noch ursprüngliches Ergebnis. Unveröffentlichte Jobs zeigen keinen Bericht. Budgetabbruch ergibt UNKNOWN; SUCCEEDED ist unabhängig von eligibility. Unbekannte kanonische assessmentId ergibt 404, fehlerhafte UUID 400.
+     * @endpoint get /api/v1/research/data-readiness/assessments/{assessmentId}
+     * @param assessmentId 
+     */
+    getReadinessAssessment(assessmentId: string, extraHttpRequestParams?: any): Observable<ReadinessAssessment>;
 
     /**
      * Read context from one committed Research snapshot
@@ -73,6 +99,24 @@ export interface ResearchServiceInterface {
     getResearchIngestionJob(id: string, extraHttpRequestParams?: any): Observable<ResearchJob>;
 
     /**
+     * Höchstens zwei registrierte Sammlungspläne samt deaktivierten Vorgaben lesen
+     * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. REQ-HMD-007/008; T-HMD-016/017/018. Keine freien Abfragefilter. Ausschließlich registrierte SPY-/QQQ-Pläne mit raw IEX und 15Min. Unpersistierte Pläne zeigen version&#x3D;0 und DISABLED. Rechte und globale Gates bleiben unabhängig von Datenzulässigkeit sichtbar.
+     * @endpoint get /api/v1/research/collection/plans
+     */
+    listCollectionPlans(extraHttpRequestParams?: any): Observable<CollectionPlanPage>;
+
+    /**
+     * Stabile begrenzte berichtsgebundene Befundseiten lesen
+     * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. Stabile Reihenfolge nach Fold, Bereich, Beginn, Kategorie und ID. Der Cursor-HMAC bindet Diagnose, unveränderlichen reportHash, Snapshot-/Vertrauensversionen, Kategorie und Ablaufzeit. Geänderte Filter, Manipulation oder Ablauf ergeben 400 CURSOR_INVALID. Unbekannte Diagnose ergibt 404; noch nicht atomar veröffentlichter Bericht 409 REPORT_NOT_READY. Seitenwiederholung bleibt auch bei späteren Writes und Widerrufen stabil.
+     * @endpoint get /api/v1/research/data-readiness/assessments/{assessmentId}/findings
+     * @param assessmentId 
+     * @param limit 
+     * @param cursor 
+     * @param category 
+     */
+    listReadinessFindings(assessmentId: string, limit?: number, cursor?: string, category?: ReadinessCategory, extraHttpRequestParams?: any): Observable<ReadinessFindingPage>;
+
+    /**
      * Read immutable raw bars at a conservative knowledge boundary
      * MDR-01/MDR-07; REQ-RCX-004, REQ-REV-004, REQ-HMD-006. LocalSession and existing Origin/CSRF boundaries. All times UTC microseconds, ranges half-open and at most 366 days; invalid/cross-field input is rejected. GET performs bounded stored reads only; no provider I/O, job dispatch or trading mutations. Missing evidence at the selected knowledge boundary returns404 NOT_FOUND. Default time filters use one request clock instant. Cursor reuse requires identical filters and retains its original snapshot.
      * @endpoint get /api/v1/research/bars
@@ -104,5 +148,15 @@ export interface ResearchServiceInterface {
      * @endpoint get /api/v1/research/sources
      */
     listResearchSources(extraHttpRequestParams?: any): Observable<ResearchSourceCatalog>;
+
+    /**
+     * Sammlungswunsch mit Versionsvergleich und idempotenter Wiederholung speichern
+     * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. REQ-HMD-007/008; T-HMD-016/017/018. Fehlerhafte Instrument-UUID ergibt 400; gültige fremde UUID 404. Gleicher Akteur, Operation, Instrument, Schlüssel und Nutzlast liefern das ursprüngliche Ergebnis VOR dem Vergleich von expectedVersion. Andere Nutzlast zum selben Schlüssel oder veraltete expectedVersion ergeben 409 mit getrennten Codes IDEMPOTENCY_CONFLICT und VERSION_CONFLICT. PUT erhöht persistierte Version und Generation atomar. enabled&#x3D;true bewahrt den Wunsch bei fehlenden globalen oder Quellengates sichtbar als BLOCKED und aktiviert diese Gates niemals. enabled&#x3D;false committet vor Bestätigung dieselbe Planlock-Dispatchbarriere; outstandingStartedDispatches zählt bereits zugelassene Abrufe mit committetem STARTED-Receipt einschließlich erst danach beginnender Socketübertragung. Nach Pausencommit entsteht keine neue Zulassung der pausierten Generation. Bereits zugelassene Antworten dürfen mit tatsächlichen Zeiten persistieren. Kein Retry verwendet einen Receipt erneut; kein Datenbanklock während I/O.
+     * @endpoint put /api/v1/research/collection/plans/{instrumentId}
+     * @param instrumentId 
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param collectionPlanUpdate 
+     */
+    updateCollectionPlan(instrumentId: string, idempotencyKey: string, collectionPlanUpdate: CollectionPlanUpdate, extraHttpRequestParams?: any): Observable<CollectionPlan>;
 
 }

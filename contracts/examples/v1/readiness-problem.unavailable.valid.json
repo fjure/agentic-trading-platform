@@ -1,0 +1,7 @@
+{
+  "type": "urn:agentic-trading-lab:readiness-problem",
+  "title": "Research data request failed",
+  "status": 503,
+  "code": "UNAVAILABLE",
+  "traceId": "cccccccccccccccccccccccccccccccc"
+}

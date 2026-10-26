@@ -7,6 +7,7 @@ import threading
 import pytest
 from fastapi.testclient import TestClient
 
+from scripts.contract_stages import pending_contract_operations
 from services.control_api.app import create_app
 from services.control_api.auth import LocalAuth
 from services.control_api.cursors import CursorExpired
@@ -19,6 +20,7 @@ TRACE = "b" * 32
 
 
 def test_all_runtime_operations_match_canonical_contract():
+    pending_operations = pending_contract_operations()
     actual = {
         (route.path, method.lower(), route.operation_id)
         for route in create_app().routes
@@ -28,6 +30,7 @@ def test_all_runtime_operations_match_canonical_contract():
         (path, method, operation["operationId"])
         for path, methods in OAS["paths"].items()
         for method, operation in methods.items()
+        if operation["operationId"] not in pending_operations
     }
     assert actual == expected
 

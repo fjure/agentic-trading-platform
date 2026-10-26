@@ -71,10 +71,18 @@ def test_every_research_component_is_mirrored_without_drift():
 
 
 def test_seven_operations_require_session_and_explicit_bounds():
+    # Bestehende MDR-Verträge bleiben unverändert; die fünf additiven RDR-Verträge
+    # mit eigenem ProblemDTO werden in test_readiness_examples.py geprüft.
+    historical_paths = {
+        "/api/v1/research/sources", "/api/v1/research/bars",
+        "/api/v1/research/evidence/{id}", "/api/v1/research/context",
+        "/api/v1/research/ingestion-jobs", "/api/v1/research/ingestion-jobs/{id}",
+    }
     paths = {
         p: item for p, item in OAS["paths"].items()
-        if p.startswith("/api/v1/research/") and not p.startswith("/api/v1/research/backtests/")
+        if p in historical_paths
     }
+    assert paths.keys() == historical_paths
     assert sum(len(item) for item in paths.values()) == 7
     for path, item in paths.items():
         for method, operation in item.items():

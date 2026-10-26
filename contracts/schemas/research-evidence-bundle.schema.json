@@ -1,0 +1,607 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/research-evidence-bundle.schema.json",
+  "title": "Normalisiertes Offlinebündel für Research-Evidenz v1",
+  "description": "REQ-RDR-003/004/007/008, RDR-01. Nur lokale normalisierte Eingaben. Der RDR-09-Importer MUSS UTF-8-Eingaben über 1048576 Bytes einschließlich Signaturen vor dem Parsen ablehnen. JSON Schema prüft Struktur, keine Bytegröße, Chronologie, Digestgleichheit, Authentizität, Quellenzulassung oder Eligibility. Mitgelieferte Schlüssel, Zertifikate, Vertrauensanker und importer-eigene Ingestion-/Commitwerte sind verboten. Das Produktionsregister beginnt leer. Strukturell gültige Beispiele verwenden synthetische, nicht authentifizierende Signaturen und belegen keine realen Quellenrechte.",
+  "x-maxSerializedBytes": 1048576,
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bundleVersion",
+    "sourceId",
+    "policyVersion",
+    "sourceDocumentFingerprint",
+    "entries"
+  ],
+  "properties": {
+    "bundleVersion": {
+      "const": "research-evidence-bundle-v1"
+    },
+    "sourceId": {
+      "$ref": "#/$defs/OpaqueId"
+    },
+    "policyVersion": {
+      "$ref": "#/$defs/OpaqueId"
+    },
+    "sourceDocumentFingerprint": {
+      "$ref": "#/$defs/Fingerprint"
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1000,
+      "items": {
+        "$ref": "#/$defs/Entry"
+      }
+    }
+  },
+  "$defs": {
+    "OpaqueId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$(?![\\s\\S])"
+    },
+    "InstrumentId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$(?![\\s\\S])"
+    },
+    "Fingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+      "description": "SHA-256-Digest als kleingeschriebene Hexadezimalfolge; Gleichheit und Provenienz benötigen Importerprüfung."
+    },
+    "Utc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "Decimal": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$",
+      "not": {
+        "pattern": "\\s"
+      }
+    },
+    "Interval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "startAt",
+        "endAt"
+      ],
+      "properties": {
+        "startAt": {
+          "$ref": "#/$defs/Utc"
+        },
+        "endAt": {
+          "$ref": "#/$defs/Utc"
+        }
+      },
+      "description": "Halboffenes UTC-Intervall. Importer MUSS startAt < endAt und die Einbettung aller untergeordneten Intervalle prüfen."
+    },
+    "Signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "canonicalization",
+        "keyId",
+        "value"
+      ],
+      "properties": {
+        "algorithm": {
+          "const": "Ed25519"
+        },
+        "canonicalization": {
+          "const": "RFC8785-UTF8-v1"
+        },
+        "keyId": {
+          "$ref": "#/$defs/OpaqueId"
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9+/]{85}[AQgw]==$(?![\\s\\S])",
+          "description": "Kanonische gepaddete Standard-Base64-Kodierung von genau 64 abgetrennten Signaturbytes."
+        }
+      },
+      "description": "Die Eintragssignatur signiert genau die nach RFC 8785 kanonisierten UTF-8-Bytes von entry.content; die Zeitsignatur entsprechend temporalProof.payload. SHA-256-Fingerprints verwenden dieselben kanonischen Bytes (statementFingerprint verwendet content.statement). Doppelte JSON-Schlüssel, ungültiges Unicode und Eingaben außerhalb I-JSON MÜSSEN vor der Kanonisierung abgewiesen werden. Schlüsselsuche ausschließlich im vorab gepinnten Offlineregister; keine Schlüssel aus der Eingabe. Schemavalidität prüft niemals eine Signatur. Der Importer MUSS signature.keyId mit der im signierten content beziehungsweise payload gebundenen keyId vergleichen."
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "content",
+        "contentFingerprint",
+        "signature"
+      ],
+      "properties": {
+        "content": {
+          "$ref": "#/$defs/Content"
+        },
+        "contentFingerprint": {
+          "$ref": "#/$defs/Fingerprint"
+        },
+        "signature": {
+          "$ref": "#/$defs/Signature"
+        },
+        "temporalProof": {
+          "$ref": "#/$defs/TemporalProof"
+        }
+      },
+      "description": "Ohne temporalProof gilt UNKNOWN/TIME_UNPROVEN, auch mit gültiger Quellsignatur oder behauptetem publishedAt. Kein Nachweistyp verändert tatsächliche lokale Ingestion oder Snapshotsichtbarkeit."
+    },
+    "Content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bundleVersion",
+        "sourceId",
+        "policyVersion",
+        "sourceDocumentFingerprint",
+        "evidenceKey",
+        "kind",
+        "instrumentId",
+        "interval",
+        "sourceObservedAt",
+        "publishedAt",
+        "revision",
+        "predecessorFingerprint",
+        "statement",
+        "signedAt",
+        "keyId"
+      ],
+      "properties": {
+        "bundleVersion": {
+          "const": "research-evidence-bundle-v1"
+        },
+        "sourceId": {
+          "$ref": "#/$defs/OpaqueId"
+        },
+        "policyVersion": {
+          "$ref": "#/$defs/OpaqueId"
+        },
+        "sourceDocumentFingerprint": {
+          "$ref": "#/$defs/Fingerprint"
+        },
+        "evidenceKey": {
+          "$ref": "#/$defs/OpaqueId"
+        },
+        "kind": {
+          "enum": [
+            "CALENDAR",
+            "QUALITY",
+            "CORPORATE_ACTION"
+          ]
+        },
+        "instrumentId": {
+          "$ref": "#/$defs/InstrumentId"
+        },
+        "interval": {
+          "$ref": "#/$defs/Interval"
+        },
+        "sourceObservedAt": {
+          "$ref": "#/$defs/Utc"
+        },
+        "publishedAt": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Utc"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optionale behauptete Quellenpublikationszeit, niemals ein unabhängiger Zeitbeweis."
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "predecessorFingerprint": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Fingerprint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "statement": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CalendarStatement"
+            },
+            {
+              "$ref": "#/$defs/QualityStatement"
+            },
+            {
+              "$ref": "#/$defs/CorporateActionStatement"
+            }
+          ]
+        },
+        "signedAt": {
+          "$ref": "#/$defs/Utc",
+          "description": "Signierte behauptete Signierzeit; Schlüsselgültigkeit und unabhängige Zeitbeweise sind gesondert zu prüfen."
+        },
+        "keyId": {
+          "$ref": "#/$defs/OpaqueId",
+          "description": "Signierte Schlüsselidentität; MUSS mit signature.keyId übereinstimmen und im vorab gepinnten Register zugelassen sein."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "revision": {
+                "const": 1
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "predecessorFingerprint": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "predecessorFingerprint": {
+                "$ref": "#/$defs/Fingerprint"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "CALENDAR"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "statement": {
+                "$ref": "#/$defs/CalendarStatement"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "QUALITY"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "statement": {
+                "$ref": "#/$defs/QualityStatement"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "CORPORATE_ACTION"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "statement": {
+                "$ref": "#/$defs/CorporateActionStatement"
+              }
+            }
+          }
+        }
+      ],
+      "description": "Signierte Kopien von Quelle, Versionen und Dokumentfingerprint MÜSSEN mit der Hülle übereinstimmen. Revisionen sind append-only und binden den tatsächlichen Vorgänger derselben Evidenzidentität. Importer prüft Eindeutigkeit, aktuellen Widerruf und Zulassung von Quelle, Instrument und Geltungsbereich vor atomaren Writes."
+    },
+    "CalendarStatement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "calendarVersion",
+        "sessions"
+      ],
+      "properties": {
+        "type": {
+          "const": "CALENDAR_SESSIONS"
+        },
+        "calendarVersion": {
+          "$ref": "#/$defs/OpaqueId"
+        },
+        "sessions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 366,
+          "items": {
+            "$ref": "#/$defs/Session"
+          }
+        }
+      },
+      "description": "Nur explizite normalisierte Sitzungen. Leere Antworten, Anfragegrenzen und fehlende Sitzungsdaten zertifizieren niemals Feiertage oder vollständige Coverage. RDR-09 prüft sortierte eindeutige Daten, Sitzungsgrenzen, Kalenderausrichtung und autoritative Randabdeckung."
+    },
+    "Session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sessionDate",
+        "opensAt",
+        "closesAt"
+      ],
+      "properties": {
+        "sessionDate": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "opensAt": {
+          "$ref": "#/$defs/Utc"
+        },
+        "closesAt": {
+          "$ref": "#/$defs/Utc"
+        }
+      }
+    },
+    "QualityStatement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "quality",
+        "ruleVersion",
+        "reason"
+      ],
+      "properties": {
+        "type": {
+          "const": "QUALITY_OBSERVATION"
+        },
+        "quality": {
+          "type": "string",
+          "enum": [
+            "VALID",
+            "MISSING_EXPECTED",
+            "NO_OBSERVATION",
+            "UNKNOWN_CALENDAR",
+            "CONFLICT",
+            "INVALID"
+          ]
+        },
+        "ruleVersion": {
+          "$ref": "#/$defs/OpaqueId"
+        },
+        "reason": {
+          "enum": [
+            "NORMALIZED_RULES_PASSED",
+            "MISSING_BARS",
+            "INVALID_OHLC",
+            "INVALID_INTERVAL",
+            "AMBIGUOUS_DATA",
+            "CALENDAR_CHANGED",
+            "INSUFFICIENT_EVIDENCE"
+          ]
+        }
+      },
+      "description": "Typisierte Quellenaussage über genau content.interval; unabhängige Domainprüfungen bleiben verpflichtend. Eine teilweise VALID-Aussage löst keinen gesamten verworfenen Bereich auf."
+    },
+    "CorporateActionStatement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "conclusion",
+        "actions"
+      ],
+      "properties": {
+        "type": {
+          "const": "CORPORATE_ACTION_COVERAGE"
+        },
+        "conclusion": {
+          "enum": [
+            "NO_ACTIONS",
+            "ACTIONS_PRESENT",
+            "UNKNOWN"
+          ]
+        },
+        "actions": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "$ref": "#/$defs/CorporateAction"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "conclusion": {
+                "const": "ACTIONS_PRESENT"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "actions": {
+                "minItems": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "actions": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ],
+      "description": "NO_ACTIONS ist eine signierte Aussage mit Geltungsbereich, niemals aus Preiskontinuität oder leeren Providerantworten abgeleitet. Negative oder widersprüchliche Evidenz muss ältere positive Coverage sperren."
+    },
+    "CorporateAction": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "effectiveAt",
+            "ratio"
+          ],
+          "properties": {
+            "type": {
+              "const": "SPLIT"
+            },
+            "effectiveAt": {
+              "$ref": "#/$defs/Utc"
+            },
+            "ratio": {
+              "$ref": "#/$defs/Decimal"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "effectiveAt",
+            "amount",
+            "currency"
+          ],
+          "properties": {
+            "type": {
+              "const": "CASH_DIVIDEND"
+            },
+            "effectiveAt": {
+              "$ref": "#/$defs/Utc"
+            },
+            "amount": {
+              "$ref": "#/$defs/Decimal"
+            },
+            "currency": {
+              "const": "USD"
+            }
+          }
+        }
+      ],
+      "description": "Normalisierte Decimalstrings. Positives Splitverhältnis, nichtnegative Dividende, Chronologie und Anwendbarkeit benötigen Domainprüfung; eine gültige Signatur macht ungültige Finanzwerte nicht gültig."
+    },
+    "TemporalProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "payload",
+        "signature"
+      ],
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/TemporalPayload"
+        },
+        "signature": {
+          "$ref": "#/$defs/Signature"
+        }
+      },
+      "description": "Kandidatenformat für Offlinezeugen, kein Vertrauensresultat. Nur ein ausdrücklich implementiertes Verfahren und ein unabhängig vorab zugelassener Zeuge dürfen in RDR-09 verifiziert werden. v1 liefert oder verspricht keinen realen Zeugen; nicht unterstützte Verfahren oder Zeugen werden abgelehnt, unbewiesene Publikation bleibt UNKNOWN/TIME_UNPROVEN."
+    },
+    "TemporalPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "witnessId",
+        "assertion",
+        "witnessObservedAt",
+        "scope",
+        "signedAt",
+        "keyId"
+      ],
+      "properties": {
+        "method": {
+          "const": "offline-witness-ed25519-v1"
+        },
+        "witnessId": {
+          "$ref": "#/$defs/OpaqueId"
+        },
+        "assertion": {
+          "enum": [
+            "EXISTENCE_BY",
+            "PUBLICATION_OBSERVED_BY"
+          ]
+        },
+        "witnessObservedAt": {
+          "$ref": "#/$defs/Utc"
+        },
+        "scope": {
+          "$ref": "#/$defs/TemporalScope"
+        },
+        "signedAt": {
+          "$ref": "#/$defs/Utc",
+          "description": "Signierte behauptete Signierzeit; Schlüsselgültigkeit und unabhängige Zeitbeweise sind gesondert zu prüfen."
+        },
+        "keyId": {
+          "$ref": "#/$defs/OpaqueId",
+          "description": "Signierte Schlüsselidentität; MUSS mit signature.keyId übereinstimmen und im vorab gepinnten Register zugelassen sein."
+        }
+      },
+      "description": "EXISTENCE_BY beweist höchstens, dass gebundene Bytes spätestens zur unabhängig geprüften Zeugenzeit existierten; weder Providerpublikation/-verfügbarkeit noch Vollständigkeit folgen daraus. PUBLICATION_OBSERVED_BY behauptet unabhängig beobachtete Verfügbarkeit an der gebundenen Quelle im exakten Geltungsbereich und benötigt eine separat zugelassene Verfahrensprüfung. Keine Aussage wird durch Schemavalidierung automatisch VERIFIED."
+    },
+    "TemporalScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceId",
+        "evidenceKey",
+        "revision",
+        "kind",
+        "instrumentId",
+        "interval",
+        "contentFingerprint",
+        "statementFingerprint"
+      ],
+      "properties": {
+        "sourceId": {
+          "$ref": "#/$defs/OpaqueId"
+        },
+        "evidenceKey": {
+          "$ref": "#/$defs/OpaqueId"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "kind": {
+          "enum": [
+            "CALENDAR",
+            "QUALITY",
+            "CORPORATE_ACTION"
+          ]
+        },
+        "instrumentId": {
+          "$ref": "#/$defs/InstrumentId"
+        },
+        "interval": {
+          "$ref": "#/$defs/Interval"
+        },
+        "contentFingerprint": {
+          "$ref": "#/$defs/Fingerprint"
+        },
+        "statementFingerprint": {
+          "$ref": "#/$defs/Fingerprint"
+        }
+      },
+      "description": "Alle Scopewerte und beide kanonischen SHA-256-Digests MÜSSEN zum Eintrag passen. Austausch von Quelle, Revision, Aussage oder Intervall muss atomar scheitern; das Schema kann diese Werte nicht vergleichen."
+    }
+  }
+}

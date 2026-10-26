@@ -14,6 +14,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
 
+from scripts.contract_stages import pending_contract_operations
 from services.control_api.app import create_app
 from services.control_api.auth import LocalAuth
 
@@ -285,11 +286,12 @@ def test_mutation_routes_are_exact_contract_subset():
         for route in api.routes
         for method in route.methods
     }
+    pending_operations = pending_contract_operations()
     expected = {
         (path, method, op["operationId"])
         for path, methods in OAS["paths"].items()
         for method, op in methods.items()
-        if method in {"post", "put"}
+        if method in {"post", "put"} and op["operationId"] not in pending_operations
     }
     assert {entry for entry in actual if entry[1] in {"post", "put"}} == expected
 

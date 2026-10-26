@@ -1,0 +1,41 @@
+{
+  "bundleVersion": "research-evidence-bundle-v1",
+  "sourceId": "synthetic-source-v1",
+  "policyVersion": "synthetic-policy-v1",
+  "sourceDocumentFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "entries": [
+    {
+      "content": {
+        "bundleVersion": "research-evidence-bundle-v1",
+        "sourceId": "synthetic-source-v1",
+        "policyVersion": "synthetic-policy-v1",
+        "sourceDocumentFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "evidenceKey": "synthetic-corporate-action",
+        "kind": "CORPORATE_ACTION",
+        "instrumentId": "11111111-1111-4111-8111-111111111111",
+        "interval": {
+          "startAt": "2026-10-23T00:00:00Z",
+          "endAt": "2026-10-24T00:00:00Z"
+        },
+        "sourceObservedAt": "2026-10-26T09:00:00Z",
+        "publishedAt": null,
+        "revision": 1,
+        "predecessorFingerprint": null,
+        "statement": {
+          "type": "CORPORATE_ACTION_COVERAGE",
+          "conclusion": "NO_ACTIONS",
+          "actions": []
+        },
+        "signedAt": "2026-10-26T09:00:01Z",
+        "keyId": "synthetic-source-key-v1"
+      },
+      "contentFingerprint": "fa56a407b753de0e26cba7962cb27cc3a18bb203e5eea4f38dc61201375d727d",
+      "signature": {
+        "algorithm": "Ed25519",
+        "canonicalization": "RFC8785-UTF8-v1",
+        "keyId": "synthetic-source-key-v1",
+        "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+      }
+    }
+  ]
+}

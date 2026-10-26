@@ -3690,6 +3690,1405 @@ paths:
                 status: 503
                 code: UNAVAILABLE
                 traceId: cccccccccccccccccccccccccccccccc
+  /api/v1/research/data-readiness/assessments:
+    post:
+      tags:
+      - Research
+      operationId: createReadinessAssessment
+      summary: Begrenzte snapshotgebundene Datenzulässigkeitsprüfung annehmen
+      description: RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010;
+        T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff;
+        bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper
+        und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen.
+        Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport
+        besitzt absichtlich keinen HTTPupload. Die strikte bestehende BacktestRequest-Semantik einschließlich
+        chronologischer disjunkter Folds, fast < slow, maximal 12 Folds und 366 Tagen wird vor dem Einreihen
+        geprüft. Gleicher Akteur, Operation, Schlüssel und kanonische Nutzlast liefern den ursprünglichen Receipt;
+        andere Nutzlast ergibt 409. Höchstens 32 wartende Jobs und insgesamt ein aktiver Diagnose-/Backtestworker;
+        erschöpfte Queue ergibt 429 ohne Jobanlage. Keine Seiteneffekte vor Prüfung von Authentifizierung, Origin,
+        Körper und Protokoll.
+      responses:
+        '202':
+          description: Begrenzte snapshotgebundene Datenzulässigkeitsprüfung annehmen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessAccepted'
+              example:
+                assessmentId: aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
+                status: ACCEPTED
+                eligibility: NOT_EVALUATED
+                detailLink: /api/v1/research/data-readiness/assessments/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
+        '400':
+          description: INVALID_REQUEST
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 400
+                code: INVALID_REQUEST
+                traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 401
+                code: UNAUTHORIZED
+                traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 403
+                code: FORBIDDEN
+                traceId: cccccccccccccccccccccccccccccccc
+        '413':
+          description: PAYLOAD_TOO_LARGE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 413
+                code: PAYLOAD_TOO_LARGE
+                traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 503
+                code: UNAVAILABLE
+                traceId: cccccccccccccccccccccccccccccccc
+        '409':
+          description: IDEMPOTENCY_CONFLICT
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 409
+                code: IDEMPOTENCY_CONFLICT
+                traceId: cccccccccccccccccccccccccccccccc
+        '429':
+          description: QUEUE_EXHAUSTED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 429
+                code: QUEUE_EXHAUSTED
+                traceId: cccccccccccccccccccccccccccccccc
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BacktestRequest'
+            example:
+              instrumentId: 11111111-1111-4111-8111-111111111111
+              strategyId: sma-cross-v1
+              version: '1'
+              parameters:
+                fast: 2
+                slow: 3
+              startCash: '10000'
+              feeUsd: '1'
+              slippageBps: '5'
+              quantityStep: '0.000001'
+              folds:
+              - trainingStart: '2026-10-20T00:00:00Z'
+                trainingEnd: '2026-10-22T00:00:00Z'
+                testStart: '2026-10-22T00:00:00Z'
+                testEnd: '2026-10-23T00:00:00Z'
+  /api/v1/research/data-readiness/assessments/{assessmentId}:
+    get:
+      tags:
+      - Research
+      operationId: getReadinessAssessment
+      summary: Dauerhafte Diagnose und unveränderlichen Bericht mit separaten aktuellen Warnungen lesen
+      description: RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010;
+        T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff;
+        bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper
+        und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen.
+        Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport
+        besitzt absichtlich keinen HTTPupload. Der Bericht bleibt unveränderlich; currentRevocation wird beim
+        Lesen separat ermittelt und verändert weder reportHash noch ursprüngliches Ergebnis. Unveröffentlichte
+        Jobs zeigen keinen Bericht. Budgetabbruch ergibt UNKNOWN; SUCCEEDED ist unabhängig von eligibility. Unbekannte
+        kanonische assessmentId ergibt 404, fehlerhafte UUID 400.
+      responses:
+        '200':
+          description: Dauerhafte Diagnose und unveränderlichen Bericht mit separaten aktuellen Warnungen lesen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessAssessment'
+              example:
+                assessmentId: aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
+                status: SUCCEEDED
+                eligibility: ELIGIBLE
+                request:
+                  instrumentId: 11111111-1111-4111-8111-111111111111
+                  strategyId: sma-cross-v1
+                  version: '1'
+                  parameters:
+                    fast: 2
+                    slow: 3
+                  startCash: '10000'
+                  feeUsd: '1'
+                  slippageBps: '5'
+                  quantityStep: '0.000001'
+                  folds:
+                  - trainingStart: '2026-10-20T00:00:00Z'
+                    trainingEnd: '2026-10-22T13:30:00Z'
+                    testStart: '2026-10-22T13:30:00Z'
+                    testEnd: '2026-10-22T16:00:00Z'
+                requestHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                acceptedAt: '2026-10-23T00:00:00Z'
+                updatedAt: '2026-10-23T00:00:00Z'
+                completedAt: '2026-10-23T00:00:00Z'
+                attempt: 1
+                failureCode: null
+                publicationComplete: true
+                report:
+                  assessmentId: aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
+                  requestHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                  reportHash: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+                  policyVersion: backtest-data-v1
+                  codeVersion: rdr-contract-v1
+                  snapshot:
+                    snapshotAt: '2026-10-23T00:00:00Z'
+                    snapshotVersion: 42
+                    trustVersion: 7
+                    trustPolicyVersion: research-trust-v1
+                  createdAt: '2026-10-23T00:00:00Z'
+                  eligibility: ELIGIBLE
+                  evaluationComplete: true
+                  trust:
+                    integrity:
+                      status: VERIFIED
+                      method: SYNTHETIC_OFFLINE_TEST
+                      ruleVersion: digest-v1
+                      reason: SYNTHETIC_ALL_REQUIRED_CHECKS_PASSED
+                      references:
+                      - kind: CALENDAR_REVISION
+                        id: calendar-20261022
+                        revision: '1'
+                        fingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                    sourceAuthenticity:
+                      status: VERIFIED
+                      method: SYNTHETIC_OFFLINE_TEST
+                      ruleVersion: signature-v1
+                      reason: SYNTHETIC_ALL_REQUIRED_CHECKS_PASSED
+                      references:
+                      - kind: KEY
+                        id: synthetic-source-key-1
+                        revision: '1'
+                        fingerprint: cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+                    temporalAuthenticity:
+                      status: VERIFIED
+                      method: SYNTHETIC_OFFLINE_TEST
+                      ruleVersion: research-trust-v1
+                      reason: SYNTHETIC_ALL_REQUIRED_CHECKS_PASSED
+                      references: []
+                    completeness:
+                      status: VERIFIED
+                      method: SYNTHETIC_OFFLINE_TEST
+                      ruleVersion: research-trust-v1
+                      reason: SYNTHETIC_ALL_REQUIRED_CHECKS_PASSED
+                      references: []
+                    domainQuality:
+                      status: VERIFIED
+                      method: SYNTHETIC_OFFLINE_TEST
+                      ruleVersion: backtest-data-v1
+                      reason: SYNTHETIC_ALL_REQUIRED_CHECKS_PASSED
+                      references: []
+                  findingCount: 0
+                  categories: []
+                  categoryOverlaps: []
+                  metrics:
+                  - sourceId: alpaca
+                    instrumentId: 11111111-1111-4111-8111-111111111111
+                    feed: iex
+                    interval: 15Min
+                    adjustment: raw
+                    calendarVersion: calendar-v1
+                    period:
+                      start: '2026-10-22T13:30:00Z'
+                      end: '2026-10-22T16:00:00Z'
+                    snapshot:
+                      snapshotAt: '2026-10-23T00:00:00Z'
+                      snapshotVersion: 42
+                      trustVersion: 7
+                      trustPolicyVersion: research-trust-v1
+                    expectedBars: 10
+                    observedBars: 10
+                    unknownCalendarDays: 0
+                    receptionMinusClose:
+                      status: MEASURED
+                      p50Seconds: '20'
+                      p95Seconds: '20'
+                      maximumSeconds: '20'
+                      sampleCount: 10
+                      unknownPairCount: 0
+                      invalidPairCount: 0
+                    ingestionMinusReception:
+                      status: MEASURED
+                      p50Seconds: '5'
+                      p95Seconds: '5'
+                      maximumSeconds: '5'
+                      sampleCount: 10
+                      unknownPairCount: 0
+                      invalidPairCount: 0
+                    confirmationMinusIngestion:
+                      status: MEASURED
+                      p50Seconds: '0.001'
+                      p95Seconds: '0.002'
+                      maximumSeconds: '0.002'
+                      sampleCount: 10
+                      unknownPairCount: 0
+                      invalidPairCount: 0
+                    receivedBySignalDeadline:
+                      status: MEASURED
+                      numerator: 10
+                      denominator: 10
+                      denominatorBasis: EXPECTED_BAR_IDENTITIES
+                      unknownCount: 0
+                    receivedByOutcomeDeadline:
+                      status: MEASURED
+                      numerator: 10
+                      denominator: 10
+                      denominatorBasis: EXPECTED_BAR_IDENTITIES
+                      unknownCount: 0
+                    usableBySignalDeadline:
+                      status: MEASURED
+                      numerator: 10
+                      denominator: 10
+                      denominatorBasis: EXPECTED_BAR_IDENTITIES
+                      unknownCount: 0
+                    usableByOutcomeDeadline:
+                      status: MEASURED
+                      numerator: 10
+                      denominator: 10
+                      denominatorBasis: EXPECTED_BAR_IDENTITIES
+                      unknownCount: 0
+                    missingBars:
+                      status: MEASURED
+                      numerator: 0
+                      denominator: 10
+                      denominatorBasis: EXPECTED_BAR_IDENTITIES
+                      unknownCount: 0
+                    lateForSignal:
+                      status: MEASURED
+                      numerator: 0
+                      denominator: 10
+                      denominatorBasis: EXPECTED_BAR_IDENTITIES
+                      unknownCount: 0
+                    lateForOutcome:
+                      status: MEASURED
+                      numerator: 0
+                      denominator: 10
+                      denominatorBasis: EXPECTED_BAR_IDENTITIES
+                      unknownCount: 0
+                    correctedBars:
+                      status: MEASURED
+                      numerator: 0
+                      denominator: 10
+                      denominatorBasis: OBSERVED_BAR_IDENTITIES
+                      unknownCount: 0
+                    duplicateResponses:
+                      status: MEASURED
+                      numerator: 0
+                      denominator: 10
+                      denominatorBasis: USABLE_BAR_OCCURRENCES
+                      unknownCount: 0
+                    limitations:
+                    - SYNTHETIC_OFFLINE_EVIDENCE_ONLY
+                    - RIGHTS_UNVERIFIED
+                  windows:
+                    barSignal:
+                    - kind: BAR_OBSERVATION
+                      scope: SIGNAL
+                      deadlineSeconds: 60
+                      firstBar:
+                        instrumentId: 11111111-1111-4111-8111-111111111111
+                        provider: ALPACA
+                        feed: iex
+                        interval: 15Min
+                        adjustment: raw
+                        start: '2026-10-22T13:30:00Z'
+                        end: '2026-10-22T13:45:00Z'
+                      lastBar:
+                        instrumentId: 11111111-1111-4111-8111-111111111111
+                        provider: ALPACA
+                        feed: iex
+                        interval: 15Min
+                        adjustment: raw
+                        start: '2026-10-22T15:45:00Z'
+                        end: '2026-10-22T16:00:00Z'
+                      period:
+                        start: '2026-10-22T13:30:00Z'
+                        end: '2026-10-22T16:00:00Z'
+                      expectedBars: 10
+                      foldIndex: 0
+                      snapshot:
+                        snapshotAt: '2026-10-23T00:00:00Z'
+                        snapshotVersion: 42
+                        trustVersion: 7
+                        trustPolicyVersion: research-trust-v1
+                      policyVersion: backtest-data-v1
+                      leftBoundary:
+                        reason: RANGE_START
+                        references:
+                        - kind: CALENDAR_REVISION
+                          id: calendar-20261022
+                          revision: '1'
+                          fingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                      rightBoundary:
+                        reason: RANGE_END
+                        references:
+                        - kind: CALENDAR_REVISION
+                          id: calendar-20261022
+                          revision: '1'
+                          fingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                      references:
+                      - kind: BAR_REVISION
+                        id: revision-1
+                        revision: '1'
+                        fingerprint: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+                    barOutcome:
+                    - kind: BAR_OBSERVATION
+                      scope: OUTCOME
+                      deadlineSeconds: 300
+                      firstBar:
+                        instrumentId: 11111111-1111-4111-8111-111111111111
+                        provider: ALPACA
+                        feed: iex
+                        interval: 15Min
+                        adjustment: raw
+                        start: '2026-10-22T13:30:00Z'
+                        end: '2026-10-22T13:45:00Z'
+                      lastBar:
+                        instrumentId: 11111111-1111-4111-8111-111111111111
+                        provider: ALPACA
+                        feed: iex
+                        interval: 15Min
+                        adjustment: raw
+                        start: '2026-10-22T15:45:00Z'
+                        end: '2026-10-22T16:00:00Z'
+                      period:
+                        start: '2026-10-22T13:30:00Z'
+                        end: '2026-10-22T16:00:00Z'
+                      expectedBars: 10
+                      foldIndex: 0
+                      snapshot:
+                        snapshotAt: '2026-10-23T00:00:00Z'
+                        snapshotVersion: 42
+                        trustVersion: 7
+                        trustPolicyVersion: research-trust-v1
+                      policyVersion: backtest-data-v1
+                      leftBoundary:
+                        reason: RANGE_START
+                        references:
+                        - kind: CALENDAR_REVISION
+                          id: calendar-20261022
+                          revision: '1'
+                          fingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                      rightBoundary:
+                        reason: RANGE_END
+                        references:
+                        - kind: CALENDAR_REVISION
+                          id: calendar-20261022
+                          revision: '1'
+                          fingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                      references:
+                      - kind: BAR_REVISION
+                        id: revision-1
+                        revision: '1'
+                        fingerprint: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+                    strictSignal:
+                    - kind: STRICT_PIT
+                      scope: SIGNAL
+                      deadlineSeconds: 60
+                      firstBar:
+                        instrumentId: 11111111-1111-4111-8111-111111111111
+                        provider: ALPACA
+                        feed: iex
+                        interval: 15Min
+                        adjustment: raw
+                        start: '2026-10-22T13:30:00Z'
+                        end: '2026-10-22T13:45:00Z'
+                      lastBar:
+                        instrumentId: 11111111-1111-4111-8111-111111111111
+                        provider: ALPACA
+                        feed: iex
+                        interval: 15Min
+                        adjustment: raw
+                        start: '2026-10-22T15:45:00Z'
+                        end: '2026-10-22T16:00:00Z'
+                      period:
+                        start: '2026-10-22T13:30:00Z'
+                        end: '2026-10-22T16:00:00Z'
+                      expectedBars: 10
+                      foldIndex: 0
+                      snapshot:
+                        snapshotAt: '2026-10-23T00:00:00Z'
+                        snapshotVersion: 42
+                        trustVersion: 7
+                        trustPolicyVersion: research-trust-v1
+                      policyVersion: backtest-data-v1
+                      leftBoundary:
+                        reason: RANGE_START
+                        references:
+                        - kind: CALENDAR_REVISION
+                          id: calendar-20261022
+                          revision: '1'
+                          fingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                      rightBoundary:
+                        reason: RANGE_END
+                        references:
+                        - kind: CALENDAR_REVISION
+                          id: calendar-20261022
+                          revision: '1'
+                          fingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                      references:
+                      - kind: BAR_REVISION
+                        id: revision-1
+                        revision: '1'
+                        fingerprint: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+                    strictOutcome:
+                    - kind: STRICT_PIT
+                      scope: OUTCOME
+                      deadlineSeconds: 300
+                      firstBar:
+                        instrumentId: 11111111-1111-4111-8111-111111111111
+                        provider: ALPACA
+                        feed: iex
+                        interval: 15Min
+                        adjustment: raw
+                        start: '2026-10-22T13:30:00Z'
+                        end: '2026-10-22T13:45:00Z'
+                      lastBar:
+                        instrumentId: 11111111-1111-4111-8111-111111111111
+                        provider: ALPACA
+                        feed: iex
+                        interval: 15Min
+                        adjustment: raw
+                        start: '2026-10-22T15:45:00Z'
+                        end: '2026-10-22T16:00:00Z'
+                      period:
+                        start: '2026-10-22T13:30:00Z'
+                        end: '2026-10-22T16:00:00Z'
+                      expectedBars: 10
+                      foldIndex: 0
+                      snapshot:
+                        snapshotAt: '2026-10-23T00:00:00Z'
+                        snapshotVersion: 42
+                        trustVersion: 7
+                        trustPolicyVersion: research-trust-v1
+                      policyVersion: backtest-data-v1
+                      leftBoundary:
+                        reason: RANGE_START
+                        references:
+                        - kind: CALENDAR_REVISION
+                          id: calendar-20261022
+                          revision: '1'
+                          fingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                      rightBoundary:
+                        reason: RANGE_END
+                        references:
+                        - kind: CALENDAR_REVISION
+                          id: calendar-20261022
+                          revision: '1'
+                          fingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                      references:
+                      - kind: BAR_REVISION
+                        id: revision-1
+                        revision: '1'
+                        fingerprint: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+                    completeExperiment:
+                    - kind: COMPLETE_EXPERIMENT
+                      scope: SIGNAL_AND_OUTCOME
+                      deadlineSeconds: 60
+                      firstBar:
+                        instrumentId: 11111111-1111-4111-8111-111111111111
+                        provider: ALPACA
+                        feed: iex
+                        interval: 15Min
+                        adjustment: raw
+                        start: '2026-10-22T13:30:00Z'
+                        end: '2026-10-22T13:45:00Z'
+                      lastBar:
+                        instrumentId: 11111111-1111-4111-8111-111111111111
+                        provider: ALPACA
+                        feed: iex
+                        interval: 15Min
+                        adjustment: raw
+                        start: '2026-10-22T15:45:00Z'
+                        end: '2026-10-22T16:00:00Z'
+                      period:
+                        start: '2026-10-22T13:30:00Z'
+                        end: '2026-10-22T16:00:00Z'
+                      expectedBars: 10
+                      foldIndex: 0
+                      snapshot:
+                        snapshotAt: '2026-10-23T00:00:00Z'
+                        snapshotVersion: 42
+                        trustVersion: 7
+                        trustPolicyVersion: research-trust-v1
+                      policyVersion: backtest-data-v1
+                      leftBoundary:
+                        reason: RANGE_START
+                        references:
+                        - kind: CALENDAR_REVISION
+                          id: calendar-20261022
+                          revision: '1'
+                          fingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                      rightBoundary:
+                        reason: RANGE_END
+                        references:
+                        - kind: CALENDAR_REVISION
+                          id: calendar-20261022
+                          revision: '1'
+                          fingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                      references:
+                      - kind: BAR_REVISION
+                        id: revision-1
+                        revision: '1'
+                        fingerprint: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+                    complete: true
+                  providerRights:
+                    licenseStatus: UNKNOWN
+                    providerVerification: UNVERIFIED
+                    attestationRef: null
+                    reason: RIGHTS_UNVERIFIED
+                  limits:
+                    maxQueued: 32
+                    maxFolds: 12
+                    maxDays: 366
+                    maxRevisionRows: 100000
+                    maxCalendarRows: 100000
+                    maxQualityRows: 100000
+                    maxCoverageRows: 100000
+                    maxAttemptSeconds: 300
+                    maxAttempts: 3
+                    maxFindings: 10000
+                    maxPublicationBytes: 12582912
+                    maxPageSize: 200
+                currentRevocation:
+                  checkedAt: '2026-10-23T00:00:00Z'
+                  currentTrustVersion: 8
+                  currentTrustPolicyVersion: research-trust-v1
+                  warnings:
+                  - decisionRef:
+                      kind: TRUST_DECISION
+                      id: revocation-1
+                      revision: '8'
+                      fingerprint: null
+                    affectedReferences:
+                    - kind: KEY
+                      id: synthetic-source-key-1
+                      revision: '1'
+                      fingerprint: cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+                    reason: KEY_COMPROMISED
+                    effectiveAt: null
+                    recordedAt: '2026-10-23T00:00:00Z'
+                    compromiseTimeKnown: false
+                  complete: true
+                detailLink: /api/v1/research/data-readiness/assessments/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
+        '400':
+          description: INVALID_REQUEST
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 400
+                code: INVALID_REQUEST
+                traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 401
+                code: UNAUTHORIZED
+                traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 403
+                code: FORBIDDEN
+                traceId: cccccccccccccccccccccccccccccccc
+        '413':
+          description: PAYLOAD_TOO_LARGE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 413
+                code: PAYLOAD_TOO_LARGE
+                traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 503
+                code: UNAVAILABLE
+                traceId: cccccccccccccccccccccccccccccccc
+        '404':
+          description: NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 404
+                code: NOT_FOUND
+                traceId: cccccccccccccccccccccccccccccccc
+      parameters:
+      - name: assessmentId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/ReadinessId'
+  /api/v1/research/data-readiness/assessments/{assessmentId}/findings:
+    get:
+      tags:
+      - Research
+      operationId: listReadinessFindings
+      summary: Stabile begrenzte berichtsgebundene Befundseiten lesen
+      description: RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010;
+        T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff;
+        bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper
+        und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen.
+        Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport
+        besitzt absichtlich keinen HTTPupload. Stabile Reihenfolge nach Fold, Bereich, Beginn, Kategorie und
+        ID. Der Cursor-HMAC bindet Diagnose, unveränderlichen reportHash, Snapshot-/Vertrauensversionen, Kategorie
+        und Ablaufzeit. Geänderte Filter, Manipulation oder Ablauf ergeben 400 CURSOR_INVALID. Unbekannte Diagnose
+        ergibt 404; noch nicht atomar veröffentlichter Bericht 409 REPORT_NOT_READY. Seitenwiederholung bleibt
+        auch bei späteren Writes und Widerrufen stabil.
+      responses:
+        '200':
+          description: Stabile begrenzte berichtsgebundene Befundseiten lesen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessFindingPage'
+              example:
+                assessmentId: aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
+                reportHash: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+                snapshot:
+                  snapshotAt: '2026-10-23T00:00:00Z'
+                  snapshotVersion: 42
+                  trustVersion: 7
+                  trustPolicyVersion: research-trust-v1
+                category: null
+                items:
+                - findingId: bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb
+                  foldIndex: 0
+                  area: SIGNAL
+                  category: OBSERVED_TOO_LATE
+                  eligibility: BLOCKED
+                  backtestReason: BLOCKED_FIRST_OBSERVED
+                  period:
+                    start: '2026-10-22T13:30:00Z'
+                    end: '2026-10-22T13:45:00Z'
+                  knowledgeAt: '2026-10-22T13:46:00Z'
+                  references:
+                  - kind: BAR_REVISION
+                    id: revision-1
+                    revision: '1'
+                    fingerprint: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+                  trust:
+                    integrity:
+                      status: VERIFIED
+                      method: SHA256
+                      ruleVersion: digest-v1
+                      reason: DIGEST_MATCH
+                      references:
+                      - kind: CALENDAR_REVISION
+                        id: calendar-20261022
+                        revision: '1'
+                        fingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                    sourceAuthenticity:
+                      status: VERIFIED
+                      method: ED25519
+                      ruleVersion: signature-v1
+                      reason: SOURCE_SIGNATURE_VALID
+                      references:
+                      - kind: KEY
+                        id: synthetic-source-key-1
+                        revision: '1'
+                        fingerprint: cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+                    temporalAuthenticity:
+                      status: UNKNOWN
+                      method: NOT_AVAILABLE
+                      ruleVersion: research-trust-v1
+                      reason: TIME_UNPROVEN
+                      references: []
+                    completeness:
+                      status: UNKNOWN
+                      method: NOT_AVAILABLE
+                      ruleVersion: research-trust-v1
+                      reason: EVIDENCE_MISSING
+                      references: []
+                    domainQuality:
+                      status: NOT_EVALUATED
+                      method: SHARED_BACKTEST_RULES
+                      ruleVersion: backtest-data-v1
+                      reason: CALENDAR_UNKNOWN
+                      references: []
+                  observation:
+                    planInstrumentId: 11111111-1111-4111-8111-111111111111
+                    generation: 1
+                    purpose: INITIAL_BAR
+                    instrumentId: 11111111-1111-4111-8111-111111111111
+                    provider: alpaca
+                    feed: iex
+                    interval: 15Min
+                    adjustment: raw
+                    bar:
+                      instrumentId: 11111111-1111-4111-8111-111111111111
+                      provider: ALPACA
+                      feed: iex
+                      interval: 15Min
+                      adjustment: raw
+                      start: '2026-10-22T13:30:00Z'
+                      end: '2026-10-22T13:45:00Z'
+                    contentFingerprint: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+                    revision:
+                      kind: BAR_REVISION
+                      id: revision-1
+                      revision: '1'
+                      fingerprint: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+                    predecessor: null
+                    receipt:
+                      kind: OBSERVATION_RECEIPT
+                      id: receipt-1
+                      revision: null
+                      fingerprint: null
+                    times:
+                      marketEventAt: '2026-10-22T13:30:00Z'
+                      barCloseAt: '2026-10-22T13:45:00Z'
+                      providerPublishedAt: null
+                      firstObservedAt: '2026-10-22T13:45:20Z'
+                      ingestedAt: '2026-10-22T13:46:15Z'
+                      commitConfirmedAt: '2026-10-22T13:46:15.001Z'
+                      commitVersion: 40
+                      publicationEvidence: null
+                      clockStatus: COMPARABLE
+                  remedy: COLLECT_FUTURE_OBSERVATIONS
+                nextCursor: eyJhc3Nlc3NtZW50IjoiYSJ9.c3ludGhldGljLW9ubHktbm90LWEtcmVhbC1tYWM
+                totalMatching: 2
+        '400':
+          description: CURSOR_INVALID
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 400
+                code: CURSOR_INVALID
+                traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 401
+                code: UNAUTHORIZED
+                traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 403
+                code: FORBIDDEN
+                traceId: cccccccccccccccccccccccccccccccc
+        '413':
+          description: PAYLOAD_TOO_LARGE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 413
+                code: PAYLOAD_TOO_LARGE
+                traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 503
+                code: UNAVAILABLE
+                traceId: cccccccccccccccccccccccccccccccc
+        '404':
+          description: NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 404
+                code: NOT_FOUND
+                traceId: cccccccccccccccccccccccccccccccc
+        '409':
+          description: REPORT_NOT_READY
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 409
+                code: REPORT_NOT_READY
+                traceId: cccccccccccccccccccccccccccccccc
+      parameters:
+      - name: assessmentId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/ReadinessId'
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 100
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ReadinessCursor'
+      - name: category
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ReadinessCategory'
+  /api/v1/research/collection/plans:
+    get:
+      tags:
+      - Research
+      operationId: listCollectionPlans
+      summary: Höchstens zwei registrierte Sammlungspläne samt deaktivierten Vorgaben lesen
+      description: RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010;
+        T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff;
+        bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper
+        und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen.
+        Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport
+        besitzt absichtlich keinen HTTPupload. REQ-HMD-007/008; T-HMD-016/017/018. Keine freien Abfragefilter.
+        Ausschließlich registrierte SPY-/QQQ-Pläne mit raw IEX und 15Min. Unpersistierte Pläne zeigen version=0
+        und DISABLED. Rechte und globale Gates bleiben unabhängig von Datenzulässigkeit sichtbar.
+      responses:
+        '200':
+          description: Höchstens zwei registrierte Sammlungspläne samt deaktivierten Vorgaben lesen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionPlanPage'
+              example:
+                items:
+                - instrumentId: 11111111-1111-4111-8111-111111111111
+                  symbol: SPY
+                  provider: alpaca
+                  feed: iex
+                  interval: 15Min
+                  adjustment: raw
+                  enabled: false
+                  version: 0
+                  generation: 0
+                  status: DISABLED
+                  reasons:
+                  - DEFAULT_DISABLED
+                  - RIGHTS_UNVERIFIED
+                  providerRights:
+                    licenseStatus: UNKNOWN
+                    providerVerification: UNVERIFIED
+                    attestationRef: null
+                    reason: RIGHTS_UNVERIFIED
+                  globalEnabled: false
+                  nextDueAt: null
+                  lastAttemptAt: null
+                  lastJobId: null
+                  outstandingStartedDispatches: 0
+                  gaps: []
+                  gapsComplete: true
+                  metrics: []
+                  windows:
+                    barSignal: []
+                    barOutcome: []
+                    strictSignal: []
+                    strictOutcome: []
+                    completeExperiment: []
+                    complete: true
+                  schedule:
+                    calendarRefreshUtc: 00:05:00Z
+                    calendarLookaheadDays: 7
+                    firstBarDelaySeconds: 5
+                    reobserveDelaySeconds: 240
+                    tickSeconds: 5
+                    recoveryHours: 24
+                    overlapMinutes: 30
+                    maxDuePerUtcDay: 100
+                    maxOpenJobsTotal: 2
+                    maxConcurrentHttpGets: 1
+                  updatedAt: null
+                - instrumentId: 22222222-2222-4222-8222-222222222222
+                  symbol: QQQ
+                  provider: alpaca
+                  feed: iex
+                  interval: 15Min
+                  adjustment: raw
+                  enabled: false
+                  version: 0
+                  generation: 0
+                  status: DISABLED
+                  reasons:
+                  - DEFAULT_DISABLED
+                  - RIGHTS_UNVERIFIED
+                  providerRights:
+                    licenseStatus: UNKNOWN
+                    providerVerification: UNVERIFIED
+                    attestationRef: null
+                    reason: RIGHTS_UNVERIFIED
+                  globalEnabled: false
+                  nextDueAt: null
+                  lastAttemptAt: null
+                  lastJobId: null
+                  outstandingStartedDispatches: 0
+                  gaps: []
+                  gapsComplete: true
+                  metrics: []
+                  windows:
+                    barSignal: []
+                    barOutcome: []
+                    strictSignal: []
+                    strictOutcome: []
+                    completeExperiment: []
+                    complete: true
+                  schedule:
+                    calendarRefreshUtc: 00:05:00Z
+                    calendarLookaheadDays: 7
+                    firstBarDelaySeconds: 5
+                    reobserveDelaySeconds: 240
+                    tickSeconds: 5
+                    recoveryHours: 24
+                    overlapMinutes: 30
+                    maxDuePerUtcDay: 100
+                    maxOpenJobsTotal: 2
+                    maxConcurrentHttpGets: 1
+                  updatedAt: null
+                observedAt: '2026-10-23T00:00:00Z'
+        '400':
+          description: INVALID_REQUEST
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 400
+                code: INVALID_REQUEST
+                traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 401
+                code: UNAUTHORIZED
+                traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 403
+                code: FORBIDDEN
+                traceId: cccccccccccccccccccccccccccccccc
+        '413':
+          description: PAYLOAD_TOO_LARGE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 413
+                code: PAYLOAD_TOO_LARGE
+                traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 503
+                code: UNAVAILABLE
+                traceId: cccccccccccccccccccccccccccccccc
+  /api/v1/research/collection/plans/{instrumentId}:
+    put:
+      tags:
+      - Research
+      operationId: updateCollectionPlan
+      summary: Sammlungswunsch mit Versionsvergleich und idempotenter Wiederholung speichern
+      description: RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010;
+        T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff;
+        bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper
+        und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen.
+        Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport
+        besitzt absichtlich keinen HTTPupload. REQ-HMD-007/008; T-HMD-016/017/018. Fehlerhafte Instrument-UUID
+        ergibt 400; gültige fremde UUID 404. Gleicher Akteur, Operation, Instrument, Schlüssel und Nutzlast liefern
+        das ursprüngliche Ergebnis VOR dem Vergleich von expectedVersion. Andere Nutzlast zum selben Schlüssel
+        oder veraltete expectedVersion ergeben 409 mit getrennten Codes IDEMPOTENCY_CONFLICT und VERSION_CONFLICT.
+        PUT erhöht persistierte Version und Generation atomar. enabled=true bewahrt den Wunsch bei fehlenden
+        globalen oder Quellengates sichtbar als BLOCKED und aktiviert diese Gates niemals. enabled=false committet
+        vor Bestätigung dieselbe Planlock-Dispatchbarriere; outstandingStartedDispatches zählt bereits zugelassene
+        Abrufe mit committetem STARTED-Receipt einschließlich erst danach beginnender Socketübertragung. Nach
+        Pausencommit entsteht keine neue Zulassung der pausierten Generation. Bereits zugelassene Antworten dürfen
+        mit tatsächlichen Zeiten persistieren. Kein Retry verwendet einen Receipt erneut; kein Datenbanklock
+        während I/O.
+      responses:
+        '200':
+          description: Sammlungswunsch mit Versionsvergleich und idempotenter Wiederholung speichern
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionPlan'
+              example:
+                instrumentId: 11111111-1111-4111-8111-111111111111
+                symbol: SPY
+                provider: alpaca
+                feed: iex
+                interval: 15Min
+                adjustment: raw
+                enabled: false
+                version: 2
+                generation: 2
+                status: PAUSED
+                reasons:
+                - OPERATOR_PAUSED
+                providerRights:
+                  licenseStatus: CONFIRMED
+                  providerVerification: UNVERIFIED
+                  attestationRef: null
+                  reason: LOCAL_ATTESTATION_ONLY
+                globalEnabled: true
+                nextDueAt: null
+                lastAttemptAt: null
+                lastJobId: null
+                outstandingStartedDispatches: 1
+                gaps:
+                - period:
+                    start: '2026-10-22T13:30:00Z'
+                    end: '2026-10-22T16:00:00Z'
+                  reason: OUTSIDE_RECOVERY_WINDOW
+                  references: []
+                gapsComplete: true
+                metrics:
+                - sourceId: alpaca
+                  instrumentId: 11111111-1111-4111-8111-111111111111
+                  feed: iex
+                  interval: 15Min
+                  adjustment: raw
+                  calendarVersion: calendar-v1
+                  period:
+                    start: '2026-10-22T13:30:00Z'
+                    end: '2026-10-22T16:00:00Z'
+                  snapshot:
+                    snapshotAt: '2026-10-23T00:00:00Z'
+                    snapshotVersion: 42
+                    trustVersion: 7
+                    trustPolicyVersion: research-trust-v1
+                  expectedBars: 10
+                  observedBars: 8
+                  unknownCalendarDays: 0
+                  receptionMinusClose:
+                    status: MEASURED
+                    p50Seconds: '20'
+                    p95Seconds: '20'
+                    maximumSeconds: '20'
+                    sampleCount: 8
+                    unknownPairCount: 2
+                    invalidPairCount: 0
+                  ingestionMinusReception:
+                    status: MEASURED
+                    p50Seconds: '5'
+                    p95Seconds: '55'
+                    maximumSeconds: '55'
+                    sampleCount: 8
+                    unknownPairCount: 2
+                    invalidPairCount: 0
+                  confirmationMinusIngestion:
+                    status: MEASURED
+                    p50Seconds: '0.001'
+                    p95Seconds: '0.002'
+                    maximumSeconds: '0.002'
+                    sampleCount: 8
+                    unknownPairCount: 2
+                    invalidPairCount: 0
+                  receivedBySignalDeadline:
+                    status: MEASURED
+                    numerator: 8
+                    denominator: 10
+                    denominatorBasis: EXPECTED_BAR_IDENTITIES
+                    unknownCount: 0
+                  receivedByOutcomeDeadline:
+                    status: MEASURED
+                    numerator: 8
+                    denominator: 10
+                    denominatorBasis: EXPECTED_BAR_IDENTITIES
+                    unknownCount: 0
+                  usableBySignalDeadline:
+                    status: MEASURED
+                    numerator: 6
+                    denominator: 10
+                    denominatorBasis: EXPECTED_BAR_IDENTITIES
+                    unknownCount: 0
+                  usableByOutcomeDeadline:
+                    status: MEASURED
+                    numerator: 8
+                    denominator: 10
+                    denominatorBasis: EXPECTED_BAR_IDENTITIES
+                    unknownCount: 0
+                  missingBars:
+                    status: MEASURED
+                    numerator: 2
+                    denominator: 10
+                    denominatorBasis: EXPECTED_BAR_IDENTITIES
+                    unknownCount: 0
+                  lateForSignal:
+                    status: MEASURED
+                    numerator: 2
+                    denominator: 10
+                    denominatorBasis: EXPECTED_BAR_IDENTITIES
+                    unknownCount: 0
+                  lateForOutcome:
+                    status: MEASURED
+                    numerator: 0
+                    denominator: 10
+                    denominatorBasis: EXPECTED_BAR_IDENTITIES
+                    unknownCount: 0
+                  correctedBars:
+                    status: MEASURED
+                    numerator: 1
+                    denominator: 8
+                    denominatorBasis: OBSERVED_BAR_IDENTITIES
+                    unknownCount: 0
+                  duplicateResponses:
+                    status: MEASURED
+                    numerator: 2
+                    denominator: 10
+                    denominatorBasis: USABLE_BAR_OCCURRENCES
+                    unknownCount: 0
+                  limitations:
+                  - RIGHTS_UNVERIFIED
+                  - PROVIDER_PUBLICATION_UNKNOWN
+                  - CROSS_CATEGORY_OVERLAP_POSSIBLE
+                windows:
+                  barSignal: []
+                  barOutcome: []
+                  strictSignal: []
+                  strictOutcome: []
+                  completeExperiment: []
+                  complete: true
+                schedule:
+                  calendarRefreshUtc: 00:05:00Z
+                  calendarLookaheadDays: 7
+                  firstBarDelaySeconds: 5
+                  reobserveDelaySeconds: 240
+                  tickSeconds: 5
+                  recoveryHours: 24
+                  overlapMinutes: 30
+                  maxDuePerUtcDay: 100
+                  maxOpenJobsTotal: 2
+                  maxConcurrentHttpGets: 1
+                updatedAt: '2026-10-23T00:00:00Z'
+        '400':
+          description: INVALID_REQUEST
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 400
+                code: INVALID_REQUEST
+                traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 401
+                code: UNAUTHORIZED
+                traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 403
+                code: FORBIDDEN
+                traceId: cccccccccccccccccccccccccccccccc
+        '413':
+          description: PAYLOAD_TOO_LARGE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 413
+                code: PAYLOAD_TOO_LARGE
+                traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 503
+                code: UNAVAILABLE
+                traceId: cccccccccccccccccccccccccccccccc
+        '404':
+          description: NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 404
+                code: NOT_FOUND
+                traceId: cccccccccccccccccccccccccccccccc
+        '409':
+          description: VERSION_CONFLICT
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ReadinessProblem'
+              example:
+                type: urn:agentic-trading-lab:readiness-problem
+                title: Research data request failed
+                status: 409
+                code: VERSION_CONFLICT
+                traceId: cccccccccccccccccccccccccccccccc
+      parameters:
+      - name: instrumentId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/ReadinessId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectionPlanUpdate'
+            example:
+              enabled: false
+              expectedVersion: 1
 components:
   securitySchemes:
     LocalSession:
@@ -9479,3 +10878,2586 @@ components:
               - UNAVAILABLE
           additionalProperties: true
         additionalProperties: true
+    ReadinessEligibility:
+      type: string
+      enum:
+      - ELIGIBLE
+      - BLOCKED
+      - UNKNOWN
+      - NOT_EVALUATED
+    ReadinessExecutionStatus:
+      type: string
+      enum:
+      - ACCEPTED
+      - RUNNING
+      - SUCCEEDED
+      - FAILED
+    ReadinessTrustStatus:
+      type: string
+      enum:
+      - VERIFIED
+      - REJECTED
+      - UNKNOWN
+      - NOT_EVALUATED
+    ReadinessCategory:
+      type: string
+      enum:
+      - CALENDAR_UNKNOWN
+      - CALENDAR_CHANGED
+      - AMBIGUOUS_DATA
+      - BAR_MISSING
+      - OBSERVED_TOO_LATE
+      - WARMUP_MISSING
+      - QUALITY_REJECTED
+      - CORPORATE_ACTIONS_UNKNOWN
+      - CORPORATE_ACTIONS_CONFLICT
+      - TIME_UNPROVEN
+      - EVIDENCE_REVOKED
+      - NOT_EVALUATED
+    ReadinessSafeCode:
+      type: string
+      minLength: 1
+      maxLength: 80
+      pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+    ReadinessSafeReferenceKind:
+      type: string
+      enum:
+      - BAR_REVISION
+      - CALENDAR_REVISION
+      - QUALITY_REVISION
+      - CORPORATE_ACTIONS_REVISION
+      - SOURCE
+      - KEY
+      - TRUST_DECISION
+      - TEMPORAL_PROOF
+      - OBSERVATION_RECEIPT
+    ReadinessSafeReference:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - id
+      - revision
+      - fingerprint
+      properties:
+        kind:
+          $ref: '#/components/schemas/ReadinessSafeReferenceKind'
+        id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+        revision:
+          type:
+          - string
+          - 'null'
+          minLength: 1
+          maxLength: 80
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+        fingerprint:
+          type:
+          - string
+          - 'null'
+          pattern: ^[0-9a-f]{64}$(?![\s\S])
+      description: Ausschließlich opake, zugelassene lokale Referenz; keine URL, kein Dateipfad, Rohinhalt, Zugangsschlüssel,
+        Zertifikat oder personenbezogener Identifikator.
+    ReadinessTrustResult:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - method
+      - ruleVersion
+      - reason
+      - references
+      properties:
+        status:
+          $ref: '#/components/schemas/ReadinessTrustStatus'
+        method:
+          $ref: '#/components/schemas/ReadinessSafeCode'
+        ruleVersion:
+          type: string
+          minLength: 1
+          maxLength: 80
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+        reason:
+          $ref: '#/components/schemas/ReadinessSafeCode'
+        references:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ReadinessSafeReference'
+      description: VERIFIED gilt ausschließlich für die benannte Dimension und Aussage. Ein Digest oder eine Signatur
+        beweist weder Veröffentlichung noch Vollständigkeit oder fachliche Qualität.
+    ReadinessTrustDimensions:
+      type: object
+      additionalProperties: false
+      required:
+      - integrity
+      - sourceAuthenticity
+      - temporalAuthenticity
+      - completeness
+      - domainQuality
+      properties:
+        integrity:
+          $ref: '#/components/schemas/ReadinessTrustResult'
+        sourceAuthenticity:
+          $ref: '#/components/schemas/ReadinessTrustResult'
+        temporalAuthenticity:
+          $ref: '#/components/schemas/ReadinessTrustResult'
+        completeness:
+          $ref: '#/components/schemas/ReadinessTrustResult'
+        domainQuality:
+          $ref: '#/components/schemas/ReadinessTrustResult'
+      description: Fünf unabhängige Pflichtdimensionen; kein zusammengefasster Vertrauensschalter und keine implizit
+        positive Voreinstellung.
+    ReadinessSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+      - snapshotAt
+      - snapshotVersion
+      - trustVersion
+      - trustPolicyVersion
+      properties:
+        snapshotAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        snapshotVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        trustVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        trustPolicyVersion:
+          type: string
+          minLength: 1
+          maxLength: 80
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+      description: Unveränderlicher Datenstand mit den beim Prüfstart sichtbaren append-only Vertrauensentscheidungen.
+        Importierte Behauptungen datieren weder Ingestion noch Sichtbarkeit zurück.
+    ReadinessInterval:
+      type: object
+      additionalProperties: false
+      required:
+      - start
+      - end
+      properties:
+        start:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        end:
+          $ref: '#/components/schemas/BacktestTimestamp'
+      description: Halboffenes Intervall [start,end), start < end. Die fachliche Reihenfolge wird vor der Persistenz
+        geprüft.
+    ReadinessTimeliness:
+      type: object
+      additionalProperties: false
+      required:
+      - marketEventAt
+      - barCloseAt
+      - providerPublishedAt
+      - firstObservedAt
+      - ingestedAt
+      - commitConfirmedAt
+      - commitVersion
+      - publicationEvidence
+      - clockStatus
+      properties:
+        marketEventAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        barCloseAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        providerPublishedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$
+          description: UTC mit Z und höchstens Mikrosekundenpräzision; lokale Offsets und Zeiten ohne Zeitzone werden abgewiesen.
+        firstObservedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$
+          description: UTC mit Z und höchstens Mikrosekundenpräzision; lokale Offsets und Zeiten ohne Zeitzone werden abgewiesen.
+        ingestedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$
+          description: UTC mit Z und höchstens Mikrosekundenpräzision; lokale Offsets und Zeiten ohne Zeitzone werden abgewiesen.
+        commitConfirmedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$
+          description: UTC mit Z und höchstens Mikrosekundenpräzision; lokale Offsets und Zeiten ohne Zeitzone werden abgewiesen.
+        commitVersion:
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+          maximum: 9007199254740991
+        publicationEvidence:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - kind
+          - id
+          - revision
+          - fingerprint
+          properties:
+            kind:
+              $ref: '#/components/schemas/ReadinessSafeReferenceKind'
+            id:
+              type: string
+              minLength: 1
+              maxLength: 128
+              pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+            revision:
+              type:
+              - string
+              - 'null'
+              minLength: 1
+              maxLength: 80
+              pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+            fingerprint:
+              type:
+              - string
+              - 'null'
+              pattern: ^[0-9a-f]{64}$(?![\s\S])
+          description: Ausschließlich opake, zugelassene lokale Referenz; keine URL, kein Dateipfad, Rohinhalt,
+            Zugangsschlüssel, Zertifikat oder personenbezogener Identifikator.
+        clockStatus:
+          type: string
+          enum:
+          - COMPARABLE
+          - UNKNOWN
+          - INVALID
+      description: 'Sechs getrennte Bedeutungen: Marktintervallbeginn, Barschluss, unabhängig belegte Providerpublikation,
+        erster vollständiger lokaler Antwortempfang dieser Inhaltsrevision, Ingestion nach Datenbankuhr und konservative
+        Bestätigung NACH Commit. Die Bestätigung ist eine obere Schranke, niemals ein exakter PostgreSQL-Commitzeitpunkt.
+        Unbekannter historischer Empfang, Publikation oder Commit bleiben null; HTTP-Date, Abrufbeginn oder Intervallzeiten
+        ersetzen sie nicht. providerPublishedAt ungleich null benötigt publicationEvidence. Nicht vergleichbare
+        oder negative Zeitpaare gehen nicht in Quantile ein. Bestehende availableAt-/ingestedAt- und Snapshotregeln
+        bleiben verbindlich.'
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                providerPublishedAt:
+                  type: string
+              required:
+              - providerPublishedAt
+              additionalProperties: true
+            then:
+              properties:
+                publicationEvidence:
+                  $ref: '#/components/schemas/ReadinessSafeReference'
+              additionalProperties: true
+            additionalProperties: true
+    ReadinessObservation:
+      type: object
+      additionalProperties: false
+      required:
+      - planInstrumentId
+      - generation
+      - purpose
+      - instrumentId
+      - provider
+      - feed
+      - interval
+      - adjustment
+      - bar
+      - contentFingerprint
+      - revision
+      - predecessor
+      - receipt
+      - times
+      properties:
+        planInstrumentId:
+          $ref: '#/components/schemas/ReadinessId'
+        generation:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        purpose:
+          type: string
+          enum:
+          - INITIAL_BAR
+          - REOBSERVE_BAR
+          - RECOVERY
+        instrumentId:
+          $ref: '#/components/schemas/ReadinessId'
+        provider:
+          type: string
+          enum:
+          - alpaca
+        feed:
+          type: string
+          enum:
+          - iex
+        interval:
+          type: string
+          enum:
+          - 15Min
+        adjustment:
+          type: string
+          enum:
+          - raw
+        bar:
+          $ref: '#/components/schemas/BacktestBarIdentity'
+        contentFingerprint:
+          $ref: '#/components/schemas/ReadinessHash'
+        revision:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - kind
+          - id
+          - revision
+          - fingerprint
+          properties:
+            kind:
+              $ref: '#/components/schemas/ReadinessSafeReferenceKind'
+            id:
+              type: string
+              minLength: 1
+              maxLength: 128
+              pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+            revision:
+              type:
+              - string
+              - 'null'
+              minLength: 1
+              maxLength: 80
+              pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+            fingerprint:
+              type:
+              - string
+              - 'null'
+              pattern: ^[0-9a-f]{64}$(?![\s\S])
+          description: Ausschließlich opake, zugelassene lokale Referenz; keine URL, kein Dateipfad, Rohinhalt,
+            Zugangsschlüssel, Zertifikat oder personenbezogener Identifikator.
+        predecessor:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - kind
+          - id
+          - revision
+          - fingerprint
+          properties:
+            kind:
+              $ref: '#/components/schemas/ReadinessSafeReferenceKind'
+            id:
+              type: string
+              minLength: 1
+              maxLength: 128
+              pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+            revision:
+              type:
+              - string
+              - 'null'
+              minLength: 1
+              maxLength: 80
+              pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+            fingerprint:
+              type:
+              - string
+              - 'null'
+              pattern: ^[0-9a-f]{64}$(?![\s\S])
+          description: Ausschließlich opake, zugelassene lokale Referenz; keine URL, kein Dateipfad, Rohinhalt,
+            Zugangsschlüssel, Zertifikat oder personenbezogener Identifikator.
+        receipt:
+          $ref: '#/components/schemas/ReadinessSafeReference'
+        times:
+          $ref: '#/components/schemas/ReadinessTimeliness'
+      description: Unveränderter Headinhalt erzeugt einen Abrufreceipt ohne neue Revision; A→B→A erzeugt drei unveränderliche
+        Vorkommen. Frühere Beobachtungszeiten und Snapshots bleiben unverändert.
+    ReadinessLatencyMetric:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - p50Seconds
+      - p95Seconds
+      - maximumSeconds
+      - sampleCount
+      - unknownPairCount
+      - invalidPairCount
+      properties:
+        status:
+          type: string
+          enum:
+          - MEASURED
+          - UNKNOWN
+          - N/A
+        p50Seconds:
+          type:
+          - string
+          - 'null'
+          pattern: ^(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$(?![\s\S])
+        p95Seconds:
+          type:
+          - string
+          - 'null'
+          pattern: ^(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$(?![\s\S])
+        maximumSeconds:
+          type:
+          - string
+          - 'null'
+          pattern: ^(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$(?![\s\S])
+        sampleCount:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        unknownPairCount:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        invalidPairCount:
+          type: integer
+          minimum: 0
+          maximum: 100000
+      description: Exakte Decimal-Sekunden; deterministische Nearest-Rank-Quantile p50/p95 und Maximum ausschließlich
+        über gültige, vergleichbare, nichtnegative Zeitpaare. Leere Stichproben liefern null statt einer behaupteten
+        Nulllatenz.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                sampleCount:
+                  const: 0
+              required:
+              - sampleCount
+              additionalProperties: true
+            then:
+              properties:
+                status:
+                  type: string
+                  enum:
+                  - UNKNOWN
+                  - N/A
+                p50Seconds:
+                  type: 'null'
+                p95Seconds:
+                  type: 'null'
+                maximumSeconds:
+                  type: 'null'
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: MEASURED
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                sampleCount:
+                  type: integer
+                  minimum: 1
+                  maximum: 100000
+                p50Seconds:
+                  $ref: '#/components/schemas/ReadinessNonnegativeDecimal'
+                p95Seconds:
+                  $ref: '#/components/schemas/ReadinessNonnegativeDecimal'
+                maximumSeconds:
+                  $ref: '#/components/schemas/ReadinessNonnegativeDecimal'
+              additionalProperties: true
+            additionalProperties: true
+    ReadinessRatio:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - numerator
+      - denominator
+      - denominatorBasis
+      - unknownCount
+      properties:
+        status:
+          type: string
+          enum:
+          - MEASURED
+          - UNKNOWN
+          - N/A
+        numerator:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        denominator:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        denominatorBasis:
+          type: string
+          enum:
+          - EXPECTED_BAR_IDENTITIES
+          - OBSERVED_BAR_IDENTITIES
+          - USABLE_BAR_OCCURRENCES
+        unknownCount:
+          type: integer
+          minimum: 0
+          maximum: 100000
+      description: Absolute Zähler und Nenner, kein gerundeter Prozentsatz. Nullnenner erfordert N/A und numerator=0.
+        Unbekannter Kalender verhindert Vollständigkeitsbehauptungen. Eindeutige Baridentitäten deduplizieren Revisionen
+        und Receipts; die Metrikbildung erzwingt numerator <= denominator.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                denominator:
+                  const: 0
+              required:
+              - denominator
+              additionalProperties: true
+            then:
+              properties:
+                status:
+                  const: N/A
+                numerator:
+                  const: 0
+              additionalProperties: true
+            additionalProperties: true
+    ReadinessTimelinessMetrics:
+      type: object
+      additionalProperties: false
+      required:
+      - sourceId
+      - instrumentId
+      - feed
+      - interval
+      - adjustment
+      - calendarVersion
+      - period
+      - snapshot
+      - expectedBars
+      - observedBars
+      - unknownCalendarDays
+      - receptionMinusClose
+      - ingestionMinusReception
+      - confirmationMinusIngestion
+      - receivedBySignalDeadline
+      - receivedByOutcomeDeadline
+      - usableBySignalDeadline
+      - usableByOutcomeDeadline
+      - missingBars
+      - lateForSignal
+      - lateForOutcome
+      - correctedBars
+      - duplicateResponses
+      - limitations
+      properties:
+        sourceId:
+          $ref: '#/components/schemas/ReadinessSafeCode'
+        instrumentId:
+          $ref: '#/components/schemas/ReadinessId'
+        feed:
+          type: string
+          enum:
+          - iex
+        interval:
+          type: string
+          enum:
+          - 15Min
+        adjustment:
+          type: string
+          enum:
+          - raw
+        calendarVersion:
+          type:
+          - string
+          - 'null'
+          minLength: 1
+          maxLength: 80
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+        period:
+          $ref: '#/components/schemas/ReadinessInterval'
+        snapshot:
+          $ref: '#/components/schemas/ReadinessSnapshot'
+        expectedBars:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        observedBars:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        unknownCalendarDays:
+          type: integer
+          minimum: 0
+          maximum: 366
+        receptionMinusClose:
+          $ref: '#/components/schemas/ReadinessLatencyMetric'
+        ingestionMinusReception:
+          $ref: '#/components/schemas/ReadinessLatencyMetric'
+        confirmationMinusIngestion:
+          $ref: '#/components/schemas/ReadinessLatencyMetric'
+        receivedBySignalDeadline:
+          $ref: '#/components/schemas/ReadinessExpectedBarRatio'
+        receivedByOutcomeDeadline:
+          $ref: '#/components/schemas/ReadinessExpectedBarRatio'
+        usableBySignalDeadline:
+          $ref: '#/components/schemas/ReadinessExpectedBarRatio'
+        usableByOutcomeDeadline:
+          $ref: '#/components/schemas/ReadinessExpectedBarRatio'
+        missingBars:
+          $ref: '#/components/schemas/ReadinessExpectedBarRatio'
+        lateForSignal:
+          $ref: '#/components/schemas/ReadinessExpectedBarRatio'
+        lateForOutcome:
+          $ref: '#/components/schemas/ReadinessExpectedBarRatio'
+        correctedBars:
+          $ref: '#/components/schemas/ReadinessObservedBarRatio'
+        duplicateResponses:
+          $ref: '#/components/schemas/ReadinessOccurrenceRatio'
+        limitations:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ReadinessSafeCode'
+      description: Signalfrist +60s und Outcomefrist +300s einschließlich Gleichheit. Nenner sind alle nach damals
+        sichtbarem regulärem Kalender erwarteten eindeutigen abgeschlossenen 15Min-Baridentitäten, einschließlich
+        fehlender und später nachgeladener Bars; unbekannte Tage werden separat gezählt. Fehlend bedeutet keine
+        verwendbare Revision am Snapshot, verspätet bedeutet erstmalige Verwendbarkeit nach der jeweiligen Frist;
+        diese Fälle sind disjunkt. Korrekturen und Duplikate können Fristkategorien überlappen und vergrößern niemals
+        den Sollbarnenner. Empfangszähler beweisen keine Verwendbarkeit. Nutzungsrechte und garantierte Providerlatenz
+        bleiben getrennt.
+    ReadinessWindowBoundary:
+      type: object
+      additionalProperties: false
+      required:
+      - reason
+      - references
+      properties:
+        reason:
+          $ref: '#/components/schemas/ReadinessSafeCode'
+        references:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ReadinessSafeReference'
+    ReadinessWindow:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - scope
+      - deadlineSeconds
+      - firstBar
+      - lastBar
+      - period
+      - expectedBars
+      - foldIndex
+      - snapshot
+      - policyVersion
+      - leftBoundary
+      - rightBoundary
+      - references
+      properties:
+        kind:
+          type: string
+          enum:
+          - BAR_OBSERVATION
+          - STRICT_PIT
+          - COMPLETE_EXPERIMENT
+        scope:
+          type: string
+          enum:
+          - SIGNAL
+          - OUTCOME
+          - SIGNAL_AND_OUTCOME
+        deadlineSeconds:
+          type: integer
+          enum:
+          - 60
+          - 300
+        firstBar:
+          $ref: '#/components/schemas/BacktestBarIdentity'
+        lastBar:
+          $ref: '#/components/schemas/BacktestBarIdentity'
+        period:
+          $ref: '#/components/schemas/ReadinessInterval'
+        expectedBars:
+          type: integer
+          minimum: 1
+          maximum: 100000
+        foldIndex:
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+          maximum: 11
+        snapshot:
+          $ref: '#/components/schemas/ReadinessSnapshot'
+        policyVersion:
+          type: string
+          minLength: 1
+          maxLength: 80
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+        leftBoundary:
+          $ref: '#/components/schemas/ReadinessWindowBoundary'
+        rightBoundary:
+          $ref: '#/components/schemas/ReadinessWindowBoundary'
+        references:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ReadinessSafeReference'
+      description: Tatsächlich beobachtete maximal zusammenhängende kalendergeordnete Bars, keine Prognose. Damals
+        sichtbare reguläre New-York-Sitzungen, DST, Feiertage und Early Close bestimmen die UTC-Reihenfolge. Unbekannter
+        Kalender sowie verspätete, fehlende oder ungültige Bars unterbrechen Läufe. STRICT_PIT verwendet zusätzlich
+        die gemeinsamen Qualitäts-, Revisions-, Snapshot- und Kapitalmaßnahmenregeln des Backtests. Signal-Warm-up
+        wird am Signalwissenszeitpunkt geprüft, nicht pauschal an der eigenen Frist der Warm-up-Bar. Kein Verschieben
+        des Foldstarts; Coverage muss bereits warmStart bis fold.testEnd belegen. Outcomes erweitern kein Signalwissen;
+        COMPLETE_EXPERIMENT benötigt beide Fristen und alle Protokollprüfungen.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                scope:
+                  const: SIGNAL
+              required:
+              - scope
+              additionalProperties: true
+            then:
+              properties:
+                deadlineSeconds:
+                  const: 60
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                scope:
+                  const: OUTCOME
+              required:
+              - scope
+              additionalProperties: true
+            then:
+              properties:
+                deadlineSeconds:
+                  const: 300
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                kind:
+                  const: COMPLETE_EXPERIMENT
+              required:
+              - kind
+              additionalProperties: true
+            then:
+              properties:
+                scope:
+                  const: SIGNAL_AND_OUTCOME
+              additionalProperties: true
+            additionalProperties: true
+    ReadinessWindows:
+      type: object
+      additionalProperties: false
+      required:
+      - barSignal
+      - barOutcome
+      - strictSignal
+      - strictOutcome
+      - completeExperiment
+      - complete
+      properties:
+        barSignal:
+          type: array
+          maxItems: 200
+          items:
+            allOf:
+            - $ref: '#/components/schemas/ReadinessWindow'
+            - properties:
+                kind:
+                  const: BAR_OBSERVATION
+                scope:
+                  const: SIGNAL
+              additionalProperties: true
+        barOutcome:
+          type: array
+          maxItems: 200
+          items:
+            allOf:
+            - $ref: '#/components/schemas/ReadinessWindow'
+            - properties:
+                kind:
+                  const: BAR_OBSERVATION
+                scope:
+                  const: OUTCOME
+              additionalProperties: true
+        strictSignal:
+          type: array
+          maxItems: 200
+          items:
+            allOf:
+            - $ref: '#/components/schemas/ReadinessWindow'
+            - properties:
+                kind:
+                  const: STRICT_PIT
+                scope:
+                  const: SIGNAL
+              additionalProperties: true
+        strictOutcome:
+          type: array
+          maxItems: 200
+          items:
+            allOf:
+            - $ref: '#/components/schemas/ReadinessWindow'
+            - properties:
+                kind:
+                  const: STRICT_PIT
+                scope:
+                  const: OUTCOME
+              additionalProperties: true
+        completeExperiment:
+          type: array
+          maxItems: 200
+          items:
+            allOf:
+            - $ref: '#/components/schemas/ReadinessWindow'
+            - properties:
+                kind:
+                  const: COMPLETE_EXPERIMENT
+                scope:
+                  const: SIGNAL_AND_OUTCOME
+              additionalProperties: true
+        complete:
+          type: boolean
+      description: Jede Liste enthält höchstens 200 Einträge. Überlauf erschöpft das Publikationsbudget und darf
+        kein ELIGIBLE-Teilergebnis veröffentlichen. Leere Strict-PIT-Listen sind auch bei vollständiger Barbeobachtung
+        ein gültiges erklärtes Ergebnis.
+    ReadinessCategorySummary:
+      type: object
+      additionalProperties: false
+      required:
+      - category
+      - findingCount
+      - disjointIntervalCount
+      properties:
+        category:
+          $ref: '#/components/schemas/ReadinessCategory'
+        findingCount:
+          type: integer
+          minimum: 0
+          maximum: 10000
+        disjointIntervalCount:
+          type: integer
+          minimum: 0
+          maximum: 10000
+    ReadinessCategoryOverlap:
+      type: object
+      additionalProperties: false
+      required:
+      - first
+      - second
+      - overlapIntervalCount
+      properties:
+        first:
+          $ref: '#/components/schemas/ReadinessCategory'
+        second:
+          $ref: '#/components/schemas/ReadinessCategory'
+        overlapIntervalCount:
+          type: integer
+          minimum: 0
+          maximum: 10000
+      description: Kategorieübergreifende Überschneidungen sind ausdrücklich ausgewiesen; Kategorieanzahlen dürfen
+        nicht als Gesamtcoverage addiert werden.
+    ReadinessProviderRights:
+      type: object
+      additionalProperties: false
+      required:
+      - licenseStatus
+      - providerVerification
+      - attestationRef
+      - reason
+      properties:
+        licenseStatus:
+          $ref: '#/components/schemas/ResearchLicenseStatus'
+        providerVerification:
+          type: string
+          enum:
+          - UNVERIFIED
+        attestationRef:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - kind
+          - id
+          - revision
+          - fingerprint
+          properties:
+            kind:
+              $ref: '#/components/schemas/ReadinessSafeReferenceKind'
+            id:
+              type: string
+              minLength: 1
+              maxLength: 128
+              pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+            revision:
+              type:
+              - string
+              - 'null'
+              minLength: 1
+              maxLength: 80
+              pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+            fingerprint:
+              type:
+              - string
+              - 'null'
+              pattern: ^[0-9a-f]{64}$(?![\s\S])
+          description: Ausschließlich opake, zugelassene lokale Referenz; keine URL, kein Dateipfad, Rohinhalt,
+            Zugangsschlüssel, Zertifikat oder personenbezogener Identifikator.
+        reason:
+          $ref: '#/components/schemas/ReadinessSafeCode'
+      description: Eine lokale Betreiberattestierung ist keine externe Lizenzprüfung. Sammlung und Diagnose verleihen
+        weder Nutzungsrechte noch Handelsberechtigung.
+    ReadinessFinding:
+      type: object
+      additionalProperties: false
+      required:
+      - findingId
+      - foldIndex
+      - area
+      - category
+      - eligibility
+      - backtestReason
+      - period
+      - knowledgeAt
+      - references
+      - trust
+      - observation
+      - remedy
+      properties:
+        findingId:
+          $ref: '#/components/schemas/ReadinessId'
+        foldIndex:
+          type: integer
+          minimum: 0
+          maximum: 11
+        area:
+          type: string
+          enum:
+          - CALENDAR
+          - WARMUP
+          - SIGNAL
+          - OUTCOME
+          - QUALITY
+          - CORPORATE_ACTIONS
+          - TRUST
+        category:
+          $ref: '#/components/schemas/ReadinessCategory'
+        eligibility:
+          $ref: '#/components/schemas/ReadinessEligibility'
+        backtestReason:
+          type:
+          - string
+          - 'null'
+          enum:
+          - BLOCKED_DATA_UNAVAILABLE
+          - BLOCKED_FIRST_OBSERVED
+          - BLOCKED_CALENDAR_UNKNOWN
+          - BLOCKED_QUALITY_UNKNOWN
+          - BLOCKED_CORPORATE_ACTIONS_UNKNOWN
+          - BLOCKED_CORPORATE_ACTION
+          - BLOCKED_WARMUP_MISSING
+          - BLOCKED_NEXT_BAR_MISSING
+          - BLOCKED_OUTCOME_UNAVAILABLE
+          - BLOCKED_SELL_FEES
+          - BUDGET_EXHAUSTED
+          - INTERNAL_FAILURE
+          - null
+        period:
+          $ref: '#/components/schemas/ReadinessInterval'
+        knowledgeAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        references:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ReadinessSafeReference'
+        trust:
+          $ref: '#/components/schemas/ReadinessTrustDimensions'
+        observation:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - planInstrumentId
+          - generation
+          - purpose
+          - instrumentId
+          - provider
+          - feed
+          - interval
+          - adjustment
+          - bar
+          - contentFingerprint
+          - revision
+          - predecessor
+          - receipt
+          - times
+          properties:
+            planInstrumentId:
+              $ref: '#/components/schemas/ReadinessId'
+            generation:
+              type: integer
+              minimum: 0
+              maximum: 9007199254740991
+            purpose:
+              type: string
+              enum:
+              - INITIAL_BAR
+              - REOBSERVE_BAR
+              - RECOVERY
+            instrumentId:
+              $ref: '#/components/schemas/ReadinessId'
+            provider:
+              type: string
+              enum:
+              - alpaca
+            feed:
+              type: string
+              enum:
+              - iex
+            interval:
+              type: string
+              enum:
+              - 15Min
+            adjustment:
+              type: string
+              enum:
+              - raw
+            bar:
+              $ref: '#/components/schemas/BacktestBarIdentity'
+            contentFingerprint:
+              $ref: '#/components/schemas/ReadinessHash'
+            revision:
+              type:
+              - object
+              - 'null'
+              additionalProperties: false
+              required:
+              - kind
+              - id
+              - revision
+              - fingerprint
+              properties:
+                kind:
+                  $ref: '#/components/schemas/ReadinessSafeReferenceKind'
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                  pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+                revision:
+                  type:
+                  - string
+                  - 'null'
+                  minLength: 1
+                  maxLength: 80
+                  pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+                fingerprint:
+                  type:
+                  - string
+                  - 'null'
+                  pattern: ^[0-9a-f]{64}$(?![\s\S])
+              description: Ausschließlich opake, zugelassene lokale Referenz; keine URL, kein Dateipfad, Rohinhalt,
+                Zugangsschlüssel, Zertifikat oder personenbezogener Identifikator.
+            predecessor:
+              type:
+              - object
+              - 'null'
+              additionalProperties: false
+              required:
+              - kind
+              - id
+              - revision
+              - fingerprint
+              properties:
+                kind:
+                  $ref: '#/components/schemas/ReadinessSafeReferenceKind'
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                  pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+                revision:
+                  type:
+                  - string
+                  - 'null'
+                  minLength: 1
+                  maxLength: 80
+                  pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+                fingerprint:
+                  type:
+                  - string
+                  - 'null'
+                  pattern: ^[0-9a-f]{64}$(?![\s\S])
+              description: Ausschließlich opake, zugelassene lokale Referenz; keine URL, kein Dateipfad, Rohinhalt,
+                Zugangsschlüssel, Zertifikat oder personenbezogener Identifikator.
+            receipt:
+              $ref: '#/components/schemas/ReadinessSafeReference'
+            times:
+              $ref: '#/components/schemas/ReadinessTimeliness'
+          description: Unveränderter Headinhalt erzeugt einen Abrufreceipt ohne neue Revision; A→B→A erzeugt drei
+            unveränderliche Vorkommen. Frühere Beobachtungszeiten und Snapshots bleiben unverändert.
+        remedy:
+          $ref: '#/components/schemas/ReadinessSafeCode'
+      description: Stabile Sortierung nach Fold, Bereich, Intervallbeginn, Kategorie und findingId. Unbekannter
+        Kalender führt bei abhängigen Prüfungen zu NOT_EVALUATED und niemals zu erfundenen Baridentitäten. Nur
+        snapshotgebundene Revisionen erklären verspätete Beobachtung; später committete Evidenz darf nicht in alte
+        Berichte einfließen.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                category:
+                  const: CALENDAR_UNKNOWN
+              required:
+              - category
+              additionalProperties: true
+            then:
+              properties:
+                observation:
+                  type: 'null'
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                category:
+                  const: NOT_EVALUATED
+              required:
+              - category
+              additionalProperties: true
+            then:
+              properties:
+                eligibility:
+                  const: NOT_EVALUATED
+                observation:
+                  type: 'null'
+              additionalProperties: true
+            additionalProperties: true
+    ReadinessLimits:
+      type: object
+      additionalProperties: false
+      required:
+      - maxQueued
+      - maxFolds
+      - maxDays
+      - maxRevisionRows
+      - maxCalendarRows
+      - maxQualityRows
+      - maxCoverageRows
+      - maxAttemptSeconds
+      - maxAttempts
+      - maxFindings
+      - maxPublicationBytes
+      - maxPageSize
+      properties:
+        maxQueued:
+          type: integer
+          const: 32
+        maxFolds:
+          type: integer
+          const: 12
+        maxDays:
+          type: integer
+          const: 366
+        maxRevisionRows:
+          type: integer
+          const: 100000
+        maxCalendarRows:
+          type: integer
+          const: 100000
+        maxQualityRows:
+          type: integer
+          const: 100000
+        maxCoverageRows:
+          type: integer
+          const: 100000
+        maxAttemptSeconds:
+          type: integer
+          const: 300
+        maxAttempts:
+          type: integer
+          const: 3
+        maxFindings:
+          type: integer
+          const: 10000
+        maxPublicationBytes:
+          type: integer
+          const: 12582912
+        maxPageSize:
+          type: integer
+          const: 200
+      description: Insgesamt höchstens eine aktive Diagnose ODER ein aktiver Backtest; Budgets sperren konservativ.
+        Eine Diagnose löst weder Netzwerkzugriff noch Simulation, Beschaffung oder Order aus.
+    ReadinessReport:
+      type: object
+      additionalProperties: false
+      required:
+      - assessmentId
+      - requestHash
+      - reportHash
+      - policyVersion
+      - codeVersion
+      - snapshot
+      - createdAt
+      - eligibility
+      - evaluationComplete
+      - trust
+      - findingCount
+      - categories
+      - categoryOverlaps
+      - metrics
+      - windows
+      - providerRights
+      - limits
+      properties:
+        assessmentId:
+          $ref: '#/components/schemas/ReadinessId'
+        requestHash:
+          $ref: '#/components/schemas/ReadinessHash'
+        reportHash:
+          $ref: '#/components/schemas/ReadinessHash'
+        policyVersion:
+          type: string
+          minLength: 1
+          maxLength: 80
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+        codeVersion:
+          type: string
+          minLength: 1
+          maxLength: 80
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+        snapshot:
+          $ref: '#/components/schemas/ReadinessSnapshot'
+        createdAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        eligibility:
+          $ref: '#/components/schemas/ReadinessEligibility'
+        evaluationComplete:
+          type: boolean
+        trust:
+          $ref: '#/components/schemas/ReadinessTrustDimensions'
+        findingCount:
+          type: integer
+          minimum: 0
+          maximum: 10000
+        categories:
+          type: array
+          maxItems: 12
+          items:
+            $ref: '#/components/schemas/ReadinessCategorySummary'
+        categoryOverlaps:
+          type: array
+          maxItems: 66
+          items:
+            $ref: '#/components/schemas/ReadinessCategoryOverlap'
+        metrics:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ReadinessTimelinessMetrics'
+        windows:
+          $ref: '#/components/schemas/ReadinessWindows'
+        providerRights:
+          $ref: '#/components/schemas/ReadinessProviderRights'
+        limits:
+          $ref: '#/components/schemas/ReadinessLimits'
+      description: 'Unveränderliche Veröffentlichung einschließlich Hashes und ursprünglicher Zulässigkeit. Aggregation:
+        bekannter Pflichtblocker ergibt BLOCKED, sonst unbekannter Pflichtbeleg UNKNOWN, sonst ungeprüfter Pflichtbereich
+        NOT_EVALUATED, sonst ELIGIBLE. Positive Ergebnisse benötigen vollständige Prüfungen und Fenster; SUCCEEDED
+        bedeutet nur abgeschlossene Diagnose. Backtests binden und prüfen ihren eigenen Snapshot und aktuellen
+        Vertrauensstand; ein Bericht ist niemals ein Freigabetoken.'
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                eligibility:
+                  const: ELIGIBLE
+              required:
+              - eligibility
+              additionalProperties: true
+            then:
+              properties:
+                evaluationComplete:
+                  const: true
+                windows:
+                  properties:
+                    complete:
+                      const: true
+                  additionalProperties: true
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                eligibility:
+                  const: ELIGIBLE
+              required:
+              - eligibility
+              additionalProperties: true
+            then:
+              properties:
+                trust:
+                  properties:
+                    integrity:
+                      properties:
+                        status:
+                          const: VERIFIED
+                      additionalProperties: true
+                    sourceAuthenticity:
+                      properties:
+                        status:
+                          const: VERIFIED
+                      additionalProperties: true
+                    temporalAuthenticity:
+                      properties:
+                        status:
+                          const: VERIFIED
+                      additionalProperties: true
+                    completeness:
+                      properties:
+                        status:
+                          const: VERIFIED
+                      additionalProperties: true
+                    domainQuality:
+                      properties:
+                        status:
+                          const: VERIFIED
+                      additionalProperties: true
+                  additionalProperties: true
+              additionalProperties: true
+            additionalProperties: true
+    ReadinessRevocationWarning:
+      type: object
+      additionalProperties: false
+      required:
+      - decisionRef
+      - affectedReferences
+      - reason
+      - effectiveAt
+      - recordedAt
+      - compromiseTimeKnown
+      properties:
+        decisionRef:
+          $ref: '#/components/schemas/ReadinessSafeReference'
+        affectedReferences:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ReadinessSafeReference'
+        reason:
+          type: string
+          enum:
+          - KEY_REVOKED
+          - KEY_COMPROMISED
+          - EVIDENCE_RETRACTED
+          - SOURCE_REVOKED
+          - TRUST_DECISION_REVISED
+        effectiveAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$
+          description: UTC mit Z und höchstens Mikrosekundenpräzision; lokale Offsets und Zeiten ohne Zeitzone werden abgewiesen.
+        recordedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        compromiseTimeKnown:
+          type: boolean
+      description: Unbekannte Kompromittierungszeit sperrt die betroffene Kette konservativ. Append-only Entscheidung;
+        Rücknahme und Wiederzulassung löschen keine Historie.
+    ReadinessRevocationProjection:
+      type: object
+      additionalProperties: false
+      required:
+      - checkedAt
+      - currentTrustVersion
+      - currentTrustPolicyVersion
+      - warnings
+      - complete
+      properties:
+        checkedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        currentTrustVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        currentTrustPolicyVersion:
+          type: string
+          minLength: 1
+          maxLength: 80
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+        warnings:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ReadinessRevocationWarning'
+        complete:
+          type: boolean
+      description: Separate aktuelle Projektion; unveränderlicher Bericht, reportHash, ursprüngliches Vertrauen
+        und Zulässigkeit dürfen nicht überschrieben werden. Neue Diagnosen und Backtests verwenden aktuelle sichtbare
+        Vertrauensentscheidungen. Unvollständige Warnungen dürfen keine aktuelle Vertrauenswürdigkeit behaupten.
+    ReadinessDetailLink:
+      type: string
+      pattern: ^/api/v1/research/data-readiness/assessments/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$(?![\s\S])
+    ReadinessAccepted:
+      type: object
+      additionalProperties: false
+      required:
+      - assessmentId
+      - status
+      - eligibility
+      - detailLink
+      properties:
+        assessmentId:
+          $ref: '#/components/schemas/ReadinessId'
+        status:
+          type: string
+          enum:
+          - ACCEPTED
+        eligibility:
+          type: string
+          enum:
+          - NOT_EVALUATED
+        detailLink:
+          $ref: '#/components/schemas/ReadinessDetailLink'
+      description: 'Dauerhafter Receipt: Wiederholung desselben Schlüssels mit gleicher Nutzlast liefert ursprüngliche
+        assessmentId und semantisch gleichen Receipt, auch nach Jobfortschritt. Der Receipt ist kein abgeschlossener
+        Bericht.'
+    ReadinessAssessment:
+      type: object
+      additionalProperties: false
+      required:
+      - assessmentId
+      - status
+      - eligibility
+      - request
+      - requestHash
+      - acceptedAt
+      - updatedAt
+      - completedAt
+      - attempt
+      - failureCode
+      - publicationComplete
+      - report
+      - currentRevocation
+      - detailLink
+      properties:
+        assessmentId:
+          $ref: '#/components/schemas/ReadinessId'
+        status:
+          $ref: '#/components/schemas/ReadinessExecutionStatus'
+        eligibility:
+          $ref: '#/components/schemas/ReadinessEligibility'
+        request:
+          $ref: '#/components/schemas/BacktestRequest'
+        requestHash:
+          $ref: '#/components/schemas/ReadinessHash'
+        acceptedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        updatedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        completedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$
+          description: UTC mit Z und höchstens Mikrosekundenpräzision; lokale Offsets und Zeiten ohne Zeitzone werden abgewiesen.
+        attempt:
+          type: integer
+          minimum: 0
+          maximum: 3
+        failureCode:
+          type:
+          - string
+          - 'null'
+          enum:
+          - BUDGET_EXHAUSTED
+          - ATTEMPTS_EXHAUSTED
+          - INTERNAL_FAILURE
+          - null
+        publicationComplete:
+          type: boolean
+        report:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - assessmentId
+          - requestHash
+          - reportHash
+          - policyVersion
+          - codeVersion
+          - snapshot
+          - createdAt
+          - eligibility
+          - evaluationComplete
+          - trust
+          - findingCount
+          - categories
+          - categoryOverlaps
+          - metrics
+          - windows
+          - providerRights
+          - limits
+          properties:
+            assessmentId:
+              $ref: '#/components/schemas/ReadinessId'
+            requestHash:
+              $ref: '#/components/schemas/ReadinessHash'
+            reportHash:
+              $ref: '#/components/schemas/ReadinessHash'
+            policyVersion:
+              type: string
+              minLength: 1
+              maxLength: 80
+              pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+            codeVersion:
+              type: string
+              minLength: 1
+              maxLength: 80
+              pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*$(?![\s\S])
+            snapshot:
+              $ref: '#/components/schemas/ReadinessSnapshot'
+            createdAt:
+              $ref: '#/components/schemas/BacktestTimestamp'
+            eligibility:
+              $ref: '#/components/schemas/ReadinessEligibility'
+            evaluationComplete:
+              type: boolean
+            trust:
+              $ref: '#/components/schemas/ReadinessTrustDimensions'
+            findingCount:
+              type: integer
+              minimum: 0
+              maximum: 10000
+            categories:
+              type: array
+              maxItems: 12
+              items:
+                $ref: '#/components/schemas/ReadinessCategorySummary'
+            categoryOverlaps:
+              type: array
+              maxItems: 66
+              items:
+                $ref: '#/components/schemas/ReadinessCategoryOverlap'
+            metrics:
+              type: array
+              maxItems: 200
+              items:
+                $ref: '#/components/schemas/ReadinessTimelinessMetrics'
+            windows:
+              $ref: '#/components/schemas/ReadinessWindows'
+            providerRights:
+              $ref: '#/components/schemas/ReadinessProviderRights'
+            limits:
+              $ref: '#/components/schemas/ReadinessLimits'
+          description: 'Unveränderliche Veröffentlichung einschließlich Hashes und ursprünglicher Zulässigkeit.
+            Aggregation: bekannter Pflichtblocker ergibt BLOCKED, sonst unbekannter Pflichtbeleg UNKNOWN, sonst
+            ungeprüfter Pflichtbereich NOT_EVALUATED, sonst ELIGIBLE. Positive Ergebnisse benötigen vollständige
+            Prüfungen und Fenster; SUCCEEDED bedeutet nur abgeschlossene Diagnose. Backtests binden und prüfen
+            ihren eigenen Snapshot und aktuellen Vertrauensstand; ein Bericht ist niemals ein Freigabetoken.'
+          allOf:
+          - not:
+              not:
+                if:
+                  properties:
+                    eligibility:
+                      const: ELIGIBLE
+                  required:
+                  - eligibility
+                  additionalProperties: true
+                then:
+                  properties:
+                    evaluationComplete:
+                      const: true
+                    windows:
+                      properties:
+                        complete:
+                          const: true
+                      additionalProperties: true
+                  additionalProperties: true
+                additionalProperties: true
+          - not:
+              not:
+                if:
+                  properties:
+                    eligibility:
+                      const: ELIGIBLE
+                  required:
+                  - eligibility
+                  additionalProperties: true
+                then:
+                  properties:
+                    trust:
+                      properties:
+                        integrity:
+                          properties:
+                            status:
+                              const: VERIFIED
+                          additionalProperties: true
+                        sourceAuthenticity:
+                          properties:
+                            status:
+                              const: VERIFIED
+                          additionalProperties: true
+                        temporalAuthenticity:
+                          properties:
+                            status:
+                              const: VERIFIED
+                          additionalProperties: true
+                        completeness:
+                          properties:
+                            status:
+                              const: VERIFIED
+                          additionalProperties: true
+                        domainQuality:
+                          properties:
+                            status:
+                              const: VERIFIED
+                          additionalProperties: true
+                      additionalProperties: true
+                  additionalProperties: true
+                additionalProperties: true
+        currentRevocation:
+          $ref: '#/components/schemas/ReadinessRevocationProjection'
+        detailLink:
+          $ref: '#/components/schemas/ReadinessDetailLink'
+      description: Dauerhafter, nach Reload lesbarer Ausführungsstand; unveröffentlichte Jobs haben keinen Bericht.
+        FAILED/BUDGET_EXHAUSTED ist unvollständig/UNKNOWN und niemals teilweise ELIGIBLE. Bericht und sämtliche
+        Befunde werden genau einmal atomar unter einer gefencten Lease veröffentlicht; abgelaufene Inhaber dürfen
+        nicht publizieren.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: ACCEPTED
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                eligibility:
+                  const: NOT_EVALUATED
+                report:
+                  type: 'null'
+                publicationComplete:
+                  const: false
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                failureCode:
+                  const: BUDGET_EXHAUSTED
+              required:
+              - failureCode
+              additionalProperties: true
+            then:
+              properties:
+                status:
+                  const: FAILED
+                eligibility:
+                  const: UNKNOWN
+                publicationComplete:
+                  const: false
+                report:
+                  type: 'null'
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: SUCCEEDED
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                publicationComplete:
+                  const: true
+                report:
+                  $ref: '#/components/schemas/ReadinessReport'
+                completedAt:
+                  $ref: '#/components/schemas/BacktestTimestamp'
+                failureCode:
+                  type: 'null'
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                eligibility:
+                  const: ELIGIBLE
+              required:
+              - eligibility
+              additionalProperties: true
+            then:
+              properties:
+                report:
+                  anyOf:
+                  - type: 'null'
+                  - allOf:
+                    - $ref: '#/components/schemas/ReadinessReport'
+                    - properties:
+                        eligibility:
+                          const: ELIGIBLE
+                      additionalProperties: true
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                eligibility:
+                  const: BLOCKED
+              required:
+              - eligibility
+              additionalProperties: true
+            then:
+              properties:
+                report:
+                  anyOf:
+                  - type: 'null'
+                  - allOf:
+                    - $ref: '#/components/schemas/ReadinessReport'
+                    - properties:
+                        eligibility:
+                          const: BLOCKED
+                      additionalProperties: true
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                eligibility:
+                  const: UNKNOWN
+              required:
+              - eligibility
+              additionalProperties: true
+            then:
+              properties:
+                report:
+                  anyOf:
+                  - type: 'null'
+                  - allOf:
+                    - $ref: '#/components/schemas/ReadinessReport'
+                    - properties:
+                        eligibility:
+                          const: UNKNOWN
+                      additionalProperties: true
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                eligibility:
+                  const: NOT_EVALUATED
+              required:
+              - eligibility
+              additionalProperties: true
+            then:
+              properties:
+                report:
+                  anyOf:
+                  - type: 'null'
+                  - allOf:
+                    - $ref: '#/components/schemas/ReadinessReport'
+                    - properties:
+                        eligibility:
+                          const: NOT_EVALUATED
+                      additionalProperties: true
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: RUNNING
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                report:
+                  type: 'null'
+                publicationComplete:
+                  const: false
+                completedAt:
+                  type: 'null'
+                failureCode:
+                  type: 'null'
+                eligibility:
+                  const: NOT_EVALUATED
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: FAILED
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                report:
+                  type: 'null'
+                publicationComplete:
+                  const: false
+                completedAt:
+                  $ref: '#/components/schemas/BacktestTimestamp'
+                eligibility:
+                  const: UNKNOWN
+                failureCode:
+                  type: string
+                  enum:
+                  - BUDGET_EXHAUSTED
+                  - ATTEMPTS_EXHAUSTED
+                  - INTERNAL_FAILURE
+              additionalProperties: true
+            additionalProperties: true
+    ReadinessCursor:
+      type: string
+      minLength: 16
+      maxLength: 2048
+      pattern: ^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$(?![\s\S])
+      description: Opaker HMAC-authentifizierter Cursor bindet Diagnose und Bericht, Snapshot- und Vertrauensversion,
+        Kategoriefilter, stabile Position und Ablaufzeit. Das Schema prüft nur Syntax; Runtime prüft MAC, Kontext
+        und Ablauf. Enthält niemals Zugangsdaten.
+    ReadinessFindingPage:
+      type: object
+      additionalProperties: false
+      required:
+      - assessmentId
+      - reportHash
+      - snapshot
+      - category
+      - items
+      - nextCursor
+      - totalMatching
+      properties:
+        assessmentId:
+          $ref: '#/components/schemas/ReadinessId'
+        reportHash:
+          $ref: '#/components/schemas/ReadinessHash'
+        snapshot:
+          $ref: '#/components/schemas/ReadinessSnapshot'
+        category:
+          type:
+          - string
+          - 'null'
+          enum:
+          - CALENDAR_UNKNOWN
+          - CALENDAR_CHANGED
+          - AMBIGUOUS_DATA
+          - BAR_MISSING
+          - OBSERVED_TOO_LATE
+          - WARMUP_MISSING
+          - QUALITY_REJECTED
+          - CORPORATE_ACTIONS_UNKNOWN
+          - CORPORATE_ACTIONS_CONFLICT
+          - TIME_UNPROVEN
+          - EVIDENCE_REVOKED
+          - NOT_EVALUATED
+          - null
+        items:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ReadinessFinding'
+        nextCursor:
+          type:
+          - string
+          - 'null'
+          minLength: 16
+          maxLength: 2048
+          pattern: ^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$(?![\s\S])
+          description: Opaker HMAC-authentifizierter Cursor bindet Diagnose und Bericht, Snapshot- und Vertrauensversion,
+            Kategoriefilter, stabile Position und Ablaufzeit. Das Schema prüft nur Syntax; Runtime prüft MAC, Kontext
+            und Ablauf. Enthält niemals Zugangsdaten.
+        totalMatching:
+          type: integer
+          minimum: 0
+          maximum: 10000
+      description: Stabile unveränderliche berichtsgebundene Seiten mit höchstens 200 Befunden. Die separate aktuelle
+        Warnprojektion verändert keine ursprünglichen Befunde.
+    ReadinessProblemCode:
+      type: string
+      enum:
+      - INVALID_REQUEST
+      - UNAUTHORIZED
+      - FORBIDDEN
+      - NOT_FOUND
+      - CURSOR_INVALID
+      - REPORT_NOT_READY
+      - IDEMPOTENCY_CONFLICT
+      - VERSION_CONFLICT
+      - QUEUE_EXHAUSTED
+      - PAYLOAD_TOO_LARGE
+      - UNAVAILABLE
+    ReadinessProblem:
+      type: object
+      additionalProperties: false
+      required:
+      - type
+      - title
+      - status
+      - code
+      - traceId
+      properties:
+        type:
+          type: string
+          const: urn:agentic-trading-lab:readiness-problem
+        title:
+          type: string
+          const: Research data request failed
+        status:
+          type: integer
+          enum:
+          - 400
+          - 401
+          - 403
+          - 404
+          - 409
+          - 413
+          - 429
+          - 503
+        code:
+          $ref: '#/components/schemas/ReadinessProblemCode'
+        traceId:
+          type: string
+          pattern: ^[0-9a-f]{32}$(?![\s\S])
+      description: Ausschließlich zugelassene redigierte Fehlerfelder; keine freien Details, Providermeldungen,
+        SQL, Stacks, privaten Belege, Zugangsdaten oder personenbezogenen Angaben.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: 400
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                code:
+                  type: string
+                  enum:
+                  - INVALID_REQUEST
+                  - CURSOR_INVALID
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: 401
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                code:
+                  type: string
+                  enum:
+                  - UNAUTHORIZED
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: 403
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                code:
+                  type: string
+                  enum:
+                  - FORBIDDEN
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: 404
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                code:
+                  type: string
+                  enum:
+                  - NOT_FOUND
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: 409
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                code:
+                  type: string
+                  enum:
+                  - REPORT_NOT_READY
+                  - IDEMPOTENCY_CONFLICT
+                  - VERSION_CONFLICT
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: 413
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                code:
+                  type: string
+                  enum:
+                  - PAYLOAD_TOO_LARGE
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: 429
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                code:
+                  type: string
+                  enum:
+                  - QUEUE_EXHAUSTED
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: 503
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                code:
+                  type: string
+                  enum:
+                  - UNAVAILABLE
+              additionalProperties: true
+            additionalProperties: true
+    CollectionPlanUpdate:
+      type: object
+      additionalProperties: false
+      required:
+      - enabled
+      - expectedVersion
+      properties:
+        enabled:
+          type: boolean
+        expectedVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+      description: 'Geschlossene Änderung: Das Instrument steht ausschließlich im Pfad. Provider alpaca, Feed iex,
+        15Min und raw sind unveränderlich. expectedVersion=0 legt den persistierten Plan an; eine veraltete Version
+        ergibt 409 VERSION_CONFLICT.'
+    CollectionGap:
+      type: object
+      additionalProperties: false
+      required:
+      - period
+      - reason
+      - references
+      properties:
+        period:
+          $ref: '#/components/schemas/ReadinessInterval'
+        reason:
+          type: string
+          enum:
+          - CALENDAR_UNKNOWN
+          - BAR_MISSING
+          - OBSERVED_TOO_LATE
+          - OUTSIDE_RECOVERY_WINDOW
+          - DAILY_BUDGET_EXHAUSTED
+          - UNKNOWN_DISPATCH
+        references:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ReadinessSafeReference'
+    CollectionSchedule:
+      type: object
+      additionalProperties: false
+      required:
+      - calendarRefreshUtc
+      - calendarLookaheadDays
+      - firstBarDelaySeconds
+      - reobserveDelaySeconds
+      - tickSeconds
+      - recoveryHours
+      - overlapMinutes
+      - maxDuePerUtcDay
+      - maxOpenJobsTotal
+      - maxConcurrentHttpGets
+      properties:
+        calendarRefreshUtc:
+          type: string
+          const: 00:05:00Z
+        calendarLookaheadDays:
+          type: integer
+          const: 7
+        firstBarDelaySeconds:
+          type: integer
+          const: 5
+        reobserveDelaySeconds:
+          type: integer
+          const: 240
+        tickSeconds:
+          type: integer
+          const: 5
+        recoveryHours:
+          type: integer
+          const: 24
+        overlapMinutes:
+          type: integer
+          const: 30
+        maxDuePerUtcDay:
+          type: integer
+          const: 100
+        maxOpenJobsTotal:
+          type: integer
+          const: 2
+        maxConcurrentHttpGets:
+          type: integer
+          const: 1
+      description: Kalenderabruf beim Aktivieren und täglich 00:05 UTC für den aktuellen und folgenden 7-Tage-Bereich.
+        Best-Effort-Fälligkeiten und bestehende Rate Limits garantieren weder +60s noch +300s. Nur belegte reguläre
+        Sitzungen erzeugen Sollbars. Ältere Lücken bleiben sichtbar; keine erfundenen Qualitäts- oder Kapitalmaßnahmenbelege.
+    CollectionPlan:
+      type: object
+      additionalProperties: false
+      required:
+      - instrumentId
+      - symbol
+      - provider
+      - feed
+      - interval
+      - adjustment
+      - enabled
+      - version
+      - generation
+      - status
+      - reasons
+      - providerRights
+      - globalEnabled
+      - nextDueAt
+      - lastAttemptAt
+      - lastJobId
+      - outstandingStartedDispatches
+      - gaps
+      - gapsComplete
+      - metrics
+      - windows
+      - schedule
+      - updatedAt
+      properties:
+        instrumentId:
+          $ref: '#/components/schemas/ReadinessId'
+        symbol:
+          type: string
+          enum:
+          - SPY
+          - QQQ
+        provider:
+          type: string
+          enum:
+          - alpaca
+        feed:
+          type: string
+          enum:
+          - iex
+        interval:
+          type: string
+          enum:
+          - 15Min
+        adjustment:
+          type: string
+          enum:
+          - raw
+        enabled:
+          type: boolean
+        version:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        generation:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        status:
+          type: string
+          enum:
+          - DISABLED
+          - ACTIVE
+          - BLOCKED
+          - PAUSED
+        reasons:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ReadinessSafeCode'
+        providerRights:
+          $ref: '#/components/schemas/ReadinessProviderRights'
+        globalEnabled:
+          type: boolean
+        nextDueAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$
+          description: UTC mit Z und höchstens Mikrosekundenpräzision; lokale Offsets und Zeiten ohne Zeitzone werden abgewiesen.
+        lastAttemptAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$
+          description: UTC mit Z und höchstens Mikrosekundenpräzision; lokale Offsets und Zeiten ohne Zeitzone werden abgewiesen.
+        lastJobId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$(?![\s\S])
+        outstandingStartedDispatches:
+          type: integer
+          minimum: 0
+          maximum: 2
+        gaps:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/CollectionGap'
+        gapsComplete:
+          type: boolean
+        metrics:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ReadinessTimelinessMetrics'
+        windows:
+          $ref: '#/components/schemas/ReadinessWindows'
+        schedule:
+          $ref: '#/components/schemas/CollectionSchedule'
+        updatedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$
+          description: UTC mit Z und höchstens Mikrosekundenpräzision; lokale Offsets und Zeiten ohne Zeitzone werden abgewiesen.
+      description: 'Projektionen existieren ausschließlich für die registrierten SPY-/QQQ-Pläne. Unpersistierte
+        Vorgaben: version=0, generation=0, enabled=false und DISABLED. ACTIVE garantiert weder PIT-Eignung noch
+        Rechte. enabled=true bleibt bei fehlenden globalen oder Quellengates BLOCKED und aktiviert weder globalen
+        Dispatcher noch Handel. enabled=false pausiert unter demselben prozessübergreifenden Planlock wie die Dispatchzulassung,
+        wechselt die Generation und antwortet erst nach Commit. Der Commit des STARTED-Receipts definiert den Abrufbeginn;
+        die Antwort zählt bereits zugelassene laufende Abrufe, deren Antworten mit tatsächlichen Zeiten persistieren
+        dürfen. Kein späterer STARTED-Receipt für die pausierte Generation, keine Receiptwiederverwendung bei Retry;
+        ein Crash wird UNKNOWN_DISPATCH. Kein Datenbanklock während Provider-I/O.'
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                version:
+                  const: 0
+              required:
+              - version
+              additionalProperties: true
+            then:
+              properties:
+                enabled:
+                  const: false
+                generation:
+                  const: 0
+                status:
+                  const: DISABLED
+                nextDueAt:
+                  type: 'null'
+                updatedAt:
+                  type: 'null'
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  const: ACTIVE
+              required:
+              - status
+              additionalProperties: true
+            then:
+              properties:
+                enabled:
+                  const: true
+                globalEnabled:
+                  const: true
+              additionalProperties: true
+            additionalProperties: true
+    CollectionPlanPage:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - observedAt
+      properties:
+        items:
+          type: array
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/CollectionPlan'
+        observedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+      description: Höchstens die beiden registrierten Pläne; eindeutige Instrument-IDs und Symbole prüft der Transport.
+        Keine freien Filter, Providerprogramme oder URLs.
+    ReadinessExpectedBarRatio:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - numerator
+      - denominator
+      - denominatorBasis
+      - unknownCount
+      properties:
+        status:
+          type: string
+          enum:
+          - MEASURED
+          - UNKNOWN
+          - N/A
+        numerator:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        denominator:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        denominatorBasis:
+          type: string
+          const: EXPECTED_BAR_IDENTITIES
+        unknownCount:
+          type: integer
+          minimum: 0
+          maximum: 100000
+      description: Absolute Zähler und Nenner, kein gerundeter Prozentsatz. Nullnenner erfordert N/A und numerator=0.
+        Unbekannter Kalender verhindert Vollständigkeitsbehauptungen. Eindeutige Baridentitäten deduplizieren Revisionen
+        und Receipts; die Metrikbildung erzwingt numerator <= denominator.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                denominator:
+                  const: 0
+              required:
+              - denominator
+              additionalProperties: true
+            then:
+              properties:
+                status:
+                  const: N/A
+                numerator:
+                  const: 0
+              additionalProperties: true
+            additionalProperties: true
+    ReadinessObservedBarRatio:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - numerator
+      - denominator
+      - denominatorBasis
+      - unknownCount
+      properties:
+        status:
+          type: string
+          enum:
+          - MEASURED
+          - UNKNOWN
+          - N/A
+        numerator:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        denominator:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        denominatorBasis:
+          type: string
+          const: OBSERVED_BAR_IDENTITIES
+        unknownCount:
+          type: integer
+          minimum: 0
+          maximum: 100000
+      description: Absolute Zähler und Nenner, kein gerundeter Prozentsatz. Nullnenner erfordert N/A und numerator=0.
+        Unbekannter Kalender verhindert Vollständigkeitsbehauptungen. Eindeutige Baridentitäten deduplizieren Revisionen
+        und Receipts; die Metrikbildung erzwingt numerator <= denominator.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                denominator:
+                  const: 0
+              required:
+              - denominator
+              additionalProperties: true
+            then:
+              properties:
+                status:
+                  const: N/A
+                numerator:
+                  const: 0
+              additionalProperties: true
+            additionalProperties: true
+    ReadinessOccurrenceRatio:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - numerator
+      - denominator
+      - denominatorBasis
+      - unknownCount
+      properties:
+        status:
+          type: string
+          enum:
+          - MEASURED
+          - UNKNOWN
+          - N/A
+        numerator:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        denominator:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        denominatorBasis:
+          type: string
+          const: USABLE_BAR_OCCURRENCES
+        unknownCount:
+          type: integer
+          minimum: 0
+          maximum: 100000
+      description: Absolute Zähler und Nenner, kein gerundeter Prozentsatz. Nullnenner erfordert N/A und numerator=0.
+        Unbekannter Kalender verhindert Vollständigkeitsbehauptungen. Eindeutige Baridentitäten deduplizieren Revisionen
+        und Receipts; die Metrikbildung erzwingt numerator <= denominator.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                denominator:
+                  const: 0
+              required:
+              - denominator
+              additionalProperties: true
+            then:
+              properties:
+                status:
+                  const: N/A
+                numerator:
+                  const: 0
+              additionalProperties: true
+            additionalProperties: true
+    ReadinessId:
+      type: string
+      format: uuid
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$(?![\s\S])
+    ReadinessHash:
+      type: string
+      pattern: ^[0-9a-f]{64}$(?![\s\S])
+    ReadinessNonnegativeDecimal:
+      type: string
+      pattern: ^(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$(?![\s\S])
