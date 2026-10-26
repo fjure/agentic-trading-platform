@@ -45,6 +45,15 @@
       "mergeCommit": "2b9f6d13dca3b242a2db21fe36caac49de7dab1b",
       "remoteVerified": true,
       "verifiedAt": "2026-10-26T12:50:15.141265+00:00"
+    },
+    {
+      "taskId": "BKT-06",
+      "issueNumber": 56,
+      "branch": "codex/ptv-56-backtest-jobs",
+      "commit": "b5e6652ea6e681700f2f2f9f6b32fa29d9f37714",
+      "mergeCommit": "82cd1998542a349738d5a0bf8f6f474d299ae992",
+      "remoteVerified": true,
+      "verifiedAt": "2026-10-26T13:00:57.851589+00:00"
     }
   ]
 }
