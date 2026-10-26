@@ -291,11 +291,24 @@ def _verify_dormant_privileges(connection):
         if version_table is not None
         else []
     )
+    backtest_revision = (
+        revisions[0][0]
+        if revisions in ([("0028_backtest_coverage",)], [("0029_backtest_jobs",)])
+        else None
+    )
+    if backtest_revision:
+        # These additive revisions preserve every existing financial/research ACL.
+        revisions = [("0027_research_quality",)]
     research_revision = revisions
-    if revisions in ([("0021_research_foundation",)], [("0022_research_jobs",)],
-                     [("0023_research_paper_roles",)], [("0024_research_runtime_metadata",)],
-                     [("0025_research_operator_resume",)], [("0026_research_observability",)],
-                     [("0027_research_quality",)]):
+    if revisions in (
+        [("0021_research_foundation",)],
+        [("0022_research_jobs",)],
+        [("0023_research_paper_roles",)],
+        [("0024_research_runtime_metadata",)],
+        [("0025_research_operator_resume",)],
+        [("0026_research_observability",)],
+        [("0027_research_quality",)],
+    ):
         # Legacy financial ACLs remain exactly the 0020 manifest.
         revisions = [("0020_paper_read_models",)]
     expected = set()
@@ -625,6 +638,24 @@ def _verify_dormant_privileges(connection):
                     "research.quality_observations",
                     "atl_paper_execution",
                     "INSERT",
+                    False,
+                )
+            )
+    if backtest_revision:
+        for role in ("atl_paper_worker", "atl_paper_control_api"):
+            expected.add(("schema", "backtest", role, "USAGE", False))
+            expected.add(("relation", "backtest.corporate_action_coverage", role, "SELECT", False))
+        if backtest_revision == "0029_backtest_jobs":
+            expected.update(
+                ("relation", "backtest." + name, "atl_paper_control_api", "SELECT", False)
+                for name in ("runs", "manifests", "fold_results", "results", "cursor_state")
+            )
+            expected.add(
+                (
+                    "function",
+                    "backtest.request_run(uuid,text,text,jsonb,text,text,text)",
+                    "atl_paper_control_api",
+                    "EXECUTE",
                     False,
                 )
             )

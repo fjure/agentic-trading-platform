@@ -9,6 +9,15 @@
       "mergeCommit": "41fee4049c7f0c3f911d67367cd462d05c1392f8",
       "remoteVerified": true,
       "verifiedAt": "2026-10-26T12:27:13.463496+00:00"
+    },
+    {
+      "taskId": "BKT-02",
+      "issueNumber": 52,
+      "branch": "codex/ptv-52-backtest-strategies",
+      "commit": "c6bfabaa9ffc6661b7d6934769c86f2157c6b2e7",
+      "mergeCommit": "9d15d985cfe4cc04c27e4c64f7e482b425b732bd",
+      "remoteVerified": true,
+      "verifiedAt": "2026-10-26T12:39:05.977550+00:00"
     }
   ]
 }
