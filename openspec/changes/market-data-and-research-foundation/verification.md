@@ -2,11 +2,14 @@
 
 ## Aktueller Applystand 26.10.2026
 
-Die lokale Researchimplementierung ist vorhanden und unabhängig geprüft. Tatsächliche
+**Apply abgeschlossen:9/9 Tasks.** Die Researchimplementierung ist unabhängig geprüft
+und mit neun getrennten Issuecommits auf Remote-main integriert. Tatsächliche
 Unit-/Contract-/Security-, PostgreSQL-, Safety- und Browserläufe samt Grenzen stehen
 im [Implementierungsnachweis](../../../docs/evidence/mdr-implementation-verification.md).
-Alle16Requirements/31Szenarien sind dort zugeordnet. Die formalen neun Taskabschlüsse
-und Git-/Issueintegration laufen noch; persönliche Providerrechte bleiben UNVERIFIED.
+Alle16Requirements/31Szenarien sind dort zugeordnet. Issues42–50 sind geschlossen und
+vollständig zurückgelesen. SHA-/Integrationsnachweise stehen in
+`docs/development/github-research-git-integrations.json`. Drei Main-Specs synchronisiert;
+OpenSpec strikt15/15. Persönliche Providerrechte bleiben UNVERIFIED.
 Die folgende Planungsverifikation ist historisch und beschreibt keinen aktuellen
 Implementierungsfehlstand.
 

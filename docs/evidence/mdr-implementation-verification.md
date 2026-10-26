@@ -1,8 +1,8 @@
 # Researchfoundation: Implementierungsnachweis
 
-Stand 26.10.2026. Lokale Implementierung und unten aufgeführte Offlineprüfungen
-vorhanden. Die formale Taskabnahme erfordert zusätzlich die noch laufende
-Issue-/Gitintegration. Persönliche Alpaca-Datenrechte und ein echter berechtigter
+Stand26.10.2026: **9/9 Tasks abgeschlossen.** Implementierung und unten aufgeführte
+Offlineprüfungen sind abgenommen; neun getrennte Issuecommits sind auf Remote-main
+integriert. Issues42–50 sind geschlossen und vollständig zurückgelesen. Persönliche Alpaca-Datenrechte und ein echter berechtigter
 Providerabruf bleiben **UNVERIFIED**. Keine echten Brokerorders wurden ausgelöst.
 
 ## Umfang und Architektur
@@ -43,8 +43,8 @@ ehrlich nicht verfügbar. Bedienung und Grenzen: [Runbook](../runbooks/research-
 | Angularclient, Generator7.26.0 |167 Dateien zweimal bytegleich;generierter Bestand und TypeScript inkl. negativer typisierter Fixtures bestanden |
 | Kanonische Verträge |OAS3.1.2,53 Operationen,26 Schema-Dateien;Schema-/Response-/Problembeispiele und bestehende Negativen bestanden |
 | Echter oasdiff1.33.0 gegen main `c19c22ed107511b785901a242facbe5c9e33b762` |keine Breaking Changes |
-| OpenSpec strikt |12/12 bestanden |
-| Letzter Source-Secret-Scan |841 Dateien,0 Befunde;einschließlich Integrationsnachweisen |
+| OpenSpec strikt nach Main-Spec-Sync |15/15 bestanden |
+| Letzter Source-Secret-Scan |844 Dateien,0 Befunde;einschließlich Main-Specs und Integrationsnachweisen |
 
 Sandbox-/Fixturefehler wurden als Fehler behandelt. Behoben wurden unter anderem
 fehlende `date`-Kanonisierung, ein festgehaltener privater Exceptionkontext,
@@ -92,10 +92,14 @@ Blocker. Seine zunächst bedingte Freigabe wurde nach Rückmeldung der bestanden
 letzten PG-/API-, Paper-Safety- und Paper-UIläufe geschlossen. Die absichtlich
 fehlende persönliche Providerabnahme wurde nicht als erfolgreicher Abruf ausgegeben.
 
-## Verbleibende Integrationsschritte
+## Bestätigte Integration
 
-Neun issuebezogene Commits und Branches42–50 werden nach bestandener gemeinsamer
-MDR-01/MDR-07-Abnahme geordnet integriert. Issue-Sync/Read-back und Gitremotes sind
-vor dem formalen Taskabschluss zu bestätigen. Die vorbestehenden fremden Änderungen
+Neun issuebezogene Commits und Branches42–50 wurden nach bestandener gemeinsamer
+MDR-01/MDR-07-Abnahme geordnet integriert. Remote-main6276f79a49026189ea59eeb6b14d91a89a876f58
+enthält sämtliche geprüften Implementierungscommits. Alle Branch-SHAs und ihre
+Erreichbarkeit auf Remote-main sind verifiziert. Zuordnung:
+`docs/development/github-research-git-integrations.json`. Wiederholter Issue-Sync:
+0Änderungen,9vollständigeRead-backs. Drei Main-Specs wurden
+synchronisiert und strikt validiert:11/11 Specs,15/15 einschließlich Changes. Die vorbestehenden fremden Änderungen
 an README und Angular-Analytics bleiben außerhalb der Issuecommits. Keine PR oder
 Archivierung ist Bestandteil dieses Nachweises.
