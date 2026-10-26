@@ -4,11 +4,11 @@ Die Reihenfolge ist eine Planungsrichtung. Jede Anwendungserweiterung braucht ei
 
 ## Heute: lokales Paper-Lab
 
-**Umgesetzt:** getrennte Control-, Worker-, Execution- und Watchdog-Rollen; lokales Dashboard; Fake-/Demoabläufe; Paperledger und kontrollierte manuelle LIMIT-Aktionen; frische Alpaca-Marktevidenz für ein kleines Symboluniversum; Jev-Shadowauswertung. Risk- und Executiongrenzen sind fail-closed, LIVE ist technisch ausgeschlossen. Die vorhandene Marktaufnahme dient laufenden Sitzungen und bietet keine allgemeine historische Marktdatenpipeline.
+**Umgesetzt:** getrennte Control-, Worker-, Execution- und Watchdog-Rollen; lokales Dashboard; Fake-/Demoabläufe; Paperledger und kontrollierte manuelle LIMIT-Aktionen; frische Alpaca-Marktevidenz für ein kleines Symboluniversum; Jev-Shadowauswertung. Risk- und Executiongrenzen sind fail-closed, LIVE ist technisch ausgeschlossen. Die vorhandene Marktaufnahme dient laufenden Sitzungen und bleibt von historischen Researchdaten getrennt.
 
-## Nächster geplanter Baustein: market-data-and-research-foundation
+## Umgesetzter Baustein: market-data-and-research-foundation
 
-**Im Apply, lokal implementiert und offline geprüft:** historische SPY-/QQQ-raw-IEX-Daten, unveränderliche Revisionen/Evidenz, konservative PIT-Abfragen, Kalender-/Qualitätsbefunde, dauerhafte Jobs und eine Researchoberfläche. Formale Taskabnahme und Gitintegration laufen noch. [Ausgeführte Prüfungen und Grenzen](../evidence/mdr-implementation-verification.md). Persönliche Providerrechte bleiben unverifiziert; Standarddispatch ist deaktiviert. Vollständiges Researchbacktesting ist weiterhin ein späterer Change.
+**Abgeschlossen und offline geprüft,9/9 Tasks:** historische SPY-/QQQ-raw-IEX-Daten, unveränderliche Revisionen/Evidenz, konservative PIT-Abfragen, Kalender-/Qualitätsbefunde, dauerhafte Jobs und eine Researchoberfläche. Getrennte Issuecommits sind in main integriert. [Ausgeführte Prüfungen und Grenzen](../evidence/mdr-implementation-verification.md). Persönliche Providerrechte bleiben unverifiziert; Standarddispatch ist deaktiviert. `point-in-time-research-backtesting` bietet sich als nächster eigenständig freizugebender Change an.
 
 Vor Nutzung eines Datenproviders sind Lizenz, Speicherung, Weitergabe, Anpassungen, Aufbewahrung und abgeleitete Daten zu klären. Historische Überlebendenverzerrung, Look-ahead, Zeitzonen, Splits/Dividenden, verspätete Veröffentlichungen und Providerkorrekturen müssen als konkrete Risiken adressiert werden. Ohne lückenlose Herkunft und damalige Verfügbarkeit sind Backtests nicht als reproduzierbar oder PIT-gültig zu behandeln.
 

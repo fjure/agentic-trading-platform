@@ -1,8 +1,8 @@
 # Researchdaten und historische Ingestion
 
-Der Change `market-data-and-research-foundation` befindet sich im Apply. Die hier
-beschriebenen lokalen Implementierungen sind erst nach vollständiger Verifikation
-und Issueintegration abgenommen. Private Alpaca-Datenrechte sind **UNVERIFIED**.
+Der Change `market-data-and-research-foundation` ist mit9/9 Tasks offline abgenommen
+und in main integriert. Private Alpaca-Datenrechte sind **UNVERIFIED**.
+Prüfergebnisse und Betriebsgrenzen stehen im Implementierungsnachweis.
 
 ## Grenzen und Betrieb
 

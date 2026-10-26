@@ -3,63 +3,80 @@
   "repository": "fjure/agentic-trading-platform",
   "changeId": "market-data-and-research-foundation",
   "baseCommit": "c19c22ed107511b785901a242facbe5c9e33b762",
-  "mainPublication": "pending",
+  "mainPublication": "verified",
   "tasks": [
     {
       "taskId": "MDR-01",
       "issueNumber": 42,
       "branch": "codex/ptv-42-research-contracts",
       "commit": "44a09496d131cff7d6cc158c5f1c140e245e99eb",
-      "remoteVerified": true
+      "remoteVerified": true,
+      "mainContainsCommit": true
     },
     {
       "taskId": "MDR-02",
       "issueNumber": 43,
       "branch": "codex/ptv-43-research-storage",
       "commit": "a923df2d7b906601a7920de2b6998df55a1a0154",
-      "remoteVerified": true
+      "remoteVerified": true,
+      "mainContainsCommit": true
     },
     {
       "taskId": "MDR-03",
       "issueNumber": 44,
       "branch": "codex/ptv-44-alpaca-history",
       "commit": "74b2752b49371ac9a463933f150aa3a3c3d01d84",
-      "remoteVerified": true
+      "remoteVerified": true,
+      "mainContainsCommit": true
     },
     {
       "taskId": "MDR-04",
       "issueNumber": 45,
       "branch": "codex/ptv-45-research-jobs",
       "commit": "99db6216836cbd2de17aa36b59c0a294481cf935",
-      "remoteVerified": true
+      "remoteVerified": true,
+      "mainContainsCommit": true
     },
     {
       "taskId": "MDR-05",
       "issueNumber": 46,
       "branch": "codex/ptv-46-research-quality",
       "commit": "77786544ea614a5ac21f71cbaf65ac6dfd624115",
-      "remoteVerified": true
+      "remoteVerified": true,
+      "mainContainsCommit": true
     },
     {
       "taskId": "MDR-06",
       "issueNumber": 47,
       "branch": "codex/ptv-47-research-context",
       "commit": "b6973445290e84412cf1fceff4d584764ad444d6",
-      "remoteVerified": true
+      "remoteVerified": true,
+      "mainContainsCommit": true
     },
     {
       "taskId": "MDR-07",
       "issueNumber": 48,
       "branch": "codex/ptv-48-research-api",
       "commit": "b8db0954b8f21dedacec197f358b3d1bef59e2a8",
-      "remoteVerified": true
+      "remoteVerified": true,
+      "mainContainsCommit": true
     },
     {
       "taskId": "MDR-08",
       "issueNumber": 49,
       "branch": "codex/ptv-49-research-dashboard",
       "commit": "a07339ab5803703666fe0e72514079d5a1a8f896",
-      "remoteVerified": true
+      "remoteVerified": true,
+      "mainContainsCommit": true
+    },
+    {
+      "taskId": "MDR-09",
+      "issueNumber": 50,
+      "branch": "codex/ptv-50-research-acceptance",
+      "commit": "0a74fc28e4dcacce8f31bea18523ce1f795b460d",
+      "remoteVerified": true,
+      "mainContainsCommit": true
     }
-  ]
+  ],
+  "mainCommit": "6276f79a49026189ea59eeb6b14d91a89a876f58"
 }
