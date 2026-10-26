@@ -27,6 +27,15 @@
       "mergeCommit": "f404e5c8af2e4d96f2dce0cc7880c20d004d031d",
       "remoteVerified": true,
       "verifiedAt": "2026-10-26T12:40:35.272745+00:00"
+    },
+    {
+      "taskId": "BKT-04",
+      "issueNumber": 54,
+      "branch": "codex/ptv-54-backtest-simulator",
+      "commit": "6e1426eb0246c81ebc4656d08d06b093fe5a67fa",
+      "mergeCommit": "c37b3631806576392832156f6c70a4120e1abbd7",
+      "remoteVerified": true,
+      "verifiedAt": "2026-10-26T12:43:12.361549+00:00"
     }
   ]
 }
