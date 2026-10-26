@@ -36,7 +36,7 @@ PSQL = [
     "-d",
     "lab",
 ]
-GROUPS = ("atl_worker", "atl_execution", "atl_control_api", "atl_watchdog")
+GROUPS = ("atl_worker", "atl_execution", "atl_control_api", "atl_watchdog", "atl_backtest_worker")
 
 
 def _admin(sql: str, *, database: str = "lab", restore_diagnostic: bool = False) -> str:

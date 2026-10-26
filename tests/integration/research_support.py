@@ -16,6 +16,11 @@ def host():
     root = Path(__file__).resolve().parents[2]
     name = "atl_research_" + uuid4().hex[:20]
     password = secrets.token_urlsafe(32)
+    _admin(
+        "DO $$ BEGIN IF NOT EXISTS(SELECT FROM pg_roles WHERE rolname='atl_backtest_worker') "
+        "THEN CREATE ROLE atl_backtest_worker NOLOGIN NOSUPERUSER NOCREATEDB "
+        "NOCREATEROLE NOINHERIT; END IF; END $$"
+    )
     _admin(f"CREATE ROLE {name} LOGIN PASSWORD '{password}' NOINHERIT")
     created = False
     try:

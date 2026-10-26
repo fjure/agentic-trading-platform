@@ -224,3 +224,93 @@ def test_long_history_retains_only_required_rolling_signal_window():
     for step in result.steps:
         q = PointInTimeQuery(step.knowledge_at, step.knowledge_at, snapshot.at, snapshot.version)
         assert step.input_bars == latest_visible(frozen.revisions, q)[-3:]
+
+
+@pytest.mark.parametrize("include_alpaca", [False, True])
+def test_simulation_selects_alpaca_without_relabeling_other_providers(include_alpaca):
+    instrument, _, snapshot, bars, calendar, proof, fold = fixture()
+    other = tuple(
+        replace(bar, revision_id=uuid4(), identity=replace(bar.identity, provider="other"))
+        for bar in bars
+    )
+    frozen = FrozenDataset(snapshot, (*bars, *other) if include_alpaca else other)
+    assert len(frozen.sweep().visible(snapshot.at, snapshot.at)) == len(frozen.revisions)
+    if not include_alpaca:
+        with pytest.raises(DatasetBlocked, match="BLOCKED_MISSING_DATA"):
+            materialize_fold(frozen, fold, instrument, 0, calendar, coverage_proofs=(proof,))
+        return
+    result = materialize_fold(frozen, fold, instrument, 0, calendar, coverage_proofs=(proof,))
+    assert all(
+        bar.identity.provider == "alpaca" for step in result.steps for bar in step.input_bars
+    )
+    assert result.outcome_bars == bars
+
+
+def midnight_fixture():
+    instrument, start, snapshot, bars, calendar, proof, fold = fixture()
+    midnight = start.replace(hour=0, minute=0)
+    observed = start.replace(hour=9, minute=0)
+    monday = {**calendar[0], "ingested_at": observed}
+    # One complete response brackets the weekend, including midnight UTC's
+    # preceding New York date. It does not invent an unproven closed date.
+    friday_open = start - timedelta(days=3)
+    friday = {
+        **monday,
+        "session_id": uuid4(),
+        "session_date": friday_open.date(),
+        "opens_at": friday_open,
+        "closes_at": friday_open + timedelta(hours=2),
+    }
+    fold = Fold(midnight - timedelta(days=1), midnight, midnight, fold.test_end)
+    return instrument, start, snapshot, bars, (friday, monday), proof, fold
+
+
+def test_midnight_test_start_binds_plan_observed_before_actual_first_signal():
+    instrument, start, snapshot, bars, calendar, proof, fold = midnight_fixture()
+    assert calendar[-1]["ingested_at"] > fold.test_start + timedelta(minutes=16)
+    result = materialize_fold(
+        FrozenDataset(snapshot, bars), fold, instrument, 0, calendar, coverage_proofs=(proof,)
+    )
+    assert result.expected_bar_starts[0] == start
+    assert result.steps[0].knowledge_at == start + timedelta(minutes=16)
+    assert result.steps[0].signal_bar == bars[0]
+
+
+def test_late_first_plan_cannot_skip_first_signal_and_start_at_a_later_bar():
+    instrument, start, snapshot, bars, calendar, proof, fold = midnight_fixture()
+    late = tuple(
+        {**row, "ingested_at": start + timedelta(minutes=16, seconds=1)} for row in calendar
+    )
+    with pytest.raises(DatasetBlocked, match="BLOCKED_CALENDAR_UNKNOWN"):
+        materialize_fold(
+            FrozenDataset(snapshot, bars), fold, instrument, 0, late, coverage_proofs=(proof,)
+        )
+
+
+def test_future_calendar_correction_cannot_backdate_an_earlier_first_signal():
+    instrument, _, snapshot, bars, calendar, proof, fold = midnight_fixture()
+    frozen = FrozenDataset(snapshot, bars)
+    original = materialize_fold(frozen, fold, instrument, 0, calendar, coverage_proofs=(proof,))
+    corrected = {
+        **calendar[-1],
+        "session_id": uuid4(),
+        "version": "c" * 64,
+        "commit_version": 50,
+        "opens_at": calendar[-1]["opens_at"] - timedelta(minutes=30),
+        "ingested_at": fold.test_end + timedelta(minutes=2),
+    }
+    after = materialize_fold(
+        frozen, fold, instrument, 0, (*calendar, corrected), coverage_proofs=(proof,)
+    )
+    assert original == after
+
+
+def test_observed_earlier_plan_does_not_skip_missing_initial_bars():
+    instrument, _, snapshot, bars, calendar, proof, fold = midnight_fixture()
+    earlier = tuple(
+        {**row, "opens_at": row["opens_at"] - timedelta(minutes=30)} for row in calendar
+    )
+    with pytest.raises(DatasetBlocked, match="BLOCKED_MISSING_DATA"):
+        materialize_fold(
+            FrozenDataset(snapshot, bars), fold, instrument, 0, earlier, coverage_proofs=(proof,)
+        )

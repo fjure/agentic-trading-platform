@@ -6,6 +6,11 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
+$sourceRevision = git -C $root rev-parse HEAD
+if ($LASTEXITCODE -ne 0 -or $sourceRevision -notmatch '^[0-9a-f]{40}$') {
+    throw 'A verified source revision is required for reproducible research.'
+}
+$env:ATL_SOURCE_REVISION = $sourceRevision
 $composePath = Join-Path $root 'infra/compose/compose.yaml'
 $runtimeDir = Join-Path $root '.tooling/application/runtime'
 $secretDir = Join-Path $root '.tooling/application/secrets'

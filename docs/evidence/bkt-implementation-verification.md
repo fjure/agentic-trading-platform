@@ -23,3 +23,9 @@ Neun Simulator-/Propertyprüfungen bestanden (einschließlich 80 Hypothesisfäll
 ## BKT-05
 
 Vier zusätzliche Evaluation-/Kennzahlprüfungen bestanden. Folds starten mit eigenem Cash und flacher Position; feste Strategieparameter und identische Kosten für flat/buy-hold. Handrechnungen für Nettorendite, Turnover und Drawdown einschließlich Startcash; Gebühren und Slippage getrennt. BLOCKED bewahrt abgeschlossene Foldresultate und erzeugt keine verkettete Gesamtrendite. Deterministischer Warm-up wird durch BKT-03 gebunden und durch die Domainmanifestregeln geprüft.
+
+## BKT-06
+
+Additive Strategierevisionen/Manifeste/Jobs/Folds/Resultate und append-only Audit in backtest, eigene Workerrolle ohne Finanzrechte, privates persistentes Cursorsignaturmaterial nur APIlesbar. Echter PG-Job-/Rollentest: Idempotenz409, Queue100, ein aktiver Job, Lease/Fenceübernahme, alte Manifest-/Checkpoint-/Publishversuche abgewiesen, Crashrollback, drei Attempts und unveränderliche Resultate. Vollständiger Workercrash vor Veröffentlichung wurde im Offline-Acceptancetest mit exakt gleichem Manifest und Resultat nach Übernahme reproduziert.
+
+Nach Review: Providerselektion und Kalenderbindung bei nicht baraligned Start präzisiert; nun 14 Dataset-Unitfälle plus echter PG-Test bestanden (27.16s). Buildfingerprint bindet tatsächliche Quellen/Lock; Worker weist abweichende Jobversion vor Datensicht ab. Unit-/PG-Regressionen für Quellen-/Lockwechsel, Defaultdisabled und Versionsmismatch: 11 bestanden (57.91s). Separates Containerimage gebaut, ohne Netzwerk/private Mounts tatsächlichen Codefingerprint geprüft. Öffentliche Fillprojektion mit Context38 und 12MiB-Persistenzbudget: zwei zusätzliche Unitfälle bestanden. CPUarbeit hält keine SQLtransaktion; Checkpoints, feste Attempts und Rollen sind Teil der Laufzeit.

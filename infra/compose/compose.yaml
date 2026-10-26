@@ -4,6 +4,8 @@ x-runtime: &runtime
   build:
     context: ../..
     dockerfile: infra/containers/Dockerfile
+    args:
+      SOURCE_REVISION: ${ATL_SOURCE_REVISION:-}
   user: "10001:10001"
   read_only: true
   cap_drop: [ALL]
@@ -48,13 +50,40 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
     ports: ["127.0.0.1:55432:5432"]
-    networks: [local, execution_db, worker_db, control_db, watchdog_db, demo_db, paper_execution_db, paper_worker_db, paper_control_db, paper_watchdog_db]
+    networks: [local, execution_db, worker_db, control_db, watchdog_db, demo_db, paper_execution_db, paper_worker_db, paper_control_db, paper_watchdog_db, backtest_db]
     healthcheck:
       test: [CMD-SHELL, "pg_isready -U lab_migration -d lab"]
       interval: 3s
       timeout: 3s
       retries: 20
     security_opt: ["no-new-privileges:true"]
+  backtest-worker:
+    <<: *runtime
+    profiles: [backtest]
+    command: [python, -m, services.runtime.backtesting, --enable]
+    configs: []
+    tmpfs: [/tmp]
+    networks: [backtest_db]
+    cpus: 0.5
+    mem_limit: 256m
+    healthcheck:
+      disable: true
+    secrets:
+      - source: backtest_database
+        target: database
+  backtest-provision:
+    <<: *runtime
+    profiles: [backtest-provision]
+    user: "0:0"
+    command: [python, -m, services.runtime.backtesting, provision]
+    configs: []
+    tmpfs: [/tmp]
+    networks: [backtest_db]
+    healthcheck:
+      disable: true
+    volumes:
+      - ../../.tooling/application/runtime:/run/provision
+    secrets: [postgres_password]
   build-smoke:
     profiles: [fake]
     build:
@@ -214,6 +243,8 @@ services:
       start_period: 5s
       retries: 6
 networks:
+  backtest_db:
+    internal: true
   local:
     internal: true
   execution_db:
@@ -253,6 +284,8 @@ volumes:
   alpaca_setup:
   jev_setup:
 secrets:
+  backtest_database:
+    file: ../../.tooling/application/runtime/backtest.json
   postgres_password:
     file: ../../.tooling/application/secrets/postgres-password
   execution_database:

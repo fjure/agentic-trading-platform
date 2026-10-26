@@ -36,6 +36,15 @@
       "mergeCommit": "c37b3631806576392832156f6c70a4120e1abbd7",
       "remoteVerified": true,
       "verifiedAt": "2026-10-26T12:43:12.361549+00:00"
+    },
+    {
+      "taskId": "BKT-05",
+      "issueNumber": 55,
+      "branch": "codex/ptv-55-backtest-evaluation",
+      "commit": "106ddd0e343bcddbe6317b32bb11623ec5e9dc3e",
+      "mergeCommit": "2b9f6d13dca3b242a2db21fe36caac49de7dab1b",
+      "remoteVerified": true,
+      "verifiedAt": "2026-10-26T12:50:15.141265+00:00"
     }
   ]
 }

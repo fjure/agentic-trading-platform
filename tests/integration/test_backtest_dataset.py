@@ -25,7 +25,7 @@ def host(module="tests.integration.test_backtest_dataset"):
         _admin(
             "\n".join(
                 f"GRANT {group} TO {name} WITH ADMIN OPTION;"
-                for group in (*GROUPS, "atl_backtest_worker")
+                for group in GROUPS
             )
         )
         _admin(f"CREATE DATABASE {name} OWNER {name}")
