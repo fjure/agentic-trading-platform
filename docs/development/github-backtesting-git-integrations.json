@@ -1,0 +1,14 @@
+{
+  "repository": "fjure/agentic-trading-platform",
+  "tasks": [
+    {
+      "taskId": "BKT-01",
+      "issueNumber": 51,
+      "branch": "codex/ptv-51-backtest-contracts",
+      "commit": "06ba404084b20b19898a28a418e6da5bf369943e",
+      "mergeCommit": "41fee4049c7f0c3f911d67367cd462d05c1392f8",
+      "remoteVerified": true,
+      "verifiedAt": "2026-10-26T12:27:13.463496+00:00"
+    }
+  ]
+}
