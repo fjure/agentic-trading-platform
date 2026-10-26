@@ -15,3 +15,7 @@ Unveränderliche Experiment-/Fold-/Manifestwerte, geschlossenes Strategieregiste
 ## BKT-03
 
 Acht Dataset-Unitfälle einschließlich 258-Schritt-Fensterparität bestanden. Echter PostgreSQL-Test erneut bestanden (26.98s): Snapshot bei offenem Writer, spätere Commits ausgeschlossen; 1er-Keysetseiten mit gleichem Barende/lokaler Revision und unterschiedlicher natürlicher Identität; 76 tatsächliche Einzelzeitpunktqueryvergleiche; Intradayplan, DST/Earlyclose und spätere Kalenderkorrektur; 60s-Signal vs spätere 300s-Ergebnisrevision; unveränderlicher Coveragebeleg ohne Runtime-Schreibrecht. Reader begrenzen Metadaten auf 100001 Zeilen und scheitern bei mehr als 100000, Strategieinputs bleiben auf höchstens slow Bars begrenzt. Bestehende Researchselektion unverändert. Additive Coverage-Migration0028 und exaktes Paper-ACLmanifest für0028/29 ergänzen keine Finanzrechte.
+
+## BKT-04
+
+Neun Simulator-/Propertyprüfungen bestanden (einschließlich 80 Hypothesisfällen). Unabhängige Kauf-/Verkaufsrechnungen bestätigen Gebühren, Slippage, Mengenraster und Cash; Nullmenge, unfinanzierbare Verkaufsgebühr, Overnight, fehlendes Fillziel und Fensterende geprüft. Jede Bar ruft einen Budgetcheckpoint auf. Festes Decimalmodell precision38/ROUND_HALF_EVEN und nächste kalenderzulässige Kerze; Ergebnisbars gelangen nicht in Strategieinputs. Keine Brokerimporte oder Brokeraktionen.
