@@ -322,6 +322,10 @@ class AlpacaPaperBrokerAdapter:
             "Accept": "application/json",
             "Accept-Encoding": "identity",
         }
+        if method == "GET":
+            from packages.research.limits import existing_get_allowed
+            if not existing_get_allowed(_HOST):
+                raise AlpacaPaperError("UNAVAILABLE")
         try:
             # POST's recursive account GET and local proof checks above must
             # finish before Execution commits its final authorization/attempt.
@@ -331,6 +335,9 @@ class AlpacaPaperBrokerAdapter:
                 method, _HOST + path, params=params, json=payload, headers=headers
             ) as response:
                 status = response.status_code
+                if method == "GET" and status == 429:
+                    from packages.research.limits import existing_get_rate_limited
+                    existing_get_rate_limited(_HOST, response.headers.get("retry-after"))
                 if response.is_redirect:
                     raise AlpacaPaperError("INVALID_RESPONSE")
                 if response.headers.get("content-encoding", "identity").lower() != "identity":

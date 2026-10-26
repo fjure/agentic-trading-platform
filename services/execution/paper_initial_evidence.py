@@ -194,6 +194,9 @@ class InitialPaperEvidenceCollector:
     def _get(client, route, credentials, deadline, *, params=None):
         if route not in _ROUTES or monotonic() >= deadline:
             _deny("PROVIDER_UNAVAILABLE")
+        from packages.research.limits import existing_get_allowed
+        if not existing_get_allowed(_PAPER):
+            _deny("PROVIDER_UNAVAILABLE")
         remaining = max(.001, min(5., deadline - monotonic()))
         with client.stream("GET", _PAPER + route, params=params, timeout=remaining, headers={
             "APCA-API-KEY-ID": credentials.api_key,
@@ -201,6 +204,8 @@ class InitialPaperEvidenceCollector:
             "Accept": "application/json", "Accept-Encoding": "identity",
         }) as response:
             if response.status_code == 429:
+                from packages.research.limits import existing_get_rate_limited
+                existing_get_rate_limited(_PAPER, response.headers.get("retry-after"))
                 _deny("PROVIDER_RATE_LIMITED")
             if response.status_code in {401, 403}:
                 _deny("CREDENTIALS_INVALID")
