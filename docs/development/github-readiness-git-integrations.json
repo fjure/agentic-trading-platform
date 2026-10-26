@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "repository": "fjure/agentic-trading-platform",
+  "changeId": "research-data-readiness",
+  "tasks": [
+    {
+      "taskId": "RDR-01",
+      "issueNumber": 60,
+      "branch": "codex/ptv-60-readiness-contracts",
+      "commit": "c5c6806e62fd7e4709e66158f42864beeb2a0e7c",
+      "mainMerge": "d7603c6edd7e7a9c9fdafbd7f43b0a915383ec5b",
+      "implementationTree": "d5a21a1662e69e90df3710a3639f59cfd2a090cc",
+      "remoteVerified": true,
+      "identicalImplementationTrees": true,
+      "issueCommitReachableFromMain": true,
+      "verifiedAt": "2026-10-26T21:00:52.058877+00:00",
+      "contractTestsPassed": 1472,
+      "clientFilesVerified": 251,
+      "evidence": "docs/evidence/rdr-01.md",
+      "note": "SHAs bezeichnen den verifizierten Implementierungspush und Merge. Nachfolgende reine Evidenzcommits ändern keine Implementierung."
+    }
+  ]
+}

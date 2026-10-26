@@ -58,7 +58,7 @@ unveränderten Pfade; eine eigene RDR-Suite prüft alle fünf additiven Operatio
 | Vollständige Contractsuite einschließlich beider exakten Runtime-Routenabgleiche | 1472 bestanden, eine bestehende Starlette/httpx-Deprecationwarnung; alle fünf neuen Routen bleiben taskgebunden zwingende Folgeabnahme |
 | OpenSpec validate --all --strict | 17 bestanden, 0 fehlgeschlagen |
 | Ruff für neue/geänderte Vertragstests | bestanden |
-| SourceScan | 1072 Quellen, 0 Credentialmuster |
+| SourceScan | 1072 Quellen vor Bereinigung/1070 Quellen nach Bereinigung und Gitnachweis, jeweils0 Credentialmuster |
 | git diff --check | bestanden vor Evidenzabschluss |
 
 Die vollständige Contractsuite bestand außerhalb der Sandbox in 19.69s. Lokale ASGItransporte
@@ -118,6 +118,15 @@ manuelle Inhalte. Zusätzlich wurden sämtliche nativen Dependencies per lesende
 Drei Updates, ein Abschluss, sechs unveränderte Issues; Soll-Ist-Wiederholung benötigt null Updates.
 Mapping: docs/development/github-readiness-issue-sync.json. Kein Kommentar, PR oder Label angelegt.
 
-Die geprüfte Gitintegration wird nach Push des Issuecommits und anschließendem regulären Merge
-nach main anhand Remote-SHAs und Commit-Erreichbarkeit verifiziert. Gitnachweis folgt in
-`docs/development/github-readiness-git-integrations.json`; keine Force-Pushes oder Branchlöschung.
+Geprüfte Gitintegration: Issuecommit c5c6806e62fd7e4709e66158f42864beeb2a0e7c und regulärer
+main-Merge d7603c6edd7e7a9c9fdafbd7f43b0a915383ec5b wurden gepusht und mit ls-remote bestätigt.
+Beide Implementierungsbäume sind identisch (d5a21a1662e69e90df3710a3639f59cfd2a090cc), der
+Issuecommit ist von main erreichbar. Dauerhafter Gitnachweis:
+`docs/development/github-readiness-git-integrations.json`. Nachfolgende reine Evidenzcommits
+ändern die geprüfte Implementierung nicht. Keine Force-Pushes oder Branchlöschung.
+
+Remote-CI der Implementierungsintegration: Contracts-Lauf40400578388 bei erster Abfrage noch
+in_progress; kein CI-Erfolg behauptet. Lokale Pflichtprüfungen sind vollständig bestanden.
+Temporäre Authoringskripte der Subagenten wurden nach .tooling/output/rdr-authoring verschoben
+und nicht committed. README.md und Angular-Konfiguration bleiben als einzige fremde Änderungen
+im Arbeitsbaum erhalten.
