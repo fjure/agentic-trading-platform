@@ -18,6 +18,15 @@
       "mergeCommit": "9d15d985cfe4cc04c27e4c64f7e482b425b732bd",
       "remoteVerified": true,
       "verifiedAt": "2026-10-26T12:39:05.977550+00:00"
+    },
+    {
+      "taskId": "BKT-03",
+      "issueNumber": 53,
+      "branch": "codex/ptv-53-backtest-datasets",
+      "commit": "010922da9f4d4241028afe0b09615e7a14a5cf1f",
+      "mergeCommit": "f404e5c8af2e4d96f2dce0cc7880c20d004d031d",
+      "remoteVerified": true,
+      "verifiedAt": "2026-10-26T12:40:35.272745+00:00"
     }
   ]
 }
