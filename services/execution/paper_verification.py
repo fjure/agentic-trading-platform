@@ -105,12 +105,19 @@ class PaperAccountVerifier:
             raise _Denied("PROVIDER_UNAVAILABLE")
         if monotonic() >= deadline:
             raise _Denied("PROVIDER_UNAVAILABLE")
+        from packages.research.limits import existing_get_allowed
+        if not existing_get_allowed(_DATA if market else _PAPER):
+            raise _Denied("PROVIDER_UNAVAILABLE")
         with client.stream("GET", url, params=params, headers={
             "APCA-API-KEY-ID": credentials.api_key,
             "APCA-API-SECRET-KEY": credentials.api_secret,
             "Accept": "application/json", "Accept-Encoding": "identity",
         }) as response:
             if response.status_code == 429:
+                from packages.research.limits import existing_get_rate_limited
+                existing_get_rate_limited(
+                    _DATA if market else _PAPER, response.headers.get("retry-after")
+                )
                 raise _Denied("PROVIDER_RATE_LIMITED")
             if response.status_code in {401, 403}:
                 raise _Denied("MARKET_DATA_UNAVAILABLE" if market else "CREDENTIALS_INVALID")

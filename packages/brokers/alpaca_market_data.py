@@ -220,6 +220,9 @@ class AlpacaMarketDataProvider:
     def _get(self, host: str, path: str, params: dict[str, str] | None = None) -> object:
         if path not in _ROUTES.get(host, ()):
             raise MarketDataError("UNAVAILABLE")
+        from packages.research.limits import existing_get_allowed
+        if not existing_get_allowed(host):
+            raise MarketDataError("RATE_LIMIT")
         if (
             not isinstance(self._api_key, str)
             or not self._api_key
@@ -240,6 +243,8 @@ class AlpacaMarketDataProvider:
                 },
             ) as response:
                 if response.status_code == 429:
+                    from packages.research.limits import existing_get_rate_limited
+                    existing_get_rate_limited(host, response.headers.get("retry-after"))
                     raise MarketDataError("RATE_LIMIT")
                 if response.status_code in {401, 403}:
                     raise MarketDataError("PERMISSION_DENIED")

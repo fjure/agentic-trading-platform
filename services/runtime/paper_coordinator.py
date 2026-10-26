@@ -19,6 +19,7 @@ from services.control_api.paper_commands import PaperCommandError, PaperCommands
 from .common import Clock, Ids
 from .execution import ExecutionRuntime
 from .paper_verification import PaperVerificationRuntime
+from .research import safety_lane
 
 
 @dataclass(frozen=True)
@@ -87,6 +88,7 @@ class PaperRuntimeCoordinator:
                 raise
         return "UNAVAILABLE" if self._faulted else "READY"
 
+    @safety_lane
     def command_tick(self):
         # Establish the restart fence before claiming a new command. Claiming
         # START first and then changing epoch would invalidate that same request.
@@ -95,6 +97,7 @@ class PaperRuntimeCoordinator:
                 self._ensure_owner()
         return self.verifier.tick()
 
+    @safety_lane
     def cancel_tick(self):
         # This lane must not acquire _cycle or reuse the entry adapter: either
         # can be held by a manual submit waiting on provider I/O. SQL owns the
@@ -257,6 +260,7 @@ class PaperRuntimeCoordinator:
 
         return run_manual_order(self, claim, command_owner)
 
+    @safety_lane
     def recovery_tick(self):
         with self._cycle:
             context = self._read()
