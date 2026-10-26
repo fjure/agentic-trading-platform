@@ -1,0 +1,65 @@
+"""Observation-bound schedule port; planned sessions need not have closed."""
+
+from datetime import UTC, datetime
+
+from sqlalchemy import text
+
+from packages.backtesting.models import BacktestBudgetExceeded
+from packages.research.calendar import NEW_YORK, expected_windows
+from packages.research.calendar_storage import coverage_from_rows
+from packages.research.models import BarInterval, PointInTimeQuery
+
+
+def read_schedule_rows(connection, snapshot):
+    rows = tuple(
+        connection.execute(
+            text("""
+        SELECT * FROM research.calendar_versions
+        WHERE commit_version<=:version AND ingested_at<=:snapshot
+        ORDER BY ingested_at,commit_version,session_id LIMIT 100001
+    """),
+            dict(version=snapshot.version, snapshot=snapshot.at),
+        ).mappings()
+    )
+    if len(rows) > 100000:
+        raise BacktestBudgetExceeded("calendar metadata budget exhausted")
+    return rows
+
+
+def schedule_at(rows, knowledge_at, snapshot):
+    # Reuse same-response holiday/ambiguity proofs, with an unbounded *planned*
+    # validity horizon. Knowledge and commit visibility remain conservative.
+    query = PointInTimeQuery(
+        datetime.max.replace(tzinfo=UTC), knowledge_at, snapshot.at, snapshot.version
+    )
+    return coverage_from_rows(rows, query)
+
+
+def relevant_schedule_rows(rows, start, end, knowledge_at, snapshot):
+    # Keep complete response groups relevant to this window. Unrelated historical
+    # response gaps must not invalidate a locally bracketed holiday proof.
+    visible = tuple(
+        row
+        for row in rows
+        if row["ingested_at"] <= min(knowledge_at, snapshot.at)
+        and row["commit_version"] <= snapshot.version
+    )
+    groups = {}
+    for row in visible:
+        groups.setdefault(row["version"], []).append(row)
+    first_day = start.astimezone(NEW_YORK).date()
+    last_day = end.astimezone(NEW_YORK).date()
+    return tuple(
+        row
+        for group in groups.values()
+        if min(r["session_date"] for r in group) <= last_day
+        and max(r["session_date"] for r in group) >= first_day
+        for row in group
+    )
+
+
+def schedule_windows(rows, start, end, knowledge_at, snapshot):
+    relevant = relevant_schedule_rows(rows, start, end, knowledge_at, snapshot)
+    coverage = schedule_at(relevant, knowledge_at, snapshot)
+    windows = expected_windows(coverage, BarInterval.FIFTEEN_MINUTES, start, end, end)
+    return coverage, windows
