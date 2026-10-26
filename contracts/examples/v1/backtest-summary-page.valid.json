@@ -1,0 +1,85 @@
+{
+  "runId": "11111111-1111-4111-8111-111111111111",
+  "status": "SUCCEEDED",
+  "resultType": "summary",
+  "publicationComplete": true,
+  "completedFolds": [
+    {
+      "foldIndex": 0,
+      "resultHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "items": [
+    {
+      "foldIndex": 0,
+      "resultHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "window": {
+        "trainingStart": "2026-10-20T00:00:00Z",
+        "trainingEnd": "2026-10-22T00:00:00Z",
+        "testStart": "2026-10-22T00:00:00Z",
+        "testEnd": "2026-10-23T00:00:00Z"
+      },
+      "metrics": {
+        "startCash": "10000",
+        "endEquity": "10000",
+        "netReturn": "0",
+        "maxDrawdown": "0",
+        "turnover": "0",
+        "feeTotalUsd": "0",
+        "slippageTotalUsd": "0",
+        "endCash": "10000",
+        "endQuantity": "0",
+        "valuation": "MARK_TO_MARKET",
+        "decisionCount": 1,
+        "fillCount": 0
+      },
+      "references": [
+        {
+          "strategyId": "flat-v1",
+          "metrics": {
+            "startCash": "10000",
+            "endEquity": "10000",
+            "netReturn": "0",
+            "maxDrawdown": "0",
+            "turnover": "0",
+            "feeTotalUsd": "0",
+            "slippageTotalUsd": "0",
+            "endCash": "10000",
+            "endQuantity": "0",
+            "valuation": "MARK_TO_MARKET",
+            "decisionCount": 1,
+            "fillCount": 0
+          }
+        },
+        {
+          "strategyId": "buy-hold-v1",
+          "metrics": {
+            "startCash": "10000",
+            "endEquity": "10000",
+            "netReturn": "0",
+            "maxDrawdown": "0",
+            "turnover": "0",
+            "feeTotalUsd": "0",
+            "slippageTotalUsd": "0",
+            "endCash": "10000",
+            "endQuantity": "0",
+            "valuation": "MARK_TO_MARKET",
+            "decisionCount": 1,
+            "fillCount": 0
+          }
+        }
+      ],
+      "coverage": {
+        "expectedBars": 26,
+        "observedBars": 26,
+        "warmupExpectedBars": 2,
+        "warmupObservedBars": 2,
+        "complete": true,
+        "corporateActions": "CERTIFIED_ABSENT"
+      }
+    }
+  ],
+  "nextCursor": null,
+  "manifestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "resultHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

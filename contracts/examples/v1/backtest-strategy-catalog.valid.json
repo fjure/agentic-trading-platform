@@ -1,0 +1,66 @@
+{
+  "items": [
+    {
+      "strategyId": "flat-v1",
+      "version": "1",
+      "parameterBounds": null,
+      "defaultParameters": {}
+    },
+    {
+      "strategyId": "buy-hold-v1",
+      "version": "1",
+      "parameterBounds": null,
+      "defaultParameters": {}
+    },
+    {
+      "strategyId": "sma-cross-v1",
+      "version": "1",
+      "parameterBounds": {
+        "fastMinimum": 2,
+        "slowMaximum": 100,
+        "ordering": "fast < slow"
+      },
+      "defaultParameters": {
+        "fast": 10,
+        "slow": 30
+      }
+    }
+  ],
+  "instruments": [
+    {
+      "instrumentId": "11111111-1111-4111-8111-111111111111",
+      "symbol": "SPY"
+    },
+    {
+      "instrumentId": "22222222-2222-4222-8222-222222222222",
+      "symbol": "QQQ"
+    }
+  ],
+  "assumptions": {
+    "simulation": "LOCAL_SIMULATION",
+    "provider": "ALPACA",
+    "feed": "iex",
+    "interval": "15Min",
+    "adjustment": "raw",
+    "currency": "USD",
+    "positionPolicy": "LONG_FLAT",
+    "fillModel": "next-regular-bar-open-v1",
+    "signalDelaySeconds": 60,
+    "outcomeCutoffSeconds": 300,
+    "decimalPrecision": 38,
+    "rounding": "ROUND_HALF_EVEN",
+    "moneyScale": 8,
+    "returnScale": 12,
+    "dividendsIncluded": false,
+    "forceLiquidation": false
+  },
+  "budgets": {
+    "maximumFolds": 12,
+    "maximumCalendarDays": 366,
+    "maximumInputRows": 100000,
+    "attemptSeconds": 300,
+    "maximumAttempts": 3,
+    "maximumActiveJobs": 1
+  },
+  "observedAt": "2026-10-23T00:00:00Z"
+}

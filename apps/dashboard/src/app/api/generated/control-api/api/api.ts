@@ -1,3 +1,6 @@
+export * from './backtesting.service';
+import { BacktestingService } from './backtesting.service';
+export * from './backtesting.serviceInterface';
 export * from './control.service';
 import { ControlService } from './control.service';
 export * from './control.serviceInterface';
@@ -25,4 +28,4 @@ export * from './snapshot.serviceInterface';
 export * from './stream.service';
 import { StreamService } from './stream.service';
 export * from './stream.serviceInterface';
-export const APIS = [ControlService, DemoService, HistoryService, PaperService, ResearchService, RiskPolicyService, SetupService, SnapshotService, StreamService];
+export const APIS = [BacktestingService, ControlService, DemoService, HistoryService, PaperService, ResearchService, RiskPolicyService, SetupService, SnapshotService, StreamService];

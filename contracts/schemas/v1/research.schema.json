@@ -1140,7 +1140,8 @@
         },
         "required": [
           "status"
-        ]
+        ],
+        "additionalProperties": true
       },
       "then": {
         "properties": {
@@ -1156,7 +1157,8 @@
           "evidenceIds": {
             "minItems": 3
           }
-        }
+        },
+        "additionalProperties": true
       },
       "else": {
         "properties": {
@@ -1169,7 +1171,8 @@
           "reason": {
             "type": "string"
           }
-        }
+        },
+        "additionalProperties": true
       }
     },
     "ResearchNewsContent": {
