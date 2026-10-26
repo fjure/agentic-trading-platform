@@ -9,6 +9,7 @@ import { Observable, Subject, firstValueFrom, takeUntil } from 'rxjs';
 import { ResearchService } from '../api/generated/control-api/api/research.service';
 import type { ResearchBarPage, ResearchContext, ResearchEvidenceResult, ResearchInstrument, ResearchInterval, ResearchJob, ResearchJobRequest, ResearchSourceCatalog } from '../api/generated/control-api/model/models';
 import { httpStatus, safeError } from '../state/supervisor-api';
+import { BacktestingComponent } from './backtesting.component';
 
 const ACTIVE = new Set(['ACCEPTED', 'RUNNING', 'RETRY_WAIT']);
 const UTC_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$/;
@@ -17,7 +18,7 @@ type Bound = { instrumentId: string; start: string; end: string; interval: Resea
 
 @Component({
   selector: 'atl-research',
-  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule, BacktestingComponent],
   templateUrl: './research.component.html',
   styleUrl: './research.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

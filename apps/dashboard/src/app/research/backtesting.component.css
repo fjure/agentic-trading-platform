@@ -1,0 +1,15 @@
+:host { display: block; margin-top: 2rem; }
+mat-card { margin: 1rem 0; }
+mat-card-content { padding-top: 1rem; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .75rem; }
+fieldset { border: 1px solid #c4c7ce; border-radius: .5rem; margin: 1rem 0; }
+.actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.backtest-run, .fold-result { border-top: 1px solid #c4c7ce; padding: 1rem 0; }
+p, dd { overflow-wrap: anywhere; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 30rem; overflow: auto; }
+dl { display: grid; grid-template-columns: minmax(10rem, 1fr) 2fr; gap: .5rem; }
+dd { margin: 0; font-family: monospace; }
+.table-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+th, td { text-align: left; padding: .5rem; border-bottom: 1px solid #c4c7ce; white-space: nowrap; }
+svg { display: block; width: 100%; max-height: 260px; color: #315da8; }

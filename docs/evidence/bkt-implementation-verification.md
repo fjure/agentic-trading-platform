@@ -33,3 +33,9 @@ Nach Review: Providerselektion und Kalenderbindung bei nicht baraligned Start pr
 ## BKT-07
 
 Fünf authentifizierte additive Operationen, strikte DTOs und private feste Weiterleitung; tatsächliche persistente Jobs, Idempotenz und Polling. Finale Transport-/Security-/echte PG-APIabnahme: 40 bestanden (25.87s). Origin/Sitzung vor Seiteneffekten, unbekannte/duplizierte/zu große Eingaben, Decimal-/Zeitgrenzen, Idempotenz409, signierte fremde/manipulierte Cursor, Wiederladen und persistente Cursorsignatur nach Dienstneustart geprüft. Jede öffentliche Antwort wird über whitelistbasierte DTOs kontrolliert. Listen selektieren nur Metadaten; Resultatpagination liegt mit höchstens limit+1 Zeilen in SQL. Blockiergründe und zulässige Datenreferenzen bleiben typisiert; SQL-/Providerdiagnosen verlassen den Dienst nicht. Die Python-Testdateien besitzen eindeutige Modulnamen, damit gemeinsame Tests ohne Importkollision laufen.
+
+## BKT-08
+
+Angular-Materialoberfläche mit generiertem Client, 1..12 chronologischen Folds, exakten Decimalgrenzen, dauerhaftem runId-URLbezug, Laufübersicht, Manifest, Foldkennzahlen/Referenzen, Equitykurve und Filltabelle. Polling nur aktiver Läufe und Abbruch bei Sitzungsverlust. Produktionsbuild bestanden; vorhandene Bundle-/Supervisor-CSSbudgetwarnungen bleiben Warnungen.
+
+Vier echte Playwrightfälle mit kanonischer API, Worker und temporärem PostgreSQL final bestanden (14.3s): Formgrenzen ohne unerlaubte Writes, unabhängige Handrechnung 12000USD/20%, Reload mit unveränderlichem Manifest, echter BLOCKED-Lauf ohne Erfolgszahlen, tatsächlicher401 nach Cookieentfernung und Pollingstillstand. SQLnachprüfung bestätigt SUCCEEDED/BLOCKED sowie unveränderten Researchbarbestand und null Brokerorders. Browserfixture verwendet ausschließlich synthetische früh beobachtete Daten; kein persönlicher Providerzugriff.
