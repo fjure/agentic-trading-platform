@@ -291,6 +291,13 @@ def _verify_dormant_privileges(connection):
         if version_table is not None
         else []
     )
+    research_revision = revisions
+    if revisions in ([("0021_research_foundation",)], [("0022_research_jobs",)],
+                     [("0023_research_paper_roles",)], [("0024_research_runtime_metadata",)],
+                     [("0025_research_operator_resume",)], [("0026_research_observability",)],
+                     [("0027_research_quality",)]):
+        # Legacy financial ACLs remain exactly the 0020 manifest.
+        revisions = [("0020_paper_read_models",)]
     expected = set()
     if revisions in (
         [("0013_paper_commands",)],
@@ -524,6 +531,103 @@ def _verify_dormant_privileges(connection):
             )
     elif revisions not in ([], [("0012_trading_profile",)]):
         raise PermissionError("PAPER_PRIVILEGE_MANIFEST_UNSUPPORTED")
+    if research_revision in (
+        [("0023_research_paper_roles",)],
+        [("0024_research_runtime_metadata",)],
+        [("0025_research_operator_resume",)],
+        [("0026_research_observability",)],
+        [("0027_research_quality",)],
+    ):
+        immutable = (
+            "version_state",
+            "instruments",
+            "symbol_mappings",
+            "bar_revisions",
+            "evidence",
+            "calendar_versions",
+            "job_projection",
+        )
+        for group in ("atl_paper_execution", "atl_paper_worker", "atl_paper_control_api"):
+            expected.add(("schema", "research", group, "USAGE", False))
+            expected.update(
+                ("relation", "research." + name, group, "SELECT", False) for name in immutable
+            )
+        expected.update(
+            ("relation", "research." + name, "atl_paper_execution", "INSERT", False)
+            for name in immutable
+            if name not in {"version_state", "job_projection"}
+        )
+        expected.update(
+            ("relation", "research.ingestion_jobs", "atl_paper_execution", p, False)
+            for p in ("SELECT", "INSERT", "UPDATE")
+        )
+        expected.update(
+            ("relation", "research.page_receipts", "atl_paper_execution", p, False)
+            for p in ("SELECT", "INSERT")
+        )
+        expected.add(
+            ("function", "research.reserve_version()", "atl_paper_execution", "EXECUTE", False)
+        )
+        expected.add(
+            (
+                "function",
+                "research.request_job(uuid,text,text,text,uuid,timestampwithtimezone,"
+                "timestampwithtimezone,text,text,text)",
+                "atl_paper_control_api",
+                "EXECUTE",
+                False,
+            )
+        )
+        if research_revision != [("0023_research_paper_roles",)]:
+            expected.update(
+                ("relation", "research.source_status", role, "SELECT", False)
+                for role in ("atl_paper_control_api", "atl_paper_worker", "atl_paper_execution")
+            )
+            expected.add(
+                ("relation", "research.source_status", "atl_paper_execution", "UPDATE", False)
+            )
+            expected.add(
+                (
+                    "function",
+                    "research.credential_generation()",
+                    "atl_paper_execution",
+                    "EXECUTE",
+                    False,
+                )
+            )
+        if research_revision in (
+            [("0025_research_operator_resume",)],
+            [("0026_research_observability",)],
+            [("0027_research_quality",)],
+        ):
+            expected.add(
+                (
+                    "function",
+                    "research.resume_job(uuid,text,text,text)",
+                    "atl_paper_control_api",
+                    "EXECUTE",
+                    False,
+                )
+            )
+        if research_revision in ([("0026_research_observability",)], [("0027_research_quality",)]):
+            expected.update(
+                ("relation", "research.job_audit", role, "SELECT", False)
+                for role in ("atl_paper_control_api", "atl_paper_worker", "atl_paper_execution")
+            )
+        if research_revision == [("0027_research_quality",)]:
+            expected.update(
+                ("relation", "research.quality_observations", role, "SELECT", False)
+                for role in ("atl_paper_control_api", "atl_paper_worker", "atl_paper_execution")
+            )
+            expected.add(
+                (
+                    "relation",
+                    "research.quality_observations",
+                    "atl_paper_execution",
+                    "INSERT",
+                    False,
+                )
+            )
     # Empty/unmigrated databases and 0012 permit no direct object ACLs. Inspect
     # columns and login grantees too; initial SET ROLE is not a permission bound.
     actual = connection.execute(

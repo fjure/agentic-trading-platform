@@ -200,6 +200,7 @@ def create_app(
     setup=None,
     trading_profile=None,
     paper=None,
+    research=None,
 ) -> FastAPI:
     from services.control_api.paper_commands import PaperCommandError
     from services.control_api.paper_routes import paper_problem, register_paper_routes
@@ -208,6 +209,17 @@ def create_app(
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
 
     def public_problem(request, status, code):
+        if request.url.path.startswith("/api/v1/research/"):
+            from services.control_api.research_routes import research_problem
+            if status == 401:
+                code = "UNAUTHORIZED"
+            elif status == 403 or (
+                status == 400 and request.headers.getlist("origin") not in ([], [auth.origin])
+            ):
+                status, code = 403, "FORBIDDEN"
+            elif code == "TEMPORARILY_UNAVAILABLE":
+                code = "UNAVAILABLE"
+            return research_problem(status, code, request.state.trace_id)
         if request.url.path.startswith("/api/v1/paper/"):
             if status == 401:
                 code = "AUTHENTICATION_REQUIRED"
@@ -243,6 +255,8 @@ def create_app(
 
     @app.exception_handler(HTTPException)
     async def http_error(request: Request, exc: HTTPException):
+        if request.url.path.startswith("/api/v1/research/"):
+            return public_problem(request, 400, "INVALID_REQUEST")
         if request.url.path.startswith("/api/v1/paper/"):
             return public_problem(request, 400, "INVALID_REQUEST")
         return problem(exc.status_code, "INVALID_REQUEST", request.state.trace_id)
@@ -437,6 +451,8 @@ def create_app(
     register_extensions(app, body_reader=_body, key_reader=key, demo=demo,
                         setup=setup, trading_profile=trading_profile, paper=paper)
     register_paper_routes(app, paper=paper, body_reader=_body, key_reader=key)
+    from services.control_api.research_routes import register_research_routes
+    register_research_routes(app, research=research, body_reader=_body, key_reader=key)
     return app
 
 

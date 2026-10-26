@@ -66,6 +66,10 @@ class RuntimeConfig:
     paper_enabled: bool = False
     reconciliation_fee_profile: str | None = None
     deployment: str = "lab"
+    research_ingestion_enabled: bool = False
+    research_license_confirmed: bool = False
+    research_policy_version: str | None = None
+    research_get_limit: int | None = None
 
     def __post_init__(self):
         if (
@@ -75,6 +79,24 @@ class RuntimeConfig:
             or self.decision_provider not in {"mock", "jev"}
             or self.account_id != "paper"
             or type(self.paper_enabled) is not bool
+            or type(self.research_ingestion_enabled) is not bool
+            or type(self.research_license_confirmed) is not bool
+            or (self.research_ingestion_enabled and self.deployment != "paper")
+            or (
+                self.research_policy_version is not None
+                and (
+                    not isinstance(self.research_policy_version, str)
+                    or not re.fullmatch(r"[A-Za-z0-9_.-]{1,64}", self.research_policy_version)
+                )
+            )
+            or (self.research_license_confirmed and self.research_policy_version is None)
+            or (
+                self.research_get_limit is not None
+                and (
+                    type(self.research_get_limit) is not int
+                    or not 1 <= self.research_get_limit <= 10000
+                )
+            )
             or type(self.instruments) is not tuple
             or not self.instruments
             or len(set(self.instruments)) != len(self.instruments)
@@ -82,14 +104,22 @@ class RuntimeConfig:
             or self.origin != "http://127.0.0.1:8000"
             or self.reconciliation_fee_profile
             not in {None, "alpaca-paper-us-retail-equity-zero-v1"}
-            or (self.deployment == "lab" and self.broker_provider == "alpaca-paper"
-                and not self.paper_enabled)
+            or (
+                self.deployment == "lab"
+                and self.broker_provider == "alpaca-paper"
+                and not self.paper_enabled
+            )
             or (self.mode == "PAPER" and not self.paper_enabled)
-            or (self.deployment == "paper" and (
-                self.mode != "DISABLED" or self.paper_enabled
-                or self.broker_provider != "alpaca-paper" or self.decision_provider != "mock"
-                or self.reconciliation_fee_profile is not None
-            ))
+            or (
+                self.deployment == "paper"
+                and (
+                    self.mode != "DISABLED"
+                    or self.paper_enabled
+                    or self.broker_provider != "alpaca-paper"
+                    or self.decision_provider != "mock"
+                    or self.reconciliation_fee_profile is not None
+                )
+            )
         ):
             raise ValueError("UNSAFE_RUNTIME_CONFIG")
 
@@ -105,19 +135,31 @@ class RuntimeConfig:
         return cls(**value)
 
 
-def database_engine(role: str, path: Path = DATABASE_PATH, *, deployment: str = "lab"):
+def database_engine(
+    role: str,
+    path: Path = DATABASE_PATH,
+    *,
+    deployment: str = "lab",
+    isolated_research: bool = False,
+):
     """Fixed host/database; verified SET ROLE on every physical connection."""
     from sqlalchemy import URL, create_engine, event
 
     if role not in ROLES or deployment not in DATABASES:
         raise ValueError("INVALID_ROLE")
+    if type(isolated_research) is not bool or (
+        isolated_research and (role not in {"execution", "api"} or deployment != "paper")
+    ):
+        raise ValueError("INVALID_RESEARCH_POOL")
     expected = (PAPER_ROLES if deployment == "paper" else ROLES)[role]
     credentials = secret_fields(path, {"username", "password"})
     if not re.fullmatch(r"atl_[a-z_]+_login", credentials["username"]):
         raise ValueError("INVALID_DATABASE_IDENTITY")
     if (
-        deployment == "paper" and credentials["username"] != expected + "_login"
-        or deployment == "lab" and credentials["username"].startswith("atl_paper_")
+        deployment == "paper"
+        and credentials["username"] != expected + "_login"
+        or deployment == "lab"
+        and credentials["username"].startswith("atl_paper_")
     ):
         raise ValueError("INVALID_DATABASE_IDENTITY")
     engine = create_engine(
@@ -133,6 +175,9 @@ def database_engine(role: str, path: Path = DATABASE_PATH, *, deployment: str = 
         pool_pre_ping=True,
         connect_args={"connect_timeout": 5},
         echo=False,
+        pool_size=1 if isolated_research else 5,
+        max_overflow=0 if isolated_research else 10,
+        pool_timeout=1 if isolated_research else 30,
     )
 
     @event.listens_for(engine, "connect")
@@ -141,6 +186,9 @@ def database_engine(role: str, path: Path = DATABASE_PATH, *, deployment: str = 
             with connection.cursor() as cursor:
                 cursor.execute(f"SET ROLE {expected}")
                 cursor.execute("SET TIME ZONE 'UTC'")
+                if isolated_research:
+                    cursor.execute("SET statement_timeout='2s'")
+                    cursor.execute("SET lock_timeout='1s'")
                 cursor.execute("SELECT current_user,current_database(),session_user")
                 identity = cursor.fetchone()
                 if identity != (expected, DATABASES[deployment], credentials["username"]):

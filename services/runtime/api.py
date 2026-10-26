@@ -209,9 +209,10 @@ def run_api(config, ledger, telemetry=None):
     from services.control_api.backend import ControlBackend
     from services.control_api.demo_client import DemoClient
     from services.control_api.events import EventFeed
+    from services.control_api.paper_client import PaperClient
+    from services.control_api.research_client import ResearchClient
     from services.control_api.snapshot import SnapshotReader
     from services.control_api.trading_profile import TradingProfileBackend
-    from services.control_api.paper_client import PaperClient
     from services.execution.control_socket import LocalControlServer, dispatcher
     from services.setup.client import FixedSetupClient
 
@@ -244,6 +245,7 @@ def run_api(config, ledger, telemetry=None):
         setup=FixedSetupClient(),
         trading_profile=TradingProfileBackend(ledger, config.account_id),
         paper=PaperClient(),
+        research=ResearchClient(),
     )
 
     def status_loop():
@@ -253,6 +255,7 @@ def run_api(config, ledger, telemetry=None):
                 sampler.sample()
             if telemetry:
                 telemetry.export_local()
+            canonical.state.research_metrics.export_local()
             sleep(5)
 
     Thread(target=status_loop, daemon=True).start()
