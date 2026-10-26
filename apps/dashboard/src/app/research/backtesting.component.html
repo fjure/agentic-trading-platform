@@ -1,0 +1,119 @@
+<section aria-labelledby="backtest-title">
+  <h2 id="backtest-title">Lokale Simulation</h2>
+  <p>Benchmarkstrategien für SPY/QQQ · raw IEX · 15Min · USD · Long/Flat. IEX bildet nicht den Gesamtmarkt ab.
+    Dividenden und Kapitalmaßnahmen sind ausgeschlossen; fehlende damalige Daten oder Abdeckungsbelege blockieren den Lauf.</p>
+  <p>Open und Close sind nachträglich begrenzte Preisproxys. Ergebnisse erteilen keine Handelsfreigabe.</p>
+  @if (error()) { <p role="alert">{{ error() }}</p> }
+  <mat-card>
+    <mat-card-header><mat-card-title>Experiment</mat-card-title></mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="fields">
+          <mat-form-field><mat-label>Backtest Instrument</mat-label><mat-select formControlName="instrumentId">
+            @for (instrument of catalog()?.instruments ?? []; track instrument.instrumentId) {
+              <mat-option [value]="instrument.instrumentId">{{ instrument.symbol }}</mat-option>
+            }
+          </mat-select></mat-form-field>
+          <mat-form-field><mat-label>Backtest Strategie</mat-label><mat-select formControlName="strategyId">
+            @for (strategy of catalog()?.items ?? []; track strategy.strategyId) {
+              <mat-option [value]="strategy.strategyId">{{ strategy.strategyId }} · Version {{ strategy.version }}</mat-option>
+            }
+          </mat-select></mat-form-field>
+          @if (form.controls.strategyId.value === 'sma-cross-v1') {
+            <mat-form-field><mat-label>SMA fast</mat-label><input matInput formControlName="fast" inputmode="numeric"></mat-form-field>
+            <mat-form-field><mat-label>SMA slow</mat-label><input matInput formControlName="slow" inputmode="numeric"></mat-form-field>
+          }
+          <mat-form-field><mat-label>Backtest Startcash USD</mat-label><input matInput formControlName="startCash" inputmode="decimal"></mat-form-field>
+          <mat-form-field><mat-label>Backtest Gebühr pro Fill USD</mat-label><input matInput formControlName="feeUsd" inputmode="decimal"></mat-form-field>
+          <mat-form-field><mat-label>Backtest Slippage Basispunkte</mat-label><input matInput formControlName="slippageBps" inputmode="decimal"></mat-form-field>
+        </div>
+        <p>Maximal 366 Tage und 12 Folds; Training vor Test, Testfenster disjunkt. SMA: 2 ≤ fast &lt; slow ≤ 100.
+          Startcash maximal 1000000000 USD, Gebühr 0–1000 USD, Slippage 0–100 Basispunkte; Mengenraster 0.000001.</p>
+        <div formArrayName="folds">
+          @for (fold of form.controls.folds.controls; track fold; let i = $index) {
+            <fieldset [formGroupName]="i"><legend>Fold {{ i + 1 }}</legend>
+              <div class="fields">
+                <mat-form-field><mat-label>Training Start UTC</mat-label><input matInput formControlName="trainingStart"></mat-form-field>
+                <mat-form-field><mat-label>Training Ende UTC</mat-label><input matInput formControlName="trainingEnd"></mat-form-field>
+                <mat-form-field><mat-label>Test Start UTC</mat-label><input matInput formControlName="testStart"></mat-form-field>
+                <mat-form-field><mat-label>Test Ende UTC exklusiv</mat-label><input matInput formControlName="testEnd"></mat-form-field>
+              </div>
+              <button mat-button type="button" (click)="removeFold(i)" [disabled]="form.controls.folds.length === 1">Fold entfernen</button>
+            </fieldset>
+          }
+        </div>
+        <div class="actions">
+          <button mat-button type="button" (click)="addFold()" [disabled]="form.controls.folds.length >= 12 || !authorized()">Fold hinzufügen</button>
+          <button mat-flat-button type="submit" [disabled]="!validRequest || sending()">Lokale Simulation beauftragen</button>
+        </div>
+        @if (!validRequest && authorized()) { <p role="status">Eingaben prüfen: gültige UTC-Zeit mit Z, feste Dezimalwerte und chronologische Fenster; keine zukünftigen Tests.</p> }
+      </form>
+    </mat-card-content>
+  </mat-card>
+  <mat-card>
+    <mat-card-header><mat-card-title>Gespeicherte Simulationen</mat-card-title></mat-card-header>
+    <mat-card-content>
+      <button mat-button (click)="refreshRuns()" [disabled]="!authorized()">Simulationen aktualisieren</button>
+      @for (run of runs(); track run.runId) {
+        <article class="backtest-run" [attr.aria-label]="'Simulation ' + run.runId">
+          <strong>{{ run.status }} · {{ run.request.strategyId }}</strong><p>{{ run.runId }} · {{ run.acceptedAt }}</p>
+          @for (blocker of run.blockers; track $index) { <p>{{ blocker.code }}</p> }
+          <button mat-button (click)="select(run.runId)" [disabled]="!authorized()">Simulation öffnen</button>
+        </article>
+      } @empty { <p>Keine gespeicherten Simulationen.</p> }
+      @if (nextRuns()) { <button mat-button (click)="refreshRuns(true)">Weitere Simulationen</button> }
+    </mat-card-content>
+  </mat-card>
+  @if (loading()) { <p role="status">Simulationsdaten laden …</p> }
+  @if (detail(); as detail) {
+    <mat-card aria-label="Simulationsdetail">
+      <mat-card-header><mat-card-title>{{ detail.run.status }} · {{ detail.run.runId }}</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <p>Snapshot: {{ detail.run.snapshot | json }}</p>
+        <p>Manifesthash: {{ detail.run.manifestHash || 'noch nicht gebunden' }}<br>Ergebnishash: {{ detail.run.resultHash || 'noch nicht veröffentlicht' }}</p>
+        @for (blocker of detail.run.blockers; track $index) { <p role="status">{{ blocker.code }} · {{ blocker | json }}</p> }
+        @if (!detail.run.publicationComplete) {
+          <p>Keine vollständigen Ergebniszeilen veröffentlicht. Abgeschlossene Folds bleiben als Teilergebnisreferenzen sichtbar. Keine Gesamtrendite.</p>
+          <pre aria-label="Abgeschlossene Foldreferenzen">{{ detail.run.completedFolds | json }}</pre>
+        }
+        @if (detail.manifest; as manifest) {
+          <p>{{ manifest.symbol }} · {{ manifest.simulatorVersion }} · {{ manifest.metricsVersion }} · {{ manifest.codeVersion }}</p>
+          <details><summary>Unveränderliches Manifest mit Daten- und Warm-up-Belegen</summary><pre aria-label="Backtest Manifest">{{ manifest | json }}</pre></details>
+        } @else { <p>Manifest noch nicht materialisiert.</p> }
+        @for (fold of summary()?.items ?? []; track fold.foldIndex) {
+          <article class="fold-result" [attr.aria-label]="'Foldresultat ' + fold.foldIndex">
+            <h3>Fold {{ fold.foldIndex + 1 }}</h3><p>{{ fold.window.testStart }} bis {{ fold.window.testEnd }} · {{ fold.resultHash }}</p>
+            <dl><dt>Nettorendite</dt><dd>{{ fold.metrics.netReturn }}</dd><dt>Maximaler Drawdown</dt><dd>{{ fold.metrics.maxDrawdown }}</dd>
+              <dt>Turnover</dt><dd>{{ fold.metrics.turnover }}</dd><dt>Gebühren USD</dt><dd>{{ fold.metrics.feeTotalUsd }}</dd>
+              <dt>Slippage USD</dt><dd>{{ fold.metrics.slippageTotalUsd }}</dd><dt>Endequity USD</dt><dd>{{ fold.metrics.endEquity }}</dd>
+              <dt>Endcash USD</dt><dd>{{ fold.metrics.endCash }}</dd><dt>Endbestand</dt><dd>{{ fold.metrics.endQuantity }}</dd>
+              <dt>Entscheidungen / Fills</dt><dd>{{ fold.metrics.decisionCount }} / {{ fold.metrics.fillCount }}</dd>
+              <dt>Bewertung</dt><dd>{{ fold.metrics.valuation }}</dd></dl>
+            @for (reference of fold.references; track reference.strategyId) {
+              <h4>Referenz {{ reference.strategyId }}</h4><pre>{{ reference.metrics | json }}</pre>
+            }
+            <details><summary>Datenabdeckung</summary><pre>{{ fold.coverage | json }}</pre></details>
+          </article>
+        }
+        @if (summary()?.nextCursor) { <button mat-button (click)="loadResults('summary', true)">Weitere Foldresultate</button> }
+        <p>Jeder Fold startet unabhängig mit demselben Cash und flacher Position. Foldrenditen werden nicht verkettet.</p>
+        @if (equity()?.items?.length) {
+          <mat-form-field><mat-label>Equity Fold</mat-label><mat-select [value]="selectedFold()" (selectionChange)="selectedFold.set($event.value)">
+            @for (fold of detail.run.request.folds; track $index) { <mat-option [value]="$index">Fold {{ $index + 1 }}</mat-option> }
+          </mat-select></mat-form-field>
+          <figure><figcaption>Equitykurve · {{ detail.run.request.strategyId }} · Fold {{ selectedFold() + 1 }} · geladene Punkte</figcaption>
+            <svg viewBox="0 0 600 190" role="img" aria-label="Backtest Equitykurve"><polyline [attr.points]="curve()" fill="none" stroke="currentColor" stroke-width="2" /></svg>
+          </figure>
+          <div class="table-scroll"><table aria-label="Backtest Equity Rohzahlen"><thead><tr><th>Fold / Strategie</th><th>UTC</th><th>Cash</th><th>Bestand</th><th>Close</th><th>Equity</th><th>Revision</th></tr></thead><tbody>
+            @for (point of equity()?.items ?? []; track $index) { <tr><td>{{ point.foldIndex + 1 }} / {{ point.strategyId }}</td><td>{{ point.at }}</td><td>{{ point.cash }}</td><td>{{ point.quantity }}</td><td>{{ point.close }}</td><td>{{ point.equity }}</td><td>{{ point.revisionId }}</td></tr> }
+          </tbody></table></div>
+        }
+        @if (equity()?.nextCursor) { <button mat-button (click)="loadResults('equity', true)">Weitere Equitypunkte</button> }
+        <div class="table-scroll"><table aria-label="Backtest Fills"><thead><tr><th>Fold / Strategie</th><th>Signal UTC</th><th>Ausführung UTC</th><th>Seite</th><th>Menge</th><th>Preis</th><th>Gebühr / Slippage USD</th><th>Beobachtungscutoff</th></tr></thead><tbody>
+          @for (fill of fills()?.items ?? []; track $index) { <tr><td>{{ fill.foldIndex + 1 }} / {{ fill.strategyId }}</td><td>{{ fill.signalAt }}</td><td>{{ fill.executedAt }}</td><td>{{ fill.side }}</td><td>{{ fill.quantity }}</td><td>{{ fill.price }}</td><td>{{ fill.feeUsd }} / {{ fill.slippageUsd }}</td><td>{{ fill.observationCutoff }}</td></tr> }
+        </tbody></table></div>
+        @if (fills()?.nextCursor) { <button mat-button (click)="loadResults('fills', true)">Weitere Fills</button> }
+      </mat-card-content>
+    </mat-card>
+  }
+</section>

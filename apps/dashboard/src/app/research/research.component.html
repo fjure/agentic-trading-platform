@@ -1,4 +1,5 @@
 <section aria-labelledby="research-title">
+  <atl-backtesting (sessionLost)="sessionLost.emit()" />
   <h2 id="research-title">Research</h2>
   <p>Gespeicherte Marktdaten · IEX · raw · observed-as-of. Historische Publikationszeiten sind nicht nachgewiesen. IEX bildet nicht den Gesamtmarkt ab.</p>
   @if (error()) { <p role="alert">{{ error() }}</p> }
