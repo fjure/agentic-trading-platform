@@ -4,6 +4,16 @@ context: |
   Language: de
   All artifacts must be written in de.
   Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  Read docs/vision/product-vision.md, docs/vision/architecture-principles.md and
+  docs/vision/roadmap.md before planning. These are canonical product context;
+  OpenSpec remains authoritative for behavior. Distinguish verified implementation,
+  current planning and long-term vision. Vision never grants trading authority.
+  Reuse the existing Python/PostgreSQL/Angular Material architecture and contracts.
+  LIVE stays unreachable; agents never send broker orders. Risk is deterministic
+  and fail-closed. Decimal for money/prices/quantities, UTC timestamps.
+  Only Execution consumes Alpaca credentials; research and dashboard stay credential-free.
+  Historical data must preserve provenance, revisions and availability; never imply
+  historical point-in-time correctness from present-day backfills or adjusted prices.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.

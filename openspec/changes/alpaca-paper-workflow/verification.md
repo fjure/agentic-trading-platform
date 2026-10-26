@@ -1,5 +1,7 @@
 # Traceability, Prüfstrategie und Ready-Gates
 
+Aktueller Konsolidierungsstand 25.10.2026: Alle zehn Tasks sind lokal offline abgenommen; die folgenden Abschnitte dokumentieren den historischen Planungs-/Zwischenstand vom 20.10.2026. Maßgebliche Schlussnachweise sind [Abnahmeübersicht](../../../docs/evidence/alpaca-paper-workflow.md), [APW-10](../../../docs/evidence/apw-10.md) und [unabhängige Verifikation](../../../docs/evidence/apw-10-verification.md). Deren Ergebnisse werden hier als vorhandene Evidenz referenziert, nicht als neu ausgeführte Tests. Die damaligen zwei Vertragsfehler und der offene APW-01-Status sind kein aktueller Blocker mehr. Tatsächliche private Alpaca-Abnahme T020 bleibt unverifiziert. Main-Spec-Sync ist separat im [Konsolidierungsnachweis](../../../docs/evidence/research-spec-consolidation.md) belegt; keine Archivierung erfolgt.
+
 Stand20.10.2026, ausschließlich Planung. Kein Eintrag hier zertifiziert eine noch nicht implementierte Paperfunktion.
 
 Apply-Update20.10.2026: separater Auftrag erteilt. APW-01 lokal vorbereitet, wegen Konflikt zwischen Contract-first-Aufgabenreihenfolge und bestehender vollständiger Runtime-/Routegleichheit weiterhin offen. Finale Matrix502bestanden/2fehlgeschlagen; keine Ausnahmen in Tests. Nutzerentscheidung zur späteren gemeinsamen Integrationsabnahme angefordert. Prüfungen, Branch/Basis und konkrete Grenzen: `docs/evidence/apw-01.md`. Die Ready-Formulierung zum ausstehenden Apply-Auftrag unten ist historisch.
