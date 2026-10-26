@@ -1,0 +1,23 @@
+# Produktroadmap
+
+Die Reihenfolge ist eine Planungsrichtung. Jede Anwendungserweiterung braucht einen eigenen OpenSpec-Change, erfüllte Definition of Ready und einen gesonderten Apply-Auftrag. Die Roadmap behauptet keine bereits erteilte Umsetzungsfreigabe.
+
+## Heute: lokales Paper-Lab
+
+**Umgesetzt:** getrennte Control-, Worker-, Execution- und Watchdog-Rollen; lokales Dashboard; Fake-/Demoabläufe; Paperledger und kontrollierte manuelle LIMIT-Aktionen; frische Alpaca-Marktevidenz für ein kleines Symboluniversum; Jev-Shadowauswertung. Risk- und Executiongrenzen sind fail-closed, LIVE ist technisch ausgeschlossen. Die vorhandene Marktaufnahme dient laufenden Sitzungen und bietet keine allgemeine historische Marktdatenpipeline.
+
+## Nächster geplanter Baustein: market-data-and-research-foundation
+
+**Im Apply, lokal implementiert und offline geprüft:** historische SPY-/QQQ-raw-IEX-Daten, unveränderliche Revisionen/Evidenz, konservative PIT-Abfragen, Kalender-/Qualitätsbefunde, dauerhafte Jobs und eine Researchoberfläche. Formale Taskabnahme und Gitintegration laufen noch. [Ausgeführte Prüfungen und Grenzen](../evidence/mdr-implementation-verification.md). Persönliche Providerrechte bleiben unverifiziert; Standarddispatch ist deaktiviert. Vollständiges Researchbacktesting ist weiterhin ein späterer Change.
+
+Vor Nutzung eines Datenproviders sind Lizenz, Speicherung, Weitergabe, Anpassungen, Aufbewahrung und abgeleitete Daten zu klären. Historische Überlebendenverzerrung, Look-ahead, Zeitzonen, Splits/Dividenden, verspätete Veröffentlichungen und Providerkorrekturen müssen als konkrete Risiken adressiert werden. Ohne lückenlose Herkunft und damalige Verfügbarkeit sind Backtests nicht als reproduzierbar oder PIT-gültig zu behandeln.
+
+## Danach: Research und Strategieprüfung
+
+**Langfristig:** versionierte Strategien, lokale Replay- und Shadowvergleiche, robuste Out-of-sample-Auswertung und ein Dashboard für Quellen, Kalender, Datenqualität, Annahmen und Ergebnisse. Neue Märkte werden erst ergänzt, wenn Datenrechte, Handelskalender, Instrumentregeln, Liquidität und Risikoparameter ausreichend belegt sind. Mehr Märkte bedeuten getrennte Quellen- und Marktregeln, nicht bloß zusätzliche Symbole.
+
+## Spätere Autonomie
+
+Autonomie kann sich von Beobachtung über Analyse und freigegebene Simulation bis zu eng begrenztem Paperbetrieb entwickeln. Jeder Schritt braucht eigene Akzeptanzkriterien, unabhängige Risiko- und Reconciliation-Evidenz, sichtbare Betreiberkontrolle und überprüfte Credentialgrenzen. Autonomiestufe 4 und jede denkbare LIVE-Fähigkeit bleiben langfristige, gesondert zu entscheidende Ziele; sie sind keine impliziten Roadmapfreigaben. Jev bleibt bis zu einer eigenen fachlichen Neubewertung ein Shadow-System. LangGraph ist derzeit nicht vorgesehen.
+
+Verbindliche Aufgaben und Abhängigkeiten werden in OpenSpec geführt; diese Übersicht wird bei wesentlichen Änderungen daran angepasst. Siehe [Marktevidenz-Spezifikation](../../openspec/specs/market-evidence/spec.md), [Implementierungsnachweise](../evidence/) und [Git-/Change-Prozess](../development/codex-tooling.md).

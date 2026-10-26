@@ -146,9 +146,30 @@ if (-not $SkipCompile) {
         $fixtureIndex++
     }
     [IO.File]::WriteAllLines((Join-Path $tooling 'client-contract-fixtures.generated.ts'), $fixtures)
+    foreach ($researchFixture in @(
+        @('research-bar', 'ResearchBar', 'researchBar'),
+        @('research-bar-page', 'ResearchBarPage', 'researchBarPage'),
+        @('research-evidence', 'ResearchEvidence', 'researchEvidence'),
+        @('research-evidence-result', 'ResearchEvidenceResult', 'researchEvidenceResult'),
+        @('research-context', 'ResearchContext', 'researchContext'),
+        @('research-source-catalog', 'ResearchSourceCatalog', 'researchSourceCatalog'),
+        @('research-job-request', 'ResearchJobRequest', 'researchJobRequest'),
+        @('research-job', 'ResearchJob', 'researchJob'),
+        @('research-job-page', 'ResearchJobPage', 'researchJobPage')
+    )) {
+        $fixtures += "import type { $($researchFixture[1]) } from './generated-a/model/$($researchFixture[2])';"
+        $fixturePath = Join-Path $root ('contracts/examples/v1/' + $researchFixture[0] + '.valid.json')
+        $literal = Get-Content -LiteralPath $fixturePath -Raw
+        $fixtures += "const fixture$fixtureIndex : $($researchFixture[1]) = $literal;"
+        $fixtureIndex++
+    }
+    $fixtures += "import type { ResearchEvidenceContent } from './generated-a/model/researchEvidenceContent';"
+    $fixtures += '// @ts-expect-error Unknown evidence kind must never typecheck.'
+    $fixtures += 'const invalidResearchKind: ResearchEvidenceContent = { kind: "UNKNOWN", rawPayload: {} };'
+    [IO.File]::WriteAllLines((Join-Path $tooling 'client-contract-fixtures.generated.ts'), $fixtures)
     $tsc = Join-Path $tooling 'node_modules/.bin/tsc.cmd'
     if (-not (Test-Path -LiteralPath $tsc)) { throw 'Pinned TypeScript compiler is missing.' }
     & $tsc --project (Join-Path $tooling 'tsconfig.generated.json') --noEmit
     if ($LASTEXITCODE -ne 0) { throw 'Generated Angular client failed TypeScript compile.' }
-    Write-Output 'PASS: generated Angular client and decision/Paper fixtures TypeScript compile.'
+    Write-Output 'PASS: generated Angular client and decision/Paper/Research fixtures TypeScript compile.'
 }

@@ -1,0 +1,1504 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/research.schema.json",
+  "title": "Research v1",
+  "$ref": "#/$defs/ResearchBarPage",
+  "$defs": {
+    "ResearchBar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "barId",
+        "instrumentId",
+        "provider",
+        "feed",
+        "interval",
+        "adjustment",
+        "currency",
+        "start",
+        "end",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "revision",
+        "predecessorId",
+        "providerRevision",
+        "eventTime",
+        "publishedAt",
+        "availableAt",
+        "ingestedAt",
+        "availabilityBasis",
+        "fingerprint",
+        "evidenceId",
+        "quality",
+        "commitVersion"
+      ],
+      "properties": {
+        "barId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "instrumentId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "ALPACA"
+          ]
+        },
+        "feed": {
+          "type": "string",
+          "enum": [
+            "iex"
+          ]
+        },
+        "interval": {
+          "$ref": "#/$defs/ResearchInterval"
+        },
+        "adjustment": {
+          "type": "string",
+          "enum": [
+            "raw"
+          ]
+        },
+        "currency": {
+          "type": "string",
+          "enum": [
+            "USD"
+          ]
+        },
+        "start": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "end": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "open": {
+          "$ref": "#/$defs/ResearchDecimal"
+        },
+        "high": {
+          "$ref": "#/$defs/ResearchDecimal"
+        },
+        "low": {
+          "$ref": "#/$defs/ResearchDecimal"
+        },
+        "close": {
+          "$ref": "#/$defs/ResearchDecimal"
+        },
+        "volume": {
+          "$ref": "#/$defs/ResearchDecimal"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "predecessorId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "providerRevision": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventTime": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "publishedAt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResearchTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "availableAt": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "ingestedAt": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "availabilityBasis": {
+          "type": "string",
+          "enum": [
+            "FIRST_OBSERVED"
+          ]
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/ResearchFingerprint"
+        },
+        "evidenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "quality": {
+          "$ref": "#/$defs/ResearchQuality"
+        },
+        "commitVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "description": "Immutable raw revision. Natural identity includes instrument/provider/feed/interval/start/end/adjustment. Prices positive and high>=max(open,close,low), low<=min(open,close); volume>=0. FIRST_OBSERVED: publishedAt=null and availableAt=ingestedAt; eventTime=end. Cross-field rules are validated by domain/runtime, not JSON Schema."
+    },
+    "ResearchBarContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "barId"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "BAR"
+          ]
+        },
+        "barId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      }
+    },
+    "ResearchBarPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "nextCursor",
+        "snapshot",
+        "coverage",
+        "incomplete",
+        "dataVersion"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/ResearchBar"
+          }
+        },
+        "nextCursor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResearchCursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "snapshot": {
+          "$ref": "#/$defs/ResearchSnapshot"
+        },
+        "coverage": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/ResearchCoverage"
+          }
+        },
+        "incomplete": {
+          "type": "boolean"
+        },
+        "dataVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ResearchContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instrumentId",
+        "start",
+        "end",
+        "interval",
+        "snapshot",
+        "dataVersion",
+        "quality",
+        "coverage",
+        "evidenceIds",
+        "priceChange",
+        "volatility",
+        "missingSources",
+        "incomplete"
+      ],
+      "properties": {
+        "instrumentId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "start": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "end": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "interval": {
+          "$ref": "#/$defs/ResearchInterval"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/ResearchSnapshot"
+        },
+        "dataVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "quality": {
+          "$ref": "#/$defs/ResearchQuality"
+        },
+        "coverage": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/ResearchCoverage"
+          }
+        },
+        "evidenceIds": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          }
+        },
+        "priceChange": {
+          "$ref": "#/$defs/ResearchMetric"
+        },
+        "volatility": {
+          "$ref": "#/$defs/ResearchMetric"
+        },
+        "missingSources": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "type": "string",
+            "enum": [
+              "BARS",
+              "NEWS",
+              "FUNDAMENTALS",
+              "MACRO",
+              "REGIME"
+            ]
+          }
+        },
+        "incomplete": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ResearchCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instrumentId",
+        "provider",
+        "feed",
+        "interval",
+        "adjustment",
+        "start",
+        "end",
+        "qualityRuleVersion",
+        "calendarVersion",
+        "status",
+        "expected",
+        "observed",
+        "missing",
+        "unchecked"
+      ],
+      "properties": {
+        "instrumentId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "ALPACA"
+          ]
+        },
+        "feed": {
+          "type": "string",
+          "enum": [
+            "iex"
+          ]
+        },
+        "interval": {
+          "$ref": "#/$defs/ResearchInterval"
+        },
+        "adjustment": {
+          "type": "string",
+          "enum": [
+            "raw"
+          ]
+        },
+        "start": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "end": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "qualityRuleVersion": {
+          "type": "string",
+          "enum": [
+            "research-quality-v1"
+          ]
+        },
+        "calendarVersion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResearchFingerprint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/ResearchQuality"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "missing": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unchecked": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ResearchCursor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "description": "Authenticated opaque keyset cursor bound to resource, canonical filters, valuationAt, knowledgeAt, snapshotAt and committed snapshotVersion. Not a provider token. Invalid cursor:400 CURSOR_INVALID; changed filters:409 SNAPSHOT_CONFLICT."
+    },
+    "ResearchDecimal": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$",
+      "description": "Exact NUMERIC(38,18) plain decimal string, never a JSON number, exponent, NaN or infinity."
+    },
+    "ResearchDerivedContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "metric",
+        "value",
+        "algorithmVersion",
+        "evidenceIds"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "DERIVED"
+          ]
+        },
+        "metric": {
+          "type": "string",
+          "enum": [
+            "PRICE_CHANGE",
+            "VOLATILITY"
+          ]
+        },
+        "value": {
+          "$ref": "#/$defs/ResearchDecimal"
+        },
+        "algorithmVersion": {
+          "type": "string",
+          "enum": [
+            "decimal-population-v1"
+          ]
+        },
+        "evidenceIds": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          }
+        }
+      }
+    },
+    "ResearchErrorCode": {
+      "type": "string",
+      "enum": [
+        "INVALID_REQUEST",
+        "UNAUTHORIZED",
+        "FORBIDDEN",
+        "NOT_FOUND",
+        "CURSOR_INVALID",
+        "SNAPSHOT_CONFLICT",
+        "IDEMPOTENCY_CONFLICT",
+        "UNAVAILABLE",
+        "NOT_IMPLEMENTED",
+        "BLOCKED_CREDENTIALS",
+        "BLOCKED_LICENSE",
+        "BLOCKED_ENTITLEMENT",
+        "PROVIDER_TIMEOUT",
+        "PROVIDER_RATE_LIMIT",
+        "PROVIDER_UNAVAILABLE",
+        "PROVIDER_RESPONSE_INVALID",
+        "PAGINATION_CYCLE",
+        "BUDGET_EXHAUSTED",
+        "LEASE_LOST"
+      ]
+    },
+    "ResearchEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidenceId",
+        "instrumentId",
+        "sourceId",
+        "sourceReference",
+        "eventTime",
+        "publishedAt",
+        "availableAt",
+        "ingestedAt",
+        "availabilityBasis",
+        "schemaVersion",
+        "dataRevision",
+        "predecessorId",
+        "fingerprint",
+        "quality",
+        "modelConfidence",
+        "content",
+        "commitVersion",
+        "market"
+      ],
+      "properties": {
+        "evidenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "instrumentId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sourceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "sourceReference": {
+          "type": "string",
+          "pattern": "^(?!.*://)[A-Za-z0-9][A-Za-z0-9:._/-]{0,255}$",
+          "description": "Opaque normalized source identifier; no URL/query string or provider transport data."
+        },
+        "eventTime": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "publishedAt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResearchTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "availableAt": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "ingestedAt": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "availabilityBasis": {
+          "type": "string",
+          "enum": [
+            "FIRST_OBSERVED",
+            "VERIFIED_PUBLICATION"
+          ]
+        },
+        "schemaVersion": {
+          "type": "string",
+          "const": "1"
+        },
+        "dataRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "predecessorId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/ResearchFingerprint"
+        },
+        "quality": {
+          "$ref": "#/$defs/ResearchQuality"
+        },
+        "modelConfidence": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(0(\\.\\d{1,18})?|1(\\.0{1,18})?)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "$ref": "#/$defs/ResearchEvidenceContent"
+        },
+        "commitVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "market": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      }
+    },
+    "ResearchEvidenceContent": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ResearchBarContent"
+        },
+        {
+          "$ref": "#/$defs/ResearchNewsContent"
+        },
+        {
+          "$ref": "#/$defs/ResearchFundamentalContent"
+        },
+        {
+          "$ref": "#/$defs/ResearchMacroContent"
+        },
+        {
+          "$ref": "#/$defs/ResearchDerivedContent"
+        }
+      ],
+      "discriminator": {
+        "propertyName": "kind",
+        "mapping": {
+          "BAR": "#/components/schemas/ResearchBarContent",
+          "NEWS": "#/components/schemas/ResearchNewsContent",
+          "FUNDAMENTAL": "#/components/schemas/ResearchFundamentalContent",
+          "MACRO_EVENT": "#/components/schemas/ResearchMacroContent",
+          "DERIVED": "#/components/schemas/ResearchDerivedContent"
+        }
+      }
+    },
+    "ResearchEvidenceResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence",
+        "snapshot",
+        "incomplete",
+        "dataVersion"
+      ],
+      "properties": {
+        "evidence": {
+          "$ref": "#/$defs/ResearchEvidence"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/ResearchSnapshot"
+        },
+        "incomplete": {
+          "type": "boolean"
+        },
+        "dataVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ResearchFingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "ResearchFundamentalContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "metric",
+        "value",
+        "unit",
+        "periodEnd"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "FUNDAMENTAL"
+          ]
+        },
+        "metric": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "value": {
+          "$ref": "#/$defs/ResearchDecimal"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "periodEnd": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        }
+      }
+    },
+    "ResearchInstrument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instrumentId",
+        "assetClass",
+        "venue",
+        "baseUnit",
+        "quoteUnit",
+        "currency"
+      ],
+      "properties": {
+        "instrumentId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "assetClass": {
+          "type": "string",
+          "enum": [
+            "EQUITY",
+            "ETF",
+            "CRYPTO",
+            "FOREX",
+            "DERIVATIVE"
+          ]
+        },
+        "venue": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{4}$"
+        },
+        "baseUnit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "quoteUnit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        }
+      }
+    },
+    "ResearchInterval": {
+      "type": "string",
+      "enum": [
+        "15Min",
+        "1Day"
+      ]
+    },
+    "ResearchJob": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jobId",
+        "request",
+        "status",
+        "acceptedAt",
+        "updatedAt",
+        "retryAt",
+        "pages",
+        "bars",
+        "attempts",
+        "errorCode",
+        "traceId"
+      ],
+      "properties": {
+        "jobId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "request": {
+          "$ref": "#/$defs/ResearchJobRequest"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ACCEPTED",
+            "RUNNING",
+            "RETRY_WAIT",
+            "PARTIAL",
+            "BLOCKED",
+            "SUCCEEDED",
+            "FAILED"
+          ]
+        },
+        "acceptedAt": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "retryAt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResearchTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pages": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "bars": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "errorCode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResearchErrorCode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        }
+      }
+    },
+    "ResearchJobPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "nextCursor",
+        "snapshotAt",
+        "snapshotVersion"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/ResearchJob"
+          }
+        },
+        "nextCursor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResearchCursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "snapshotAt": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "snapshotVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ResearchJobRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instrumentId",
+        "start",
+        "end",
+        "interval",
+        "feed",
+        "adjustment",
+        "mode"
+      ],
+      "properties": {
+        "instrumentId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "start": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "end": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "interval": {
+          "$ref": "#/$defs/ResearchInterval"
+        },
+        "feed": {
+          "type": "string",
+          "enum": [
+            "iex"
+          ]
+        },
+        "adjustment": {
+          "type": "string",
+          "enum": [
+            "raw"
+          ]
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "BACKFILL",
+            "UPDATE"
+          ]
+        }
+      },
+      "description": "Explicit [start,end) UTC range, 0 < end-start <=366 days. Initial adapter supports only registered SPY/QQQ USD ETF identities. UPDATE overlaps one completed interval. No URLs, provider tokens, credentials or trading activation fields."
+    },
+    "ResearchJobResumeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "jobId"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "const": "RESUME"
+        },
+        "jobId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "description": "Explicit local-operator resume of a PARTIAL/BLOCKED job. The existing job and committed progress remain immutable; the resume request has its own Idempotency-Key and never exposes its private cursor."
+    },
+    "ResearchJobAction": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ResearchJobRequest"
+        },
+        {
+          "$ref": "#/$defs/ResearchJobResumeRequest"
+        }
+      ]
+    },
+    "ResearchLicenseStatus": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "CONFIRMED",
+        "BLOCKED"
+      ]
+    },
+    "ResearchMacroContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "eventCode",
+        "region",
+        "actual",
+        "unit"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "MACRO_EVENT"
+          ]
+        },
+        "eventCode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "region": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "actual": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResearchDecimal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 32
+        }
+      },
+      "if": {
+        "properties": {
+          "actual": {
+            "const": null
+          }
+        },
+        "required": [
+          "actual"
+        ]
+      },
+      "then": {
+        "properties": {
+          "actual": {
+            "type": "null"
+          },
+          "unit": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "actual": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ResearchMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "value",
+        "algorithmVersion",
+        "evidenceIds",
+        "reason"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "COMPUTABLE",
+            "NOT_COMPUTABLE"
+          ]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResearchDecimal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "algorithmVersion": {
+          "type": "string",
+          "enum": [
+            "decimal-population-v1"
+          ]
+        },
+        "evidenceIds": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          }
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "INSUFFICIENT_BARS",
+                "INCOMPLETE_WINDOW",
+                "INCOMPATIBLE_INTERVALS",
+                "INVALID_QUALITY"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "if": {
+        "properties": {
+          "status": {
+            "const": "COMPUTABLE"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "COMPUTABLE"
+          },
+          "value": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "null"
+          },
+          "evidenceIds": {
+            "minItems": 3
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "status": {
+            "const": "NOT_COMPUTABLE"
+          },
+          "value": {
+            "type": "null"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ResearchNewsContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "headline",
+        "language"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "NEWS"
+          ]
+        },
+        "headline": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "language": {
+          "type": "string",
+          "pattern": "^[a-z]{2}$"
+        }
+      }
+    },
+    "ResearchProblem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "title",
+        "status",
+        "code",
+        "traceId"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "urn:agentic-trading-lab:research-problem"
+        },
+        "title": {
+          "type": "string",
+          "const": "Research request failed"
+        },
+        "status": {
+          "type": "integer",
+          "enum": [
+            400,
+            401,
+            403,
+            404,
+            409,
+            503
+          ]
+        },
+        "code": {
+          "$ref": "#/$defs/ResearchErrorCode"
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        }
+      }
+    },
+    "ResearchQuality": {
+      "type": "string",
+      "enum": [
+        "VALID",
+        "MISSING_EXPECTED",
+        "NO_OBSERVATION",
+        "UNKNOWN_CALENDAR",
+        "CONFLICT",
+        "INVALID"
+      ]
+    },
+    "ResearchSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "valuationAt",
+        "knowledgeAt",
+        "snapshotAt",
+        "snapshotVersion",
+        "semantics"
+      ],
+      "properties": {
+        "valuationAt": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "knowledgeAt": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "snapshotAt": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "snapshotVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "semantics": {
+          "type": "string",
+          "enum": [
+            "observed-as-of"
+          ]
+        }
+      },
+      "description": "knowledgeAt <= valuationAt. Select event/bar end <= valuationAt AND availableAt <= knowledgeAt AND ingestedAt <= knowledgeAt AND commitVersion <= snapshotVersion. Fresh query defaults both times to a single request clock instant. snapshotAt/version are server-bound; never supplied freely by a client."
+    },
+    "ResearchSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceId",
+        "kind",
+        "state",
+        "licenseStatus",
+        "policyVersion",
+        "providerVerification",
+        "instruments",
+        "intervals",
+        "feed",
+        "adjustment",
+        "historyStart",
+        "historyEnd",
+        "limitations"
+      ],
+      "properties": {
+        "sourceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "BAR",
+            "NEWS",
+            "FUNDAMENTAL",
+            "MACRO_EVENT",
+            "REGIME"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "IMPLEMENTED",
+            "DISABLED",
+            "BLOCKED",
+            "NOT_IMPLEMENTED"
+          ]
+        },
+        "licenseStatus": {
+          "$ref": "#/$defs/ResearchLicenseStatus"
+        },
+        "policyVersion": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "providerVerification": {
+          "type": "string",
+          "enum": [
+            "UNVERIFIED",
+            "VERIFIED",
+            "BLOCKED"
+          ]
+        },
+        "instruments": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/ResearchInstrument"
+          }
+        },
+        "intervals": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/ResearchInterval"
+          }
+        },
+        "feed": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "iex"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "adjustment": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "raw"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "historyStart": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResearchTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "historyEnd": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResearchTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limitations": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "string",
+            "enum": [
+              "FIRST_OBSERVED_ONLY",
+              "IEX_NOT_FULL_MARKET",
+              "NO_CALENDAR_PROOF",
+              "NO_HISTORICAL_PUBLICATION",
+              "NO_ADAPTER",
+              "RIGHTS_UNVERIFIED"
+            ]
+          }
+        }
+      }
+    },
+    "ResearchSourceCatalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "observedAt",
+        "incomplete"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "$ref": "#/$defs/ResearchSource"
+          }
+        },
+        "observedAt": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "incomplete": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ResearchSymbolMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instrumentId",
+        "provider",
+        "symbol",
+        "validFrom",
+        "validUntil"
+      ],
+      "properties": {
+        "instrumentId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "ALPACA"
+          ]
+        },
+        "symbol": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9./-]{0,15}$"
+        },
+        "validFrom": {
+          "$ref": "#/$defs/ResearchTimestamp"
+        },
+        "validUntil": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResearchTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ResearchTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+      "description": "UTC with Z and at most microsecond precision; local offsets and naive values are rejected."
+    },
+    "TraceId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "example": "4bf92f3577b34da6a3ce929d0e0e4736"
+    }
+  }
+}

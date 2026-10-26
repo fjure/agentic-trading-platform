@@ -1,5 +1,7 @@
 # Agentic Trading Lab
 
+- Kanonischer Produktkontext: [Produktvision](docs/vision/product-vision.md), [Architekturprinzipien](docs/vision/architecture-principles.md), [Roadmap](docs/vision/roadmap.md). Vision, geplante Fähigkeiten und nachgewiesene Implementierung strikt unterscheiden; Vision erteilt keine Handelsberechtigung. Fachliches Verhalten bleibt in OpenSpec.
+
 - OpenSpec ist die fachliche Source of Truth. Vor wesentlichen Änderungen einen Change anlegen oder aktualisieren; aktive Spezifikation und Implementierung gemeinsam pflegen.
 - Anwendungsimplementierung benötigt eine erfüllte Definition of Ready und einen gesonderten Nutzerauftrag für OpenSpec Apply. Der initiale Bootstrap-Auftrag umfasst ausschließlich Entwicklungsinfrastruktur, Skills, MCP-Konfiguration und Dokumentation.
 - LIVE bleibt technisch unerreichbar, bis ein eigener späterer Change ausdrücklich freigegeben ist. Agenten senden niemals Brokerorders. Risk Engine und Execution-Gates sind deterministisch und fail-closed.
