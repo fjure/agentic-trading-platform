@@ -25,6 +25,8 @@ tags:
   description: Isolated Alpaca paper workflow, without credentials or direct broker access.
 - name: Research
   description: Stored conservative research evidence and bounded ingestion, without trading permission.
+- name: Backtesting
+  description: Bounded deterministic local simulation without trading permission.
 paths:
   /health:
     get:
@@ -2824,6 +2826,870 @@ paths:
                 attempts: 0
                 errorCode: BLOCKED_LICENSE
                 traceId: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  /api/v1/research/backtests/strategies:
+    get:
+      tags:
+      - Backtesting
+      operationId: listBacktestStrategies
+      summary: Read the closed local simulation strategy catalog
+      description: REQ-BKT-001/006/007; T-BKT-002/011/014. Session and trusted Origin required before side effects.
+        No external/provider/broker calls or trading permission. Semantic fast < slow, chronological disjoint fold
+        windows and 366-day bounds are checked before job creation. Cursor signatures/context require runtime verification;
+        schema checks syntax only. Before complete publication results expose status and completed fold references
+        only. Default research dispatch remains disabled.
+      parameters: []
+      responses:
+        '200':
+          description: Bounded local simulation projection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BacktestStrategyCatalog'
+              example:
+                items:
+                - strategyId: flat-v1
+                  version: '1'
+                  parameterBounds: null
+                  defaultParameters: {}
+                - strategyId: buy-hold-v1
+                  version: '1'
+                  parameterBounds: null
+                  defaultParameters: {}
+                - strategyId: sma-cross-v1
+                  version: '1'
+                  parameterBounds:
+                    fastMinimum: 2
+                    slowMaximum: 100
+                    ordering: fast < slow
+                  defaultParameters:
+                    fast: 10
+                    slow: 30
+                instruments:
+                - instrumentId: 11111111-1111-4111-8111-111111111111
+                  symbol: SPY
+                - instrumentId: 22222222-2222-4222-8222-222222222222
+                  symbol: QQQ
+                assumptions:
+                  simulation: LOCAL_SIMULATION
+                  provider: ALPACA
+                  feed: iex
+                  interval: 15Min
+                  adjustment: raw
+                  currency: USD
+                  positionPolicy: LONG_FLAT
+                  fillModel: next-regular-bar-open-v1
+                  signalDelaySeconds: 60
+                  outcomeCutoffSeconds: 300
+                  decimalPrecision: 38
+                  rounding: ROUND_HALF_EVEN
+                  moneyScale: 8
+                  returnScale: 12
+                  dividendsIncluded: false
+                  forceLiquidation: false
+                budgets:
+                  maximumFolds: 12
+                  maximumCalendarDays: 366
+                  maximumInputRows: 100000
+                  attemptSeconds: 300
+                  maximumAttempts: 3
+                  maximumActiveJobs: 1
+                observedAt: '2026-10-23T00:00:00Z'
+        '400':
+          description: CURSOR_INVALID
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 400
+                code: CURSOR_INVALID
+                traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 401
+                code: UNAUTHORIZED
+                traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 403
+                code: FORBIDDEN
+                traceId: cccccccccccccccccccccccccccccccc
+        '404':
+          description: NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 404
+                code: NOT_FOUND
+                traceId: cccccccccccccccccccccccccccccccc
+        '409':
+          description: IDEMPOTENCY_CONFLICT
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 409
+                code: IDEMPOTENCY_CONFLICT
+                traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 503
+                code: UNAVAILABLE
+                traceId: cccccccccccccccccccccccccccccccc
+  /api/v1/research/backtests/runs:
+    post:
+      tags:
+      - Backtesting
+      operationId: createBacktestRun
+      summary: Accept a bounded immutable local simulation request
+      description: REQ-BKT-001/006/007; T-BKT-002/011/014. Session and trusted Origin required before side effects.
+        No external/provider/broker calls or trading permission. Semantic fast < slow, chronological disjoint fold
+        windows and 366-day bounds are checked before job creation. Cursor signatures/context require runtime verification;
+        schema checks syntax only. Before complete publication results expose status and completed fold references
+        only. Default research dispatch remains disabled.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '202':
+          description: Durable accepted receipt; identical payload/key replays return the same runId.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BacktestRun'
+              example:
+                runId: 11111111-1111-4111-8111-111111111111
+                status: ACCEPTED
+                request:
+                  instrumentId: 11111111-1111-4111-8111-111111111111
+                  strategyId: sma-cross-v1
+                  version: '1'
+                  parameters:
+                    fast: 2
+                    slow: 3
+                  startCash: '10000'
+                  feeUsd: '1'
+                  slippageBps: '5'
+                  quantityStep: '0.000001'
+                  folds:
+                  - trainingStart: '2026-10-20T00:00:00Z'
+                    trainingEnd: '2026-10-22T00:00:00Z'
+                    testStart: '2026-10-22T00:00:00Z'
+                    testEnd: '2026-10-23T00:00:00Z'
+                acceptedAt: '2026-10-23T00:00:00Z'
+                updatedAt: '2026-10-23T00:00:00Z'
+                completedAt: null
+                snapshot:
+                  version: 1
+                  committedAt: '2026-10-23T00:00:00Z'
+                manifestHash: null
+                resultHash: null
+                completedFolds: []
+                blockers: []
+                attempt: 0
+                publicationComplete: false
+        '400':
+          description: CURSOR_INVALID
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 400
+                code: CURSOR_INVALID
+                traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 401
+                code: UNAUTHORIZED
+                traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 403
+                code: FORBIDDEN
+                traceId: cccccccccccccccccccccccccccccccc
+        '404':
+          description: NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 404
+                code: NOT_FOUND
+                traceId: cccccccccccccccccccccccccccccccc
+        '409':
+          description: IDEMPOTENCY_CONFLICT
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 409
+                code: IDEMPOTENCY_CONFLICT
+                traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 503
+                code: UNAVAILABLE
+                traceId: cccccccccccccccccccccccccccccccc
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BacktestRequest'
+            example:
+              instrumentId: 11111111-1111-4111-8111-111111111111
+              strategyId: sma-cross-v1
+              version: '1'
+              parameters:
+                fast: 2
+                slow: 3
+              startCash: '10000'
+              feeUsd: '1'
+              slippageBps: '5'
+              quantityStep: '0.000001'
+              folds:
+              - trainingStart: '2026-10-20T00:00:00Z'
+                trainingEnd: '2026-10-22T00:00:00Z'
+                testStart: '2026-10-22T00:00:00Z'
+                testEnd: '2026-10-23T00:00:00Z'
+    get:
+      tags:
+      - Backtesting
+      operationId: listBacktestRuns
+      summary: List durable local simulation runs
+      description: REQ-BKT-001/006/007; T-BKT-002/011/014. Session and trusted Origin required before side effects.
+        No external/provider/broker calls or trading permission. Semantic fast < slow, chronological disjoint fold
+        windows and 366-day bounds are checked before job creation. Cursor signatures/context require runtime verification;
+        schema checks syntax only. Before complete publication results expose status and completed fold references
+        only. Default research dispatch remains disabled.
+      parameters:
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: cursor
+        in: query
+        schema:
+          $ref: '#/components/schemas/BacktestCursor'
+      - name: status
+        in: query
+        schema:
+          $ref: '#/components/schemas/BacktestState'
+      - name: instrumentId
+        in: query
+        schema:
+          $ref: '#/components/schemas/BacktestId'
+      responses:
+        '200':
+          description: Bounded local simulation projection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BacktestRunPage'
+              example:
+                items:
+                - runId: 11111111-1111-4111-8111-111111111111
+                  status: ACCEPTED
+                  request:
+                    instrumentId: 11111111-1111-4111-8111-111111111111
+                    strategyId: sma-cross-v1
+                    version: '1'
+                    parameters:
+                      fast: 2
+                      slow: 3
+                    startCash: '10000'
+                    feeUsd: '1'
+                    slippageBps: '5'
+                    quantityStep: '0.000001'
+                    folds:
+                    - trainingStart: '2026-10-20T00:00:00Z'
+                      trainingEnd: '2026-10-22T00:00:00Z'
+                      testStart: '2026-10-22T00:00:00Z'
+                      testEnd: '2026-10-23T00:00:00Z'
+                  acceptedAt: '2026-10-23T00:00:00Z'
+                  updatedAt: '2026-10-23T00:00:00Z'
+                  completedAt: null
+                  snapshot:
+                    version: 1
+                    committedAt: '2026-10-23T00:00:00Z'
+                  manifestHash: null
+                  resultHash: null
+                  completedFolds: []
+                  blockers: []
+                  attempt: 0
+                  publicationComplete: false
+                nextCursor: c3ludGhldGljLW9wYXF1ZS1jdXJzb3ItZXhhbXBsZQ
+                snapshotAt: '2026-10-23T00:00:00Z'
+        '400':
+          description: CURSOR_INVALID
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 400
+                code: CURSOR_INVALID
+                traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 401
+                code: UNAUTHORIZED
+                traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 403
+                code: FORBIDDEN
+                traceId: cccccccccccccccccccccccccccccccc
+        '404':
+          description: NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 404
+                code: NOT_FOUND
+                traceId: cccccccccccccccccccccccccccccccc
+        '409':
+          description: IDEMPOTENCY_CONFLICT
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 409
+                code: IDEMPOTENCY_CONFLICT
+                traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 503
+                code: UNAVAILABLE
+                traceId: cccccccccccccccccccccccccccccccc
+  /api/v1/research/backtests/runs/{runId}:
+    get:
+      tags:
+      - Backtesting
+      operationId: getBacktestRun
+      summary: Read a durable run and its server-bound manifest
+      description: REQ-BKT-001/006/007; T-BKT-002/011/014. Session and trusted Origin required before side effects.
+        No external/provider/broker calls or trading permission. Semantic fast < slow, chronological disjoint fold
+        windows and 366-day bounds are checked before job creation. Cursor signatures/context require runtime verification;
+        schema checks syntax only. Before complete publication results expose status and completed fold references
+        only. Default research dispatch remains disabled.
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/BacktestId'
+      responses:
+        '200':
+          description: Bounded local simulation projection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BacktestRunDetail'
+              example:
+                run:
+                  runId: 11111111-1111-4111-8111-111111111111
+                  status: RUNNING
+                  request:
+                    instrumentId: 11111111-1111-4111-8111-111111111111
+                    strategyId: sma-cross-v1
+                    version: '1'
+                    parameters:
+                      fast: 2
+                      slow: 3
+                    startCash: '10000'
+                    feeUsd: '1'
+                    slippageBps: '5'
+                    quantityStep: '0.000001'
+                    folds:
+                    - trainingStart: '2026-10-20T00:00:00Z'
+                      trainingEnd: '2026-10-22T00:00:00Z'
+                      testStart: '2026-10-22T00:00:00Z'
+                      testEnd: '2026-10-23T00:00:00Z'
+                  acceptedAt: '2026-10-23T00:00:00Z'
+                  updatedAt: '2026-10-23T00:00:00Z'
+                  completedAt: null
+                  snapshot:
+                    version: 1
+                    committedAt: '2026-10-23T00:00:00Z'
+                  manifestHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                  resultHash: null
+                  completedFolds: []
+                  blockers: []
+                  attempt: 1
+                  publicationComplete: false
+                manifest:
+                  manifestHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                  inputHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                  request:
+                    instrumentId: 11111111-1111-4111-8111-111111111111
+                    strategyId: sma-cross-v1
+                    version: '1'
+                    parameters:
+                      fast: 2
+                      slow: 3
+                    startCash: '10000'
+                    feeUsd: '1'
+                    slippageBps: '5'
+                    quantityStep: '0.000001'
+                    folds:
+                    - trainingStart: '2026-10-20T00:00:00Z'
+                      trainingEnd: '2026-10-22T00:00:00Z'
+                      testStart: '2026-10-22T00:00:00Z'
+                      testEnd: '2026-10-23T00:00:00Z'
+                  symbol: SPY
+                  strategyVersion: '1'
+                  simulatorVersion: backtest-simulator-v1
+                  metricsVersion: backtest-metrics-v1
+                  codeVersion: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                  snapshot:
+                    version: 1
+                    committedAt: '2026-10-23T00:00:00Z'
+                  assumptions:
+                    simulation: LOCAL_SIMULATION
+                    provider: ALPACA
+                    feed: iex
+                    interval: 15Min
+                    adjustment: raw
+                    currency: USD
+                    positionPolicy: LONG_FLAT
+                    fillModel: next-regular-bar-open-v1
+                    signalDelaySeconds: 60
+                    outcomeCutoffSeconds: 300
+                    decimalPrecision: 38
+                    rounding: ROUND_HALF_EVEN
+                    moneyScale: 8
+                    returnScale: 12
+                    dividendsIncluded: false
+                    forceLiquidation: false
+                  folds:
+                  - foldIndex: 0
+                    window:
+                      trainingStart: '2026-10-20T00:00:00Z'
+                      trainingEnd: '2026-10-22T00:00:00Z'
+                      testStart: '2026-10-22T00:00:00Z'
+                      testEnd: '2026-10-23T00:00:00Z'
+                    warmupStart: '2026-10-21T19:30:00Z'
+                    warmupEnd: '2026-10-22T00:00:00Z'
+                    warmupRuleVersion: regular-bars-slow-minus-one-v1
+                    expectedWarmupBars:
+                    - instrumentId: 11111111-1111-4111-8111-111111111111
+                      provider: ALPACA
+                      feed: iex
+                      interval: 15Min
+                      start: '2026-10-21T19:30:00Z'
+                      end: '2026-10-21T19:45:00Z'
+                      adjustment: raw
+                    - instrumentId: 11111111-1111-4111-8111-111111111111
+                      provider: ALPACA
+                      feed: iex
+                      interval: 15Min
+                      start: '2026-10-21T19:45:00Z'
+                      end: '2026-10-21T20:00:00Z'
+                      adjustment: raw
+                  decisionInputs:
+                  - valuationAt: '2026-10-22T13:45:00Z'
+                    knowledgeAt: '2026-10-22T13:46:00Z'
+                    inputHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                    revisions:
+                    - bar:
+                        instrumentId: 11111111-1111-4111-8111-111111111111
+                        provider: ALPACA
+                        feed: iex
+                        interval: 15Min
+                        start: '2026-10-21T19:30:00Z'
+                        end: '2026-10-21T19:45:00Z'
+                        adjustment: raw
+                      revisionId: 11111111-1111-4111-8111-111111111111
+                      localRevision: 1
+                      fingerprint: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                      ingestedAt: '2026-10-21T19:45:01Z'
+                      availableAt: '2026-10-21T19:45:01Z'
+                  outcomeInputs:
+                  - revision:
+                      bar:
+                        instrumentId: 11111111-1111-4111-8111-111111111111
+                        provider: ALPACA
+                        feed: iex
+                        interval: 15Min
+                        start: '2026-10-21T19:30:00Z'
+                        end: '2026-10-21T19:45:00Z'
+                        adjustment: raw
+                      revisionId: 11111111-1111-4111-8111-111111111111
+                      localRevision: 1
+                      fingerprint: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                      ingestedAt: '2026-10-21T19:45:01Z'
+                      availableAt: '2026-10-21T19:45:01Z'
+                    observationCutoff: '2026-10-21T19:50:00Z'
+                  calendarRevisions:
+                  - evidenceId: 11111111-1111-4111-8111-111111111111
+                    fingerprint: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                    revision: 1
+                    ingestedAt: '2026-10-20T00:00:00Z'
+                  qualityRevisions:
+                  - evidenceId: 11111111-1111-4111-8111-111111111111
+                    fingerprint: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                    revision: 1
+                    ingestedAt: '2026-10-20T00:00:00Z'
+                  corporateActionCoverage:
+                  - evidenceId: 11111111-1111-4111-8111-111111111111
+                    fingerprint: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                    revision: 1
+                    ingestedAt: '2026-10-20T00:00:00Z'
+        '400':
+          description: CURSOR_INVALID
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 400
+                code: CURSOR_INVALID
+                traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 401
+                code: UNAUTHORIZED
+                traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 403
+                code: FORBIDDEN
+                traceId: cccccccccccccccccccccccccccccccc
+        '404':
+          description: NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 404
+                code: NOT_FOUND
+                traceId: cccccccccccccccccccccccccccccccc
+        '409':
+          description: IDEMPOTENCY_CONFLICT
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 409
+                code: IDEMPOTENCY_CONFLICT
+                traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 503
+                code: UNAVAILABLE
+                traceId: cccccccccccccccccccccccccccccccc
+  /api/v1/research/backtests/runs/{runId}/results:
+    get:
+      tags:
+      - Backtesting
+      operationId: getBacktestResults
+      summary: Page published fold summaries, equity or simulated fills
+      description: REQ-BKT-001/006/007; T-BKT-002/011/014. Session and trusted Origin required before side effects.
+        No external/provider/broker calls or trading permission. Semantic fast < slow, chronological disjoint fold
+        windows and 366-day bounds are checked before job creation. Cursor signatures/context require runtime verification;
+        schema checks syntax only. Before complete publication results expose status and completed fold references
+        only. Default research dispatch remains disabled.
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/BacktestId'
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: cursor
+        in: query
+        schema:
+          $ref: '#/components/schemas/BacktestCursor'
+      - name: resultType
+        in: query
+        schema:
+          type: string
+          enum:
+          - summary
+          - equity
+          - fills
+          default: summary
+      - name: foldIndex
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 11
+      responses:
+        '200':
+          description: Bounded local simulation projection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BacktestResults'
+              example:
+                runId: 11111111-1111-4111-8111-111111111111
+                status: SUCCEEDED
+                resultType: summary
+                publicationComplete: true
+                completedFolds:
+                - foldIndex: 0
+                  resultHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                items:
+                - foldIndex: 0
+                  resultHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                  window:
+                    trainingStart: '2026-10-20T00:00:00Z'
+                    trainingEnd: '2026-10-22T00:00:00Z'
+                    testStart: '2026-10-22T00:00:00Z'
+                    testEnd: '2026-10-23T00:00:00Z'
+                  metrics:
+                    startCash: '10000'
+                    endEquity: '10000'
+                    netReturn: '0'
+                    maxDrawdown: '0'
+                    turnover: '0'
+                    feeTotalUsd: '0'
+                    slippageTotalUsd: '0'
+                    endCash: '10000'
+                    endQuantity: '0'
+                    valuation: MARK_TO_MARKET
+                    decisionCount: 1
+                    fillCount: 0
+                  references:
+                  - strategyId: flat-v1
+                    metrics:
+                      startCash: '10000'
+                      endEquity: '10000'
+                      netReturn: '0'
+                      maxDrawdown: '0'
+                      turnover: '0'
+                      feeTotalUsd: '0'
+                      slippageTotalUsd: '0'
+                      endCash: '10000'
+                      endQuantity: '0'
+                      valuation: MARK_TO_MARKET
+                      decisionCount: 1
+                      fillCount: 0
+                  - strategyId: buy-hold-v1
+                    metrics:
+                      startCash: '10000'
+                      endEquity: '10000'
+                      netReturn: '0'
+                      maxDrawdown: '0'
+                      turnover: '0'
+                      feeTotalUsd: '0'
+                      slippageTotalUsd: '0'
+                      endCash: '10000'
+                      endQuantity: '0'
+                      valuation: MARK_TO_MARKET
+                      decisionCount: 1
+                      fillCount: 0
+                  coverage:
+                    expectedBars: 26
+                    observedBars: 26
+                    warmupExpectedBars: 2
+                    warmupObservedBars: 2
+                    complete: true
+                    corporateActions: CERTIFIED_ABSENT
+                nextCursor: null
+                manifestHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                resultHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+        '400':
+          description: CURSOR_INVALID
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 400
+                code: CURSOR_INVALID
+                traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 401
+                code: UNAUTHORIZED
+                traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 403
+                code: FORBIDDEN
+                traceId: cccccccccccccccccccccccccccccccc
+        '404':
+          description: NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 404
+                code: NOT_FOUND
+                traceId: cccccccccccccccccccccccccccccccc
+        '409':
+          description: IDEMPOTENCY_CONFLICT
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 409
+                code: IDEMPOTENCY_CONFLICT
+                traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 503
+                code: UNAVAILABLE
+                traceId: cccccccccccccccccccccccccccccccc
 components:
   securitySchemes:
     LocalSession:
@@ -6956,12 +7822,14 @@ components:
             - INVALID_QUALITY
           - type: 'null'
       if:
+        additionalProperties: true
         properties:
           status:
             const: COMPUTABLE
         required:
         - status
       then:
+        additionalProperties: true
         properties:
           status:
             const: COMPUTABLE
@@ -6972,6 +7840,7 @@ components:
           evidenceIds:
             minItems: 3
       else:
+        additionalProperties: true
         properties:
           status:
             const: NOT_COMPUTABLE
@@ -7184,3 +8053,1429 @@ components:
           type: integer
           minimum: 0
           maximum: 9007199254740991
+    BacktestId:
+      type: string
+      format: uuid
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+    BacktestTimestamp:
+      type: string
+      format: date-time
+      pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$
+      description: UTC with Z and at most microsecond precision; local offsets and naive values are rejected.
+    BacktestHash:
+      type: string
+      pattern: ^[0-9a-f]{64}$
+    BacktestDecimal:
+      type: string
+      pattern: ^-?(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+      description: Exact finite Decimal string; no exponent, whitespace or JSON number. Precision 38, ROUND_HALF_EVEN;
+        USD scale 8 and return scale 12. Semantic precision and rounding are validated by the domain.
+    BacktestNonnegativeDecimal:
+      type: string
+      pattern: ^(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+    BacktestStartCash:
+      type: string
+      pattern: ^(?:(?:[1-9][0-9]{0,8})(?:\.[0-9]{1,8})?|0\.(?!0{1,8}$)[0-9]{1,8}|1000000000(?:\.0{1,8})?)$
+      description: Positive USD cash at most 1000000000, at most 8 fractional digits.
+    BacktestFeeUsd:
+      type: string
+      pattern: ^(?:(?:0|[1-9][0-9]{0,2})(?:\.[0-9]{1,8})?|1000(?:\.0{1,8})?)$
+    BacktestSlippageBps:
+      type: string
+      pattern: ^(?:(?:0|[1-9][0-9]?)(?:\.[0-9]{1,8})?|100(?:\.0{1,8})?)$
+    BacktestStrategyId:
+      type: string
+      enum:
+      - flat-v1
+      - buy-hold-v1
+      - sma-cross-v1
+    BacktestEmptyParameters:
+      type: object
+      additionalProperties: false
+      required: []
+      properties: {}
+    BacktestSmaParameters:
+      type: object
+      additionalProperties: false
+      required:
+      - fast
+      - slow
+      properties:
+        fast:
+          type: integer
+          minimum: 2
+          maximum: 99
+        slow:
+          type: integer
+          minimum: 3
+          maximum: 100
+      description: Semantic validation additionally requires fast < slow before job creation.
+    BacktestParameters:
+      oneOf:
+      - $ref: '#/components/schemas/BacktestEmptyParameters'
+      - $ref: '#/components/schemas/BacktestSmaParameters'
+    BacktestFold:
+      type: object
+      additionalProperties: false
+      required:
+      - trainingStart
+      - trainingEnd
+      - testStart
+      - testEnd
+      properties:
+        trainingStart:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        trainingEnd:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        testStart:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        testEnd:
+          $ref: '#/components/schemas/BacktestTimestamp'
+      description: Half-open UTC windows. Domain validation requires trainingStart < trainingEnd <= testStart < testEnd,
+        chronologically ordered disjoint tests and at most 366 calendar days including warm-up.
+    BacktestRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - instrumentId
+      - strategyId
+      - version
+      - parameters
+      - startCash
+      - feeUsd
+      - slippageBps
+      - quantityStep
+      - folds
+      properties:
+        instrumentId:
+          $ref: '#/components/schemas/BacktestId'
+        strategyId:
+          $ref: '#/components/schemas/BacktestStrategyId'
+        version:
+          type: string
+          const: '1'
+        parameters:
+          $ref: '#/components/schemas/BacktestParameters'
+        startCash:
+          $ref: '#/components/schemas/BacktestStartCash'
+        feeUsd:
+          $ref: '#/components/schemas/BacktestFeeUsd'
+        slippageBps:
+          $ref: '#/components/schemas/BacktestSlippageBps'
+        quantityStep:
+          type: string
+          const: '0.000001'
+        folds:
+          type: array
+          maxItems: 12
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/BacktestFold'
+      description: REQ-BKT-001/006/007; T-BKT-002/011/014. Only catalog instrument IDs resolving to SPY or QQQ. Server
+        binds every manifest reference. Semantic window and SMA ordering checks run before persistence.
+      allOf:
+      - if:
+          properties:
+            strategyId:
+              type: string
+              const: sma-cross-v1
+          additionalProperties: true
+        then:
+          properties:
+            parameters:
+              $ref: '#/components/schemas/BacktestSmaParameters'
+          additionalProperties: true
+        else:
+          properties:
+            parameters:
+              $ref: '#/components/schemas/BacktestEmptyParameters'
+          additionalProperties: true
+        additionalProperties: true
+    BacktestInstrument:
+      type: object
+      additionalProperties: false
+      required:
+      - instrumentId
+      - symbol
+      properties:
+        instrumentId:
+          $ref: '#/components/schemas/BacktestId'
+        symbol:
+          type: string
+          enum:
+          - SPY
+          - QQQ
+    BacktestParameterBounds:
+      type: object
+      additionalProperties: false
+      required:
+      - fastMinimum
+      - slowMaximum
+      - ordering
+      properties:
+        fastMinimum:
+          type: integer
+          const: 2
+        slowMaximum:
+          type: integer
+          const: 100
+        ordering:
+          type: string
+          const: fast < slow
+    BacktestStrategy:
+      type: object
+      additionalProperties: false
+      required:
+      - strategyId
+      - version
+      - parameterBounds
+      - defaultParameters
+      properties:
+        strategyId:
+          $ref: '#/components/schemas/BacktestStrategyId'
+        version:
+          type: string
+          const: '1'
+        parameterBounds:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestParameterBounds'
+          - type: 'null'
+        defaultParameters:
+          $ref: '#/components/schemas/BacktestParameters'
+      allOf:
+      - if:
+          properties:
+            strategyId:
+              type: string
+              const: sma-cross-v1
+          additionalProperties: true
+        then:
+          properties:
+            parameterBounds:
+              $ref: '#/components/schemas/BacktestParameterBounds'
+            defaultParameters:
+              $ref: '#/components/schemas/BacktestSmaParameters'
+          additionalProperties: true
+        else:
+          properties:
+            parameterBounds:
+              type: 'null'
+            defaultParameters:
+              $ref: '#/components/schemas/BacktestEmptyParameters'
+          additionalProperties: true
+        additionalProperties: true
+    BacktestAssumptions:
+      type: object
+      additionalProperties: false
+      required:
+      - simulation
+      - provider
+      - feed
+      - interval
+      - adjustment
+      - currency
+      - positionPolicy
+      - fillModel
+      - signalDelaySeconds
+      - outcomeCutoffSeconds
+      - decimalPrecision
+      - rounding
+      - moneyScale
+      - returnScale
+      - dividendsIncluded
+      - forceLiquidation
+      properties:
+        simulation:
+          type: string
+          const: LOCAL_SIMULATION
+        provider:
+          type: string
+          const: ALPACA
+        feed:
+          type: string
+          const: iex
+        interval:
+          type: string
+          const: 15Min
+        adjustment:
+          type: string
+          const: raw
+        currency:
+          type: string
+          const: USD
+        positionPolicy:
+          type: string
+          const: LONG_FLAT
+        fillModel:
+          type: string
+          const: next-regular-bar-open-v1
+        signalDelaySeconds:
+          type: integer
+          const: 60
+        outcomeCutoffSeconds:
+          type: integer
+          const: 300
+        decimalPrecision:
+          type: integer
+          const: 38
+        rounding:
+          type: string
+          const: ROUND_HALF_EVEN
+        moneyScale:
+          type: integer
+          const: 8
+        returnScale:
+          type: integer
+          const: 12
+        dividendsIncluded:
+          type: boolean
+          const: false
+        forceLiquidation:
+          type: boolean
+          const: false
+    BacktestBudgets:
+      type: object
+      additionalProperties: false
+      required:
+      - maximumFolds
+      - maximumCalendarDays
+      - maximumInputRows
+      - attemptSeconds
+      - maximumAttempts
+      - maximumActiveJobs
+      properties:
+        maximumFolds:
+          type: integer
+          const: 12
+        maximumCalendarDays:
+          type: integer
+          const: 366
+        maximumInputRows:
+          type: integer
+          const: 100000
+        attemptSeconds:
+          type: integer
+          const: 300
+        maximumAttempts:
+          type: integer
+          const: 3
+        maximumActiveJobs:
+          type: integer
+          const: 1
+    BacktestStrategyCatalog:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - instruments
+      - assumptions
+      - budgets
+      - observedAt
+      properties:
+        items:
+          type: array
+          maxItems: 3
+          minItems: 3
+          items:
+            $ref: '#/components/schemas/BacktestStrategy'
+        instruments:
+          type: array
+          maxItems: 2
+          minItems: 2
+          items:
+            $ref: '#/components/schemas/BacktestInstrument'
+        assumptions:
+          $ref: '#/components/schemas/BacktestAssumptions'
+        budgets:
+          $ref: '#/components/schemas/BacktestBudgets'
+        observedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+    BacktestState:
+      type: string
+      enum:
+      - ACCEPTED
+      - RUNNING
+      - SUCCEEDED
+      - BLOCKED
+      - FAILED
+    BacktestReasonCode:
+      type: string
+      enum:
+      - BLOCKED_DATA_UNAVAILABLE
+      - BLOCKED_FIRST_OBSERVED
+      - BLOCKED_CALENDAR_UNKNOWN
+      - BLOCKED_QUALITY_UNKNOWN
+      - BLOCKED_CORPORATE_ACTIONS_UNKNOWN
+      - BLOCKED_CORPORATE_ACTION
+      - BLOCKED_WARMUP_MISSING
+      - BLOCKED_NEXT_BAR_MISSING
+      - BLOCKED_OUTCOME_UNAVAILABLE
+      - BLOCKED_SELL_FEES
+      - BUDGET_EXHAUSTED
+      - INTERNAL_FAILURE
+    BacktestBlocker:
+      type: object
+      additionalProperties: false
+      required:
+      - code
+      - foldIndex
+      - barStart
+      - evidenceId
+      properties:
+        code:
+          $ref: '#/components/schemas/BacktestReasonCode'
+        foldIndex:
+          anyOf:
+          - type: integer
+            minimum: 0
+            maximum: 11
+          - type: 'null'
+        barStart:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$
+          description: UTC with Z and at most microsecond precision; local offsets and naive values are rejected.
+        evidenceId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+    BacktestSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+      - version
+      - committedAt
+      properties:
+        version:
+          type: integer
+          minimum: 0
+          maximum: 9223372036854775807
+        committedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+    BacktestBarIdentity:
+      type: object
+      additionalProperties: false
+      required:
+      - instrumentId
+      - provider
+      - feed
+      - interval
+      - start
+      - end
+      - adjustment
+      properties:
+        instrumentId:
+          $ref: '#/components/schemas/BacktestId'
+        provider:
+          type: string
+          const: ALPACA
+        feed:
+          type: string
+          const: iex
+        interval:
+          type: string
+          const: 15Min
+        start:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        end:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        adjustment:
+          type: string
+          const: raw
+    BacktestRevision:
+      type: object
+      additionalProperties: false
+      required:
+      - bar
+      - revisionId
+      - localRevision
+      - fingerprint
+      - ingestedAt
+      - availableAt
+      properties:
+        bar:
+          $ref: '#/components/schemas/BacktestBarIdentity'
+        revisionId:
+          $ref: '#/components/schemas/BacktestId'
+        localRevision:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        fingerprint:
+          $ref: '#/components/schemas/BacktestHash'
+        ingestedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        availableAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+    BacktestDecisionInput:
+      type: object
+      additionalProperties: false
+      required:
+      - valuationAt
+      - knowledgeAt
+      - inputHash
+      - revisions
+      properties:
+        valuationAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        knowledgeAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        inputHash:
+          $ref: '#/components/schemas/BacktestHash'
+        revisions:
+          type: array
+          maxItems: 100000
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestRevision'
+    BacktestOutcomeInput:
+      type: object
+      additionalProperties: false
+      required:
+      - revision
+      - observationCutoff
+      properties:
+        revision:
+          $ref: '#/components/schemas/BacktestRevision'
+        observationCutoff:
+          $ref: '#/components/schemas/BacktestTimestamp'
+    BacktestEvidenceRevision:
+      type: object
+      additionalProperties: false
+      required:
+      - evidenceId
+      - fingerprint
+      - revision
+      - ingestedAt
+      properties:
+        evidenceId:
+          $ref: '#/components/schemas/BacktestId'
+        fingerprint:
+          $ref: '#/components/schemas/BacktestHash'
+        revision:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        ingestedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+    BacktestBoundFold:
+      type: object
+      additionalProperties: false
+      required:
+      - foldIndex
+      - window
+      - warmupStart
+      - warmupEnd
+      - warmupRuleVersion
+      - expectedWarmupBars
+      properties:
+        foldIndex:
+          type: integer
+          minimum: 0
+          maximum: 11
+        window:
+          $ref: '#/components/schemas/BacktestFold'
+        warmupStart:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        warmupEnd:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        warmupRuleVersion:
+          type: string
+          const: regular-bars-slow-minus-one-v1
+        expectedWarmupBars:
+          type: array
+          maxItems: 99
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestBarIdentity'
+    BacktestManifest:
+      type: object
+      additionalProperties: false
+      required:
+      - manifestHash
+      - inputHash
+      - request
+      - symbol
+      - strategyVersion
+      - simulatorVersion
+      - metricsVersion
+      - codeVersion
+      - snapshot
+      - assumptions
+      - folds
+      - decisionInputs
+      - outcomeInputs
+      - calendarRevisions
+      - qualityRevisions
+      - corporateActionCoverage
+      properties:
+        manifestHash:
+          $ref: '#/components/schemas/BacktestHash'
+        inputHash:
+          $ref: '#/components/schemas/BacktestHash'
+        request:
+          $ref: '#/components/schemas/BacktestRequest'
+        symbol:
+          type: string
+          enum:
+          - SPY
+          - QQQ
+        strategyVersion:
+          type: string
+          const: '1'
+        simulatorVersion:
+          type: string
+          const: backtest-simulator-v1
+        metricsVersion:
+          type: string
+          const: backtest-metrics-v1
+        codeVersion:
+          type: string
+          pattern: ^[0-9a-f]{40}$
+        snapshot:
+          $ref: '#/components/schemas/BacktestSnapshot'
+        assumptions:
+          $ref: '#/components/schemas/BacktestAssumptions'
+        folds:
+          type: array
+          maxItems: 12
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/BacktestBoundFold'
+        decisionInputs:
+          type: array
+          maxItems: 100000
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestDecisionInput'
+        outcomeInputs:
+          type: array
+          maxItems: 100000
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestOutcomeInput'
+        calendarRevisions:
+          type: array
+          maxItems: 100000
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestEvidenceRevision'
+        qualityRevisions:
+          type: array
+          maxItems: 100000
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestEvidenceRevision'
+        corporateActionCoverage:
+          type: array
+          maxItems: 100000
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestEvidenceRevision'
+      description: Immutable server-bound input manifest. Revision arrays are sorted by natural identity/revisionId;
+        decisions by knowledgeAt and outcomes by bar identity/cutoff. Run UUID and elapsed runtime excluded from hashes.
+        A manifest may be unavailable until dataset binding completes.
+    BacktestFoldReference:
+      type: object
+      additionalProperties: false
+      required:
+      - foldIndex
+      - resultHash
+      properties:
+        foldIndex:
+          type: integer
+          minimum: 0
+          maximum: 11
+        resultHash:
+          $ref: '#/components/schemas/BacktestHash'
+    BacktestRun:
+      type: object
+      additionalProperties: false
+      required:
+      - runId
+      - status
+      - request
+      - acceptedAt
+      - updatedAt
+      - completedAt
+      - snapshot
+      - manifestHash
+      - resultHash
+      - completedFolds
+      - blockers
+      - attempt
+      - publicationComplete
+      properties:
+        runId:
+          $ref: '#/components/schemas/BacktestId'
+        status:
+          $ref: '#/components/schemas/BacktestState'
+        request:
+          $ref: '#/components/schemas/BacktestRequest'
+        acceptedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        updatedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        completedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$
+          description: UTC with Z and at most microsecond precision; local offsets and naive values are rejected.
+        snapshot:
+          $ref: '#/components/schemas/BacktestSnapshot'
+        manifestHash:
+          type:
+          - string
+          - 'null'
+          pattern: ^[0-9a-f]{64}$
+        resultHash:
+          type:
+          - string
+          - 'null'
+          pattern: ^[0-9a-f]{64}$
+        completedFolds:
+          type: array
+          maxItems: 12
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestFoldReference'
+        blockers:
+          type: array
+          maxItems: 100
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestBlocker'
+        attempt:
+          type: integer
+          minimum: 0
+          maximum: 3
+        publicationComplete:
+          type: boolean
+      description: Durable receipt returned on initial and identical replayed requests. BLOCKED/FAILED may retain completed
+        fold references; never a run-wide return.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  type: string
+                  enum:
+                  - ACCEPTED
+                  - RUNNING
+              additionalProperties: true
+            then:
+              properties:
+                completedAt:
+                  type: 'null'
+                resultHash:
+                  type: 'null'
+                publicationComplete:
+                  const: false
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  type: string
+                  const: SUCCEEDED
+              additionalProperties: true
+            then:
+              properties:
+                completedAt:
+                  $ref: '#/components/schemas/BacktestTimestamp'
+                manifestHash:
+                  $ref: '#/components/schemas/BacktestHash'
+                resultHash:
+                  $ref: '#/components/schemas/BacktestHash'
+                blockers:
+                  maxItems: 0
+                publicationComplete:
+                  const: true
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  type: string
+                  enum:
+                  - BLOCKED
+                  - FAILED
+              additionalProperties: true
+            then:
+              properties:
+                completedAt:
+                  $ref: '#/components/schemas/BacktestTimestamp'
+                resultHash:
+                  type: 'null'
+                publicationComplete:
+                  const: false
+                blockers:
+                  minItems: 1
+              additionalProperties: true
+            additionalProperties: true
+    BacktestRunDetail:
+      type: object
+      additionalProperties: false
+      required:
+      - run
+      - manifest
+      properties:
+        run:
+          $ref: '#/components/schemas/BacktestRun'
+        manifest:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestManifest'
+          - type: 'null'
+    BacktestCursor:
+      type: string
+      minLength: 32
+      maxLength: 2048
+      pattern: ^[A-Za-z0-9_-]+$
+      description: Opaque HMAC-signed keyset token, bound to resource kind, runId, result type, filters and immutable
+        list snapshot. Malformed/signature-invalid token => 400 CURSOR_INVALID; changed context/snapshot => 409 SNAPSHOT_CONFLICT.
+        Never client-built. Example tokens illustrate syntax only, not valid signatures.
+    BacktestRunPage:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      - snapshotAt
+      properties:
+        items:
+          type: array
+          maxItems: 200
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestRun'
+        nextCursor:
+          type:
+          - string
+          - 'null'
+          minLength: 32
+          maxLength: 2048
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Opaque HMAC-signed keyset token, bound to resource kind, runId, result type, filters and immutable
+            list snapshot. Malformed/signature-invalid token => 400 CURSOR_INVALID; changed context/snapshot => 409
+            SNAPSHOT_CONFLICT. Never client-built. Example tokens illustrate syntax only, not valid signatures.
+        snapshotAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+    BacktestMetrics:
+      type: object
+      additionalProperties: false
+      required:
+      - startCash
+      - endEquity
+      - netReturn
+      - maxDrawdown
+      - turnover
+      - feeTotalUsd
+      - slippageTotalUsd
+      - endCash
+      - endQuantity
+      - valuation
+      - decisionCount
+      - fillCount
+      properties:
+        startCash:
+          $ref: '#/components/schemas/BacktestStartCash'
+        endEquity:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        netReturn:
+          $ref: '#/components/schemas/BacktestDecimal'
+        maxDrawdown:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        turnover:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        feeTotalUsd:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        slippageTotalUsd:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        endCash:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        endQuantity:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        valuation:
+          type: string
+          const: MARK_TO_MARKET
+        decisionCount:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        fillCount:
+          type: integer
+          minimum: 0
+          maximum: 100000
+    BacktestCoverage:
+      type: object
+      additionalProperties: false
+      required:
+      - expectedBars
+      - observedBars
+      - warmupExpectedBars
+      - warmupObservedBars
+      - complete
+      - corporateActions
+      properties:
+        expectedBars:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        observedBars:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        warmupExpectedBars:
+          type: integer
+          minimum: 0
+          maximum: 99
+        warmupObservedBars:
+          type: integer
+          minimum: 0
+          maximum: 99
+        complete:
+          type: boolean
+          const: true
+        corporateActions:
+          type: string
+          const: CERTIFIED_ABSENT
+    BacktestReferenceMetrics:
+      type: object
+      additionalProperties: false
+      required:
+      - strategyId
+      - metrics
+      properties:
+        strategyId:
+          type: string
+          enum:
+          - flat-v1
+          - buy-hold-v1
+        metrics:
+          $ref: '#/components/schemas/BacktestMetrics'
+    BacktestFoldSummary:
+      type: object
+      additionalProperties: false
+      required:
+      - foldIndex
+      - resultHash
+      - window
+      - metrics
+      - references
+      - coverage
+      properties:
+        foldIndex:
+          type: integer
+          minimum: 0
+          maximum: 11
+        resultHash:
+          $ref: '#/components/schemas/BacktestHash'
+        window:
+          $ref: '#/components/schemas/BacktestFold'
+        metrics:
+          $ref: '#/components/schemas/BacktestMetrics'
+        references:
+          type: array
+          maxItems: 2
+          minItems: 2
+          items:
+            $ref: '#/components/schemas/BacktestReferenceMetrics'
+        coverage:
+          $ref: '#/components/schemas/BacktestCoverage'
+    BacktestEquityPoint:
+      type: object
+      additionalProperties: false
+      required:
+      - foldIndex
+      - strategyId
+      - at
+      - cash
+      - quantity
+      - close
+      - equity
+      - revisionId
+      properties:
+        foldIndex:
+          type: integer
+          minimum: 0
+          maximum: 11
+        strategyId:
+          $ref: '#/components/schemas/BacktestStrategyId'
+        at:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        cash:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        quantity:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        close:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        equity:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        revisionId:
+          $ref: '#/components/schemas/BacktestId'
+    BacktestFill:
+      type: object
+      additionalProperties: false
+      required:
+      - foldIndex
+      - strategyId
+      - sequence
+      - signalAt
+      - executedAt
+      - side
+      - quantity
+      - rawOpen
+      - price
+      - notionalUsd
+      - feeUsd
+      - slippageUsd
+      - cashAfter
+      - quantityAfter
+      - revisionId
+      - observationCutoff
+      properties:
+        foldIndex:
+          type: integer
+          minimum: 0
+          maximum: 11
+        strategyId:
+          $ref: '#/components/schemas/BacktestStrategyId'
+        sequence:
+          type: integer
+          minimum: 1
+          maximum: 100000
+        signalAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        executedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        side:
+          type: string
+          enum:
+          - BUY
+          - SELL
+        quantity:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        rawOpen:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        price:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        notionalUsd:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        feeUsd:
+          $ref: '#/components/schemas/BacktestFeeUsd'
+        slippageUsd:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        cashAfter:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        quantityAfter:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        revisionId:
+          $ref: '#/components/schemas/BacktestId'
+        observationCutoff:
+          $ref: '#/components/schemas/BacktestTimestamp'
+    BacktestSummaryPage:
+      type: object
+      additionalProperties: false
+      required:
+      - runId
+      - status
+      - resultType
+      - publicationComplete
+      - completedFolds
+      - items
+      - nextCursor
+      - manifestHash
+      - resultHash
+      properties:
+        runId:
+          $ref: '#/components/schemas/BacktestId'
+        status:
+          $ref: '#/components/schemas/BacktestState'
+        resultType:
+          type: string
+          const: summary
+        publicationComplete:
+          type: boolean
+        completedFolds:
+          type: array
+          maxItems: 12
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestFoldReference'
+        items:
+          type: array
+          maxItems: 200
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestFoldSummary'
+        nextCursor:
+          type:
+          - string
+          - 'null'
+          minLength: 32
+          maxLength: 2048
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Opaque HMAC-signed keyset token, bound to resource kind, runId, result type, filters and immutable
+            list snapshot. Malformed/signature-invalid token => 400 CURSOR_INVALID; changed context/snapshot => 409
+            SNAPSHOT_CONFLICT. Never client-built. Example tokens illustrate syntax only, not valid signatures.
+        manifestHash:
+          type:
+          - string
+          - 'null'
+          pattern: ^[0-9a-f]{64}$
+        resultHash:
+          type:
+          - string
+          - 'null'
+          pattern: ^[0-9a-f]{64}$
+      description: Only atomically published complete runs expose result rows. Before full publication items is empty
+        and completedFolds identifies durable partial folds; never aggregate independent folds.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  type: string
+                  const: SUCCEEDED
+              additionalProperties: true
+            then:
+              properties:
+                publicationComplete:
+                  const: true
+                manifestHash:
+                  $ref: '#/components/schemas/BacktestHash'
+                resultHash:
+                  $ref: '#/components/schemas/BacktestHash'
+              additionalProperties: true
+            else:
+              properties:
+                publicationComplete:
+                  const: false
+                items:
+                  maxItems: 0
+                nextCursor:
+                  type: 'null'
+                resultHash:
+                  type: 'null'
+              additionalProperties: true
+            additionalProperties: true
+    BacktestEquityPage:
+      type: object
+      additionalProperties: false
+      required:
+      - runId
+      - status
+      - resultType
+      - publicationComplete
+      - completedFolds
+      - items
+      - nextCursor
+      - manifestHash
+      - resultHash
+      properties:
+        runId:
+          $ref: '#/components/schemas/BacktestId'
+        status:
+          $ref: '#/components/schemas/BacktestState'
+        resultType:
+          type: string
+          const: equity
+        publicationComplete:
+          type: boolean
+        completedFolds:
+          type: array
+          maxItems: 12
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestFoldReference'
+        items:
+          type: array
+          maxItems: 200
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestEquityPoint'
+        nextCursor:
+          type:
+          - string
+          - 'null'
+          minLength: 32
+          maxLength: 2048
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Opaque HMAC-signed keyset token, bound to resource kind, runId, result type, filters and immutable
+            list snapshot. Malformed/signature-invalid token => 400 CURSOR_INVALID; changed context/snapshot => 409
+            SNAPSHOT_CONFLICT. Never client-built. Example tokens illustrate syntax only, not valid signatures.
+        manifestHash:
+          type:
+          - string
+          - 'null'
+          pattern: ^[0-9a-f]{64}$
+        resultHash:
+          type:
+          - string
+          - 'null'
+          pattern: ^[0-9a-f]{64}$
+      description: Only atomically published complete runs expose result rows. Before full publication items is empty
+        and completedFolds identifies durable partial folds; never aggregate independent folds.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  type: string
+                  const: SUCCEEDED
+              additionalProperties: true
+            then:
+              properties:
+                publicationComplete:
+                  const: true
+                manifestHash:
+                  $ref: '#/components/schemas/BacktestHash'
+                resultHash:
+                  $ref: '#/components/schemas/BacktestHash'
+              additionalProperties: true
+            else:
+              properties:
+                publicationComplete:
+                  const: false
+                items:
+                  maxItems: 0
+                nextCursor:
+                  type: 'null'
+                resultHash:
+                  type: 'null'
+              additionalProperties: true
+            additionalProperties: true
+    BacktestFillsPage:
+      type: object
+      additionalProperties: false
+      required:
+      - runId
+      - status
+      - resultType
+      - publicationComplete
+      - completedFolds
+      - items
+      - nextCursor
+      - manifestHash
+      - resultHash
+      properties:
+        runId:
+          $ref: '#/components/schemas/BacktestId'
+        status:
+          $ref: '#/components/schemas/BacktestState'
+        resultType:
+          type: string
+          const: fills
+        publicationComplete:
+          type: boolean
+        completedFolds:
+          type: array
+          maxItems: 12
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestFoldReference'
+        items:
+          type: array
+          maxItems: 200
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestFill'
+        nextCursor:
+          type:
+          - string
+          - 'null'
+          minLength: 32
+          maxLength: 2048
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Opaque HMAC-signed keyset token, bound to resource kind, runId, result type, filters and immutable
+            list snapshot. Malformed/signature-invalid token => 400 CURSOR_INVALID; changed context/snapshot => 409
+            SNAPSHOT_CONFLICT. Never client-built. Example tokens illustrate syntax only, not valid signatures.
+        manifestHash:
+          type:
+          - string
+          - 'null'
+          pattern: ^[0-9a-f]{64}$
+        resultHash:
+          type:
+          - string
+          - 'null'
+          pattern: ^[0-9a-f]{64}$
+      description: Only atomically published complete runs expose result rows. Before full publication items is empty
+        and completedFolds identifies durable partial folds; never aggregate independent folds.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  type: string
+                  const: SUCCEEDED
+              additionalProperties: true
+            then:
+              properties:
+                publicationComplete:
+                  const: true
+                manifestHash:
+                  $ref: '#/components/schemas/BacktestHash'
+                resultHash:
+                  $ref: '#/components/schemas/BacktestHash'
+              additionalProperties: true
+            else:
+              properties:
+                publicationComplete:
+                  const: false
+                items:
+                  maxItems: 0
+                nextCursor:
+                  type: 'null'
+                resultHash:
+                  type: 'null'
+              additionalProperties: true
+            additionalProperties: true
+    BacktestResults:
+      oneOf:
+      - $ref: '#/components/schemas/BacktestSummaryPage'
+      - $ref: '#/components/schemas/BacktestEquityPage'
+      - $ref: '#/components/schemas/BacktestFillsPage'
+      discriminator:
+        propertyName: resultType
+        mapping:
+          summary: '#/components/schemas/BacktestSummaryPage'
+          equity: '#/components/schemas/BacktestEquityPage'
+          fills: '#/components/schemas/BacktestFillsPage'
+    BacktestProblemCode:
+      type: string
+      enum:
+      - INVALID_REQUEST
+      - UNAUTHORIZED
+      - FORBIDDEN
+      - NOT_FOUND
+      - CURSOR_INVALID
+      - SNAPSHOT_CONFLICT
+      - IDEMPOTENCY_CONFLICT
+      - UNAVAILABLE
+    BacktestProblem:
+      type: object
+      additionalProperties: false
+      required:
+      - type
+      - title
+      - status
+      - code
+      - traceId
+      properties:
+        type:
+          type: string
+          const: urn:agentic-trading-lab:backtest-problem
+        title:
+          type: string
+          const: Backtest request failed
+        status:
+          type: integer
+          enum:
+          - 400
+          - 401
+          - 403
+          - 404
+          - 409
+          - 503
+        code:
+          $ref: '#/components/schemas/BacktestProblemCode'
+        traceId:
+          type: string
+          pattern: ^[0-9a-f]{32}$
+      description: Whitelist-only sanitized problem; no provider text, SQL, stack, credentials or arbitrary detail.
+      allOf:
+      - if:
+          properties:
+            status:
+              const: 400
+          additionalProperties: true
+        then:
+          properties:
+            code:
+              type: string
+              enum:
+              - INVALID_REQUEST
+              - CURSOR_INVALID
+          additionalProperties: true
+        additionalProperties: true
+      - if:
+          properties:
+            status:
+              const: 401
+          additionalProperties: true
+        then:
+          properties:
+            code:
+              type: string
+              enum:
+              - UNAUTHORIZED
+          additionalProperties: true
+        additionalProperties: true
+      - if:
+          properties:
+            status:
+              const: 403
+          additionalProperties: true
+        then:
+          properties:
+            code:
+              type: string
+              enum:
+              - FORBIDDEN
+          additionalProperties: true
+        additionalProperties: true
+      - if:
+          properties:
+            status:
+              const: 404
+          additionalProperties: true
+        then:
+          properties:
+            code:
+              type: string
+              enum:
+              - NOT_FOUND
+          additionalProperties: true
+        additionalProperties: true
+      - if:
+          properties:
+            status:
+              const: 409
+          additionalProperties: true
+        then:
+          properties:
+            code:
+              type: string
+              enum:
+              - SNAPSHOT_CONFLICT
+              - IDEMPOTENCY_CONFLICT
+          additionalProperties: true
+        additionalProperties: true
+      - if:
+          properties:
+            status:
+              const: 503
+          additionalProperties: true
+        then:
+          properties:
+            code:
+              type: string
+              enum:
+              - UNAVAILABLE
+          additionalProperties: true
+        additionalProperties: true

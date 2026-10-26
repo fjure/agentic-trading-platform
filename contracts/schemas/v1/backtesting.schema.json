@@ -1,0 +1,1985 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/schemas/v1/backtesting.schema.json",
+  "title": "Backtesting v1",
+  "$ref": "#/$defs/BacktestRequest",
+  "$defs": {
+    "BacktestId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "BacktestTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+      "description": "UTC with Z and at most microsecond precision; local offsets and naive values are rejected."
+    },
+    "BacktestHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "BacktestDecimal": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$",
+      "description": "Exact finite Decimal string; no exponent, whitespace or JSON number. Precision 38, ROUND_HALF_EVEN; USD scale 8 and return scale 12. Semantic precision and rounding are validated by the domain."
+    },
+    "BacktestNonnegativeDecimal": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+    },
+    "BacktestStartCash": {
+      "type": "string",
+      "pattern": "^(?:(?:[1-9][0-9]{0,8})(?:\\.[0-9]{1,8})?|0\\.(?!0{1,8}$)[0-9]{1,8}|1000000000(?:\\.0{1,8})?)$",
+      "description": "Positive USD cash at most 1000000000, at most 8 fractional digits."
+    },
+    "BacktestFeeUsd": {
+      "type": "string",
+      "pattern": "^(?:(?:0|[1-9][0-9]{0,2})(?:\\.[0-9]{1,8})?|1000(?:\\.0{1,8})?)$"
+    },
+    "BacktestSlippageBps": {
+      "type": "string",
+      "pattern": "^(?:(?:0|[1-9][0-9]?)(?:\\.[0-9]{1,8})?|100(?:\\.0{1,8})?)$"
+    },
+    "BacktestStrategyId": {
+      "type": "string",
+      "enum": [
+        "flat-v1",
+        "buy-hold-v1",
+        "sma-cross-v1"
+      ]
+    },
+    "BacktestEmptyParameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
+    "BacktestSmaParameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fast",
+        "slow"
+      ],
+      "properties": {
+        "fast": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 99
+        },
+        "slow": {
+          "type": "integer",
+          "minimum": 3,
+          "maximum": 100
+        }
+      },
+      "description": "Semantic validation additionally requires fast < slow before job creation."
+    },
+    "BacktestParameters": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/BacktestEmptyParameters"
+        },
+        {
+          "$ref": "#/$defs/BacktestSmaParameters"
+        }
+      ]
+    },
+    "BacktestFold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trainingStart",
+        "trainingEnd",
+        "testStart",
+        "testEnd"
+      ],
+      "properties": {
+        "trainingStart": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "trainingEnd": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "testStart": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "testEnd": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      },
+      "description": "Half-open UTC windows. Domain validation requires trainingStart < trainingEnd <= testStart < testEnd, chronologically ordered disjoint tests and at most 366 calendar days including warm-up."
+    },
+    "BacktestRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instrumentId",
+        "strategyId",
+        "version",
+        "parameters",
+        "startCash",
+        "feeUsd",
+        "slippageBps",
+        "quantityStep",
+        "folds"
+      ],
+      "properties": {
+        "instrumentId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "strategyId": {
+          "$ref": "#/$defs/BacktestStrategyId"
+        },
+        "version": {
+          "type": "string",
+          "const": "1"
+        },
+        "parameters": {
+          "$ref": "#/$defs/BacktestParameters"
+        },
+        "startCash": {
+          "$ref": "#/$defs/BacktestStartCash"
+        },
+        "feeUsd": {
+          "$ref": "#/$defs/BacktestFeeUsd"
+        },
+        "slippageBps": {
+          "$ref": "#/$defs/BacktestSlippageBps"
+        },
+        "quantityStep": {
+          "type": "string",
+          "const": "0.000001"
+        },
+        "folds": {
+          "type": "array",
+          "maxItems": 12,
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/BacktestFold"
+          }
+        }
+      },
+      "description": "REQ-BKT-001/006/007; T-BKT-002/011/014. Only catalog instrument IDs resolving to SPY or QQQ. Server binds every manifest reference. Semantic window and SMA ordering checks run before persistence.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "strategyId": {
+                "type": "string",
+                "const": "sma-cross-v1"
+              }
+            },
+            "additionalProperties": true
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/BacktestSmaParameters"
+              }
+            },
+            "additionalProperties": true
+          },
+          "else": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/BacktestEmptyParameters"
+              }
+            },
+            "additionalProperties": true
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "BacktestInstrument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instrumentId",
+        "symbol"
+      ],
+      "properties": {
+        "instrumentId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "symbol": {
+          "type": "string",
+          "enum": [
+            "SPY",
+            "QQQ"
+          ]
+        }
+      }
+    },
+    "BacktestParameterBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fastMinimum",
+        "slowMaximum",
+        "ordering"
+      ],
+      "properties": {
+        "fastMinimum": {
+          "type": "integer",
+          "const": 2
+        },
+        "slowMaximum": {
+          "type": "integer",
+          "const": 100
+        },
+        "ordering": {
+          "type": "string",
+          "const": "fast < slow"
+        }
+      }
+    },
+    "BacktestStrategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "strategyId",
+        "version",
+        "parameterBounds",
+        "defaultParameters"
+      ],
+      "properties": {
+        "strategyId": {
+          "$ref": "#/$defs/BacktestStrategyId"
+        },
+        "version": {
+          "type": "string",
+          "const": "1"
+        },
+        "parameterBounds": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestParameterBounds"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defaultParameters": {
+          "$ref": "#/$defs/BacktestParameters"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "strategyId": {
+                "type": "string",
+                "const": "sma-cross-v1"
+              }
+            },
+            "additionalProperties": true
+          },
+          "then": {
+            "properties": {
+              "parameterBounds": {
+                "$ref": "#/$defs/BacktestParameterBounds"
+              },
+              "defaultParameters": {
+                "$ref": "#/$defs/BacktestSmaParameters"
+              }
+            },
+            "additionalProperties": true
+          },
+          "else": {
+            "properties": {
+              "parameterBounds": {
+                "type": "null"
+              },
+              "defaultParameters": {
+                "$ref": "#/$defs/BacktestEmptyParameters"
+              }
+            },
+            "additionalProperties": true
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "BacktestAssumptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "simulation",
+        "provider",
+        "feed",
+        "interval",
+        "adjustment",
+        "currency",
+        "positionPolicy",
+        "fillModel",
+        "signalDelaySeconds",
+        "outcomeCutoffSeconds",
+        "decimalPrecision",
+        "rounding",
+        "moneyScale",
+        "returnScale",
+        "dividendsIncluded",
+        "forceLiquidation"
+      ],
+      "properties": {
+        "simulation": {
+          "type": "string",
+          "const": "LOCAL_SIMULATION"
+        },
+        "provider": {
+          "type": "string",
+          "const": "ALPACA"
+        },
+        "feed": {
+          "type": "string",
+          "const": "iex"
+        },
+        "interval": {
+          "type": "string",
+          "const": "15Min"
+        },
+        "adjustment": {
+          "type": "string",
+          "const": "raw"
+        },
+        "currency": {
+          "type": "string",
+          "const": "USD"
+        },
+        "positionPolicy": {
+          "type": "string",
+          "const": "LONG_FLAT"
+        },
+        "fillModel": {
+          "type": "string",
+          "const": "next-regular-bar-open-v1"
+        },
+        "signalDelaySeconds": {
+          "type": "integer",
+          "const": 60
+        },
+        "outcomeCutoffSeconds": {
+          "type": "integer",
+          "const": 300
+        },
+        "decimalPrecision": {
+          "type": "integer",
+          "const": 38
+        },
+        "rounding": {
+          "type": "string",
+          "const": "ROUND_HALF_EVEN"
+        },
+        "moneyScale": {
+          "type": "integer",
+          "const": 8
+        },
+        "returnScale": {
+          "type": "integer",
+          "const": 12
+        },
+        "dividendsIncluded": {
+          "type": "boolean",
+          "const": false
+        },
+        "forceLiquidation": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    },
+    "BacktestBudgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumFolds",
+        "maximumCalendarDays",
+        "maximumInputRows",
+        "attemptSeconds",
+        "maximumAttempts",
+        "maximumActiveJobs"
+      ],
+      "properties": {
+        "maximumFolds": {
+          "type": "integer",
+          "const": 12
+        },
+        "maximumCalendarDays": {
+          "type": "integer",
+          "const": 366
+        },
+        "maximumInputRows": {
+          "type": "integer",
+          "const": 100000
+        },
+        "attemptSeconds": {
+          "type": "integer",
+          "const": 300
+        },
+        "maximumAttempts": {
+          "type": "integer",
+          "const": 3
+        },
+        "maximumActiveJobs": {
+          "type": "integer",
+          "const": 1
+        }
+      }
+    },
+    "BacktestStrategyCatalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "instruments",
+        "assumptions",
+        "budgets",
+        "observedAt"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "maxItems": 3,
+          "minItems": 3,
+          "items": {
+            "$ref": "#/$defs/BacktestStrategy"
+          }
+        },
+        "instruments": {
+          "type": "array",
+          "maxItems": 2,
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/BacktestInstrument"
+          }
+        },
+        "assumptions": {
+          "$ref": "#/$defs/BacktestAssumptions"
+        },
+        "budgets": {
+          "$ref": "#/$defs/BacktestBudgets"
+        },
+        "observedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      }
+    },
+    "BacktestState": {
+      "type": "string",
+      "enum": [
+        "ACCEPTED",
+        "RUNNING",
+        "SUCCEEDED",
+        "BLOCKED",
+        "FAILED"
+      ]
+    },
+    "BacktestReasonCode": {
+      "type": "string",
+      "enum": [
+        "BLOCKED_DATA_UNAVAILABLE",
+        "BLOCKED_FIRST_OBSERVED",
+        "BLOCKED_CALENDAR_UNKNOWN",
+        "BLOCKED_QUALITY_UNKNOWN",
+        "BLOCKED_CORPORATE_ACTIONS_UNKNOWN",
+        "BLOCKED_CORPORATE_ACTION",
+        "BLOCKED_WARMUP_MISSING",
+        "BLOCKED_NEXT_BAR_MISSING",
+        "BLOCKED_OUTCOME_UNAVAILABLE",
+        "BLOCKED_SELL_FEES",
+        "BUDGET_EXHAUSTED",
+        "INTERNAL_FAILURE"
+      ]
+    },
+    "BacktestBlocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "foldIndex",
+        "barStart",
+        "evidenceId"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/BacktestReasonCode"
+        },
+        "foldIndex": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "barStart": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+          "description": "UTC with Z and at most microsecond precision; local offsets and naive values are rejected."
+        },
+        "evidenceId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      }
+    },
+    "BacktestSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "committedAt"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "committedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      }
+    },
+    "BacktestBarIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instrumentId",
+        "provider",
+        "feed",
+        "interval",
+        "start",
+        "end",
+        "adjustment"
+      ],
+      "properties": {
+        "instrumentId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "provider": {
+          "type": "string",
+          "const": "ALPACA"
+        },
+        "feed": {
+          "type": "string",
+          "const": "iex"
+        },
+        "interval": {
+          "type": "string",
+          "const": "15Min"
+        },
+        "start": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "end": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "adjustment": {
+          "type": "string",
+          "const": "raw"
+        }
+      }
+    },
+    "BacktestRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bar",
+        "revisionId",
+        "localRevision",
+        "fingerprint",
+        "ingestedAt",
+        "availableAt"
+      ],
+      "properties": {
+        "bar": {
+          "$ref": "#/$defs/BacktestBarIdentity"
+        },
+        "revisionId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "localRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "ingestedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "availableAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      }
+    },
+    "BacktestDecisionInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "valuationAt",
+        "knowledgeAt",
+        "inputHash",
+        "revisions"
+      ],
+      "properties": {
+        "valuationAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "knowledgeAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "inputHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "revisions": {
+          "type": "array",
+          "maxItems": 100000,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestRevision"
+          }
+        }
+      }
+    },
+    "BacktestOutcomeInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "observationCutoff"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/BacktestRevision"
+        },
+        "observationCutoff": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      }
+    },
+    "BacktestEvidenceRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidenceId",
+        "fingerprint",
+        "revision",
+        "ingestedAt"
+      ],
+      "properties": {
+        "evidenceId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "ingestedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      }
+    },
+    "BacktestBoundFold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "foldIndex",
+        "window",
+        "warmupStart",
+        "warmupEnd",
+        "warmupRuleVersion",
+        "expectedWarmupBars"
+      ],
+      "properties": {
+        "foldIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        },
+        "window": {
+          "$ref": "#/$defs/BacktestFold"
+        },
+        "warmupStart": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "warmupEnd": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "warmupRuleVersion": {
+          "type": "string",
+          "const": "regular-bars-slow-minus-one-v1"
+        },
+        "expectedWarmupBars": {
+          "type": "array",
+          "maxItems": 99,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestBarIdentity"
+          }
+        }
+      }
+    },
+    "BacktestManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifestHash",
+        "inputHash",
+        "request",
+        "symbol",
+        "strategyVersion",
+        "simulatorVersion",
+        "metricsVersion",
+        "codeVersion",
+        "snapshot",
+        "assumptions",
+        "folds",
+        "decisionInputs",
+        "outcomeInputs",
+        "calendarRevisions",
+        "qualityRevisions",
+        "corporateActionCoverage"
+      ],
+      "properties": {
+        "manifestHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "inputHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "request": {
+          "$ref": "#/$defs/BacktestRequest"
+        },
+        "symbol": {
+          "type": "string",
+          "enum": [
+            "SPY",
+            "QQQ"
+          ]
+        },
+        "strategyVersion": {
+          "type": "string",
+          "const": "1"
+        },
+        "simulatorVersion": {
+          "type": "string",
+          "const": "backtest-simulator-v1"
+        },
+        "metricsVersion": {
+          "type": "string",
+          "const": "backtest-metrics-v1"
+        },
+        "codeVersion": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/BacktestSnapshot"
+        },
+        "assumptions": {
+          "$ref": "#/$defs/BacktestAssumptions"
+        },
+        "folds": {
+          "type": "array",
+          "maxItems": 12,
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/BacktestBoundFold"
+          }
+        },
+        "decisionInputs": {
+          "type": "array",
+          "maxItems": 100000,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestDecisionInput"
+          }
+        },
+        "outcomeInputs": {
+          "type": "array",
+          "maxItems": 100000,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestOutcomeInput"
+          }
+        },
+        "calendarRevisions": {
+          "type": "array",
+          "maxItems": 100000,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestEvidenceRevision"
+          }
+        },
+        "qualityRevisions": {
+          "type": "array",
+          "maxItems": 100000,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestEvidenceRevision"
+          }
+        },
+        "corporateActionCoverage": {
+          "type": "array",
+          "maxItems": 100000,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestEvidenceRevision"
+          }
+        }
+      },
+      "description": "Immutable server-bound input manifest. Revision arrays are sorted by natural identity/revisionId; decisions by knowledgeAt and outcomes by bar identity/cutoff. Run UUID and elapsed runtime excluded from hashes. A manifest may be unavailable until dataset binding completes."
+    },
+    "BacktestFoldReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "foldIndex",
+        "resultHash"
+      ],
+      "properties": {
+        "foldIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        },
+        "resultHash": {
+          "$ref": "#/$defs/BacktestHash"
+        }
+      }
+    },
+    "BacktestRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "status",
+        "request",
+        "acceptedAt",
+        "updatedAt",
+        "completedAt",
+        "snapshot",
+        "manifestHash",
+        "resultHash",
+        "completedFolds",
+        "blockers",
+        "attempt",
+        "publicationComplete"
+      ],
+      "properties": {
+        "runId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "status": {
+          "$ref": "#/$defs/BacktestState"
+        },
+        "request": {
+          "$ref": "#/$defs/BacktestRequest"
+        },
+        "acceptedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "completedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+          "description": "UTC with Z and at most microsecond precision; local offsets and naive values are rejected."
+        },
+        "snapshot": {
+          "$ref": "#/$defs/BacktestSnapshot"
+        },
+        "manifestHash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "resultHash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "completedFolds": {
+          "type": "array",
+          "maxItems": 12,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestFoldReference"
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "maxItems": 100,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestBlocker"
+          }
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "publicationComplete": {
+          "type": "boolean"
+        }
+      },
+      "description": "Durable receipt returned on initial and identical replayed requests. BLOCKED/FAILED may retain completed fold references; never a run-wide return.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ACCEPTED",
+                      "RUNNING"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "completedAt": {
+                    "type": "null"
+                  },
+                  "resultHash": {
+                    "type": "null"
+                  },
+                  "publicationComplete": {
+                    "const": false
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "const": "SUCCEEDED"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "completedAt": {
+                    "$ref": "#/$defs/BacktestTimestamp"
+                  },
+                  "manifestHash": {
+                    "$ref": "#/$defs/BacktestHash"
+                  },
+                  "resultHash": {
+                    "$ref": "#/$defs/BacktestHash"
+                  },
+                  "blockers": {
+                    "maxItems": 0
+                  },
+                  "publicationComplete": {
+                    "const": true
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "BLOCKED",
+                      "FAILED"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "completedAt": {
+                    "$ref": "#/$defs/BacktestTimestamp"
+                  },
+                  "resultHash": {
+                    "type": "null"
+                  },
+                  "publicationComplete": {
+                    "const": false
+                  },
+                  "blockers": {
+                    "minItems": 1
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "BacktestRunDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run",
+        "manifest"
+      ],
+      "properties": {
+        "run": {
+          "$ref": "#/$defs/BacktestRun"
+        },
+        "manifest": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestManifest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BacktestCursor": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 2048,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "description": "Opaque HMAC-signed keyset token, bound to resource kind, runId, result type, filters and immutable list snapshot. Malformed/signature-invalid token => 400 CURSOR_INVALID; changed context/snapshot => 409 SNAPSHOT_CONFLICT. Never client-built. Example tokens illustrate syntax only, not valid signatures."
+    },
+    "BacktestRunPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "nextCursor",
+        "snapshotAt"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "maxItems": 200,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestRun"
+          }
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 32,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Opaque HMAC-signed keyset token, bound to resource kind, runId, result type, filters and immutable list snapshot. Malformed/signature-invalid token => 400 CURSOR_INVALID; changed context/snapshot => 409 SNAPSHOT_CONFLICT. Never client-built. Example tokens illustrate syntax only, not valid signatures."
+        },
+        "snapshotAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      }
+    },
+    "BacktestMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "startCash",
+        "endEquity",
+        "netReturn",
+        "maxDrawdown",
+        "turnover",
+        "feeTotalUsd",
+        "slippageTotalUsd",
+        "endCash",
+        "endQuantity",
+        "valuation",
+        "decisionCount",
+        "fillCount"
+      ],
+      "properties": {
+        "startCash": {
+          "$ref": "#/$defs/BacktestStartCash"
+        },
+        "endEquity": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "netReturn": {
+          "$ref": "#/$defs/BacktestDecimal"
+        },
+        "maxDrawdown": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "turnover": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "feeTotalUsd": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "slippageTotalUsd": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "endCash": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "endQuantity": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "valuation": {
+          "type": "string",
+          "const": "MARK_TO_MARKET"
+        },
+        "decisionCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "fillCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        }
+      }
+    },
+    "BacktestCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedBars",
+        "observedBars",
+        "warmupExpectedBars",
+        "warmupObservedBars",
+        "complete",
+        "corporateActions"
+      ],
+      "properties": {
+        "expectedBars": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "observedBars": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "warmupExpectedBars": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "warmupObservedBars": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "complete": {
+          "type": "boolean",
+          "const": true
+        },
+        "corporateActions": {
+          "type": "string",
+          "const": "CERTIFIED_ABSENT"
+        }
+      }
+    },
+    "BacktestReferenceMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "strategyId",
+        "metrics"
+      ],
+      "properties": {
+        "strategyId": {
+          "type": "string",
+          "enum": [
+            "flat-v1",
+            "buy-hold-v1"
+          ]
+        },
+        "metrics": {
+          "$ref": "#/$defs/BacktestMetrics"
+        }
+      }
+    },
+    "BacktestFoldSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "foldIndex",
+        "resultHash",
+        "window",
+        "metrics",
+        "references",
+        "coverage"
+      ],
+      "properties": {
+        "foldIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        },
+        "resultHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "window": {
+          "$ref": "#/$defs/BacktestFold"
+        },
+        "metrics": {
+          "$ref": "#/$defs/BacktestMetrics"
+        },
+        "references": {
+          "type": "array",
+          "maxItems": 2,
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/BacktestReferenceMetrics"
+          }
+        },
+        "coverage": {
+          "$ref": "#/$defs/BacktestCoverage"
+        }
+      }
+    },
+    "BacktestEquityPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "foldIndex",
+        "strategyId",
+        "at",
+        "cash",
+        "quantity",
+        "close",
+        "equity",
+        "revisionId"
+      ],
+      "properties": {
+        "foldIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        },
+        "strategyId": {
+          "$ref": "#/$defs/BacktestStrategyId"
+        },
+        "at": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "cash": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "quantity": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "close": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "equity": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "revisionId": {
+          "$ref": "#/$defs/BacktestId"
+        }
+      }
+    },
+    "BacktestFill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "foldIndex",
+        "strategyId",
+        "sequence",
+        "signalAt",
+        "executedAt",
+        "side",
+        "quantity",
+        "rawOpen",
+        "price",
+        "notionalUsd",
+        "feeUsd",
+        "slippageUsd",
+        "cashAfter",
+        "quantityAfter",
+        "revisionId",
+        "observationCutoff"
+      ],
+      "properties": {
+        "foldIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        },
+        "strategyId": {
+          "$ref": "#/$defs/BacktestStrategyId"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "signalAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "executedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "BUY",
+            "SELL"
+          ]
+        },
+        "quantity": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "rawOpen": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "price": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "notionalUsd": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "feeUsd": {
+          "$ref": "#/$defs/BacktestFeeUsd"
+        },
+        "slippageUsd": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "cashAfter": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "quantityAfter": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "revisionId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "observationCutoff": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      }
+    },
+    "BacktestSummaryPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "status",
+        "resultType",
+        "publicationComplete",
+        "completedFolds",
+        "items",
+        "nextCursor",
+        "manifestHash",
+        "resultHash"
+      ],
+      "properties": {
+        "runId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "status": {
+          "$ref": "#/$defs/BacktestState"
+        },
+        "resultType": {
+          "type": "string",
+          "const": "summary"
+        },
+        "publicationComplete": {
+          "type": "boolean"
+        },
+        "completedFolds": {
+          "type": "array",
+          "maxItems": 12,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestFoldReference"
+          }
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 200,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestFoldSummary"
+          }
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 32,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Opaque HMAC-signed keyset token, bound to resource kind, runId, result type, filters and immutable list snapshot. Malformed/signature-invalid token => 400 CURSOR_INVALID; changed context/snapshot => 409 SNAPSHOT_CONFLICT. Never client-built. Example tokens illustrate syntax only, not valid signatures."
+        },
+        "manifestHash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "resultHash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "description": "Only atomically published complete runs expose result rows. Before full publication items is empty and completedFolds identifies durable partial folds; never aggregate independent folds.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "const": "SUCCEEDED"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "publicationComplete": {
+                    "const": true
+                  },
+                  "manifestHash": {
+                    "$ref": "#/$defs/BacktestHash"
+                  },
+                  "resultHash": {
+                    "$ref": "#/$defs/BacktestHash"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "else": {
+                "properties": {
+                  "publicationComplete": {
+                    "const": false
+                  },
+                  "items": {
+                    "maxItems": 0
+                  },
+                  "nextCursor": {
+                    "type": "null"
+                  },
+                  "resultHash": {
+                    "type": "null"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "BacktestEquityPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "status",
+        "resultType",
+        "publicationComplete",
+        "completedFolds",
+        "items",
+        "nextCursor",
+        "manifestHash",
+        "resultHash"
+      ],
+      "properties": {
+        "runId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "status": {
+          "$ref": "#/$defs/BacktestState"
+        },
+        "resultType": {
+          "type": "string",
+          "const": "equity"
+        },
+        "publicationComplete": {
+          "type": "boolean"
+        },
+        "completedFolds": {
+          "type": "array",
+          "maxItems": 12,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestFoldReference"
+          }
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 200,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestEquityPoint"
+          }
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 32,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Opaque HMAC-signed keyset token, bound to resource kind, runId, result type, filters and immutable list snapshot. Malformed/signature-invalid token => 400 CURSOR_INVALID; changed context/snapshot => 409 SNAPSHOT_CONFLICT. Never client-built. Example tokens illustrate syntax only, not valid signatures."
+        },
+        "manifestHash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "resultHash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "description": "Only atomically published complete runs expose result rows. Before full publication items is empty and completedFolds identifies durable partial folds; never aggregate independent folds.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "const": "SUCCEEDED"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "publicationComplete": {
+                    "const": true
+                  },
+                  "manifestHash": {
+                    "$ref": "#/$defs/BacktestHash"
+                  },
+                  "resultHash": {
+                    "$ref": "#/$defs/BacktestHash"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "else": {
+                "properties": {
+                  "publicationComplete": {
+                    "const": false
+                  },
+                  "items": {
+                    "maxItems": 0
+                  },
+                  "nextCursor": {
+                    "type": "null"
+                  },
+                  "resultHash": {
+                    "type": "null"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "BacktestFillsPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "status",
+        "resultType",
+        "publicationComplete",
+        "completedFolds",
+        "items",
+        "nextCursor",
+        "manifestHash",
+        "resultHash"
+      ],
+      "properties": {
+        "runId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "status": {
+          "$ref": "#/$defs/BacktestState"
+        },
+        "resultType": {
+          "type": "string",
+          "const": "fills"
+        },
+        "publicationComplete": {
+          "type": "boolean"
+        },
+        "completedFolds": {
+          "type": "array",
+          "maxItems": 12,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestFoldReference"
+          }
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 200,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestFill"
+          }
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 32,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Opaque HMAC-signed keyset token, bound to resource kind, runId, result type, filters and immutable list snapshot. Malformed/signature-invalid token => 400 CURSOR_INVALID; changed context/snapshot => 409 SNAPSHOT_CONFLICT. Never client-built. Example tokens illustrate syntax only, not valid signatures."
+        },
+        "manifestHash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "resultHash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "description": "Only atomically published complete runs expose result rows. Before full publication items is empty and completedFolds identifies durable partial folds; never aggregate independent folds.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "const": "SUCCEEDED"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "publicationComplete": {
+                    "const": true
+                  },
+                  "manifestHash": {
+                    "$ref": "#/$defs/BacktestHash"
+                  },
+                  "resultHash": {
+                    "$ref": "#/$defs/BacktestHash"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "else": {
+                "properties": {
+                  "publicationComplete": {
+                    "const": false
+                  },
+                  "items": {
+                    "maxItems": 0
+                  },
+                  "nextCursor": {
+                    "type": "null"
+                  },
+                  "resultHash": {
+                    "type": "null"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "BacktestResults": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/BacktestSummaryPage"
+        },
+        {
+          "$ref": "#/$defs/BacktestEquityPage"
+        },
+        {
+          "$ref": "#/$defs/BacktestFillsPage"
+        }
+      ],
+      "discriminator": {
+        "propertyName": "resultType",
+        "mapping": {
+          "summary": "#/components/schemas/BacktestSummaryPage",
+          "equity": "#/components/schemas/BacktestEquityPage",
+          "fills": "#/components/schemas/BacktestFillsPage"
+        }
+      }
+    },
+    "BacktestProblemCode": {
+      "type": "string",
+      "enum": [
+        "INVALID_REQUEST",
+        "UNAUTHORIZED",
+        "FORBIDDEN",
+        "NOT_FOUND",
+        "CURSOR_INVALID",
+        "SNAPSHOT_CONFLICT",
+        "IDEMPOTENCY_CONFLICT",
+        "UNAVAILABLE"
+      ]
+    },
+    "BacktestProblem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "title",
+        "status",
+        "code",
+        "traceId"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "urn:agentic-trading-lab:backtest-problem"
+        },
+        "title": {
+          "type": "string",
+          "const": "Backtest request failed"
+        },
+        "status": {
+          "type": "integer",
+          "enum": [
+            400,
+            401,
+            403,
+            404,
+            409,
+            503
+          ]
+        },
+        "code": {
+          "$ref": "#/$defs/BacktestProblemCode"
+        },
+        "traceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        }
+      },
+      "description": "Whitelist-only sanitized problem; no provider text, SQL, stack, credentials or arbitrary detail.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": 400
+              }
+            },
+            "additionalProperties": true
+          },
+          "then": {
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "INVALID_REQUEST",
+                  "CURSOR_INVALID"
+                ]
+              }
+            },
+            "additionalProperties": true
+          },
+          "additionalProperties": true
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": 401
+              }
+            },
+            "additionalProperties": true
+          },
+          "then": {
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "UNAUTHORIZED"
+                ]
+              }
+            },
+            "additionalProperties": true
+          },
+          "additionalProperties": true
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": 403
+              }
+            },
+            "additionalProperties": true
+          },
+          "then": {
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "FORBIDDEN"
+                ]
+              }
+            },
+            "additionalProperties": true
+          },
+          "additionalProperties": true
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": 404
+              }
+            },
+            "additionalProperties": true
+          },
+          "then": {
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "NOT_FOUND"
+                ]
+              }
+            },
+            "additionalProperties": true
+          },
+          "additionalProperties": true
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": 409
+              }
+            },
+            "additionalProperties": true
+          },
+          "then": {
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "SNAPSHOT_CONFLICT",
+                  "IDEMPOTENCY_CONFLICT"
+                ]
+              }
+            },
+            "additionalProperties": true
+          },
+          "additionalProperties": true
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": 503
+              }
+            },
+            "additionalProperties": true
+          },
+          "then": {
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "UNAVAILABLE"
+                ]
+              }
+            },
+            "additionalProperties": true
+          },
+          "additionalProperties": true
+        }
+      ]
+    }
+  }
+}

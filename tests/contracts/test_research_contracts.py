@@ -71,7 +71,10 @@ def test_every_research_component_is_mirrored_without_drift():
 
 
 def test_seven_operations_require_session_and_explicit_bounds():
-    paths = {p: item for p, item in OAS["paths"].items() if p.startswith("/api/v1/research/")}
+    paths = {
+        p: item for p, item in OAS["paths"].items()
+        if p.startswith("/api/v1/research/") and not p.startswith("/api/v1/research/backtests/")
+    }
     assert sum(len(item) for item in paths.values()) == 7
     for path, item in paths.items():
         for method, operation in item.items():

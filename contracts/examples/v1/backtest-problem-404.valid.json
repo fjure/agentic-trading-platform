@@ -1,0 +1,7 @@
+{
+  "type": "urn:agentic-trading-lab:backtest-problem",
+  "title": "Backtest request failed",
+  "status": 404,
+  "code": "NOT_FOUND",
+  "traceId": "cccccccccccccccccccccccccccccccc"
+}
