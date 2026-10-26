@@ -19,3 +19,7 @@ Acht Dataset-Unitfälle einschließlich 258-Schritt-Fensterparität bestanden. E
 ## BKT-04
 
 Neun Simulator-/Propertyprüfungen bestanden (einschließlich 80 Hypothesisfällen). Unabhängige Kauf-/Verkaufsrechnungen bestätigen Gebühren, Slippage, Mengenraster und Cash; Nullmenge, unfinanzierbare Verkaufsgebühr, Overnight, fehlendes Fillziel und Fensterende geprüft. Jede Bar ruft einen Budgetcheckpoint auf. Festes Decimalmodell precision38/ROUND_HALF_EVEN und nächste kalenderzulässige Kerze; Ergebnisbars gelangen nicht in Strategieinputs. Keine Brokerimporte oder Brokeraktionen.
+
+## BKT-05
+
+Vier zusätzliche Evaluation-/Kennzahlprüfungen bestanden. Folds starten mit eigenem Cash und flacher Position; feste Strategieparameter und identische Kosten für flat/buy-hold. Handrechnungen für Nettorendite, Turnover und Drawdown einschließlich Startcash; Gebühren und Slippage getrennt. BLOCKED bewahrt abgeschlossene Foldresultate und erzeugt keine verkettete Gesamtrendite. Deterministischer Warm-up wird durch BKT-03 gebunden und durch die Domainmanifestregeln geprüft.
