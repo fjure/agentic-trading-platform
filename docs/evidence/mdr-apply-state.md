@@ -1,0 +1,12 @@
+# Applystand market-data-and-research-foundation
+
+Stand26.10.2026. Lokaler Code für alle neun Pakete vorhanden; vollständige Offline- und unabhängige Verify-/Safetyabnahme bestanden. Finale Git-/Issueintegration läuft auf codex/ptv-50-research-acceptance. Keine PR, Force-Operation oder Archivierung. Vorbestehende README-/Angular-Analyticsänderungen bleiben ungestaged.
+
+- Issues42–49: je eigener geprüfter Commit/Branch, regulär gepusht und SHA zurückgelesen, geordnet lokal in main gemergt. Remote-main ist bis zur abschließenden Gesamtprüfung noch die alte Basis c19c22ed107511b785901a242facbe5c9e33b762. SHAzuordnung: docs/development/github-research-git-integrations.json.
+- Gemeinsame MDR-01/MDR-07-Abnahme bestanden: alle sieben Routen tatsächlich angebunden, komplette bestehende Contractmatrix unverändert,167Dateien Client zweimal bytegleich/TypeScript, OAS53 valide und additiver Baselinevergleich.
+- Tests und detaillierte Grenzen: docs/evidence/mdr-implementation-verification.md. Gesamtlauf2115 Unit/Contract/Security bestanden; Linux112; echte PG-/HTTPkette inkl.Recovery/Audit/Qualität/Resume mehrfach bestanden; Paper-Safety-Lasttest bestanden; echter Researchbrowser2Tests inklusiveFortsetzung bestanden; betroffenePaperbrowser10/10.
+- Laufender letzter Gesamtprüflauf umfasst Unit/Contract/Security sowie Research-PG/Safety und Paperprovisionierung. Danach Issue50 committen/pushen/verifizieren/mergen, main regulär pushen und alle Issuecommits auf Remote-main nachweisen.
+- Erst nach echter Remoteintegration alle Tasks abhaken, Issue-Sync schließen und wiederholen (0Änderungen), Metadaten committen und regulär integrieren. Keine voreiligen Checkboxen oder geschlossenen Issues.
+- A→B→A: ausdrücklich bestätigte neue Vorkommensrevision nach zwischenzeitlicher Änderung. Gleicher Fingerprint, neue Revisions-/Evidenzidentität. Keine global eindeutige Inhaltsfingerprintconstraint.
+- Persönliche Providerrechte bleiben UNVERIFIED. Standarddispatch deaktiviert; nur Execution konsumiert vorhandene geschützte Credentials. Keine echten Providerrequests oder Brokerorders während der Prüfung.
+- Neuere Reviewbefunde sind behoben: Safetyinitialisierung/Poolisolation/429Backoff, pagegebundene Coverage, vollständig enthaltene Kalenderfenster, ehrliche Contextqualität, NULLtyping bei Retryerschöpfung. Queryaudit/Metriken werden redigiert und begrenzt in bestehende lokale tmpfs-Telemetrie exportiert.

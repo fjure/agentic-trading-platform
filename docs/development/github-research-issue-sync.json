@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "repository": "fjure/agentic-trading-platform",
+  "changeId": "market-data-and-research-foundation",
+  "source": "openspec/changes/market-data-and-research-foundation/tasks.md",
+  "transport": "authorized-gh-cli-fallback",
+  "tasks": [
+    {
+      "taskId": "MDR-01",
+      "issueNumber": 42,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/42",
+      "contentHash": "7f44d7a5be57af9aef8fcb91f442b1d0c273463a9fb442ddac39f95106719c85",
+      "syncedAt": "2026-10-26T09:29:35.174605+00:00",
+      "dependsOn": [],
+      "state": "open"
+    },
+    {
+      "taskId": "MDR-02",
+      "issueNumber": 43,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/43",
+      "contentHash": "d3293f39f42ba73bc34d8d9d884317e03c42f3d1dd4ea7a9a24a05bcd1dff34c",
+      "syncedAt": "2026-10-26T09:29:35.174605+00:00",
+      "dependsOn": [
+        "MDR-01"
+      ],
+      "state": "open"
+    },
+    {
+      "taskId": "MDR-03",
+      "issueNumber": 44,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/44",
+      "contentHash": "d0202cd9157bdedad7d007a39638c8a3c3202a3c5c0a428107a28000bcceaf42",
+      "syncedAt": "2026-10-26T09:29:35.174605+00:00",
+      "dependsOn": [
+        "MDR-01",
+        "MDR-02"
+      ],
+      "state": "open"
+    },
+    {
+      "taskId": "MDR-04",
+      "issueNumber": 45,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/45",
+      "contentHash": "b441e09a0e6ccd4a2ef91659b810e4de13b09eaa0628960d7dfde9285f91f7e4",
+      "syncedAt": "2026-10-26T09:29:35.174605+00:00",
+      "dependsOn": [
+        "MDR-02",
+        "MDR-03"
+      ],
+      "state": "open"
+    },
+    {
+      "taskId": "MDR-05",
+      "issueNumber": 46,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/46",
+      "contentHash": "e3a0f5b4754e50027368732f81fbe16f8cba29e9d7859db8d9faa7214126d8bd",
+      "syncedAt": "2026-10-26T09:29:35.174605+00:00",
+      "dependsOn": [
+        "MDR-02",
+        "MDR-03",
+        "MDR-04"
+      ],
+      "state": "open"
+    },
+    {
+      "taskId": "MDR-06",
+      "issueNumber": 47,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/47",
+      "contentHash": "01226b99c848bc16e3e4adc701cf5bfbc6708b0fb1327a6a351816951401e3e4",
+      "syncedAt": "2026-10-26T09:29:35.174605+00:00",
+      "dependsOn": [
+        "MDR-02",
+        "MDR-05"
+      ],
+      "state": "open"
+    },
+    {
+      "taskId": "MDR-07",
+      "issueNumber": 48,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/48",
+      "contentHash": "c53cbcad4dd443364999c248d339295061ca1d70011b0e9afd4347c94e4e4e12",
+      "syncedAt": "2026-10-26T09:29:35.174605+00:00",
+      "dependsOn": [
+        "MDR-01",
+        "MDR-04",
+        "MDR-05",
+        "MDR-06"
+      ],
+      "state": "open"
+    },
+    {
+      "taskId": "MDR-08",
+      "issueNumber": 49,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/49",
+      "contentHash": "4a6afe211d3e28e396e6f7ac44a76abf9aade9ac559810ea347da6363c68fadb",
+      "syncedAt": "2026-10-26T09:29:35.174605+00:00",
+      "dependsOn": [
+        "MDR-07"
+      ],
+      "state": "open"
+    },
+    {
+      "taskId": "MDR-09",
+      "issueNumber": 50,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/50",
+      "contentHash": "90804fe0983435430f6baa631d5383df2d2e4aaf8ddbddda45be81248518c177",
+      "syncedAt": "2026-10-26T09:29:35.174605+00:00",
+      "dependsOn": [
+        "MDR-01",
+        "MDR-02",
+        "MDR-03",
+        "MDR-04",
+        "MDR-05",
+        "MDR-06",
+        "MDR-07",
+        "MDR-08"
+      ],
+      "state": "open"
+    }
+  ],
+  "lastSyncRun": {
+    "syncedAt": "2026-10-26T09:29:35.174605+00:00",
+    "created": 0,
+    "updated": 9,
+    "unchanged": 0,
+    "readBack": 9,
+    "repositoryWideVerified": true
+  }
+}
