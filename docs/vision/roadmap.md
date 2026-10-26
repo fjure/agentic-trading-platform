@@ -12,7 +12,11 @@ Die Reihenfolge ist eine Planungsrichtung. Jede Anwendungserweiterung braucht ei
 
 Vor Nutzung eines Datenproviders sind Lizenz, Speicherung, Weitergabe, Anpassungen, Aufbewahrung und abgeleitete Daten zu klären. Historische Überlebendenverzerrung, Look-ahead, Zeitzonen, Splits/Dividenden, verspätete Veröffentlichungen und Providerkorrekturen müssen als konkrete Risiken adressiert werden. Ohne lückenlose Herkunft und damalige Verfügbarkeit sind Backtests nicht als reproduzierbar oder PIT-gültig zu behandeln.
 
-## Danach: Research und Strategieprüfung
+## Umgesetzter Baustein: point-in-time-research-backtesting
+
+**Umgesetzt und offline geprüft:** feste SPY-/QQQ-Long/Flat-Benchmarks, beobachtungsgebundene Datensichten, deterministischer Decimal-Simulator, unabhängige chronologische Folds, persistente begrenzte Workerjobs, authentifizierte Verträge und Materialoberfläche. [Abnahme, unabhängiger Review und Grenzen](../evidence/bkt-implementation-verification.md). Standarddispatch bleibt deaktiviert; echte historische Nutzbarkeit hängt weiterhin von tatsächlich damaliger Verfügbarkeit und expliziten Kalender-/Kapitalmaßnahmenbelegen ab. Heutige Backfills können korrekt vollständig blockieren. Kein automatischer Übergang in Paper oder LIVE.
+
+## Danach: weiterführende Research und Strategieprüfung
 
 **Langfristig:** versionierte Strategien, lokale Replay- und Shadowvergleiche, robuste Out-of-sample-Auswertung und ein Dashboard für Quellen, Kalender, Datenqualität, Annahmen und Ergebnisse. Neue Märkte werden erst ergänzt, wenn Datenrechte, Handelskalender, Instrumentregeln, Liquidität und Risikoparameter ausreichend belegt sind. Mehr Märkte bedeuten getrennte Quellen- und Marktregeln, nicht bloß zusätzliche Symbole.
 

@@ -63,6 +63,15 @@
       "mergeCommit": "9f4d6ccea2de26f99989dbf56b2a5e9ca87d6863",
       "remoteVerified": true,
       "verifiedAt": "2026-10-26T13:05:06.849150+00:00"
+    },
+    {
+      "taskId": "BKT-08",
+      "issueNumber": 58,
+      "branch": "codex/ptv-58-backtest-dashboard",
+      "commit": "418440fd693d8cf541bf154a9d648071bc61fc30",
+      "mergeCommit": "d7cbe3c526b8cd3f39712d3855581e3530527622",
+      "remoteVerified": true,
+      "verifiedAt": "2026-10-26T13:09:04.179311+00:00"
     }
   ]
 }
