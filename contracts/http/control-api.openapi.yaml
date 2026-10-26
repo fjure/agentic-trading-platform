@@ -23,6 +23,8 @@ tags:
   description: Paginated audit and trading history.
 - name: Paper
   description: Isolated Alpaca paper workflow, without credentials or direct broker access.
+- name: Research
+  description: Stored conservative research evidence and bounded ingestion, without trading permission.
 paths:
   /health:
     get:
@@ -2061,6 +2063,767 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/PaperProblem'
+  /api/v1/research/sources:
+    get:
+      tags:
+      - Research
+      operationId: listResearchSources
+      summary: Read implemented and unavailable source capabilities
+      description: MDR-01/MDR-07; REQ-RCX-004, REQ-REV-004, REQ-HMD-006. LocalSession and existing Origin/CSRF boundaries.
+        All times UTC microseconds, ranges half-open and at most 366 days; invalid/cross-field input is rejected.
+        GET performs bounded stored reads only; no provider I/O, job dispatch or trading mutations. Missing evidence
+        at the selected knowledge boundary returns404 NOT_FOUND. Default time filters use one request clock instant.
+        Cursor reuse requires identical filters and retains its original snapshot.
+      parameters: []
+      responses:
+        '400':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '401':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '403':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '404':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '409':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '503':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '200':
+          description: Stored normalized Research data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchSourceCatalog'
+              example:
+                items:
+                - sourceId: news
+                  kind: NEWS
+                  state: NOT_IMPLEMENTED
+                  licenseStatus: UNKNOWN
+                  policyVersion: null
+                  providerVerification: UNVERIFIED
+                  instruments: []
+                  intervals: []
+                  feed: null
+                  adjustment: null
+                  historyStart: null
+                  historyEnd: null
+                  limitations:
+                  - NO_ADAPTER
+                  - RIGHTS_UNVERIFIED
+                observedAt: '2026-10-25T18:00:00Z'
+                incomplete: true
+  /api/v1/research/bars:
+    get:
+      tags:
+      - Research
+      operationId: listResearchBars
+      summary: Read immutable raw bars at a conservative knowledge boundary
+      description: MDR-01/MDR-07; REQ-RCX-004, REQ-REV-004, REQ-HMD-006. LocalSession and existing Origin/CSRF boundaries.
+        All times UTC microseconds, ranges half-open and at most 366 days; invalid/cross-field input is rejected.
+        GET performs bounded stored reads only; no provider I/O, job dispatch or trading mutations. Missing evidence
+        at the selected knowledge boundary returns404 NOT_FOUND. Default time filters use one request clock instant.
+        Cursor reuse requires identical filters and retains its original snapshot.
+      parameters:
+      - name: instrumentId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      - name: start
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ResearchTimestamp'
+      - name: end
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ResearchTimestamp'
+      - name: interval
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ResearchInterval'
+      - name: feed
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - iex
+          default: iex
+      - name: adjustment
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - raw
+          default: raw
+      - name: valuationAt
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ResearchTimestamp'
+      - name: knowledgeAt
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ResearchTimestamp'
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 100
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ResearchCursor'
+      responses:
+        '400':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '401':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '403':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '404':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '409':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '503':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '200':
+          description: Stored normalized Research data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchBarPage'
+              example:
+                items:
+                - barId: 22222222-2222-4222-8222-222222222222
+                  instrumentId: 11111111-1111-4111-8111-111111111111
+                  provider: ALPACA
+                  feed: iex
+                  interval: 15Min
+                  adjustment: raw
+                  currency: USD
+                  start: '2026-10-23T13:30:00Z'
+                  end: '2026-10-23T13:45:00Z'
+                  open: '100'
+                  high: '102'
+                  low: '99'
+                  close: '101'
+                  volume: '1000'
+                  revision: 1
+                  predecessorId: null
+                  providerRevision: null
+                  eventTime: '2026-10-23T13:45:00Z'
+                  publishedAt: null
+                  availableAt: '2026-10-25T18:00:00Z'
+                  ingestedAt: '2026-10-25T18:00:00Z'
+                  availabilityBasis: FIRST_OBSERVED
+                  fingerprint: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                  evidenceId: 33333333-3333-4333-8333-333333333333
+                  quality: VALID
+                  commitVersion: 1
+                nextCursor: null
+                snapshot:
+                  valuationAt: '2026-10-25T18:00:00Z'
+                  knowledgeAt: '2026-10-25T18:00:00Z'
+                  snapshotAt: '2026-10-25T18:00:00Z'
+                  snapshotVersion: 1
+                  semantics: observed-as-of
+                coverage:
+                - instrumentId: 11111111-1111-4111-8111-111111111111
+                  provider: ALPACA
+                  feed: iex
+                  interval: 15Min
+                  adjustment: raw
+                  start: '2026-10-23T00:00:00Z'
+                  end: '2026-10-24T00:00:00Z'
+                  qualityRuleVersion: research-quality-v1
+                  calendarVersion: null
+                  status: UNKNOWN_CALENDAR
+                  expected: null
+                  observed: 1
+                  missing: null
+                  unchecked: 1
+                incomplete: true
+                dataVersion: 1
+  /api/v1/research/evidence/{id}:
+    get:
+      tags:
+      - Research
+      operationId: getResearchEvidence
+      summary: Read evidence under the same PIT boundary
+      description: MDR-01/MDR-07; REQ-RCX-004, REQ-REV-004, REQ-HMD-006. LocalSession and existing Origin/CSRF boundaries.
+        All times UTC microseconds, ranges half-open and at most 366 days; invalid/cross-field input is rejected.
+        GET performs bounded stored reads only; no provider I/O, job dispatch or trading mutations. Missing evidence
+        at the selected knowledge boundary returns404 NOT_FOUND. Default time filters use one request clock instant.
+        Cursor reuse requires identical filters and retains its original snapshot.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      - name: valuationAt
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ResearchTimestamp'
+      - name: knowledgeAt
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ResearchTimestamp'
+      responses:
+        '400':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '401':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '403':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '404':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '409':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '503':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '200':
+          description: Stored normalized Research data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchEvidenceResult'
+              example:
+                evidence:
+                  evidenceId: 33333333-3333-4333-8333-333333333333
+                  instrumentId: 11111111-1111-4111-8111-111111111111
+                  sourceId: alpaca-iex-bars
+                  sourceReference: alpaca:bars/SPY/2026-10-23
+                  eventTime: '2026-10-23T13:45:00Z'
+                  publishedAt: null
+                  availableAt: '2026-10-25T18:00:00Z'
+                  ingestedAt: '2026-10-25T18:00:00Z'
+                  availabilityBasis: FIRST_OBSERVED
+                  schemaVersion: '1'
+                  dataRevision: 1
+                  predecessorId: null
+                  fingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                  quality: VALID
+                  modelConfidence: null
+                  content:
+                    kind: BAR
+                    barId: 22222222-2222-4222-8222-222222222222
+                  commitVersion: 1
+                  market: US_EQUITY
+                snapshot:
+                  valuationAt: '2026-10-25T18:00:00Z'
+                  knowledgeAt: '2026-10-25T18:00:00Z'
+                  snapshotAt: '2026-10-25T18:00:00Z'
+                  snapshotVersion: 1
+                  semantics: observed-as-of
+                incomplete: true
+                dataVersion: 1
+  /api/v1/research/context:
+    get:
+      tags:
+      - Research
+      operationId: getResearchContext
+      summary: Read context from one committed Research snapshot
+      description: MDR-01/MDR-07; REQ-RCX-004, REQ-REV-004, REQ-HMD-006. LocalSession and existing Origin/CSRF boundaries.
+        All times UTC microseconds, ranges half-open and at most 366 days; invalid/cross-field input is rejected.
+        GET performs bounded stored reads only; no provider I/O, job dispatch or trading mutations. Missing evidence
+        at the selected knowledge boundary returns404 NOT_FOUND. Default time filters use one request clock instant.
+        Cursor reuse requires identical filters and retains its original snapshot.
+      parameters:
+      - name: instrumentId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      - name: start
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ResearchTimestamp'
+      - name: end
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ResearchTimestamp'
+      - name: interval
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ResearchInterval'
+      - name: feed
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - iex
+          default: iex
+      - name: adjustment
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - raw
+          default: raw
+      - name: valuationAt
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ResearchTimestamp'
+      - name: knowledgeAt
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ResearchTimestamp'
+      responses:
+        '400':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '401':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '403':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '404':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '409':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '503':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '200':
+          description: Stored normalized Research data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchContext'
+              example:
+                instrumentId: 11111111-1111-4111-8111-111111111111
+                start: '2026-10-23T00:00:00Z'
+                end: '2026-10-24T00:00:00Z'
+                interval: 15Min
+                snapshot:
+                  valuationAt: '2026-10-25T18:00:00Z'
+                  knowledgeAt: '2026-10-25T18:00:00Z'
+                  snapshotAt: '2026-10-25T18:00:00Z'
+                  snapshotVersion: 1
+                  semantics: observed-as-of
+                dataVersion: 1
+                quality: UNKNOWN_CALENDAR
+                coverage:
+                - instrumentId: 11111111-1111-4111-8111-111111111111
+                  provider: ALPACA
+                  feed: iex
+                  interval: 15Min
+                  adjustment: raw
+                  start: '2026-10-23T00:00:00Z'
+                  end: '2026-10-24T00:00:00Z'
+                  qualityRuleVersion: research-quality-v1
+                  calendarVersion: null
+                  status: UNKNOWN_CALENDAR
+                  expected: null
+                  observed: 1
+                  missing: null
+                  unchecked: 1
+                evidenceIds:
+                - 33333333-3333-4333-8333-333333333333
+                priceChange:
+                  status: NOT_COMPUTABLE
+                  value: null
+                  algorithmVersion: decimal-population-v1
+                  evidenceIds: []
+                  reason: INSUFFICIENT_BARS
+                volatility:
+                  status: NOT_COMPUTABLE
+                  value: null
+                  algorithmVersion: decimal-population-v1
+                  evidenceIds: []
+                  reason: INSUFFICIENT_BARS
+                missingSources:
+                - NEWS
+                - FUNDAMENTALS
+                - MACRO
+                - REGIME
+                incomplete: true
+  /api/v1/research/ingestion-jobs:
+    post:
+      tags:
+      - Research
+      operationId: createResearchIngestionJob
+      summary: Request bounded historical ingestion
+      description: MDR-01/MDR-07; REQ-RCX-004, REQ-HMD-006. LocalSession, Same-Origin/CSRF and Idempotency-Key required.
+        Accepts either the legacy-shaped explicit Research create request or an operator resume request, never trading
+        permission. Repeating a create or resume idempotency key and canonical payload returns the original job with
+        202; changed payload returns409 IDEMPOTENCY_CONFLICT. Only PARTIAL/BLOCKED jobs can be resumed. No private
+        cursor or raw transport data is returned.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '400':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '401':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '403':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '404':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '409':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '503':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '202':
+          description: Durably accepted; no trading permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchJob'
+              example:
+                jobId: 44444444-4444-4444-8444-444444444444
+                request:
+                  instrumentId: 11111111-1111-4111-8111-111111111111
+                  start: '2026-10-23T00:00:00Z'
+                  end: '2026-10-24T00:00:00Z'
+                  interval: 15Min
+                  feed: iex
+                  adjustment: raw
+                  mode: BACKFILL
+                status: BLOCKED
+                acceptedAt: '2026-10-25T18:00:00Z'
+                updatedAt: '2026-10-25T18:00:00Z'
+                retryAt: null
+                pages: 0
+                bars: 0
+                attempts: 0
+                errorCode: BLOCKED_LICENSE
+                traceId: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResearchJobAction'
+            examples:
+              create:
+                value:
+                  instrumentId: 11111111-1111-4111-8111-111111111111
+                  start: '2026-10-23T00:00:00Z'
+                  end: '2026-10-24T00:00:00Z'
+                  interval: 15Min
+                  feed: iex
+                  adjustment: raw
+                  mode: BACKFILL
+              resume:
+                value:
+                  action: RESUME
+                  jobId: 44444444-4444-4444-8444-444444444444
+    get:
+      tags:
+      - Research
+      operationId: listResearchIngestionJobs
+      summary: Read redacted durable ingestion jobs
+      description: MDR-01/MDR-07; REQ-RCX-004, REQ-REV-004, REQ-HMD-006. LocalSession and existing Origin/CSRF boundaries.
+        All times UTC microseconds, ranges half-open and at most 366 days; invalid/cross-field input is rejected.
+        GET performs bounded stored reads only; no provider I/O, job dispatch or trading mutations. Missing evidence
+        at the selected knowledge boundary returns404 NOT_FOUND. Default time filters use one request clock instant.
+        Cursor reuse requires identical filters and retains its original snapshot.
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 100
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ResearchCursor'
+      responses:
+        '400':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '401':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '403':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '404':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '409':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '503':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '200':
+          description: Stored normalized Research data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchJobPage'
+              example:
+                items:
+                - jobId: 44444444-4444-4444-8444-444444444444
+                  request:
+                    instrumentId: 11111111-1111-4111-8111-111111111111
+                    start: '2026-10-23T00:00:00Z'
+                    end: '2026-10-24T00:00:00Z'
+                    interval: 15Min
+                    feed: iex
+                    adjustment: raw
+                    mode: BACKFILL
+                  status: BLOCKED
+                  acceptedAt: '2026-10-25T18:00:00Z'
+                  updatedAt: '2026-10-25T18:00:00Z'
+                  retryAt: null
+                  pages: 0
+                  bars: 0
+                  attempts: 0
+                  errorCode: BLOCKED_LICENSE
+                  traceId: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                nextCursor: null
+                snapshotAt: '2026-10-25T18:00:00Z'
+                snapshotVersion: 1
+  /api/v1/research/ingestion-jobs/{id}:
+    get:
+      tags:
+      - Research
+      operationId: getResearchIngestionJob
+      summary: Read a durable ingestion job without dispatch
+      description: MDR-01/MDR-07; REQ-RCX-004, REQ-REV-004, REQ-HMD-006. LocalSession and existing Origin/CSRF boundaries.
+        All times UTC microseconds, ranges half-open and at most 366 days; invalid/cross-field input is rejected.
+        GET performs bounded stored reads only; no provider I/O, job dispatch or trading mutations. Missing evidence
+        at the selected knowledge boundary returns404 NOT_FOUND. Default time filters use one request clock instant.
+        Cursor reuse requires identical filters and retains its original snapshot.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      responses:
+        '400':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '401':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '403':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '404':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '409':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '503':
+          description: Bounded redacted Research error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ResearchProblem'
+        '200':
+          description: Stored normalized Research data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchJob'
+              example:
+                jobId: 44444444-4444-4444-8444-444444444444
+                request:
+                  instrumentId: 11111111-1111-4111-8111-111111111111
+                  start: '2026-10-23T00:00:00Z'
+                  end: '2026-10-24T00:00:00Z'
+                  interval: 15Min
+                  feed: iex
+                  adjustment: raw
+                  mode: BACKFILL
+                status: BLOCKED
+                acceptedAt: '2026-10-25T18:00:00Z'
+                updatedAt: '2026-10-25T18:00:00Z'
+                retryAt: null
+                pages: 0
+                bars: 0
+                attempts: 0
+                errorCode: BLOCKED_LICENSE
+                traceId: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 components:
   securitySchemes:
     LocalSession:
@@ -5376,3 +6139,1048 @@ components:
       description: Reloadable original receipts. ACCEPTED and RUNNING operations precede terminal operations; each group
         is ordered by acceptedAt and operationId descending. The opaque keyset cursor includes this priority and account
         context. A recent terminal history must not hide unresolved work.
+    ResearchTimestamp:
+      type: string
+      format: date-time
+      pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$
+      description: UTC with Z and at most microsecond precision; local offsets and naive values are rejected.
+    ResearchDecimal:
+      type: string
+      pattern: ^-?(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+      description: Exact NUMERIC(38,18) plain decimal string, never a JSON number, exponent, NaN or infinity.
+    ResearchFingerprint:
+      type: string
+      pattern: ^[0-9a-f]{64}$
+    ResearchInterval:
+      type: string
+      enum:
+      - 15Min
+      - 1Day
+    ResearchQuality:
+      type: string
+      enum:
+      - VALID
+      - MISSING_EXPECTED
+      - NO_OBSERVATION
+      - UNKNOWN_CALENDAR
+      - CONFLICT
+      - INVALID
+    ResearchLicenseStatus:
+      type: string
+      enum:
+      - UNKNOWN
+      - CONFIRMED
+      - BLOCKED
+    ResearchErrorCode:
+      type: string
+      enum:
+      - INVALID_REQUEST
+      - UNAUTHORIZED
+      - FORBIDDEN
+      - NOT_FOUND
+      - CURSOR_INVALID
+      - SNAPSHOT_CONFLICT
+      - IDEMPOTENCY_CONFLICT
+      - UNAVAILABLE
+      - NOT_IMPLEMENTED
+      - BLOCKED_CREDENTIALS
+      - BLOCKED_LICENSE
+      - BLOCKED_ENTITLEMENT
+      - PROVIDER_TIMEOUT
+      - PROVIDER_RATE_LIMIT
+      - PROVIDER_UNAVAILABLE
+      - PROVIDER_RESPONSE_INVALID
+      - PAGINATION_CYCLE
+      - BUDGET_EXHAUSTED
+      - LEASE_LOST
+    ResearchProblem:
+      type: object
+      additionalProperties: false
+      required:
+      - type
+      - title
+      - status
+      - code
+      - traceId
+      properties:
+        type:
+          type: string
+          const: urn:agentic-trading-lab:research-problem
+        title:
+          type: string
+          const: Research request failed
+        status:
+          type: integer
+          enum:
+          - 400
+          - 401
+          - 403
+          - 404
+          - 409
+          - 503
+        code:
+          $ref: '#/components/schemas/ResearchErrorCode'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    ResearchCursor:
+      type: string
+      minLength: 1
+      maxLength: 2048
+      pattern: ^[A-Za-z0-9_-]+$
+      description: Authenticated opaque keyset cursor bound to resource, canonical filters, valuationAt, knowledgeAt,
+        snapshotAt and committed snapshotVersion. Not a provider token. Invalid cursor:400 CURSOR_INVALID; changed filters:409
+        SNAPSHOT_CONFLICT.
+    ResearchInstrument:
+      type: object
+      additionalProperties: false
+      required:
+      - instrumentId
+      - assetClass
+      - venue
+      - baseUnit
+      - quoteUnit
+      - currency
+      properties:
+        instrumentId:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        assetClass:
+          type: string
+          enum:
+          - EQUITY
+          - ETF
+          - CRYPTO
+          - FOREX
+          - DERIVATIVE
+        venue:
+          type: string
+          pattern: ^[A-Z0-9]{4}$
+        baseUnit:
+          type: string
+          minLength: 1
+          maxLength: 16
+        quoteUnit:
+          type: string
+          minLength: 1
+          maxLength: 16
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+    ResearchSymbolMapping:
+      type: object
+      additionalProperties: false
+      required:
+      - instrumentId
+      - provider
+      - symbol
+      - validFrom
+      - validUntil
+      properties:
+        instrumentId:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        provider:
+          type: string
+          enum:
+          - ALPACA
+        symbol:
+          type: string
+          pattern: ^[A-Z][A-Z0-9./-]{0,15}$
+        validFrom:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        validUntil:
+          anyOf:
+          - $ref: '#/components/schemas/ResearchTimestamp'
+          - type: 'null'
+    ResearchBar:
+      type: object
+      additionalProperties: false
+      required:
+      - barId
+      - instrumentId
+      - provider
+      - feed
+      - interval
+      - adjustment
+      - currency
+      - start
+      - end
+      - open
+      - high
+      - low
+      - close
+      - volume
+      - revision
+      - predecessorId
+      - providerRevision
+      - eventTime
+      - publishedAt
+      - availableAt
+      - ingestedAt
+      - availabilityBasis
+      - fingerprint
+      - evidenceId
+      - quality
+      - commitVersion
+      properties:
+        barId:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        instrumentId:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        provider:
+          type: string
+          enum:
+          - ALPACA
+        feed:
+          type: string
+          enum:
+          - iex
+        interval:
+          $ref: '#/components/schemas/ResearchInterval'
+        adjustment:
+          type: string
+          enum:
+          - raw
+        currency:
+          type: string
+          enum:
+          - USD
+        start:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        end:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        open:
+          $ref: '#/components/schemas/ResearchDecimal'
+        high:
+          $ref: '#/components/schemas/ResearchDecimal'
+        low:
+          $ref: '#/components/schemas/ResearchDecimal'
+        close:
+          $ref: '#/components/schemas/ResearchDecimal'
+        volume:
+          $ref: '#/components/schemas/ResearchDecimal'
+        revision:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        predecessorId:
+          anyOf:
+          - type: string
+            format: uuid
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          - type: 'null'
+        providerRevision:
+          anyOf:
+          - type: string
+            minLength: 1
+            maxLength: 128
+          - type: 'null'
+        eventTime:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        publishedAt:
+          anyOf:
+          - $ref: '#/components/schemas/ResearchTimestamp'
+          - type: 'null'
+        availableAt:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        ingestedAt:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        availabilityBasis:
+          type: string
+          enum:
+          - FIRST_OBSERVED
+        fingerprint:
+          $ref: '#/components/schemas/ResearchFingerprint'
+        evidenceId:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        quality:
+          $ref: '#/components/schemas/ResearchQuality'
+        commitVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+      description: 'Immutable raw revision. Natural identity includes instrument/provider/feed/interval/start/end/adjustment.
+        Prices positive and high>=max(open,close,low), low<=min(open,close); volume>=0. FIRST_OBSERVED: publishedAt=null
+        and availableAt=ingestedAt; eventTime=end. Cross-field rules are validated by domain/runtime, not JSON Schema.'
+    ResearchBarContent:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - barId
+      properties:
+        kind:
+          type: string
+          enum:
+          - BAR
+        barId:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+    ResearchNewsContent:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - headline
+      - language
+      properties:
+        kind:
+          type: string
+          enum:
+          - NEWS
+        headline:
+          type: string
+          minLength: 1
+          maxLength: 500
+        language:
+          type: string
+          pattern: ^[a-z]{2}$
+    ResearchFundamentalContent:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - metric
+      - value
+      - unit
+      - periodEnd
+      properties:
+        kind:
+          type: string
+          enum:
+          - FUNDAMENTAL
+        metric:
+          type: string
+          minLength: 1
+          maxLength: 64
+        value:
+          $ref: '#/components/schemas/ResearchDecimal'
+        unit:
+          type: string
+          minLength: 1
+          maxLength: 32
+        periodEnd:
+          $ref: '#/components/schemas/ResearchTimestamp'
+    ResearchMacroContent:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - eventCode
+      - region
+      - actual
+      - unit
+      properties:
+        kind:
+          type: string
+          enum:
+          - MACRO_EVENT
+        eventCode:
+          type: string
+          minLength: 1
+          maxLength: 64
+        region:
+          type: string
+          minLength: 1
+          maxLength: 64
+        actual:
+          anyOf:
+          - $ref: '#/components/schemas/ResearchDecimal'
+          - type: 'null'
+        unit:
+          type:
+          - string
+          - 'null'
+          minLength: 1
+          maxLength: 32
+      if:
+        properties:
+          actual:
+            const: null
+        required:
+        - actual
+      then:
+        properties:
+          actual:
+            type: 'null'
+          unit:
+            type: 'null'
+      else:
+        properties:
+          actual:
+            type: string
+          unit:
+            type: string
+    ResearchDerivedContent:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - metric
+      - value
+      - algorithmVersion
+      - evidenceIds
+      properties:
+        kind:
+          type: string
+          enum:
+          - DERIVED
+        metric:
+          type: string
+          enum:
+          - PRICE_CHANGE
+          - VOLATILITY
+        value:
+          $ref: '#/components/schemas/ResearchDecimal'
+        algorithmVersion:
+          type: string
+          enum:
+          - decimal-population-v1
+        evidenceIds:
+          type: array
+          maxItems: 200
+          items:
+            type: string
+            format: uuid
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+    ResearchEvidenceContent:
+      oneOf:
+      - $ref: '#/components/schemas/ResearchBarContent'
+      - $ref: '#/components/schemas/ResearchNewsContent'
+      - $ref: '#/components/schemas/ResearchFundamentalContent'
+      - $ref: '#/components/schemas/ResearchMacroContent'
+      - $ref: '#/components/schemas/ResearchDerivedContent'
+      discriminator:
+        propertyName: kind
+        mapping:
+          BAR: '#/components/schemas/ResearchBarContent'
+          NEWS: '#/components/schemas/ResearchNewsContent'
+          FUNDAMENTAL: '#/components/schemas/ResearchFundamentalContent'
+          MACRO_EVENT: '#/components/schemas/ResearchMacroContent'
+          DERIVED: '#/components/schemas/ResearchDerivedContent'
+    ResearchEvidence:
+      type: object
+      additionalProperties: false
+      required:
+      - evidenceId
+      - instrumentId
+      - sourceId
+      - sourceReference
+      - eventTime
+      - publishedAt
+      - availableAt
+      - ingestedAt
+      - availabilityBasis
+      - schemaVersion
+      - dataRevision
+      - predecessorId
+      - fingerprint
+      - quality
+      - modelConfidence
+      - content
+      - commitVersion
+      - market
+      properties:
+        evidenceId:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        instrumentId:
+          anyOf:
+          - type: string
+            format: uuid
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          - type: 'null'
+        sourceId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        sourceReference:
+          type: string
+          pattern: ^(?!.*://)[A-Za-z0-9][A-Za-z0-9:._/-]{0,255}$
+          description: Opaque normalized source identifier; no URL/query string or provider transport data.
+        eventTime:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        publishedAt:
+          anyOf:
+          - $ref: '#/components/schemas/ResearchTimestamp'
+          - type: 'null'
+        availableAt:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        ingestedAt:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        availabilityBasis:
+          type: string
+          enum:
+          - FIRST_OBSERVED
+          - VERIFIED_PUBLICATION
+        schemaVersion:
+          type: string
+          const: '1'
+        dataRevision:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        predecessorId:
+          anyOf:
+          - type: string
+            format: uuid
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          - type: 'null'
+        fingerprint:
+          $ref: '#/components/schemas/ResearchFingerprint'
+        quality:
+          $ref: '#/components/schemas/ResearchQuality'
+        modelConfidence:
+          anyOf:
+          - type: string
+            pattern: ^(0(\.\d{1,18})?|1(\.0{1,18})?)$
+          - type: 'null'
+        content:
+          $ref: '#/components/schemas/ResearchEvidenceContent'
+        commitVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        market:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: ^[A-Za-z0-9_-]+$
+    ResearchSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+      - valuationAt
+      - knowledgeAt
+      - snapshotAt
+      - snapshotVersion
+      - semantics
+      properties:
+        valuationAt:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        knowledgeAt:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        snapshotAt:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        snapshotVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        semantics:
+          type: string
+          enum:
+          - observed-as-of
+      description: knowledgeAt <= valuationAt. Select event/bar end <= valuationAt AND availableAt <= knowledgeAt AND
+        ingestedAt <= knowledgeAt AND commitVersion <= snapshotVersion. Fresh query defaults both times to a single
+        request clock instant. snapshotAt/version are server-bound; never supplied freely by a client.
+    ResearchCoverage:
+      type: object
+      additionalProperties: false
+      required:
+      - instrumentId
+      - provider
+      - feed
+      - interval
+      - adjustment
+      - start
+      - end
+      - qualityRuleVersion
+      - calendarVersion
+      - status
+      - expected
+      - observed
+      - missing
+      - unchecked
+      properties:
+        instrumentId:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        provider:
+          type: string
+          enum:
+          - ALPACA
+        feed:
+          type: string
+          enum:
+          - iex
+        interval:
+          $ref: '#/components/schemas/ResearchInterval'
+        adjustment:
+          type: string
+          enum:
+          - raw
+        start:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        end:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        qualityRuleVersion:
+          type: string
+          enum:
+          - research-quality-v1
+        calendarVersion:
+          anyOf:
+          - $ref: '#/components/schemas/ResearchFingerprint'
+          - type: 'null'
+        status:
+          $ref: '#/components/schemas/ResearchQuality'
+        expected:
+          anyOf:
+          - type: integer
+            minimum: 0
+            maximum: 9007199254740991
+          - type: 'null'
+        observed:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        missing:
+          anyOf:
+          - type: integer
+            minimum: 0
+            maximum: 9007199254740991
+          - type: 'null'
+        unchecked:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+    ResearchBarPage:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      - snapshot
+      - coverage
+      - incomplete
+      - dataVersion
+      properties:
+        items:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ResearchBar'
+        nextCursor:
+          anyOf:
+          - $ref: '#/components/schemas/ResearchCursor'
+          - type: 'null'
+        snapshot:
+          $ref: '#/components/schemas/ResearchSnapshot'
+        coverage:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ResearchCoverage'
+        incomplete:
+          type: boolean
+        dataVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+    ResearchEvidenceResult:
+      type: object
+      additionalProperties: false
+      required:
+      - evidence
+      - snapshot
+      - incomplete
+      - dataVersion
+      properties:
+        evidence:
+          $ref: '#/components/schemas/ResearchEvidence'
+        snapshot:
+          $ref: '#/components/schemas/ResearchSnapshot'
+        incomplete:
+          type: boolean
+        dataVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+    ResearchSource:
+      type: object
+      additionalProperties: false
+      required:
+      - sourceId
+      - kind
+      - state
+      - licenseStatus
+      - policyVersion
+      - providerVerification
+      - instruments
+      - intervals
+      - feed
+      - adjustment
+      - historyStart
+      - historyEnd
+      - limitations
+      properties:
+        sourceId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        kind:
+          type: string
+          enum:
+          - BAR
+          - NEWS
+          - FUNDAMENTAL
+          - MACRO_EVENT
+          - REGIME
+        state:
+          type: string
+          enum:
+          - IMPLEMENTED
+          - DISABLED
+          - BLOCKED
+          - NOT_IMPLEMENTED
+        licenseStatus:
+          $ref: '#/components/schemas/ResearchLicenseStatus'
+        policyVersion:
+          anyOf:
+          - type: string
+            minLength: 1
+            maxLength: 64
+          - type: 'null'
+        providerVerification:
+          type: string
+          enum:
+          - UNVERIFIED
+          - VERIFIED
+          - BLOCKED
+        instruments:
+          type: array
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/ResearchInstrument'
+        intervals:
+          type: array
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/ResearchInterval'
+        feed:
+          anyOf:
+          - type: string
+            enum:
+            - iex
+          - type: 'null'
+        adjustment:
+          anyOf:
+          - type: string
+            enum:
+            - raw
+          - type: 'null'
+        historyStart:
+          anyOf:
+          - $ref: '#/components/schemas/ResearchTimestamp'
+          - type: 'null'
+        historyEnd:
+          anyOf:
+          - $ref: '#/components/schemas/ResearchTimestamp'
+          - type: 'null'
+        limitations:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+            enum:
+            - FIRST_OBSERVED_ONLY
+            - IEX_NOT_FULL_MARKET
+            - NO_CALENDAR_PROOF
+            - NO_HISTORICAL_PUBLICATION
+            - NO_ADAPTER
+            - RIGHTS_UNVERIFIED
+    ResearchSourceCatalog:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - observedAt
+      - incomplete
+      properties:
+        items:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/ResearchSource'
+        observedAt:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        incomplete:
+          type: boolean
+    ResearchMetric:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - value
+      - algorithmVersion
+      - evidenceIds
+      - reason
+      properties:
+        status:
+          type: string
+          enum:
+          - COMPUTABLE
+          - NOT_COMPUTABLE
+        value:
+          anyOf:
+          - $ref: '#/components/schemas/ResearchDecimal'
+          - type: 'null'
+        algorithmVersion:
+          type: string
+          enum:
+          - decimal-population-v1
+        evidenceIds:
+          type: array
+          maxItems: 200
+          items:
+            type: string
+            format: uuid
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        reason:
+          anyOf:
+          - type: string
+            enum:
+            - INSUFFICIENT_BARS
+            - INCOMPLETE_WINDOW
+            - INCOMPATIBLE_INTERVALS
+            - INVALID_QUALITY
+          - type: 'null'
+      if:
+        properties:
+          status:
+            const: COMPUTABLE
+        required:
+        - status
+      then:
+        properties:
+          status:
+            const: COMPUTABLE
+          value:
+            type: string
+          reason:
+            type: 'null'
+          evidenceIds:
+            minItems: 3
+      else:
+        properties:
+          status:
+            const: NOT_COMPUTABLE
+          value:
+            type: 'null'
+          reason:
+            type: string
+    ResearchContext:
+      type: object
+      additionalProperties: false
+      required:
+      - instrumentId
+      - start
+      - end
+      - interval
+      - snapshot
+      - dataVersion
+      - quality
+      - coverage
+      - evidenceIds
+      - priceChange
+      - volatility
+      - missingSources
+      - incomplete
+      properties:
+        instrumentId:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        start:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        end:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        interval:
+          $ref: '#/components/schemas/ResearchInterval'
+        snapshot:
+          $ref: '#/components/schemas/ResearchSnapshot'
+        dataVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        quality:
+          $ref: '#/components/schemas/ResearchQuality'
+        coverage:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ResearchCoverage'
+        evidenceIds:
+          type: array
+          maxItems: 200
+          items:
+            type: string
+            format: uuid
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        priceChange:
+          $ref: '#/components/schemas/ResearchMetric'
+        volatility:
+          $ref: '#/components/schemas/ResearchMetric'
+        missingSources:
+          type: array
+          maxItems: 5
+          items:
+            type: string
+            enum:
+            - BARS
+            - NEWS
+            - FUNDAMENTALS
+            - MACRO
+            - REGIME
+        incomplete:
+          type: boolean
+    ResearchJobRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - instrumentId
+      - start
+      - end
+      - interval
+      - feed
+      - adjustment
+      - mode
+      properties:
+        instrumentId:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        start:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        end:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        interval:
+          $ref: '#/components/schemas/ResearchInterval'
+        feed:
+          type: string
+          enum:
+          - iex
+        adjustment:
+          type: string
+          enum:
+          - raw
+        mode:
+          type: string
+          enum:
+          - BACKFILL
+          - UPDATE
+      description: Explicit [start,end) UTC range, 0 < end-start <=366 days. Initial adapter supports only registered
+        SPY/QQQ USD ETF identities. UPDATE overlaps one completed interval. No URLs, provider tokens, credentials or
+        trading activation fields.
+    ResearchJobResumeRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - action
+      - jobId
+      properties:
+        action:
+          type: string
+          const: RESUME
+        jobId:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      description: Explicit local-operator resume of a PARTIAL/BLOCKED job. The existing job and committed progress
+        remain immutable; the resume request has its own Idempotency-Key and never exposes its private cursor.
+    ResearchJobAction:
+      oneOf:
+      - $ref: '#/components/schemas/ResearchJobRequest'
+      - $ref: '#/components/schemas/ResearchJobResumeRequest'
+    ResearchJob:
+      type: object
+      additionalProperties: false
+      required:
+      - jobId
+      - request
+      - status
+      - acceptedAt
+      - updatedAt
+      - retryAt
+      - pages
+      - bars
+      - attempts
+      - errorCode
+      - traceId
+      properties:
+        jobId:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        request:
+          $ref: '#/components/schemas/ResearchJobRequest'
+        status:
+          type: string
+          enum:
+          - ACCEPTED
+          - RUNNING
+          - RETRY_WAIT
+          - PARTIAL
+          - BLOCKED
+          - SUCCEEDED
+          - FAILED
+        acceptedAt:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        updatedAt:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        retryAt:
+          anyOf:
+          - $ref: '#/components/schemas/ResearchTimestamp'
+          - type: 'null'
+        pages:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        bars:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        attempts:
+          type: integer
+          minimum: 0
+          maximum: 3
+        errorCode:
+          anyOf:
+          - $ref: '#/components/schemas/ResearchErrorCode'
+          - type: 'null'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    ResearchJobPage:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      - snapshotAt
+      - snapshotVersion
+      properties:
+        items:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ResearchJob'
+        nextCursor:
+          anyOf:
+          - $ref: '#/components/schemas/ResearchCursor'
+          - type: 'null'
+        snapshotAt:
+          $ref: '#/components/schemas/ResearchTimestamp'
+        snapshotVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
