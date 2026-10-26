@@ -1,0 +1,42 @@
+{
+  "assessmentId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+  "status": "ACCEPTED",
+  "eligibility": "NOT_EVALUATED",
+  "request": {
+    "instrumentId": "11111111-1111-4111-8111-111111111111",
+    "strategyId": "sma-cross-v1",
+    "version": "1",
+    "parameters": {
+      "fast": 2,
+      "slow": 3
+    },
+    "startCash": "10000",
+    "feeUsd": "1",
+    "slippageBps": "5",
+    "quantityStep": "0.000001",
+    "folds": [
+      {
+        "trainingStart": "2026-10-20T00:00:00Z",
+        "trainingEnd": "2026-10-22T00:00:00Z",
+        "testStart": "2026-10-22T00:00:00Z",
+        "testEnd": "2026-10-23T00:00:00Z"
+      }
+    ]
+  },
+  "requestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "acceptedAt": "2026-10-23T00:00:00Z",
+  "updatedAt": "2026-10-23T00:00:00Z",
+  "completedAt": null,
+  "attempt": 0,
+  "failureCode": null,
+  "publicationComplete": false,
+  "report": null,
+  "currentRevocation": {
+    "checkedAt": "2026-10-23T00:00:00Z",
+    "currentTrustVersion": 7,
+    "currentTrustPolicyVersion": "research-trust-v1",
+    "warnings": [],
+    "complete": true
+  },
+  "detailLink": "/api/v1/research/data-readiness/assessments/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+}

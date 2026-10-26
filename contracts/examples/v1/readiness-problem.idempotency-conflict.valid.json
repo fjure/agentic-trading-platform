@@ -1,0 +1,7 @@
+{
+  "type": "urn:agentic-trading-lab:readiness-problem",
+  "title": "Research data request failed",
+  "status": 409,
+  "code": "IDEMPOTENCY_CONFLICT",
+  "traceId": "cccccccccccccccccccccccccccccccc"
+}

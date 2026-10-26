@@ -3,17 +3,17 @@
   "repository": "fjure/agentic-trading-platform",
   "changeId": "research-data-readiness",
   "source": "openspec/changes/research-data-readiness/tasks.md",
-  "transport": "authorized-gh-cli-fallback-mcp-write-404",
+  "transport": "authorized-gh-cli-write-fallback-mcp-403; official-mcp-read-back",
   "nativeDependencies": "verified-via-reverse-edges-and-terminal-summary",
   "tasks": [
     {
       "taskId": "RDR-01",
       "issueNumber": 60,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/60",
-      "contentHash": "2ef280be834523fd4ad41c6b654a8cbf655a769790a3e9b6b1ba0e32348ec4d5",
-      "syncedAt": "2026-10-26T18:18:56.245560+00:00",
+      "contentHash": "463586ce309e31db01edfc4f7ae814eb32f58e83b347d4ed42b6ec8ca2e72ec4",
+      "syncedAt": "2026-10-26T20:58:35.061876+00:00",
       "dependsOn": [],
-      "state": "open",
+      "state": "closed",
       "nativeDependsOn": []
     },
     {
@@ -21,7 +21,7 @@
       "issueNumber": 61,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/61",
       "contentHash": "6a17bf83171bd096211d05edeef8438e75b41377f086c77787406c6d5d00fceb",
-      "syncedAt": "2026-10-26T18:18:56.245560+00:00",
+      "syncedAt": "2026-10-26T20:58:35.061876+00:00",
       "dependsOn": [
         "RDR-01"
       ],
@@ -35,7 +35,7 @@
       "issueNumber": 62,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/62",
       "contentHash": "02dca2242671ec98353e31ce68cc862e472c667485edf70dc77e5f0a5776e03e",
-      "syncedAt": "2026-10-26T18:18:56.245560+00:00",
+      "syncedAt": "2026-10-26T20:58:35.061876+00:00",
       "dependsOn": [
         "RDR-01"
       ],
@@ -49,7 +49,7 @@
       "issueNumber": 63,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/63",
       "contentHash": "7c5e00792f55d7245d7c82981d4620d6e53a8df2974acf8e91fa78b9e8d3178a",
-      "syncedAt": "2026-10-26T18:18:56.245560+00:00",
+      "syncedAt": "2026-10-26T20:58:35.061876+00:00",
       "dependsOn": [
         "RDR-03"
       ],
@@ -63,7 +63,7 @@
       "issueNumber": 68,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/68",
       "contentHash": "0ec1ead07eff73ae37dcbba292e0e02de0bd222b19c49e141060cce7b06c483e",
-      "syncedAt": "2026-10-26T18:18:56.245560+00:00",
+      "syncedAt": "2026-10-26T20:58:35.061876+00:00",
       "dependsOn": [
         "RDR-01",
         "RDR-03"
@@ -78,8 +78,8 @@
       "taskId": "RDR-05",
       "issueNumber": 64,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/64",
-      "contentHash": "375ae5208874d159251919bf39ae0509d110f3ab03c81b591b46edda6b5e7aeb",
-      "syncedAt": "2026-10-26T18:18:56.245560+00:00",
+      "contentHash": "3dd5cad99fbcf3ab78be0d7bc437ebcdf5047e62552b182a12da776a848e5e5f",
+      "syncedAt": "2026-10-26T20:58:35.061876+00:00",
       "dependsOn": [
         "RDR-02",
         "RDR-03"
@@ -94,8 +94,8 @@
       "taskId": "RDR-06",
       "issueNumber": 65,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/65",
-      "contentHash": "925735193e7df28ca1846698a963908f4509a3f12cb39a368894207f16551a07",
-      "syncedAt": "2026-10-26T18:18:56.245560+00:00",
+      "contentHash": "9fa92255d74436537f56344b4584009d441a8998ba74df11942a4ba19a1b04f2",
+      "syncedAt": "2026-10-26T20:58:35.061876+00:00",
       "dependsOn": [
         "RDR-04",
         "RDR-05"
@@ -111,7 +111,7 @@
       "issueNumber": 66,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/66",
       "contentHash": "81bf84305176239047a337593a9e5d7acb4f1686f576ad620ed402ca1aea3a47",
-      "syncedAt": "2026-10-26T18:18:56.245560+00:00",
+      "syncedAt": "2026-10-26T20:58:35.061876+00:00",
       "dependsOn": [
         "RDR-05",
         "RDR-06"
@@ -127,7 +127,7 @@
       "issueNumber": 67,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/67",
       "contentHash": "1b0e29dd9f11daa74f55e53c096c8abe591052e8561ba7368ce1211eb850a389",
-      "syncedAt": "2026-10-26T18:18:56.245560+00:00",
+      "syncedAt": "2026-10-26T20:58:35.061876+00:00",
       "dependsOn": [
         "RDR-01",
         "RDR-02",
@@ -152,19 +152,22 @@
     }
   ],
   "readBack": {
-    "verifiedCount": 9,
-    "updatedCount": 0,
-    "unchangedCount": 9,
+    "verifiedTaskCount": 9,
+    "createdCount": 0,
+    "updatedCount": 3,
+    "unchangedCount": 6,
+    "closedCount": 1,
     "duplicates": 0,
-    "verifiedAt": "2026-10-26T18:18:56.245560+00:00"
+    "secondPassUpdates": 0,
+    "verifiedAt": "2026-10-26T20:58:35.061876+00:00"
   },
   "nativeReadBack": {
     "blockingEdges": {
       "60": [
         61,
         62,
-        68,
-        67
+        67,
+        68
       ],
       "61": [
         64,
@@ -172,9 +175,9 @@
       ],
       "62": [
         63,
-        68,
         64,
-        67
+        67,
+        68
       ],
       "63": [
         65,
@@ -198,6 +201,6 @@
     },
     "terminalIssue": 67,
     "terminalBlockedByCount": 8,
-    "verifiedAt": "2026-10-26T18:18:56.245560+00:00"
+    "verifiedAt": "2026-10-26T20:58:35.061876+00:00"
   }
 }

@@ -84,6 +84,31 @@ def main() -> None:
                 fail(f"OpenAPI response example: {errors[0].message}")
             response_examples += 1
 
+    # RDR-01: include the separately installed offline contract and all public fixtures.
+    readiness_manifest = json.loads(
+        (EXAMPLES / "readiness-fixtures.json").read_text(encoding="utf-8")
+    )
+    for filename, component in readiness_manifest.items():
+        instance = json.loads((EXAMPLES / filename).read_text(encoding="utf-8"))
+        Draft202012Validator(
+            {"$ref": openapi_id + "#/components/schemas/" + component},
+            registry=openapi_registry, format_checker=contract_formats(),
+        ).validate(instance)
+    bundle_schema = json.loads(
+        (ROOT / "contracts/schemas/research-evidence-bundle.schema.json").read_text("utf-8")
+    )
+    Draft202012Validator.check_schema(bundle_schema)
+    bundle_validator = Draft202012Validator(bundle_schema, format_checker=contract_formats())
+    bundle_examples = list((ROOT / "contracts/examples/readiness-bundle").glob("*.valid.json"))
+    if not bundle_examples:
+        fail("missing offline evidence bundle fixtures")
+    for fixture in bundle_examples:
+        bundle_validator.validate(json.loads(fixture.read_text("utf-8")))
+    print(
+        f"PASS: {len(readiness_manifest)} readiness/collection fixtures, "
+        f"{len(bundle_examples)} offline bundle fixtures (schema only; no signature verification)"
+    )
+
     operations: list[str] = []
     for path, path_item in document["paths"].items():
         if not path.startswith("/api/v1/") and path not in {"/health", "/ready"}:

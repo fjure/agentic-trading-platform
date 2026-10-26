@@ -1,0 +1,7 @@
+{
+  "type": "urn:agentic-trading-lab:readiness-problem",
+  "title": "Research data request failed",
+  "status": 429,
+  "code": "QUEUE_EXHAUSTED",
+  "traceId": "cccccccccccccccccccccccccccccccc"
+}

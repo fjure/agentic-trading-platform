@@ -1,0 +1,591 @@
+{
+  "assessmentId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+  "status": "SUCCEEDED",
+  "eligibility": "ELIGIBLE",
+  "request": {
+    "instrumentId": "11111111-1111-4111-8111-111111111111",
+    "strategyId": "sma-cross-v1",
+    "version": "1",
+    "parameters": {
+      "fast": 2,
+      "slow": 3
+    },
+    "startCash": "10000",
+    "feeUsd": "1",
+    "slippageBps": "5",
+    "quantityStep": "0.000001",
+    "folds": [
+      {
+        "trainingStart": "2026-10-20T00:00:00Z",
+        "trainingEnd": "2026-10-22T13:30:00Z",
+        "testStart": "2026-10-22T13:30:00Z",
+        "testEnd": "2026-10-22T16:00:00Z"
+      }
+    ]
+  },
+  "requestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "acceptedAt": "2026-10-23T00:00:00Z",
+  "updatedAt": "2026-10-23T00:00:00Z",
+  "completedAt": "2026-10-23T00:00:00Z",
+  "attempt": 1,
+  "failureCode": null,
+  "publicationComplete": true,
+  "report": {
+    "assessmentId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    "requestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "reportHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "policyVersion": "backtest-data-v1",
+    "codeVersion": "rdr-contract-v1",
+    "snapshot": {
+      "snapshotAt": "2026-10-23T00:00:00Z",
+      "snapshotVersion": 42,
+      "trustVersion": 7,
+      "trustPolicyVersion": "research-trust-v1"
+    },
+    "createdAt": "2026-10-23T00:00:00Z",
+    "eligibility": "ELIGIBLE",
+    "evaluationComplete": true,
+    "trust": {
+      "integrity": {
+        "status": "VERIFIED",
+        "method": "SYNTHETIC_OFFLINE_TEST",
+        "ruleVersion": "digest-v1",
+        "reason": "SYNTHETIC_ALL_REQUIRED_CHECKS_PASSED",
+        "references": [
+          {
+            "kind": "CALENDAR_REVISION",
+            "id": "calendar-20261022",
+            "revision": "1",
+            "fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          }
+        ]
+      },
+      "sourceAuthenticity": {
+        "status": "VERIFIED",
+        "method": "SYNTHETIC_OFFLINE_TEST",
+        "ruleVersion": "signature-v1",
+        "reason": "SYNTHETIC_ALL_REQUIRED_CHECKS_PASSED",
+        "references": [
+          {
+            "kind": "KEY",
+            "id": "synthetic-source-key-1",
+            "revision": "1",
+            "fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        ]
+      },
+      "temporalAuthenticity": {
+        "status": "VERIFIED",
+        "method": "SYNTHETIC_OFFLINE_TEST",
+        "ruleVersion": "research-trust-v1",
+        "reason": "SYNTHETIC_ALL_REQUIRED_CHECKS_PASSED",
+        "references": []
+      },
+      "completeness": {
+        "status": "VERIFIED",
+        "method": "SYNTHETIC_OFFLINE_TEST",
+        "ruleVersion": "research-trust-v1",
+        "reason": "SYNTHETIC_ALL_REQUIRED_CHECKS_PASSED",
+        "references": []
+      },
+      "domainQuality": {
+        "status": "VERIFIED",
+        "method": "SYNTHETIC_OFFLINE_TEST",
+        "ruleVersion": "backtest-data-v1",
+        "reason": "SYNTHETIC_ALL_REQUIRED_CHECKS_PASSED",
+        "references": []
+      }
+    },
+    "findingCount": 0,
+    "categories": [],
+    "categoryOverlaps": [],
+    "metrics": [
+      {
+        "sourceId": "alpaca",
+        "instrumentId": "11111111-1111-4111-8111-111111111111",
+        "feed": "iex",
+        "interval": "15Min",
+        "adjustment": "raw",
+        "calendarVersion": "calendar-v1",
+        "period": {
+          "start": "2026-10-22T13:30:00Z",
+          "end": "2026-10-22T16:00:00Z"
+        },
+        "snapshot": {
+          "snapshotAt": "2026-10-23T00:00:00Z",
+          "snapshotVersion": 42,
+          "trustVersion": 7,
+          "trustPolicyVersion": "research-trust-v1"
+        },
+        "expectedBars": 10,
+        "observedBars": 10,
+        "unknownCalendarDays": 0,
+        "receptionMinusClose": {
+          "status": "MEASURED",
+          "p50Seconds": "20",
+          "p95Seconds": "20",
+          "maximumSeconds": "20",
+          "sampleCount": 10,
+          "unknownPairCount": 0,
+          "invalidPairCount": 0
+        },
+        "ingestionMinusReception": {
+          "status": "MEASURED",
+          "p50Seconds": "5",
+          "p95Seconds": "5",
+          "maximumSeconds": "5",
+          "sampleCount": 10,
+          "unknownPairCount": 0,
+          "invalidPairCount": 0
+        },
+        "confirmationMinusIngestion": {
+          "status": "MEASURED",
+          "p50Seconds": "0.001",
+          "p95Seconds": "0.002",
+          "maximumSeconds": "0.002",
+          "sampleCount": 10,
+          "unknownPairCount": 0,
+          "invalidPairCount": 0
+        },
+        "receivedBySignalDeadline": {
+          "status": "MEASURED",
+          "numerator": 10,
+          "denominator": 10,
+          "denominatorBasis": "EXPECTED_BAR_IDENTITIES",
+          "unknownCount": 0
+        },
+        "receivedByOutcomeDeadline": {
+          "status": "MEASURED",
+          "numerator": 10,
+          "denominator": 10,
+          "denominatorBasis": "EXPECTED_BAR_IDENTITIES",
+          "unknownCount": 0
+        },
+        "usableBySignalDeadline": {
+          "status": "MEASURED",
+          "numerator": 10,
+          "denominator": 10,
+          "denominatorBasis": "EXPECTED_BAR_IDENTITIES",
+          "unknownCount": 0
+        },
+        "usableByOutcomeDeadline": {
+          "status": "MEASURED",
+          "numerator": 10,
+          "denominator": 10,
+          "denominatorBasis": "EXPECTED_BAR_IDENTITIES",
+          "unknownCount": 0
+        },
+        "missingBars": {
+          "status": "MEASURED",
+          "numerator": 0,
+          "denominator": 10,
+          "denominatorBasis": "EXPECTED_BAR_IDENTITIES",
+          "unknownCount": 0
+        },
+        "lateForSignal": {
+          "status": "MEASURED",
+          "numerator": 0,
+          "denominator": 10,
+          "denominatorBasis": "EXPECTED_BAR_IDENTITIES",
+          "unknownCount": 0
+        },
+        "lateForOutcome": {
+          "status": "MEASURED",
+          "numerator": 0,
+          "denominator": 10,
+          "denominatorBasis": "EXPECTED_BAR_IDENTITIES",
+          "unknownCount": 0
+        },
+        "correctedBars": {
+          "status": "MEASURED",
+          "numerator": 0,
+          "denominator": 10,
+          "denominatorBasis": "OBSERVED_BAR_IDENTITIES",
+          "unknownCount": 0
+        },
+        "duplicateResponses": {
+          "status": "MEASURED",
+          "numerator": 0,
+          "denominator": 10,
+          "denominatorBasis": "USABLE_BAR_OCCURRENCES",
+          "unknownCount": 0
+        },
+        "limitations": [
+          "SYNTHETIC_OFFLINE_EVIDENCE_ONLY",
+          "RIGHTS_UNVERIFIED"
+        ]
+      }
+    ],
+    "windows": {
+      "barSignal": [
+        {
+          "kind": "BAR_OBSERVATION",
+          "scope": "SIGNAL",
+          "deadlineSeconds": 60,
+          "firstBar": {
+            "instrumentId": "11111111-1111-4111-8111-111111111111",
+            "provider": "ALPACA",
+            "feed": "iex",
+            "interval": "15Min",
+            "adjustment": "raw",
+            "start": "2026-10-22T13:30:00Z",
+            "end": "2026-10-22T13:45:00Z"
+          },
+          "lastBar": {
+            "instrumentId": "11111111-1111-4111-8111-111111111111",
+            "provider": "ALPACA",
+            "feed": "iex",
+            "interval": "15Min",
+            "adjustment": "raw",
+            "start": "2026-10-22T15:45:00Z",
+            "end": "2026-10-22T16:00:00Z"
+          },
+          "period": {
+            "start": "2026-10-22T13:30:00Z",
+            "end": "2026-10-22T16:00:00Z"
+          },
+          "expectedBars": 10,
+          "foldIndex": 0,
+          "snapshot": {
+            "snapshotAt": "2026-10-23T00:00:00Z",
+            "snapshotVersion": 42,
+            "trustVersion": 7,
+            "trustPolicyVersion": "research-trust-v1"
+          },
+          "policyVersion": "backtest-data-v1",
+          "leftBoundary": {
+            "reason": "RANGE_START",
+            "references": [
+              {
+                "kind": "CALENDAR_REVISION",
+                "id": "calendar-20261022",
+                "revision": "1",
+                "fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ]
+          },
+          "rightBoundary": {
+            "reason": "RANGE_END",
+            "references": [
+              {
+                "kind": "CALENDAR_REVISION",
+                "id": "calendar-20261022",
+                "revision": "1",
+                "fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ]
+          },
+          "references": [
+            {
+              "kind": "BAR_REVISION",
+              "id": "revision-1",
+              "revision": "1",
+              "fingerprint": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            }
+          ]
+        }
+      ],
+      "barOutcome": [
+        {
+          "kind": "BAR_OBSERVATION",
+          "scope": "OUTCOME",
+          "deadlineSeconds": 300,
+          "firstBar": {
+            "instrumentId": "11111111-1111-4111-8111-111111111111",
+            "provider": "ALPACA",
+            "feed": "iex",
+            "interval": "15Min",
+            "adjustment": "raw",
+            "start": "2026-10-22T13:30:00Z",
+            "end": "2026-10-22T13:45:00Z"
+          },
+          "lastBar": {
+            "instrumentId": "11111111-1111-4111-8111-111111111111",
+            "provider": "ALPACA",
+            "feed": "iex",
+            "interval": "15Min",
+            "adjustment": "raw",
+            "start": "2026-10-22T15:45:00Z",
+            "end": "2026-10-22T16:00:00Z"
+          },
+          "period": {
+            "start": "2026-10-22T13:30:00Z",
+            "end": "2026-10-22T16:00:00Z"
+          },
+          "expectedBars": 10,
+          "foldIndex": 0,
+          "snapshot": {
+            "snapshotAt": "2026-10-23T00:00:00Z",
+            "snapshotVersion": 42,
+            "trustVersion": 7,
+            "trustPolicyVersion": "research-trust-v1"
+          },
+          "policyVersion": "backtest-data-v1",
+          "leftBoundary": {
+            "reason": "RANGE_START",
+            "references": [
+              {
+                "kind": "CALENDAR_REVISION",
+                "id": "calendar-20261022",
+                "revision": "1",
+                "fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ]
+          },
+          "rightBoundary": {
+            "reason": "RANGE_END",
+            "references": [
+              {
+                "kind": "CALENDAR_REVISION",
+                "id": "calendar-20261022",
+                "revision": "1",
+                "fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ]
+          },
+          "references": [
+            {
+              "kind": "BAR_REVISION",
+              "id": "revision-1",
+              "revision": "1",
+              "fingerprint": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            }
+          ]
+        }
+      ],
+      "strictSignal": [
+        {
+          "kind": "STRICT_PIT",
+          "scope": "SIGNAL",
+          "deadlineSeconds": 60,
+          "firstBar": {
+            "instrumentId": "11111111-1111-4111-8111-111111111111",
+            "provider": "ALPACA",
+            "feed": "iex",
+            "interval": "15Min",
+            "adjustment": "raw",
+            "start": "2026-10-22T13:30:00Z",
+            "end": "2026-10-22T13:45:00Z"
+          },
+          "lastBar": {
+            "instrumentId": "11111111-1111-4111-8111-111111111111",
+            "provider": "ALPACA",
+            "feed": "iex",
+            "interval": "15Min",
+            "adjustment": "raw",
+            "start": "2026-10-22T15:45:00Z",
+            "end": "2026-10-22T16:00:00Z"
+          },
+          "period": {
+            "start": "2026-10-22T13:30:00Z",
+            "end": "2026-10-22T16:00:00Z"
+          },
+          "expectedBars": 10,
+          "foldIndex": 0,
+          "snapshot": {
+            "snapshotAt": "2026-10-23T00:00:00Z",
+            "snapshotVersion": 42,
+            "trustVersion": 7,
+            "trustPolicyVersion": "research-trust-v1"
+          },
+          "policyVersion": "backtest-data-v1",
+          "leftBoundary": {
+            "reason": "RANGE_START",
+            "references": [
+              {
+                "kind": "CALENDAR_REVISION",
+                "id": "calendar-20261022",
+                "revision": "1",
+                "fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ]
+          },
+          "rightBoundary": {
+            "reason": "RANGE_END",
+            "references": [
+              {
+                "kind": "CALENDAR_REVISION",
+                "id": "calendar-20261022",
+                "revision": "1",
+                "fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ]
+          },
+          "references": [
+            {
+              "kind": "BAR_REVISION",
+              "id": "revision-1",
+              "revision": "1",
+              "fingerprint": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            }
+          ]
+        }
+      ],
+      "strictOutcome": [
+        {
+          "kind": "STRICT_PIT",
+          "scope": "OUTCOME",
+          "deadlineSeconds": 300,
+          "firstBar": {
+            "instrumentId": "11111111-1111-4111-8111-111111111111",
+            "provider": "ALPACA",
+            "feed": "iex",
+            "interval": "15Min",
+            "adjustment": "raw",
+            "start": "2026-10-22T13:30:00Z",
+            "end": "2026-10-22T13:45:00Z"
+          },
+          "lastBar": {
+            "instrumentId": "11111111-1111-4111-8111-111111111111",
+            "provider": "ALPACA",
+            "feed": "iex",
+            "interval": "15Min",
+            "adjustment": "raw",
+            "start": "2026-10-22T15:45:00Z",
+            "end": "2026-10-22T16:00:00Z"
+          },
+          "period": {
+            "start": "2026-10-22T13:30:00Z",
+            "end": "2026-10-22T16:00:00Z"
+          },
+          "expectedBars": 10,
+          "foldIndex": 0,
+          "snapshot": {
+            "snapshotAt": "2026-10-23T00:00:00Z",
+            "snapshotVersion": 42,
+            "trustVersion": 7,
+            "trustPolicyVersion": "research-trust-v1"
+          },
+          "policyVersion": "backtest-data-v1",
+          "leftBoundary": {
+            "reason": "RANGE_START",
+            "references": [
+              {
+                "kind": "CALENDAR_REVISION",
+                "id": "calendar-20261022",
+                "revision": "1",
+                "fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ]
+          },
+          "rightBoundary": {
+            "reason": "RANGE_END",
+            "references": [
+              {
+                "kind": "CALENDAR_REVISION",
+                "id": "calendar-20261022",
+                "revision": "1",
+                "fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ]
+          },
+          "references": [
+            {
+              "kind": "BAR_REVISION",
+              "id": "revision-1",
+              "revision": "1",
+              "fingerprint": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            }
+          ]
+        }
+      ],
+      "completeExperiment": [
+        {
+          "kind": "COMPLETE_EXPERIMENT",
+          "scope": "SIGNAL_AND_OUTCOME",
+          "deadlineSeconds": 60,
+          "firstBar": {
+            "instrumentId": "11111111-1111-4111-8111-111111111111",
+            "provider": "ALPACA",
+            "feed": "iex",
+            "interval": "15Min",
+            "adjustment": "raw",
+            "start": "2026-10-22T13:30:00Z",
+            "end": "2026-10-22T13:45:00Z"
+          },
+          "lastBar": {
+            "instrumentId": "11111111-1111-4111-8111-111111111111",
+            "provider": "ALPACA",
+            "feed": "iex",
+            "interval": "15Min",
+            "adjustment": "raw",
+            "start": "2026-10-22T15:45:00Z",
+            "end": "2026-10-22T16:00:00Z"
+          },
+          "period": {
+            "start": "2026-10-22T13:30:00Z",
+            "end": "2026-10-22T16:00:00Z"
+          },
+          "expectedBars": 10,
+          "foldIndex": 0,
+          "snapshot": {
+            "snapshotAt": "2026-10-23T00:00:00Z",
+            "snapshotVersion": 42,
+            "trustVersion": 7,
+            "trustPolicyVersion": "research-trust-v1"
+          },
+          "policyVersion": "backtest-data-v1",
+          "leftBoundary": {
+            "reason": "RANGE_START",
+            "references": [
+              {
+                "kind": "CALENDAR_REVISION",
+                "id": "calendar-20261022",
+                "revision": "1",
+                "fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ]
+          },
+          "rightBoundary": {
+            "reason": "RANGE_END",
+            "references": [
+              {
+                "kind": "CALENDAR_REVISION",
+                "id": "calendar-20261022",
+                "revision": "1",
+                "fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ]
+          },
+          "references": [
+            {
+              "kind": "BAR_REVISION",
+              "id": "revision-1",
+              "revision": "1",
+              "fingerprint": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            }
+          ]
+        }
+      ],
+      "complete": true
+    },
+    "providerRights": {
+      "licenseStatus": "UNKNOWN",
+      "providerVerification": "UNVERIFIED",
+      "attestationRef": null,
+      "reason": "RIGHTS_UNVERIFIED"
+    },
+    "limits": {
+      "maxQueued": 32,
+      "maxFolds": 12,
+      "maxDays": 366,
+      "maxRevisionRows": 100000,
+      "maxCalendarRows": 100000,
+      "maxQualityRows": 100000,
+      "maxCoverageRows": 100000,
+      "maxAttemptSeconds": 300,
+      "maxAttempts": 3,
+      "maxFindings": 10000,
+      "maxPublicationBytes": 12582912,
+      "maxPageSize": 200
+    }
+  },
+  "currentRevocation": {
+    "checkedAt": "2026-10-23T00:00:00Z",
+    "currentTrustVersion": 7,
+    "currentTrustPolicyVersion": "research-trust-v1",
+    "warnings": [],
+    "complete": true
+  },
+  "detailLink": "/api/v1/research/data-readiness/assessments/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+}

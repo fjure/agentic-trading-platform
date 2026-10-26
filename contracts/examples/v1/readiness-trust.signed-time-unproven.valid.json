@@ -1,0 +1,51 @@
+{
+  "integrity": {
+    "status": "VERIFIED",
+    "method": "SHA256",
+    "ruleVersion": "digest-v1",
+    "reason": "DIGEST_MATCH",
+    "references": [
+      {
+        "kind": "CALENDAR_REVISION",
+        "id": "calendar-20261022",
+        "revision": "1",
+        "fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ]
+  },
+  "sourceAuthenticity": {
+    "status": "VERIFIED",
+    "method": "ED25519",
+    "ruleVersion": "signature-v1",
+    "reason": "SOURCE_SIGNATURE_VALID",
+    "references": [
+      {
+        "kind": "KEY",
+        "id": "synthetic-source-key-1",
+        "revision": "1",
+        "fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    ]
+  },
+  "temporalAuthenticity": {
+    "status": "UNKNOWN",
+    "method": "NOT_AVAILABLE",
+    "ruleVersion": "research-trust-v1",
+    "reason": "TIME_UNPROVEN",
+    "references": []
+  },
+  "completeness": {
+    "status": "UNKNOWN",
+    "method": "NOT_AVAILABLE",
+    "ruleVersion": "research-trust-v1",
+    "reason": "EVIDENCE_MISSING",
+    "references": []
+  },
+  "domainQuality": {
+    "status": "NOT_EVALUATED",
+    "method": "SHARED_BACKTEST_RULES",
+    "ruleVersion": "backtest-data-v1",
+    "reason": "CALENDAR_UNKNOWN",
+    "references": []
+  }
+}

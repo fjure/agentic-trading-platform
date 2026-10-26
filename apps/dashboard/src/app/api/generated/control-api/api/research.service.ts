@@ -17,6 +17,24 @@ import { Observable }                                        from 'rxjs';
 import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
+import { BacktestRequest } from '../model/backtestRequest';
+// @ts-ignore
+import { CollectionPlan } from '../model/collectionPlan';
+// @ts-ignore
+import { CollectionPlanPage } from '../model/collectionPlanPage';
+// @ts-ignore
+import { CollectionPlanUpdate } from '../model/collectionPlanUpdate';
+// @ts-ignore
+import { ReadinessAccepted } from '../model/readinessAccepted';
+// @ts-ignore
+import { ReadinessAssessment } from '../model/readinessAssessment';
+// @ts-ignore
+import { ReadinessCategory } from '../model/readinessCategory';
+// @ts-ignore
+import { ReadinessFindingPage } from '../model/readinessFindingPage';
+// @ts-ignore
+import { ReadinessProblem } from '../model/readinessProblem';
+// @ts-ignore
 import { ResearchBarPage } from '../model/researchBarPage';
 // @ts-ignore
 import { ResearchContext } from '../model/researchContext';
@@ -52,6 +70,83 @@ export class ResearchService extends BaseService implements ResearchServiceInter
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
+    }
+
+    /**
+     * Begrenzte snapshotgebundene Datenzulässigkeitsprüfung annehmen
+     * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. Die strikte bestehende BacktestRequest-Semantik einschließlich chronologischer disjunkter Folds, fast &lt; slow, maximal 12 Folds und 366 Tagen wird vor dem Einreihen geprüft. Gleicher Akteur, Operation, Schlüssel und kanonische Nutzlast liefern den ursprünglichen Receipt; andere Nutzlast ergibt 409. Höchstens 32 wartende Jobs und insgesamt ein aktiver Diagnose-/Backtestworker; erschöpfte Queue ergibt 429 ohne Jobanlage. Keine Seiteneffekte vor Prüfung von Authentifizierung, Origin, Körper und Protokoll.
+     * @endpoint post /api/v1/research/data-readiness/assessments
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param backtestRequest 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public createReadinessAssessment(idempotencyKey: string, backtestRequest: BacktestRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<ReadinessAccepted>;
+    public createReadinessAssessment(idempotencyKey: string, backtestRequest: BacktestRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<ReadinessAccepted>>;
+    public createReadinessAssessment(idempotencyKey: string, backtestRequest: BacktestRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<ReadinessAccepted>>;
+    public createReadinessAssessment(idempotencyKey: string, backtestRequest: BacktestRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (idempotencyKey === null || idempotencyKey === undefined) {
+            throw new Error('Required parameter idempotencyKey was null or undefined when calling createReadinessAssessment.');
+        }
+        if (backtestRequest === null || backtestRequest === undefined) {
+            throw new Error('Required parameter backtestRequest was null or undefined when calling createReadinessAssessment.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (idempotencyKey !== undefined && idempotencyKey !== null) {
+            localVarHeaders = localVarHeaders.set('Idempotency-Key', String(idempotencyKey));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/data-readiness/assessments`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<ReadinessAccepted>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: backtestRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
     }
 
     /**
@@ -121,6 +216,66 @@ export class ResearchService extends BaseService implements ResearchServiceInter
             {
                 context: localVarHttpContext,
                 body: researchJobAction,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Dauerhafte Diagnose und unveränderlichen Bericht mit separaten aktuellen Warnungen lesen
+     * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. Der Bericht bleibt unveränderlich; currentRevocation wird beim Lesen separat ermittelt und verändert weder reportHash noch ursprüngliches Ergebnis. Unveröffentlichte Jobs zeigen keinen Bericht. Budgetabbruch ergibt UNKNOWN; SUCCEEDED ist unabhängig von eligibility. Unbekannte kanonische assessmentId ergibt 404, fehlerhafte UUID 400.
+     * @endpoint get /api/v1/research/data-readiness/assessments/{assessmentId}
+     * @param assessmentId 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getReadinessAssessment(assessmentId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<ReadinessAssessment>;
+    public getReadinessAssessment(assessmentId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<ReadinessAssessment>>;
+    public getReadinessAssessment(assessmentId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<ReadinessAssessment>>;
+    public getReadinessAssessment(assessmentId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (assessmentId === null || assessmentId === undefined) {
+            throw new Error('Required parameter assessmentId was null or undefined when calling getReadinessAssessment.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/data-readiness/assessments/${this.configuration.encodeParam({name: "assessmentId", value: assessmentId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<ReadinessAssessment>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
@@ -415,6 +570,155 @@ export class ResearchService extends BaseService implements ResearchServiceInter
         return this.httpClient.request<ResearchJob>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Höchstens zwei registrierte Sammlungspläne samt deaktivierten Vorgaben lesen
+     * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. REQ-HMD-007/008; T-HMD-016/017/018. Keine freien Abfragefilter. Ausschließlich registrierte SPY-/QQQ-Pläne mit raw IEX und 15Min. Unpersistierte Pläne zeigen version&#x3D;0 und DISABLED. Rechte und globale Gates bleiben unabhängig von Datenzulässigkeit sichtbar.
+     * @endpoint get /api/v1/research/collection/plans
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public listCollectionPlans(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<CollectionPlanPage>;
+    public listCollectionPlans(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<CollectionPlanPage>>;
+    public listCollectionPlans(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<CollectionPlanPage>>;
+    public listCollectionPlans(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/collection/plans`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<CollectionPlanPage>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Stabile begrenzte berichtsgebundene Befundseiten lesen
+     * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. Stabile Reihenfolge nach Fold, Bereich, Beginn, Kategorie und ID. Der Cursor-HMAC bindet Diagnose, unveränderlichen reportHash, Snapshot-/Vertrauensversionen, Kategorie und Ablaufzeit. Geänderte Filter, Manipulation oder Ablauf ergeben 400 CURSOR_INVALID. Unbekannte Diagnose ergibt 404; noch nicht atomar veröffentlichter Bericht 409 REPORT_NOT_READY. Seitenwiederholung bleibt auch bei späteren Writes und Widerrufen stabil.
+     * @endpoint get /api/v1/research/data-readiness/assessments/{assessmentId}/findings
+     * @param assessmentId 
+     * @param limit 
+     * @param cursor 
+     * @param category 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public listReadinessFindings(assessmentId: string, limit?: number, cursor?: string, category?: ReadinessCategory, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<ReadinessFindingPage>;
+    public listReadinessFindings(assessmentId: string, limit?: number, cursor?: string, category?: ReadinessCategory, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<ReadinessFindingPage>>;
+    public listReadinessFindings(assessmentId: string, limit?: number, cursor?: string, category?: ReadinessCategory, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<ReadinessFindingPage>>;
+    public listReadinessFindings(assessmentId: string, limit?: number, cursor?: string, category?: ReadinessCategory, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (assessmentId === null || assessmentId === undefined) {
+            throw new Error('Required parameter assessmentId was null or undefined when calling listReadinessFindings.');
+        }
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'limit',
+            <any>limit,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'cursor',
+            <any>cursor,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'category',
+            <any>category,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/data-readiness/assessments/${this.configuration.encodeParam({name: "assessmentId", value: assessmentId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/findings`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<ReadinessFindingPage>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
@@ -721,6 +1025,87 @@ export class ResearchService extends BaseService implements ResearchServiceInter
         return this.httpClient.request<ResearchSourceCatalog>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Sammlungswunsch mit Versionsvergleich und idempotenter Wiederholung speichern
+     * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. REQ-HMD-007/008; T-HMD-016/017/018. Fehlerhafte Instrument-UUID ergibt 400; gültige fremde UUID 404. Gleicher Akteur, Operation, Instrument, Schlüssel und Nutzlast liefern das ursprüngliche Ergebnis VOR dem Vergleich von expectedVersion. Andere Nutzlast zum selben Schlüssel oder veraltete expectedVersion ergeben 409 mit getrennten Codes IDEMPOTENCY_CONFLICT und VERSION_CONFLICT. PUT erhöht persistierte Version und Generation atomar. enabled&#x3D;true bewahrt den Wunsch bei fehlenden globalen oder Quellengates sichtbar als BLOCKED und aktiviert diese Gates niemals. enabled&#x3D;false committet vor Bestätigung dieselbe Planlock-Dispatchbarriere; outstandingStartedDispatches zählt bereits zugelassene Abrufe mit committetem STARTED-Receipt einschließlich erst danach beginnender Socketübertragung. Nach Pausencommit entsteht keine neue Zulassung der pausierten Generation. Bereits zugelassene Antworten dürfen mit tatsächlichen Zeiten persistieren. Kein Retry verwendet einen Receipt erneut; kein Datenbanklock während I/O.
+     * @endpoint put /api/v1/research/collection/plans/{instrumentId}
+     * @param instrumentId 
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param collectionPlanUpdate 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public updateCollectionPlan(instrumentId: string, idempotencyKey: string, collectionPlanUpdate: CollectionPlanUpdate, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<CollectionPlan>;
+    public updateCollectionPlan(instrumentId: string, idempotencyKey: string, collectionPlanUpdate: CollectionPlanUpdate, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<CollectionPlan>>;
+    public updateCollectionPlan(instrumentId: string, idempotencyKey: string, collectionPlanUpdate: CollectionPlanUpdate, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<CollectionPlan>>;
+    public updateCollectionPlan(instrumentId: string, idempotencyKey: string, collectionPlanUpdate: CollectionPlanUpdate, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (instrumentId === null || instrumentId === undefined) {
+            throw new Error('Required parameter instrumentId was null or undefined when calling updateCollectionPlan.');
+        }
+        if (idempotencyKey === null || idempotencyKey === undefined) {
+            throw new Error('Required parameter idempotencyKey was null or undefined when calling updateCollectionPlan.');
+        }
+        if (collectionPlanUpdate === null || collectionPlanUpdate === undefined) {
+            throw new Error('Required parameter collectionPlanUpdate was null or undefined when calling updateCollectionPlan.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (idempotencyKey !== undefined && idempotencyKey !== null) {
+            localVarHeaders = localVarHeaders.set('Idempotency-Key', String(idempotencyKey));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/collection/plans/${this.configuration.encodeParam({name: "instrumentId", value: instrumentId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<CollectionPlan>('put', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: collectionPlanUpdate,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
