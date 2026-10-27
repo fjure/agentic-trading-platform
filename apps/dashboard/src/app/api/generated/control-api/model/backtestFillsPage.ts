@@ -7,8 +7,14 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { BacktestExperimentVersion } from './backtestExperimentVersion';
+import { BacktestSnapshotReference } from './backtestSnapshotReference';
 import { BacktestState } from './backtestState';
+import { BacktestResultLimitation } from './backtestResultLimitation';
+import { BacktestResearchMode } from './backtestResearchMode';
+import { BacktestSelectionPolicyVersion } from './backtestSelectionPolicyVersion';
 import { BacktestFoldReference } from './backtestFoldReference';
+import { BacktestRetrospectiveFill } from './backtestRetrospectiveFill';
 import { BacktestFill } from './backtestFill';
 
 
@@ -25,6 +31,13 @@ export interface BacktestFillsPage {
     nextCursor: string | null;
     manifestHash: string | null;
     resultHash: string | null;
+    researchMode?: BacktestResearchMode;
+    selectionPolicyVersion?: BacktestSelectionPolicyVersion;
+    experimentVersion?: BacktestExperimentVersion;
+    snapshotReference?: BacktestSnapshotReference | null;
+    reliabilityReportId?: string | null;
+    resultLimitations?: Array<BacktestResultLimitation>;
+    retrospectiveItems?: Array<BacktestRetrospectiveFill>;
 }
 export namespace BacktestFillsPage {
     export const ResultTypeEnum = {

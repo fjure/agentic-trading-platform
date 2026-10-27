@@ -7,6 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { BacktestResearchMode } from './backtestResearchMode';
 import { BacktestInstrument } from './backtestInstrument';
 import { BacktestStrategy } from './backtestStrategy';
 import { BacktestAssumptions } from './backtestAssumptions';
@@ -22,5 +23,6 @@ export interface BacktestStrategyCatalog {
      * UTC with Z and at most microsecond precision; local offsets and naive values are rejected.
      */
     observedAt: string;
+    supportedResearchModes?: Array<BacktestResearchMode>;
 }
 

@@ -117,9 +117,17 @@ def test_exact_five_authenticated_operations_reuse_backtest_protocol():
         if method in {"post", "put"}:
             assert {"$ref": "#/components/parameters/IdempotencyKey"} in op["parameters"]
     post = paths["/api/v1/research/data-readiness/assessments"]["post"]
-    assert post["requestBody"]["content"]["application/json"]["schema"] == {
-        "$ref": "#/components/schemas/BacktestRequest"
-    }
+    schema = post["requestBody"]["content"]["application/json"]["schema"]
+    assert schema["$ref"] == "#/components/schemas/BacktestRequest"
+    assert set(schema) == {"$ref", "not"}
+    strict = Draft202012Validator(
+        {**schema, "$ref": URI + schema["$ref"]},
+        registry=REGISTRY, format_checker=contract_formats(),
+    )
+    legacy = example("backtest-request.valid.json")
+    strict.validate(legacy)
+    strict.validate({**legacy, "researchMode": "STRICT_PIT"})
+    assert not strict.is_valid(example("retrospective-request.valid.json"))
     assert {"202", "409", "429"} <= post["responses"].keys()
 
 

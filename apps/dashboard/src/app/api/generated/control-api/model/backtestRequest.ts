@@ -8,17 +8,15 @@
  * Do not edit the class manually.
  */
 import { BacktestParameters } from './backtestParameters';
+import { BacktestResearchMode } from './backtestResearchMode';
 import { BacktestStrategyId } from './backtestStrategyId';
 import { BacktestFold } from './backtestFold';
 
 
-/**
- * REQ-BKT-001/006/007; T-BKT-002/011/014. Only catalog instrument IDs resolving to SPY or QQQ. Server binds every manifest reference. Semantic window and SMA ordering checks run before persistence.
- */
 export interface BacktestRequest { 
     instrumentId: string;
     strategyId: BacktestStrategyId;
-    version: string;
+    version: BacktestRequest.VersionEnum;
     parameters: BacktestParameters;
     /**
      * Positive USD cash at most 1000000000, at most 8 fractional digits.
@@ -26,10 +24,26 @@ export interface BacktestRequest {
     startCash: string;
     feeUsd: string;
     slippageBps: string;
-    quantityStep: string;
+    quantityStep: BacktestRequest.QuantityStepEnum;
     folds: Array<BacktestFold>;
+    researchMode?: BacktestResearchMode;
+    selectionPolicyVersion?: BacktestRequest.SelectionPolicyVersionEnum;
+    assessmentId?: string;
+    assessmentHash?: string;
 }
 export namespace BacktestRequest {
+    export const VersionEnum = {
+        _1: '1',
+    } as const;
+    export type VersionEnum = typeof VersionEnum[keyof typeof VersionEnum];
+    export const QuantityStepEnum = {
+        _0000001: '0.000001',
+    } as const;
+    export type QuantityStepEnum = typeof QuantityStepEnum[keyof typeof QuantityStepEnum];
+    export const SelectionPolicyVersionEnum = {
+        RetrospectiveV1: 'retrospective-v1',
+    } as const;
+    export type SelectionPolicyVersionEnum = typeof SelectionPolicyVersionEnum[keyof typeof SelectionPolicyVersionEnum];
 }
 
 

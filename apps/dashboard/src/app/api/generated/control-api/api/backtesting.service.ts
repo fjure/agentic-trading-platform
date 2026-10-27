@@ -17,7 +17,15 @@ import { Observable }                                        from 'rxjs';
 import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
+import { BacktestAssessment } from '../model/backtestAssessment';
+// @ts-ignore
+import { BacktestAssessmentRequest } from '../model/backtestAssessmentRequest';
+// @ts-ignore
 import { BacktestProblem } from '../model/backtestProblem';
+// @ts-ignore
+import { BacktestReliabilityDimensionName } from '../model/backtestReliabilityDimensionName';
+// @ts-ignore
+import { BacktestReliabilityReportPage } from '../model/backtestReliabilityReportPage';
 // @ts-ignore
 import { BacktestRequest } from '../model/backtestRequest';
 // @ts-ignore
@@ -50,6 +58,83 @@ export class BacktestingService extends BaseService implements BacktestingServic
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
+    }
+
+    /**
+     * Accept a bounded retrospective snapshot assessment without simulation
+     * REQ-RRB-001/004/006/008/012; T-RRB-002/008/010/011/013/020. Authenticated local research only; trusted Origin checked before side effects. No provider, broker, credential or trading capability. Unknown fields/versions &#x3D;&gt; 400 INVALID_REQUEST; missing/foreign references &#x3D;&gt; 404; protocol/snapshot conflicts &#x3D;&gt; 409 SNAPSHOT_CONFLICT; exhausted shared worker budget &#x3D;&gt; 503 UNAVAILABLE.
+     * @endpoint post /api/v1/research/backtests/assessments
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param backtestAssessmentRequest 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public createBacktestAssessment(idempotencyKey: string, backtestAssessmentRequest: BacktestAssessmentRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<BacktestAssessment>;
+    public createBacktestAssessment(idempotencyKey: string, backtestAssessmentRequest: BacktestAssessmentRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<BacktestAssessment>>;
+    public createBacktestAssessment(idempotencyKey: string, backtestAssessmentRequest: BacktestAssessmentRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<BacktestAssessment>>;
+    public createBacktestAssessment(idempotencyKey: string, backtestAssessmentRequest: BacktestAssessmentRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (idempotencyKey === null || idempotencyKey === undefined) {
+            throw new Error('Required parameter idempotencyKey was null or undefined when calling createBacktestAssessment.');
+        }
+        if (backtestAssessmentRequest === null || backtestAssessmentRequest === undefined) {
+            throw new Error('Required parameter backtestAssessmentRequest was null or undefined when calling createBacktestAssessment.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (idempotencyKey !== undefined && idempotencyKey !== null) {
+            localVarHeaders = localVarHeaders.set('Idempotency-Key', String(idempotencyKey));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/backtests/assessments`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<BacktestAssessment>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: backtestAssessmentRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
     }
 
     /**
@@ -119,6 +204,179 @@ export class BacktestingService extends BaseService implements BacktestingServic
             {
                 context: localVarHttpContext,
                 body: backtestRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Read durable retrospective assessment state and snapshot binding
+     * REQ-RRB-001/004/006/008/012; T-RRB-002/008/010/011/013/020. Authenticated local research only; trusted Origin checked before side effects. No provider, broker, credential or trading capability. Unknown fields/versions &#x3D;&gt; 400 INVALID_REQUEST; missing/foreign references &#x3D;&gt; 404; protocol/snapshot conflicts &#x3D;&gt; 409 SNAPSHOT_CONFLICT; exhausted shared worker budget &#x3D;&gt; 503 UNAVAILABLE.
+     * @endpoint get /api/v1/research/backtests/assessments/{assessmentId}
+     * @param assessmentId 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getBacktestAssessment(assessmentId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<BacktestAssessment>;
+    public getBacktestAssessment(assessmentId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<BacktestAssessment>>;
+    public getBacktestAssessment(assessmentId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<BacktestAssessment>>;
+    public getBacktestAssessment(assessmentId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (assessmentId === null || assessmentId === undefined) {
+            throw new Error('Required parameter assessmentId was null or undefined when calling getBacktestAssessment.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/backtests/assessments/${this.configuration.encodeParam({name: "assessmentId", value: assessmentId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<BacktestAssessment>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Read a bounded immutable reliability report page with current warnings
+     * REQ-RRB-001/004/006/008/012; T-RRB-002/008/010/011/013/020. Authenticated local research only; trusted Origin checked before side effects. No provider, broker, credential or trading capability. Unknown fields/versions &#x3D;&gt; 400 INVALID_REQUEST; missing/foreign references &#x3D;&gt; 404; protocol/snapshot conflicts &#x3D;&gt; 409 SNAPSHOT_CONFLICT; exhausted shared worker budget &#x3D;&gt; 503 UNAVAILABLE.
+     * @endpoint get /api/v1/research/backtests/reliability-reports/{reportId}
+     * @param reportId 
+     * @param limit 
+     * @param cursor 
+     * @param section 
+     * @param category 
+     * @param foldIndex 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getBacktestReliabilityReport(reportId: string, limit?: number, cursor?: string, section?: 'findings' | 'revisions', category?: BacktestReliabilityDimensionName, foldIndex?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<BacktestReliabilityReportPage>;
+    public getBacktestReliabilityReport(reportId: string, limit?: number, cursor?: string, section?: 'findings' | 'revisions', category?: BacktestReliabilityDimensionName, foldIndex?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<BacktestReliabilityReportPage>>;
+    public getBacktestReliabilityReport(reportId: string, limit?: number, cursor?: string, section?: 'findings' | 'revisions', category?: BacktestReliabilityDimensionName, foldIndex?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<BacktestReliabilityReportPage>>;
+    public getBacktestReliabilityReport(reportId: string, limit?: number, cursor?: string, section?: 'findings' | 'revisions', category?: BacktestReliabilityDimensionName, foldIndex?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (reportId === null || reportId === undefined) {
+            throw new Error('Required parameter reportId was null or undefined when calling getBacktestReliabilityReport.');
+        }
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'limit',
+            <any>limit,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'cursor',
+            <any>cursor,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'section',
+            <any>section,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'category',
+            <any>category,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'foldIndex',
+            <any>foldIndex,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/backtests/reliability-reports/${this.configuration.encodeParam({name: "reportId", value: reportId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<BacktestReliabilityReportPage>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
