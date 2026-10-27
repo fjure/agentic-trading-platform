@@ -44,6 +44,13 @@ def configured_service(engine):
     return BacktestService(engine, code_version=version) if version else None
 
 
+def configured_readiness_service(engine):
+    from services.control_api.readiness_service import ReadinessService
+
+    version = source_version()
+    return ReadinessService(engine, code_version=version) if version else None
+
+
 def engine():
     from sqlalchemy import URL, create_engine, event
 
