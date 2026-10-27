@@ -11,7 +11,7 @@
       "issueNumber": 60,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/60",
       "contentHash": "463586ce309e31db01edfc4f7ae814eb32f58e83b347d4ed42b6ec8ca2e72ec4",
-      "syncedAt": "2026-10-27T08:37:01.377003+00:00",
+      "syncedAt": "2026-10-27T08:49:42.287027+00:00",
       "dependsOn": [],
       "state": "closed",
       "nativeDependsOn": []
@@ -21,7 +21,7 @@
       "issueNumber": 61,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/61",
       "contentHash": "86d0b95b721e8c1b11d3ce663dbea94632ebed1044bf9a8acc7e5ba78a56a7f9",
-      "syncedAt": "2026-10-27T08:37:01.377003+00:00",
+      "syncedAt": "2026-10-27T08:49:42.287027+00:00",
       "dependsOn": [
         "RDR-01"
       ],
@@ -35,7 +35,7 @@
       "issueNumber": 62,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/62",
       "contentHash": "ac3a43f08f077a998fc6f13a0a4733c06f852f0dc3016c352ece6b0963dd254e",
-      "syncedAt": "2026-10-27T08:37:01.377003+00:00",
+      "syncedAt": "2026-10-27T08:49:42.287027+00:00",
       "dependsOn": [
         "RDR-01"
       ],
@@ -49,7 +49,7 @@
       "issueNumber": 63,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/63",
       "contentHash": "7c5e00792f55d7245d7c82981d4620d6e53a8df2974acf8e91fa78b9e8d3178a",
-      "syncedAt": "2026-10-27T08:37:01.377003+00:00",
+      "syncedAt": "2026-10-27T08:49:42.287027+00:00",
       "dependsOn": [
         "RDR-03"
       ],
@@ -62,13 +62,13 @@
       "taskId": "RDR-09",
       "issueNumber": 68,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/68",
-      "contentHash": "0ec1ead07eff73ae37dcbba292e0e02de0bd222b19c49e141060cce7b06c483e",
-      "syncedAt": "2026-10-27T08:37:01.377003+00:00",
+      "contentHash": "9f1c61be17e06f517e9825cb57c4b94d72116cdbeb8dea264dcb09a94e5d4684",
+      "syncedAt": "2026-10-27T08:49:42.287027+00:00",
       "dependsOn": [
         "RDR-01",
         "RDR-03"
       ],
-      "state": "open",
+      "state": "closed",
       "nativeDependsOn": [
         60,
         62
@@ -79,7 +79,7 @@
       "issueNumber": 64,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/64",
       "contentHash": "3dd5cad99fbcf3ab78be0d7bc437ebcdf5047e62552b182a12da776a848e5e5f",
-      "syncedAt": "2026-10-27T08:37:01.377003+00:00",
+      "syncedAt": "2026-10-27T08:49:42.287027+00:00",
       "dependsOn": [
         "RDR-02",
         "RDR-03"
@@ -95,7 +95,7 @@
       "issueNumber": 65,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/65",
       "contentHash": "9fa92255d74436537f56344b4584009d441a8998ba74df11942a4ba19a1b04f2",
-      "syncedAt": "2026-10-27T08:37:01.377003+00:00",
+      "syncedAt": "2026-10-27T08:49:42.287027+00:00",
       "dependsOn": [
         "RDR-04",
         "RDR-05"
@@ -111,7 +111,7 @@
       "issueNumber": 66,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/66",
       "contentHash": "81bf84305176239047a337593a9e5d7acb4f1686f576ad620ed402ca1aea3a47",
-      "syncedAt": "2026-10-27T08:37:01.377003+00:00",
+      "syncedAt": "2026-10-27T08:49:42.287027+00:00",
       "dependsOn": [
         "RDR-05",
         "RDR-06"
@@ -127,7 +127,7 @@
       "issueNumber": 67,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/67",
       "contentHash": "1b0e29dd9f11daa74f55e53c096c8abe591052e8561ba7368ce1211eb850a389",
-      "syncedAt": "2026-10-27T08:37:01.377003+00:00",
+      "syncedAt": "2026-10-27T08:49:42.287027+00:00",
       "dependsOn": [
         "RDR-01",
         "RDR-02",
@@ -158,7 +158,7 @@
     "unchangedCount": 8,
     "duplicates": 0,
     "secondPassUpdates": 0,
-    "verifiedAt": "2026-10-27T08:37:01.377003+00:00"
+    "verifiedAt": "2026-10-27T08:49:42.287027+00:00"
   },
   "nativeReadBack": {
     "blockingEdges": {
@@ -200,6 +200,6 @@
     },
     "terminalIssue": 67,
     "terminalBlockedByCount": 8,
-    "verifiedAt": "2026-10-27T08:37:01.377003+00:00"
+    "verifiedAt": "2026-10-27T08:49:42.287027+00:00"
   }
 }
