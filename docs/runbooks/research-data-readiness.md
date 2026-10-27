@@ -170,3 +170,20 @@ Filter sind snapshotgebunden. Planänderungen verwenden erwartete Versionen; ein
 409 erfordert erneutes Lesen, keinen automatischen Schreibretry. Sessionverlust
 stoppt die Bedienung und das Polling. Reale Providerrechte bleiben unverifiziert.
 Prüfungen und Bestandsregression: `docs/evidence/rdr-07-ui.md`.
+
+## Gemeinsame Offlineabnahme (RDR-08)
+
+Die gesamte synthetische Kette umfasst Sammlung, atomaren Import, Diagnose und
+ausdrücklich gesonderten Backtest. Heutige Backfills, unbekannte Kapitalmaßnahmen
+und fehlende Publikationsbeweise bleiben blockiert. Unter tatsächlicher
+Diagnose-CPUlast bleiben Paper-Pause, Kill und Reconciliation bedienbar; Kill
+muss HALTED und geschlossene Eintrittsgates ergeben. Vollständige Zeilenhashes
+der ausdrücklich erfassten Finanzledgertabellen bleiben unverändert.
+
+Alle geprüften Softwarepfade sind in
+`docs/evidence/rdr-implementation-verification.md` mit Requirements, Szenarien,
+Review und tatsächlichen Testergebnissen dokumentiert. Frische Images werden
+lokal gebaut; bestehende Dienste werden nicht deployt oder neu gestartet.
+Offlineabschluss erteilt weder Providerrechte noch historische Eignung und
+aktiviert weder globale Sammlung noch Handel. Main-Spec-Sync und Archivierung
+bleiben gesonderte Aufträge.

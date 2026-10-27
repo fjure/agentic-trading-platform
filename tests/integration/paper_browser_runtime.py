@@ -330,11 +330,21 @@ def guest():
                     reports = connection.execute(text(
                         "SELECT status,reason_code FROM execution_reports ORDER BY received_at"
                     )).all()
+                    reconciliation = connection.execute(text(
+                        "SELECT ready,reason_code FROM paper_reconciliation_receipts "
+                        "ORDER BY observed_at DESC LIMIT 5"
+                    )).all()
+                    safety = connection.execute(text(
+                        "SELECT safety_state,reconciliation_current,"
+                        "valid_until>clock_timestamp() AS fresh FROM risk_account_context"
+                    )).all()
                 print(json.dumps({"failures": sorted(set(failures)),
                                   "provider": provider.evidence(),
                                   "operations": [list(row) for row in operations],
                                   "orders": orders,
-                                  "reports": [list(row) for row in reports]},
+                                  "reports": [list(row) for row in reports],
+                                  "reconciliation": [list(row) for row in reconciliation],
+                                  "safety": [list(row) for row in safety]},
                                  default=str), flush=True)
                 return
             if instruction != "verify":
