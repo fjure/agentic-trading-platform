@@ -1,7 +1,7 @@
 """Normalized historical sessions; never infer holiday coverage from an empty response."""
 
 from collections.abc import Mapping
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from uuid import UUID, uuid5
 
 from sqlalchemy import text
@@ -67,6 +67,7 @@ def coverage_from_rows(rows: tuple[Mapping, ...], query: PointInTimeQuery) -> Ca
         if row["commit_version"] <= query.snapshot_version
         and row["ingested_at"] <= min(query.knowledge_at, query.snapshot_at)
         and row["closes_at"] <= query.valuation_at
+        and row.get("managed_trust_state") is None
     )
     groups = {}
     for row in visible:
@@ -172,4 +173,76 @@ def read_calendar(connection, start: datetime, end: datetime, query: PointInTime
         .mappings()
         .all()
     )
-    return coverage_from_rows(tuple(rows), query)
+    imported = read_evidence_calendar_rows(connection, query.snapshot_version, query.snapshot_at)
+    return coverage_from_rows((*rows, *imported), query)
+
+
+def read_evidence_calendar_rows(connection, snapshot_version: int, snapshot_at: datetime):
+    """RDR-03: normalisierte Importsitzungen mit aktuellem, getrenntem Truststand.
+
+    Keine importierte Sitzung wird durch bloße Speicherung autoritativ. Die
+    gemeinsame Auswahl schließt unbekannte/widerrufene Nachweise konservativ aus.
+    """
+    from packages.backtesting.models import BacktestBudgetExceeded
+    from packages.research.evidence_storage import EvidenceBudgetExceeded, read_trust_snapshot
+
+    if (
+        connection.execute(text("SELECT to_regclass('research.evidence_revisions')")).scalar_one()
+        is None
+    ):
+        return ()
+    try:
+        state = read_trust_snapshot(
+            connection, knowledge_at=snapshot_at, snapshot_version=snapshot_version
+        )
+    except EvidenceBudgetExceeded:
+        raise BacktestBudgetExceeded("calendar trust metadata budget exhausted") from None
+    trust = {record["reference"]: record for record in state["records"]}
+    rows = (
+        connection.execute(
+            text("""
+          SELECT * FROM research.evidence_revisions WHERE kind='CALENDAR'
+          AND commit_version<=:version AND ingested_at<=:at
+          ORDER BY commit_version,evidence_id LIMIT 100001
+        """),
+            dict(version=snapshot_version, at=snapshot_at),
+        )
+        .mappings()
+        .all()
+    )
+    if len(rows) > 100000:
+        raise BacktestBudgetExceeded("calendar metadata budget exhausted")
+    sessions = []
+    for row in rows:
+        record = trust.get(str(row["evidence_id"]))
+        reason = "TRUST_UNKNOWN"
+        if record is not None:
+            if record["revoked"]:
+                reason = "EVIDENCE_REVOKED"
+            else:
+                results = record["dimensions"]
+                statuses = {value["status"] for value in results.values()}
+                if "REJECTED" in statuses:
+                    reason = "TRUST_REJECTED"
+                elif results["temporalAuthenticity"]["status"] != "VERIFIED":
+                    reason = "TIME_UNPROVEN"
+                elif statuses == {"VERIFIED"}:
+                    reason = None
+        for session in row["statement"].get("sessions", ()):
+            sessions.append(
+                {
+                    "session_id": uuid5(row["evidence_id"], session["sessionDate"]),
+                    "evidence_id": row["evidence_id"],
+                    "session_date": date.fromisoformat(session["sessionDate"]),
+                    "opens_at": datetime.fromisoformat(session["opensAt"]),
+                    "closes_at": datetime.fromisoformat(session["closesAt"]),
+                    "version": row["fingerprint"],
+                    "source": row["source_id"],
+                    "commit_version": row["commit_version"],
+                    "ingested_at": row["ingested_at"],
+                    "managed_trust_state": reason,
+                }
+            )
+            if len(sessions) > 100000:
+                raise BacktestBudgetExceeded("calendar metadata budget exhausted")
+    return tuple(sessions)

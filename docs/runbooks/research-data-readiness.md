@@ -60,6 +60,14 @@ bleiben getrennt; Warm-up, Kalender, Qualität und Kapitalmaßnahmencoverage gel
 
 ## Offlinebündel
 
+RDR-03 ergänzt die append-only Evidenz- und Vertrauensmetadaten sowie die
+Basistabellen für Reports, Pläne und Receipts. Die separate Offlinerolle besitzt
+keine Finanz-, Runtime- oder Providerrechte. Runtimekonsumenten können keine
+zertifizierten Belege schreiben. Quelle, Revision, tatsächliche DB-Ingestion und
+Commitversion bleiben gemeinsam gebunden; Commitbestätigung erfolgt in einer
+neuen Transaktion. Negative oder nicht vergleichbare Messpaare bleiben als
+Messbefunde erhalten. Produktion startet mit leerem Vertrauensregister.
+
 Das geschlossene Schema liegt in `contracts/schemas/research-evidence-bundle.schema.json`.
 Es beschreibt normalisierte Kalender-, Qualitäts- und Kapitalmaßnahmenbelege, keine freien
 Providerpayloads. Der spätere Importer muss vor dem Parsen höchstens 1MiB UTF-8 erlauben;
