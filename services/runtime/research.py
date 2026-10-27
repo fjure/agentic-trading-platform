@@ -10,11 +10,13 @@ from threading import Lock, Thread
 from sqlalchemy import text
 
 from packages.brokers.alpaca_history import AlpacaHistorySource, ProviderPolicy
+from packages.research.collection import CollectionScheduler, CollectionStore
 from packages.research.jobs import ResearchJobs
 from packages.research.limits import SharedAccountHostLimiter, install_process_limiter
 from packages.research.ports import LicenseStatus, SourceError, SourceErrorCode
 from packages.research.quality_storage import observe as observe_quality
 from packages.research.registry import register
+from services.execution.research_collection import CalendarCollection
 from services.execution.research_ingestion import ResearchIngestion
 
 
@@ -93,16 +95,24 @@ class PaperResearchRuntime:
             source_observer=self._verified,
             quality_observer=observe_quality,
             error_observer=self._failed,
+            collection=CollectionStore(self.engine),
         )
+        scheduler = CollectionScheduler(self.engine, enabled=True)
+        calendar = CalendarCollection(self.engine, self.source, self.limiter, enabled=True,
+                                      error_observer=self._failed)
 
         def loop():
             async def run():
                 while not self.stop.is_set():
                     try:
+                        scheduler.tick()
+                        if await calendar.tick():
+                            await asyncio.sleep(5)
+                            continue
                         await dispatcher.tick()
                     except Exception:
                         pass  # Independent safety lanes and fail-closed job leases remain usable.
-                    await asyncio.sleep(1)
+                    await asyncio.sleep(5)
 
             asyncio.run(run())
 

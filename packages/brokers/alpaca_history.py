@@ -89,6 +89,7 @@ class CalendarSession:
 @dataclass(frozen=True)
 class CalendarPage:
     sessions: tuple[CalendarSession, ...]
+    received_at: datetime | None = None
 
     @property
     def coverage_known(self) -> bool:
@@ -100,6 +101,7 @@ class CalendarPage:
 class HistoryPage:
     items: tuple[BarRevision, ...]
     next_page_token: str | None = field(default=None, repr=False)
+    received_at: datetime | None = None
 
 
 class HistorySourceError(SourceError):
@@ -242,7 +244,7 @@ class AlpacaHistorySource:
         self._check()
         if endpoint not in {_DATA, _CALENDAR}:
             raise HistorySourceError(SourceErrorCode.INVALID_REQUEST)
-        code, retry_after = None, None
+        code, retry_after, received_at = None, None, None
         body = bytearray()
         try:
             async with asyncio.timeout(5):
@@ -294,6 +296,9 @@ class AlpacaHistorySource:
                                     code = SourceErrorCode.RESPONSE_TOO_LARGE
                                     break
                                 body.extend(chunk)
+                            if code is None:
+                                # Vollständiger Empfang vor Parsing/Normalisierung.
+                                received_at = utc_time(self._clock())
         except (TimeoutError, httpx.TimeoutException):
             code = SourceErrorCode.TIMEOUT
         except (httpx.HTTPError, ValueError):
@@ -301,13 +306,15 @@ class AlpacaHistorySource:
         if code is not None:
             # Raise outside handlers: no HTTPX exception context retaining private request headers.
             raise HistorySourceError(code, retry_after)
-        return _decode(bytes(body))
+        return _decode(bytes(body)), received_at
 
     async def fetch_calendar(self, start: date, end: date) -> CalendarPage:
         self._check()
         if type(start) is not date or type(end) is not date or not 0 <= (end - start).days <= 366:
             raise HistorySourceError(SourceErrorCode.INVALID_REQUEST)
-        payload = await self._get(_CALENDAR, {"start": start.isoformat(), "end": end.isoformat()})
+        payload, received = await self._get(
+            _CALENDAR, {"start": start.isoformat(), "end": end.isoformat()},
+        )
         failed = False
         try:
             if not isinstance(payload, list) or len(payload) > 367:
@@ -335,7 +342,9 @@ class AlpacaHistorySource:
             failed = True
         if failed:
             raise HistorySourceError(SourceErrorCode.INVALID_RESPONSE)
-        return CalendarPage(tuple(sorted(sessions, key=lambda session: session.session_date)))
+        return CalendarPage(
+            tuple(sorted(sessions, key=lambda session: session.session_date)), received,
+        )
 
     async def fetch_page(
         self,
@@ -376,10 +385,10 @@ class AlpacaHistorySource:
             )
         if token is not None:
             parameters["page_token"] = token
-        payload = await self._get(_DATA, parameters)
+        payload, received = await self._get(_DATA, parameters)
         failed = False
         try:
-            page = self._normalize(payload, request, sessions)
+            page = self._normalize(payload, request, sessions, received_at=received)
         except (ValueError, KeyError, TypeError):
             failed = True
         if failed:
@@ -389,7 +398,9 @@ class AlpacaHistorySource:
         return page
 
     def _normalize(
-        self, payload: object, request: HistoricalBarsRequest, sessions: tuple[CalendarSession, ...]
+        self, payload: object, request: HistoricalBarsRequest,
+        sessions: tuple[CalendarSession, ...],
+        *, received_at: datetime | None = None,
     ) -> HistoryPage:
         if not isinstance(payload, dict) or not isinstance(payload.get("bars"), dict):
             raise ValueError("invalid bars envelope")
@@ -400,7 +411,7 @@ class AlpacaHistorySource:
         if not isinstance(values, list) or len(values) > request.limit:
             raise ValueError("invalid page size")
         next_token = _token(payload.get("next_page_token"))
-        observed = utc_time(self._clock())
+        observed = utc_time(received_at if received_at is not None else self._clock())
         by_day = {session.session_date: session for session in sessions}
         bars = []
         previous_start = None
@@ -454,4 +465,4 @@ class AlpacaHistorySource:
                     observed,
                 )
             )
-        return HistoryPage(tuple(bars), next_token)
+        return HistoryPage(tuple(bars), next_token, received_at)

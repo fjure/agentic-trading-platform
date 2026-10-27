@@ -125,3 +125,15 @@ erhält weder Importrechte noch Zertifizierungsfunktionen. Signatur ohne
 unabhängigen Publikationsbeweis bleibt zeitlich UNKNOWN. Wiederholungen werden
 atomar auf denselben Receipt gebunden; Widerrufe wirken bei jeder neuen Nutzung.
 Details und tatsächlich ausgeführte Prüfungen: `docs/evidence/rdr-09-import.md`.
+
+## Execution-Sammlung (RDR-04)
+
+Kalenderfälligkeiten und UPDATEjobs sind dauerhaft an Generation und Zweck
+gebunden. Kalender läuft bei Aktivierung und täglich 00:05 UTC; belegte Barschlüsse
+erzeugen +5s-/+240s-Fälligkeiten. Maximal 24 Stunden Nachholen, zwei offene logische
+Jobs, ein gleichzeitiger GET und 100 Fälligkeiten je Instrument/UTC-Tag begrenzen
+die Arbeit. Ältere Lücken und unbekannte Abrufe bleiben sichtbar. Safetyvorrang,
+HTTP429 und Providerblocker sperren neue Abrufe. STARTED wird vor GET unter Planlock
+committet; Crashwiederaufnahme benötigt einen neuen Fence. Tatsächliche Empfangs-
+und Commitbestätigungszeiten ersetzen keinen Publikationsnachweis. Sammlung bleibt
+global aus. Prüfungen: `docs/evidence/rdr-04-collection.md`.

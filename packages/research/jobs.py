@@ -26,6 +26,34 @@ _TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z\Z")
 _REQUEST_FIELDS = {"instrumentId", "start", "end", "interval", "mode", "feed", "adjustment"}
 
 
+def enqueue_collection_job(connection, due_id: UUID, instrument: UUID,
+                           start: datetime, end: datetime) -> UUID:
+    """Execution-interner UPDATEport; kein zusätzliches öffentliches Abrufprogramm.
+
+    Bestehende Requestnormalisierung, Lease-/Audit-/Revisionsports gelten weiter.
+    Der Aufrufer hält den Plan-/Sammlungslock und begrenzt die globale Queue.
+    """
+    from packages.research.registry import definitions
+
+    if instrument not in {item.instrument_id for item, _ in definitions()}:
+        raise ResearchJobError(400, "INVALID_REQUEST")
+    payload = validated_request(dict(
+        instrumentId=str(instrument), start=utc_string(start), end=utc_string(end),
+        interval="15Min", mode="UPDATE", feed="iex", adjustment="raw",
+    ))
+    connection.execute(text("""
+      INSERT INTO research.ingestion_jobs
+        (job_id,actor,idempotency_key,request_hash,instrument_id,start_at,end_at,
+         interval,mode,status,trace_id,overlap_start_at)
+      VALUES(:id,'local-operator',:key,:hash,:instrument,:start,:end,
+             '15Min','UPDATE','ACCEPTED',:trace,:start)
+      ON CONFLICT(job_id) DO NOTHING
+    """), dict(id=due_id, key="collection-" + due_id.hex,
+               hash=canonical_request_hash(payload), instrument=instrument,
+               start=start, end=end, trace=due_id.hex))
+    return due_id
+
+
 class ResearchJobError(ValueError):
     def __init__(self, status: int, code: str) -> None:
         self.status, self.code = status, code
