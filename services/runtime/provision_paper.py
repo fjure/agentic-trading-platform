@@ -291,10 +291,15 @@ def _verify_dormant_privileges(connection):
         if version_table is not None
         else []
     )
+    readiness_revision = (
+        revisions[0][0] if revisions in (
+            [("0030_readiness_storage",)], [("0031_readiness_jobs",)],
+        ) else None
+    )
     backtest_revision = (
         revisions[0][0]
         if revisions in ([("0028_backtest_coverage",)], [("0029_backtest_jobs",)])
-        else None
+        else "0029_backtest_jobs" if readiness_revision else None
     )
     if backtest_revision:
         # These additive revisions preserve every existing financial/research ACL.
@@ -659,6 +664,34 @@ def _verify_dormant_privileges(connection):
                     False,
                 )
             )
+    if readiness_revision:
+        for role in ("atl_paper_control_api", "atl_paper_execution"):
+            expected.update(
+                ("relation", "research." + name, role, "SELECT", False)
+                for name in ("trust_version_state", "trust_decisions", "evidence_revisions",
+                             "import_receipts", "commit_confirmations", "collection_plans",
+                             "plan_revisions", "due_jobs", "observation_receipts")
+            )
+        for privilege, names in (
+            ("INSERT", ("collection_plans", "due_jobs", "plan_revisions", "observation_receipts")),
+            ("UPDATE", ("collection_plans", "due_jobs")),
+        ):
+            expected.update(
+                ("relation", "research." + name, "atl_paper_execution", privilege, False)
+                for name in names
+            )
+        expected.add(("function", "research.confirm_receipt(uuid,text)",
+                      "atl_paper_execution", "EXECUTE", False))
+        expected.update(
+            ("relation", "backtest." + name, "atl_paper_control_api", "SELECT", False)
+            for name in ("readiness_jobs", "readiness_reports", "readiness_findings")
+        )
+        if readiness_revision == "0031_readiness_jobs":
+            expected.add(("relation", "backtest.readiness_bindings",
+                          "atl_paper_control_api", "SELECT", False))
+            expected.add(("function",
+                          "backtest.request_readiness(uuid,text,text,jsonb,text,text,text,text)",
+                          "atl_paper_control_api", "EXECUTE", False))
     # Empty/unmigrated databases and 0012 permit no direct object ACLs. Inspect
     # columns and login grantees too; initial SET ROLE is not a permission bound.
     actual = connection.execute(

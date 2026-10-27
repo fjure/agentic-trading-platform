@@ -137,3 +137,13 @@ HTTP429 und Providerblocker sperren neue Abrufe. STARTED wird vor GET unter Plan
 committet; Crashwiederaufnahme benötigt einen neuen Fence. Tatsächliche Empfangs-
 und Commitbestätigungszeiten ersetzen keinen Publikationsnachweis. Sammlung bleibt
 global aus. Prüfungen: `docs/evidence/rdr-04-collection.md`.
+
+## Dauerhafte Diagnosen (RDR-05)
+
+Die drei authentifizierten Diagnoseoperationen erzeugen eigene dauerhafte Jobs;
+kein Bericht startet einen Backtest oder Providerabruf. Maximal 32 wartende
+Diagnosen teilen sich einen Worker mit Backtests. Fence, Ablaufzeit und atomare
+Publikation verhindern Teilberichte nach Crash. Ein Budgetabbruch bleibt UNKNOWN.
+Berichte und Befundseiten binden Daten- und Truststand; aktuelle Widerrufswarnungen
+stehen getrennt neben dem unveränderten Originalbericht. Reload und Cursor nutzen
+dauerhafte Datenbankzustände. Nachweise: `docs/evidence/rdr-05-api.md`.

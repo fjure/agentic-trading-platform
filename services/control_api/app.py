@@ -202,6 +202,7 @@ def create_app(
     paper=None,
     research=None,
     backtesting=None,
+    readiness=None,
 ) -> FastAPI:
     from services.control_api.paper_commands import PaperCommandError
     from services.control_api.paper_routes import paper_problem, register_paper_routes
@@ -210,6 +211,17 @@ def create_app(
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
 
     def public_problem(request, status, code):
+        if request.url.path.startswith("/api/v1/research/data-readiness/"):
+            from services.control_api.readiness_routes import readiness_problem
+            if status == 401:
+                code = "UNAUTHORIZED"
+            elif status == 403 or (
+                status == 400 and request.headers.getlist("origin") not in ([], [auth.origin])
+            ):
+                status, code = 403, "FORBIDDEN"
+            elif code == "TEMPORARILY_UNAVAILABLE":
+                code = "UNAVAILABLE"
+            return readiness_problem(status, code, request.state.trace_id)
         if request.url.path.startswith("/api/v1/research/backtests/"):
             from services.control_api.backtest_routes import backtest_problem
             if status == 401:
@@ -467,6 +479,8 @@ def create_app(
     register_research_routes(app, research=research, body_reader=_body, key_reader=key)
     from services.control_api.backtest_routes import register_backtest_routes
     register_backtest_routes(app, backtesting=backtesting, body_reader=_body, key_reader=key)
+    from services.control_api.readiness_routes import register_readiness_routes
+    register_readiness_routes(app, readiness=readiness, body_reader=_body, key_reader=key)
     return app
 
 

@@ -62,6 +62,21 @@
       "verifiedAt": "2026-10-27T13:33:46.794717+00:00",
       "securityAndBundleTestsPassed": 239,
       "evidence": "docs/evidence/rdr-09-import.md"
+    },
+    {
+      "taskId": "RDR-04",
+      "issueNumber": 63,
+      "branch": "codex/ptv-63-research-collection",
+      "commit": "6d3bbea65fd4c71ab04ff89886d410deaeb5018f",
+      "mainMerge": "e532b217ecba28745c9a13fb484be170e137377b",
+      "implementationTree": "32d1f8eb30e5db6873f14546866f14013e060ffa",
+      "remoteVerified": true,
+      "identicalImplementationTrees": true,
+      "issueCommitReachableFromMain": true,
+      "verifiedAt": "2026-10-27T13:38:05.531403+00:00",
+      "postgresIntegrationSecurityRecoveryPassed": true,
+      "unitTestsPassed": 21,
+      "evidence": "docs/evidence/rdr-04-collection.md"
     }
   ]
 }
