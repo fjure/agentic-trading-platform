@@ -294,6 +294,7 @@ def _verify_dormant_privileges(connection):
     readiness_revision = (
         revisions[0][0] if revisions in (
             [("0030_readiness_storage",)], [("0031_readiness_jobs",)],
+            [("0032_collection_control",)],
         ) else None
     )
     backtest_revision = (
@@ -686,12 +687,20 @@ def _verify_dormant_privileges(connection):
             ("relation", "backtest." + name, "atl_paper_control_api", "SELECT", False)
             for name in ("readiness_jobs", "readiness_reports", "readiness_findings")
         )
-        if readiness_revision == "0031_readiness_jobs":
+        if readiness_revision in ("0031_readiness_jobs", "0032_collection_control"):
             expected.add(("relation", "backtest.readiness_bindings",
                           "atl_paper_control_api", "SELECT", False))
             expected.add(("function",
                           "backtest.request_readiness(uuid,text,text,jsonb,text,text,text,text)",
                           "atl_paper_control_api", "EXECUTE", False))
+        if readiness_revision == "0032_collection_control":
+            expected.add(("relation", "research.collection_commands",
+                          "atl_paper_control_api", "SELECT", False))
+            expected.update(
+                ("function", name, "atl_paper_control_api", "EXECUTE", False)
+                for name in ("research.collection_plan_projection(uuid)",
+                             "research.set_collection_plan(uuid,boolean,bigint,text,text,text,jsonb)")
+            )
     # Empty/unmigrated databases and 0012 permit no direct object ACLs. Inspect
     # columns and login grantees too; initial SET ROLE is not a permission bound.
     actual = connection.execute(

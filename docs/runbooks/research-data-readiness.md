@@ -117,26 +117,26 @@ SourceScan und verifizierten Issue-Sync. Befunde und tatsÃ¤chliche Ergebnisse we
 
 ## Verifizierter Offlineimport (RDR-09)
 
-Der separate CLI-Port `scripts/import-research-evidence.py` prüft höchstens 1MiB
-mit Ed25519 und RFC8785 gegen ein unabhängig zugelassenes Register. Produktion
-beginnt mit leerem Register; mitgelieferte Schlüssel sind keine Trustanker.
-Das ausschließlich lokale Libpq-Serviceziel ist auf Loopback gebunden. Runtime
-erhält weder Importrechte noch Zertifizierungsfunktionen. Signatur ohne
-unabhängigen Publikationsbeweis bleibt zeitlich UNKNOWN. Wiederholungen werden
+Der separate CLI-Port `scripts/import-research-evidence.py` prÃ¼ft hÃ¶chstens 1MiB
+mit Ed25519 und RFC8785 gegen ein unabhÃ¤ngig zugelassenes Register. Produktion
+beginnt mit leerem Register; mitgelieferte SchlÃ¼ssel sind keine Trustanker.
+Das ausschlieÃŸlich lokale Libpq-Serviceziel ist auf Loopback gebunden. Runtime
+erhÃ¤lt weder Importrechte noch Zertifizierungsfunktionen. Signatur ohne
+unabhÃ¤ngigen Publikationsbeweis bleibt zeitlich UNKNOWN. Wiederholungen werden
 atomar auf denselben Receipt gebunden; Widerrufe wirken bei jeder neuen Nutzung.
-Details und tatsächlich ausgeführte Prüfungen: `docs/evidence/rdr-09-import.md`.
+Details und tatsÃ¤chlich ausgefÃ¼hrte PrÃ¼fungen: `docs/evidence/rdr-09-import.md`.
 
 ## Execution-Sammlung (RDR-04)
 
-Kalenderfälligkeiten und UPDATEjobs sind dauerhaft an Generation und Zweck
-gebunden. Kalender läuft bei Aktivierung und täglich 00:05 UTC; belegte Barschlüsse
-erzeugen +5s-/+240s-Fälligkeiten. Maximal 24 Stunden Nachholen, zwei offene logische
-Jobs, ein gleichzeitiger GET und 100 Fälligkeiten je Instrument/UTC-Tag begrenzen
-die Arbeit. Ältere Lücken und unbekannte Abrufe bleiben sichtbar. Safetyvorrang,
+KalenderfÃ¤lligkeiten und UPDATEjobs sind dauerhaft an Generation und Zweck
+gebunden. Kalender lÃ¤uft bei Aktivierung und tÃ¤glich 00:05 UTC; belegte BarschlÃ¼sse
+erzeugen +5s-/+240s-FÃ¤lligkeiten. Maximal 24 Stunden Nachholen, zwei offene logische
+Jobs, ein gleichzeitiger GET und 100 FÃ¤lligkeiten je Instrument/UTC-Tag begrenzen
+die Arbeit. Ã„ltere LÃ¼cken und unbekannte Abrufe bleiben sichtbar. Safetyvorrang,
 HTTP429 und Providerblocker sperren neue Abrufe. STARTED wird vor GET unter Planlock
-committet; Crashwiederaufnahme benötigt einen neuen Fence. Tatsächliche Empfangs-
-und Commitbestätigungszeiten ersetzen keinen Publikationsnachweis. Sammlung bleibt
-global aus. Prüfungen: `docs/evidence/rdr-04-collection.md`.
+committet; Crashwiederaufnahme benÃ¶tigt einen neuen Fence. TatsÃ¤chliche Empfangs-
+und CommitbestÃ¤tigungszeiten ersetzen keinen Publikationsnachweis. Sammlung bleibt
+global aus. PrÃ¼fungen: `docs/evidence/rdr-04-collection.md`.
 
 ## Dauerhafte Diagnosen (RDR-05)
 
@@ -145,5 +145,17 @@ kein Bericht startet einen Backtest oder Providerabruf. Maximal 32 wartende
 Diagnosen teilen sich einen Worker mit Backtests. Fence, Ablaufzeit und atomare
 Publikation verhindern Teilberichte nach Crash. Ein Budgetabbruch bleibt UNKNOWN.
 Berichte und Befundseiten binden Daten- und Truststand; aktuelle Widerrufswarnungen
-stehen getrennt neben dem unveränderten Originalbericht. Reload und Cursor nutzen
-dauerhafte Datenbankzustände. Nachweise: `docs/evidence/rdr-05-api.md`.
+stehen getrennt neben dem unverÃ¤nderten Originalbericht. Reload und Cursor nutzen
+dauerhafte DatenbankzustÃ¤nde. Nachweise: `docs/evidence/rdr-05-api.md`.
+
+## Versionierte Sammlungssteuerung (RDR-06)
+
+GET liefert hÃ¶chstens die registrierten SPY-/QQQ-PlÃ¤ne. PUT verlangt enabled und
+expectedVersion mit neuem IdempotenzschlÃ¼ssel; Versions- oder Nutzlastkonflikte
+liefern 409. Replay gibt die ursprÃ¼ngliche Antwort zurÃ¼ck. Aktivierung ist nur ein
+lokaler Wunsch und hebt globale oder Providerblocker nicht auf. Pause wechselt
+die Generation unter der Dispatchbarriere und antwortet nach Commit; bereits
+zugelassene Abrufe werden gezÃ¤hlt. Auch ein Diagnosebudget-/SQLfehler verhindert
+keine Pause. Metriken werden auf hÃ¶chstens 24 Stunden begrenzt; ohne gebundenes
+Experimentprotokoll werden keine vollstÃ¤ndigen Experimentfenster behauptet.
+Nachweise: `docs/evidence/rdr-06-api.md`.

@@ -208,6 +208,7 @@ def run_api(config, ledger, telemetry=None):
     from services.control_api.auth import LocalAuth
     from services.control_api.backend import ControlBackend
     from services.control_api.backtest_client import BacktestClient
+    from services.control_api.collection_client import CollectionClient
     from services.control_api.demo_client import DemoClient
     from services.control_api.events import EventFeed
     from services.control_api.paper_client import PaperClient
@@ -250,6 +251,7 @@ def run_api(config, ledger, telemetry=None):
         research=ResearchClient(),
         backtesting=BacktestClient(),
         readiness=ReadinessClient(),
+        collection=CollectionClient(),
     )
 
     def status_loop():

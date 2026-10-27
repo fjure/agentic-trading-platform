@@ -56,8 +56,8 @@ Das Verfahren garantiert keine +60s-/+300s-Fristen. Plan-HTTPsteuerung und Ã¶ffe
 Projektionen werden in RDR-06, die gemeinsame Last-/Browser-/Safetykette in RDR-08
 abgenommen. Diese Grenzen ersetzen keine individuelle Strict-PIT-PrÃ¼fung.
 
-Unabhängiger Safetyreview abgeschlossen: Der zunächst gefundene veraltete
-Fence wurde korrigiert und mit tatsächlichem PG-Recoverytest geprüft. Auch ein
+UnabhÃ¤ngiger Safetyreview abgeschlossen: Der zunÃ¤chst gefundene veraltete
+Fence wurde korrigiert und mit tatsÃ¤chlichem PG-Recoverytest geprÃ¼ft. Auch ein
 vor Dispatch bekannter Credential-/Rechteblocker wird dauerhaft sichtbar. Die
-erweiterte Sicherheitsprüfung bestand erneut in 66,55s. Keine offenen P1/P2
-im geprüften Sammlungsumfang. Ruff ist für alle Paketdateien fehlerfrei.
+erweiterte SicherheitsprÃ¼fung bestand erneut in 66,55s. Keine offenen P1/P2
+im geprÃ¼ften Sammlungsumfang. Ruff ist fÃ¼r alle Paketdateien fehlerfrei.
