@@ -1,0 +1,167 @@
+{
+  "reportId": "33333333-3333-4333-8333-333333333333",
+  "version": "reliability-report-v1",
+  "reportHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "phase": "PREVIEW",
+  "assessmentId": "22222222-2222-4222-8222-222222222222",
+  "runId": null,
+  "protocolHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "snapshotReference": {
+    "snapshotVersion": 7,
+    "snapshotAt": "2026-10-27T00:00:00Z"
+  },
+  "researchMode": "RETROSPECTIVE_EXPLORATORY",
+  "selectionPolicyVersion": "retrospective-v1",
+  "experimentVersion": "retrospective-experiment-v1",
+  "instrumentId": "11111111-1111-4111-8111-111111111111",
+  "symbol": "SPY",
+  "provider": "ALPACA",
+  "feed": "iex",
+  "interval": "15Min",
+  "adjustment": "raw",
+  "period": {
+    "start": "2026-10-20T00:00:00Z",
+    "end": "2026-10-23T00:00:00Z"
+  },
+  "folds": [
+    {
+      "foldIndex": 0,
+      "window": {
+        "trainingStart": "2026-10-20T00:00:00Z",
+        "trainingEnd": "2026-10-22T00:00:00Z",
+        "testStart": "2026-10-22T00:00:00Z",
+        "testEnd": "2026-10-23T00:00:00Z"
+      },
+      "warmupPeriod": {
+        "start": "2026-10-21T19:30:00Z",
+        "end": "2026-10-22T00:00:00Z"
+      },
+      "barCounts": {
+        "warmup": {
+          "expected": 2,
+          "present": 2,
+          "missing": 0,
+          "unexpected": 0
+        },
+        "training": {
+          "expected": 26,
+          "present": 26,
+          "missing": 0,
+          "unexpected": 0
+        },
+        "test": {
+          "expected": 26,
+          "present": 26,
+          "missing": 0,
+          "unexpected": 0
+        }
+      },
+      "eligibility": "EXPLORATORY_WITH_LIMITATIONS"
+    }
+  ],
+  "dimensions": {
+    "INTEGRITY": {
+      "rating": "PASS",
+      "reasonCodes": []
+    },
+    "CALENDAR": {
+      "rating": "PASS",
+      "reasonCodes": []
+    },
+    "CORPORATE_ACTIONS": {
+      "rating": "UNKNOWN",
+      "reasonCodes": [
+        "CORPORATE_ACTIONS_UNKNOWN"
+      ]
+    },
+    "HISTORICAL_AVAILABILITY": {
+      "rating": "UNKNOWN",
+      "reasonCodes": [
+        "HISTORICAL_AVAILABILITY_NOT_PROVEN"
+      ]
+    },
+    "FEED": {
+      "rating": "LIMITED",
+      "reasonCodes": [
+        "IEX_PARTIAL_MARKET"
+      ]
+    },
+    "LICENSE": {
+      "rating": "UNKNOWN",
+      "reasonCodes": [
+        "LICENSE_UNKNOWN"
+      ]
+    }
+  },
+  "overallStatus": "EXPLORATORY_WITH_LIMITATIONS",
+  "corporateActionStatus": "UNKNOWN",
+  "licenseStatus": "UNKNOWN",
+  "historicalAvailabilityStatus": "NOT_PROVEN",
+  "methods": {
+    "manifestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "protocol": {
+      "instrumentId": "11111111-1111-4111-8111-111111111111",
+      "strategyId": "sma-cross-v1",
+      "version": "1",
+      "parameters": {
+        "fast": 2,
+        "slow": 3
+      },
+      "startCash": "10000",
+      "feeUsd": "1",
+      "slippageBps": "5",
+      "quantityStep": "0.000001",
+      "folds": [
+        {
+          "trainingStart": "2026-10-20T00:00:00Z",
+          "trainingEnd": "2026-10-22T00:00:00Z",
+          "testStart": "2026-10-22T00:00:00Z",
+          "testEnd": "2026-10-23T00:00:00Z"
+        }
+      ],
+      "researchMode": "RETROSPECTIVE_EXPLORATORY",
+      "selectionPolicyVersion": "retrospective-v1"
+    },
+    "experimentVersion": "retrospective-experiment-v1",
+    "strategyVersion": "1",
+    "simulatorVersion": "backtest-simulator-v1",
+    "metricsVersion": "backtest-metrics-v1",
+    "codeVersion": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "assumptions": {
+      "simulation": "LOCAL_SIMULATION",
+      "provider": "ALPACA",
+      "feed": "iex",
+      "interval": "15Min",
+      "adjustment": "raw",
+      "currency": "USD",
+      "positionPolicy": "LONG_FLAT",
+      "fillModel": "next-regular-bar-open-v1",
+      "signalDelaySeconds": 60,
+      "decimalPrecision": 38,
+      "rounding": "ROUND_HALF_EVEN",
+      "moneyScale": 8,
+      "returnScale": 12,
+      "dividendsIncluded": false,
+      "forceLiquidation": false,
+      "outcomeSelection": "SNAPSHOT_BOUND_MARKET_EVENT",
+      "qualityPolicyVersion": "retrospective-quality-v1",
+      "discontinuityPolicyVersion": "raw-discontinuity-v1"
+    },
+    "benchmarks": [
+      "flat-v1",
+      "buy-hold-v1"
+    ],
+    "qualityPolicyVersion": "retrospective-quality-v1"
+  },
+  "resultLimitations": [
+    "NOT_STRICT_PIT",
+    "PRICE_ONLY",
+    "DIVIDENDS_EXCLUDED",
+    "IEX_PARTIAL_MARKET",
+    "SURVIVORSHIP_BIAS",
+    "EX_POST_REVISIONS",
+    "NO_TRADING_AUTHORIZATION"
+  ],
+  "findingsCount": 1,
+  "revisionReferenceCount": 1
+}

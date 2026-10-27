@@ -14,11 +14,15 @@ import { BacktestStrategyParameterBounds } from './backtestStrategyParameterBoun
 
 export interface BacktestStrategy { 
     strategyId: BacktestStrategyId;
-    version: string;
+    version: BacktestStrategy.VersionEnum;
     parameterBounds: BacktestStrategyParameterBounds;
     defaultParameters: BacktestParameters;
 }
 export namespace BacktestStrategy {
+    export const VersionEnum = {
+        _1: '1',
+    } as const;
+    export type VersionEnum = typeof VersionEnum[keyof typeof VersionEnum];
 }
 
 

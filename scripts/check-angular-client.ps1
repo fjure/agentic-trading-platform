@@ -183,6 +183,16 @@ if (-not $SkipCompile) {
         $fixtureIndex++
     }
     [IO.File]::WriteAllLines((Join-Path $tooling 'client-contract-fixtures.generated.ts'), $fixtures)
+    $retrospectiveFixtures = Get-Content -LiteralPath (Join-Path $root 'contracts/examples/v1/retrospective-fixtures.json') -Raw | ConvertFrom-Json -AsHashtable
+    foreach ($entry in $retrospectiveFixtures.GetEnumerator()) {
+        $model = $entry.Value
+        $modelFile = $model.Substring(0, 1).ToLowerInvariant() + $model.Substring(1)
+        $fixtures += "import type { $model as RetrospectiveFixtureType$fixtureIndex } from './generated-a/model/$modelFile';"
+        $literal = Get-Content -LiteralPath (Join-Path $root ('contracts/examples/v1/' + $entry.Key)) -Raw
+        $fixtures += "const retrospectiveFixture$fixtureIndex : RetrospectiveFixtureType$fixtureIndex = $literal;"
+        $fixtureIndex++
+    }
+    [IO.File]::WriteAllLines((Join-Path $tooling 'client-contract-fixtures.generated.ts'), $fixtures)
     $tsc = Join-Path $tooling 'node_modules/.bin/tsc.cmd'
     if (-not (Test-Path -LiteralPath $tsc)) { throw 'Pinned TypeScript compiler is missing.' }
     & $tsc --project (Join-Path $tooling 'tsconfig.generated.json') --noEmit

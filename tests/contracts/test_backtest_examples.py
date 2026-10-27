@@ -212,12 +212,13 @@ def test_problem_status_and_code_are_consistent_and_sanitized():
     assert not validator("BacktestProblem").is_valid(value)
 
 
-def test_five_additive_authenticated_operations_and_page_bounds():
+def test_eight_additive_authenticated_operations_and_page_bounds():
     paths = {key: item for key, item in OAS["paths"].items() if "/backtests/" in key}
     operations = [operation for item in paths.values() for operation in item.values()]
     assert {op["operationId"] for op in operations} == {
         "listBacktestStrategies", "createBacktestRun", "listBacktestRuns",
         "getBacktestRun", "getBacktestResults",
+        "createBacktestAssessment", "getBacktestAssessment", "getBacktestReliabilityReport",
     }
     for operation in operations:
         assert operation.get("security", OAS["security"]) == [{"LocalSession": []}]

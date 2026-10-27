@@ -1,0 +1,40 @@
+# Retrospektive Research-Backtests
+
+## Lieferstand RRB-01
+
+Der Apply-Auftrag vom 27.10.2026 beginnt mit RRB-01/#69. Dieses Paket liefert additive Verträge, Schema-/Negativtests und den mechanisch generierten Angularclient. Die neuen Vorschau-/Reportoperationen werden erst mit RRB-06 als tatsächliche Runtimefunktionen abgenommen. Eine gültige Vertragsfixture beweist weder historische Datenqualität noch ein lauffähiges Experiment.
+
+## Researchmodi und Ein-/Ausgaben
+
+Bestehende `POST /api/v1/research/backtests/runs`-Requests bleiben ohne Modusauswahl Strict PIT. `STRICT_PIT` ist auch ausdrücklich auswählbar. Die bisherige historische Beleg-/Fehlersemantik, Zeitgrenzen und Idempotenz bleiben erhalten. Ein blockierter Strict-Lauf löst niemals automatisch einen retrospektiven Lauf aus.
+
+`RETROSPECTIVE_EXPLORATORY` erfordert eine ausdrücklich gewählte Policyversion und die Referenz einer Vorschau mit Eingabe-/Snapshotbindung. Unterschiedliche Modi sind unterschiedliche Nutzlasten; wiederverwendete Idempotenzkennungen mit anderem Inhalt sind Konflikte. Freie Programme, URLs, Strategien außerhalb des Katalogs und unbekannte Felder/Versionen sind unzulässig.
+
+| Operation | Zweck | Requirements |
+|---|---|---|
+| createBacktestAssessment / POST `/api/v1/research/backtests/assessments` | begrenzte dauerhafte Vorschau, 202 und Idempotency-Key; keine Simulation | REQ-RRB-002/008/009/010/011/012 |
+| getBacktestAssessment / GET `/api/v1/research/backtests/assessments/{assessmentId}` | Status, Snapshot und Reportreferenz | REQ-RRB-002/008/012 |
+| getBacktestReliabilityReport / GET `/api/v1/research/backtests/reliability-reports/{reportId}` | unveränderlicher strukturierter Bericht mit höchstens 200 Einträgen je Seite | REQ-RRB-008/009/010/011/012 |
+| createBacktestRun und bestehende Lauf-/Ergebnisoperationen | expliziter Modus und Bindung, bestehende Strict-Anfragen kompatibel | REQ-RRB-001/004/005/006 |
+
+Alle Operationen verwenden LocalSession und die bestehenden Origin-/CSRF-/Fehlergrenzen. Ungültige Eingaben sind 400, fehlende Sitzung 401, verweigerter Zugriff 403, fehlende Referenzen 404, Idempotenz-/Snapshotkonflikte 409 und nicht verfügbarer Dienst 503. Vorschau ist keine Handelsfreigabe und startet selbst keinen Backtest.
+
+## Aussagegrenzen
+
+Ergebnisse bleiben raw/IEX/15Min für SPY oder QQQ, price-only und explorativ. Snapshot/Revisionen, echte Ingestion, simulierte Entscheidung und heutige Datensatzerstellung sind getrennte Zeitbegriffe. Heutige Providerkorrekturen werden im eingefrorenen Datensatz gebunden und begründen keine damalige Verfügbarkeit. Alte Manifeste werden nicht umgeschrieben.
+
+Der versionierte Reliability Report trennt Datenintegrität, Kalender, Kapitalmaßnahmen, historische Verfügbarkeit, Feedabdeckung und Lizenzstatus. Unbekannte Nenner und ungeprüfte Dimensionen werden nicht mit erfundenen Werten gefüllt. Ein hoher simulierter Gewinn verbessert keine Qualitätsbewertung.
+
+APIkompatibilität: Strict-Details verwenden unverändert `manifest`, retrospektive Details das zusätzliche `retrospectiveManifest` bei altem `manifest=null`. Strict-Foldzusammenfassungen bleiben unter `items`; retrospektive Summaryseiten liefern dort keine Strict-Objekte, sondern eigene `retrospectiveItems` mit ehrlichem Maßnahmenstatus. Explizite retrospektive Antworten verlangen vollständigen Modus-/Policy-/Versions-/Snapshot-/Report-/Einschränkungskontext. Die alten Pflichtfelder und Erfolgsregeln bleiben erhalten.
+
+Retrospektive Fillseiten verwenden ebenfalls `retrospectiveItems`. Ihre Fills tragen `simulatedMarketCutoff` statt eines scheinbaren historischen `observationCutoff`; echte Aufnahmezeiten bleiben in der Datenevidenz erhalten. Gemeinsame Equitypunkte sind simulierte Ledger-/Marktwerte und enthalten keine Verfügbarkeitszertifikate.
+
+Bekannte Splits, nicht modellierte strukturelle Maßnahmen, widersprüchliche Evidenz, notwendige fehlende Bars und Kalenderfehler blockieren. Unbekannte Maßnahmen bleiben UNKNOWN mit Einschränkungen; Bardividenden sind ausgeschlossen. Der konservative Preisbruchfilter ab 20 Prozent ist kein Splitdetektor. Es gibt keinen Total-Return- oder Profitabilitätsnachweis, keine automatische Promotion und keine Paper-/LIVE-Aktivierung.
+
+Persönliche Providerrechte und echte historische Dateneignung bleiben ungeprüft. Ein technischer Zugang oder eine lokale Lizenzdeklaration bestätigt diese Rechte nicht. Keine neuen Providerabrufe, Rohdatenexports, Credentials oder Handelsberechtigungen werden durch diese Vertragslieferung eingeführt.
+
+## Abnahme und spätere Runtime
+
+`scripts/contract_stages.py` nimmt ausschließlich die drei neuen Operationen bis Abschluss von RRB-06 vom vollständigen Runtime-Routenvergleich aus. Fehlende oder doppelte RRB-06-Taskzuordnung blockiert die Prüfung; nach dessen Abschluss werden alle drei echten Routen automatisch verlangt. Alle Bestandsrouten bleiben sofort prüfpflichtig. Keine Serverstubs.
+
+Vertragsprüfung: `python scripts/validate-contracts.py`, `python scripts/check-contract-breaking.py --base-ref main`, `pytest tests/contracts`, `./scripts/check-angular-client.ps1`. Clientänderungen ausschließlich mit `-WriteClient`, zweimalige Generierung und TypeScriptprüfungen. Tests und Quellenachweise pro Paket stehen unter `docs/evidence/rrb-NN.md`. Reale PG-/HTTP-/Browser-/ACL-/Lastabnahme folgt in RRB-03/06/07/08 gemäß OpenSpec.

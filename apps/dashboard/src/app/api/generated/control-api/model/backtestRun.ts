@@ -7,7 +7,12 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { BacktestExperimentVersion } from './backtestExperimentVersion';
+import { BacktestSnapshotReference } from './backtestSnapshotReference';
 import { BacktestState } from './backtestState';
+import { BacktestResultLimitation } from './backtestResultLimitation';
+import { BacktestResearchMode } from './backtestResearchMode';
+import { BacktestSelectionPolicyVersion } from './backtestSelectionPolicyVersion';
 import { BacktestFoldReference } from './backtestFoldReference';
 import { BacktestRequest } from './backtestRequest';
 import { BacktestSnapshot } from './backtestSnapshot';
@@ -37,6 +42,12 @@ export interface BacktestRun {
     blockers: Array<BacktestBlocker>;
     attempt: number;
     publicationComplete: boolean;
+    researchMode?: BacktestResearchMode;
+    selectionPolicyVersion?: BacktestSelectionPolicyVersion;
+    experimentVersion?: BacktestExperimentVersion;
+    snapshotReference?: BacktestSnapshotReference | null;
+    reliabilityReportId?: string | null;
+    resultLimitations?: Array<BacktestResultLimitation>;
 }
 export namespace BacktestRun {
 }

@@ -11,7 +11,11 @@ import { HttpHeaders }                                       from '@angular/comm
 
 import { Observable }                                        from 'rxjs';
 
+import { BacktestAssessment } from '../model/models';
+import { BacktestAssessmentRequest } from '../model/models';
 import { BacktestProblem } from '../model/models';
+import { BacktestReliabilityDimensionName } from '../model/models';
+import { BacktestReliabilityReportPage } from '../model/models';
 import { BacktestRequest } from '../model/models';
 import { BacktestResults } from '../model/models';
 import { BacktestRun } from '../model/models';
@@ -30,6 +34,15 @@ export interface BacktestingServiceInterface {
     configuration: Configuration;
 
     /**
+     * Accept a bounded retrospective snapshot assessment without simulation
+     * REQ-RRB-001/004/006/008/012; T-RRB-002/008/010/011/013/020. Authenticated local research only; trusted Origin checked before side effects. No provider, broker, credential or trading capability. Unknown fields/versions &#x3D;&gt; 400 INVALID_REQUEST; missing/foreign references &#x3D;&gt; 404; protocol/snapshot conflicts &#x3D;&gt; 409 SNAPSHOT_CONFLICT; exhausted shared worker budget &#x3D;&gt; 503 UNAVAILABLE.
+     * @endpoint post /api/v1/research/backtests/assessments
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param backtestAssessmentRequest 
+     */
+    createBacktestAssessment(idempotencyKey: string, backtestAssessmentRequest: BacktestAssessmentRequest, extraHttpRequestParams?: any): Observable<BacktestAssessment>;
+
+    /**
      * Accept a bounded immutable local simulation request
      * REQ-BKT-001/006/007; T-BKT-002/011/014. Session and trusted Origin required before side effects. No external/provider/broker calls or trading permission. Semantic fast &lt; slow, chronological disjoint fold windows and 366-day bounds are checked before job creation. Cursor signatures/context require runtime verification; schema checks syntax only. Before complete publication results expose status and completed fold references only. Default research dispatch remains disabled.
      * @endpoint post /api/v1/research/backtests/runs
@@ -37,6 +50,27 @@ export interface BacktestingServiceInterface {
      * @param backtestRequest 
      */
     createBacktestRun(idempotencyKey: string, backtestRequest: BacktestRequest, extraHttpRequestParams?: any): Observable<BacktestRun>;
+
+    /**
+     * Read durable retrospective assessment state and snapshot binding
+     * REQ-RRB-001/004/006/008/012; T-RRB-002/008/010/011/013/020. Authenticated local research only; trusted Origin checked before side effects. No provider, broker, credential or trading capability. Unknown fields/versions &#x3D;&gt; 400 INVALID_REQUEST; missing/foreign references &#x3D;&gt; 404; protocol/snapshot conflicts &#x3D;&gt; 409 SNAPSHOT_CONFLICT; exhausted shared worker budget &#x3D;&gt; 503 UNAVAILABLE.
+     * @endpoint get /api/v1/research/backtests/assessments/{assessmentId}
+     * @param assessmentId 
+     */
+    getBacktestAssessment(assessmentId: string, extraHttpRequestParams?: any): Observable<BacktestAssessment>;
+
+    /**
+     * Read a bounded immutable reliability report page with current warnings
+     * REQ-RRB-001/004/006/008/012; T-RRB-002/008/010/011/013/020. Authenticated local research only; trusted Origin checked before side effects. No provider, broker, credential or trading capability. Unknown fields/versions &#x3D;&gt; 400 INVALID_REQUEST; missing/foreign references &#x3D;&gt; 404; protocol/snapshot conflicts &#x3D;&gt; 409 SNAPSHOT_CONFLICT; exhausted shared worker budget &#x3D;&gt; 503 UNAVAILABLE.
+     * @endpoint get /api/v1/research/backtests/reliability-reports/{reportId}
+     * @param reportId 
+     * @param limit 
+     * @param cursor 
+     * @param section 
+     * @param category 
+     * @param foldIndex 
+     */
+    getBacktestReliabilityReport(reportId: string, limit?: number, cursor?: string, section?: 'findings' | 'revisions', category?: BacktestReliabilityDimensionName, foldIndex?: number, extraHttpRequestParams?: any): Observable<BacktestReliabilityReportPage>;
 
     /**
      * Page published fold summaries, equity or simulated fills

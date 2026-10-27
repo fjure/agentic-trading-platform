@@ -7,6 +7,12 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { BacktestRetrospectiveManifest } from './backtestRetrospectiveManifest';
+import { BacktestExperimentVersion } from './backtestExperimentVersion';
+import { BacktestSnapshotReference } from './backtestSnapshotReference';
+import { BacktestResultLimitation } from './backtestResultLimitation';
+import { BacktestResearchMode } from './backtestResearchMode';
+import { BacktestSelectionPolicyVersion } from './backtestSelectionPolicyVersion';
 import { BacktestRun } from './backtestRun';
 import { BacktestManifest } from './backtestManifest';
 
@@ -14,5 +20,15 @@ import { BacktestManifest } from './backtestManifest';
 export interface BacktestRunDetail { 
     run: BacktestRun;
     manifest: BacktestManifest | null;
+    researchMode?: BacktestResearchMode;
+    selectionPolicyVersion?: BacktestSelectionPolicyVersion;
+    experimentVersion?: BacktestExperimentVersion;
+    snapshotReference?: BacktestSnapshotReference | null;
+    reliabilityReportId?: string | null;
+    resultLimitations?: Array<BacktestResultLimitation>;
+    retrospectiveManifest?: BacktestRetrospectiveManifest | null;
 }
+export namespace BacktestRunDetail {
+}
+
 

@@ -159,9 +159,22 @@
           "items": {
             "$ref": "#/$defs/BacktestFold"
           }
+        },
+        "researchMode": {
+          "$ref": "#/$defs/BacktestResearchMode"
+        },
+        "selectionPolicyVersion": {
+          "type": "string",
+          "const": "retrospective-v1"
+        },
+        "assessmentId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "assessmentHash": {
+          "$ref": "#/$defs/BacktestHash"
         }
       },
-      "description": "REQ-BKT-001/006/007; T-BKT-002/011/014. Only catalog instrument IDs resolving to SPY or QQQ. Server binds every manifest reference. Semantic window and SMA ordering checks run before persistence.",
+      "description": "REQ-BKT-001/006/007; T-BKT-002/011/014. Only catalog instrument IDs resolving to SPY or QQQ. Server binds every manifest reference. Semantic window and SMA ordering checks run before persistence. REQ-RRB-001/004/006/012; T-RRB-002/008/010/011/020. Omitted or explicit STRICT_PIT preserves legacy hash/idempotency identity. Only retrospective starts accept and require policy plus exact assessment ID/hash; normalized protocol and current trust are revalidated before execution.",
       "allOf": [
         {
           "if": {
@@ -190,6 +203,86 @@
             "additionalProperties": true
           },
           "additionalProperties": true
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "required": [
+                  "researchMode"
+                ],
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "RETROSPECTIVE_EXPLORATORY"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "required": [
+                  "selectionPolicyVersion",
+                  "assessmentId",
+                  "assessmentHash"
+                ],
+                "additionalProperties": true,
+                "properties": {
+                  "selectionPolicyVersion": {
+                    "type": "string",
+                    "const": "retrospective-v1"
+                  },
+                  "assessmentId": {
+                    "$ref": "#/$defs/BacktestId"
+                  },
+                  "assessmentHash": {
+                    "$ref": "#/$defs/BacktestHash"
+                  }
+                }
+              },
+              "additionalProperties": true,
+              "else": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "selectionPolicyVersion"
+                      ],
+                      "properties": {
+                        "selectionPolicyVersion": {
+                          "type": "string",
+                          "const": "retrospective-v1"
+                        }
+                      },
+                      "additionalProperties": true
+                    },
+                    {
+                      "required": [
+                        "assessmentId"
+                      ],
+                      "properties": {
+                        "assessmentId": {
+                          "$ref": "#/$defs/BacktestId"
+                        }
+                      },
+                      "additionalProperties": true
+                    },
+                    {
+                      "required": [
+                        "assessmentHash"
+                      ],
+                      "properties": {
+                        "assessmentHash": {
+                          "$ref": "#/$defs/BacktestHash"
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  ]
+                },
+                "additionalProperties": true
+              }
+            }
+          }
         }
       ]
     },
@@ -465,6 +558,19 @@
         },
         "observedAt": {
           "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "supportedResearchModes": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/BacktestResearchMode"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
         }
       }
     },
@@ -954,9 +1060,51 @@
         },
         "publicationComplete": {
           "type": "boolean"
+        },
+        "researchMode": {
+          "$ref": "#/$defs/BacktestResearchMode"
+        },
+        "selectionPolicyVersion": {
+          "$ref": "#/$defs/BacktestSelectionPolicyVersion"
+        },
+        "experimentVersion": {
+          "$ref": "#/$defs/BacktestExperimentVersion"
+        },
+        "snapshotReference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestSnapshotReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reliabilityReportId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resultLimitations": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 7,
+          "items": {
+            "$ref": "#/$defs/BacktestResultLimitation"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
         }
       },
-      "description": "Durable receipt returned on initial and identical replayed requests. BLOCKED/FAILED may retain completed fold references; never a run-wide return.",
+      "description": "Durable receipt returned on initial and identical replayed requests. BLOCKED/FAILED may retain completed fold references; never a run-wide return. REQ-RRB-006; T-RRB-008/010. Additive context fields are optional for legacy schema compatibility; servers emit all fields for every run, projecting legacy rows as STRICT_PIT. Current warnings are separate from immutable experiment identity.",
       "allOf": [
         {
           "not": {
@@ -1062,6 +1210,165 @@
               "additionalProperties": true
             }
           }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "anyOf": [
+                  {
+                    "properties": {
+                      "request": {
+                        "properties": {
+                          "researchMode": {
+                            "type": "string",
+                            "const": "RETROSPECTIVE_EXPLORATORY"
+                          }
+                        },
+                        "additionalProperties": true,
+                        "required": [
+                          "researchMode"
+                        ]
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "request"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "researchMode": {
+                        "type": "string",
+                        "const": "RETROSPECTIVE_EXPLORATORY"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "researchMode"
+                    ]
+                  }
+                ],
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "RETROSPECTIVE_EXPLORATORY"
+                  },
+                  "selectionPolicyVersion": {
+                    "type": "string",
+                    "const": "retrospective-v1"
+                  },
+                  "experimentVersion": {
+                    "type": "string",
+                    "const": "retrospective-experiment-v1"
+                  },
+                  "snapshotReference": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/BacktestSnapshotReference"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reliabilityReportId": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/BacktestId"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "resultLimitations": {
+                    "$ref": "#/$defs/BacktestResultLimitations"
+                  },
+                  "request": {
+                    "properties": {
+                      "researchMode": {
+                        "type": "string",
+                        "const": "RETROSPECTIVE_EXPLORATORY"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "researchMode"
+                    ]
+                  }
+                },
+                "additionalProperties": true,
+                "required": [
+                  "researchMode",
+                  "selectionPolicyVersion",
+                  "experimentVersion",
+                  "snapshotReference",
+                  "reliabilityReportId",
+                  "resultLimitations"
+                ]
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "allOf": [
+                  {
+                    "properties": {
+                      "request": {
+                        "properties": {
+                          "researchMode": {
+                            "type": "string",
+                            "const": "RETROSPECTIVE_EXPLORATORY"
+                          }
+                        },
+                        "additionalProperties": true,
+                        "required": [
+                          "researchMode"
+                        ]
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "request"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "const": "SUCCEEDED"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "status"
+                    ]
+                  }
+                ],
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "snapshotReference": {
+                    "$ref": "#/$defs/BacktestSnapshotReference"
+                  },
+                  "reliabilityReportId": {
+                    "$ref": "#/$defs/BacktestId"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
         }
       ]
     },
@@ -1085,8 +1392,297 @@
               "type": "null"
             }
           ]
+        },
+        "researchMode": {
+          "$ref": "#/$defs/BacktestResearchMode"
+        },
+        "selectionPolicyVersion": {
+          "$ref": "#/$defs/BacktestSelectionPolicyVersion"
+        },
+        "experimentVersion": {
+          "$ref": "#/$defs/BacktestExperimentVersion"
+        },
+        "snapshotReference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestSnapshotReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reliabilityReportId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resultLimitations": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 7,
+          "items": {
+            "$ref": "#/$defs/BacktestResultLimitation"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        },
+        "retrospectiveManifest": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestRetrospectiveManifest"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
-      }
+      },
+      "description": " REQ-RRB-006; T-RRB-008/010. Additive context fields are optional for legacy schema compatibility; servers emit all fields for every run, projecting legacy rows as STRICT_PIT. Current warnings are separate from immutable experiment identity.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "anyOf": [
+                  {
+                    "properties": {
+                      "run": {
+                        "anyOf": [
+                          {
+                            "properties": {
+                              "request": {
+                                "properties": {
+                                  "researchMode": {
+                                    "type": "string",
+                                    "const": "RETROSPECTIVE_EXPLORATORY"
+                                  }
+                                },
+                                "additionalProperties": true,
+                                "required": [
+                                  "researchMode"
+                                ]
+                              }
+                            },
+                            "additionalProperties": true,
+                            "required": [
+                              "request"
+                            ]
+                          },
+                          {
+                            "properties": {
+                              "researchMode": {
+                                "type": "string",
+                                "const": "RETROSPECTIVE_EXPLORATORY"
+                              }
+                            },
+                            "additionalProperties": true,
+                            "required": [
+                              "researchMode"
+                            ]
+                          }
+                        ],
+                        "additionalProperties": true
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "run"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "researchMode": {
+                        "type": "string",
+                        "const": "RETROSPECTIVE_EXPLORATORY"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "researchMode"
+                    ]
+                  }
+                ],
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "RETROSPECTIVE_EXPLORATORY"
+                  },
+                  "selectionPolicyVersion": {
+                    "type": "string",
+                    "const": "retrospective-v1"
+                  },
+                  "experimentVersion": {
+                    "type": "string",
+                    "const": "retrospective-experiment-v1"
+                  },
+                  "snapshotReference": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/BacktestSnapshotReference"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reliabilityReportId": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/BacktestId"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "resultLimitations": {
+                    "$ref": "#/$defs/BacktestResultLimitations"
+                  },
+                  "manifest": {
+                    "type": "null"
+                  },
+                  "retrospectiveManifest": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/BacktestRetrospectiveManifest"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "run": {
+                    "properties": {
+                      "researchMode": {
+                        "type": "string",
+                        "const": "RETROSPECTIVE_EXPLORATORY"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "researchMode"
+                    ]
+                  }
+                },
+                "additionalProperties": true,
+                "required": [
+                  "researchMode",
+                  "selectionPolicyVersion",
+                  "experimentVersion",
+                  "snapshotReference",
+                  "reliabilityReportId",
+                  "resultLimitations",
+                  "retrospectiveManifest"
+                ]
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "allOf": [
+                  {
+                    "properties": {
+                      "run": {
+                        "anyOf": [
+                          {
+                            "properties": {
+                              "request": {
+                                "properties": {
+                                  "researchMode": {
+                                    "type": "string",
+                                    "const": "RETROSPECTIVE_EXPLORATORY"
+                                  }
+                                },
+                                "additionalProperties": true,
+                                "required": [
+                                  "researchMode"
+                                ]
+                              }
+                            },
+                            "additionalProperties": true,
+                            "required": [
+                              "request"
+                            ]
+                          },
+                          {
+                            "properties": {
+                              "researchMode": {
+                                "type": "string",
+                                "const": "RETROSPECTIVE_EXPLORATORY"
+                              }
+                            },
+                            "additionalProperties": true,
+                            "required": [
+                              "researchMode"
+                            ]
+                          }
+                        ],
+                        "additionalProperties": true
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "run"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "run": {
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "const": "SUCCEEDED"
+                          }
+                        },
+                        "additionalProperties": true,
+                        "required": [
+                          "status"
+                        ]
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "run"
+                    ]
+                  }
+                ],
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "snapshotReference": {
+                    "$ref": "#/$defs/BacktestSnapshotReference"
+                  },
+                  "reliabilityReportId": {
+                    "$ref": "#/$defs/BacktestId"
+                  },
+                  "retrospectiveManifest": {
+                    "$ref": "#/$defs/BacktestRetrospectiveManifest"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
     },
     "BacktestCursor": {
       "type": "string",
@@ -1478,9 +2074,59 @@
             "null"
           ],
           "pattern": "^[0-9a-f]{64}$"
+        },
+        "researchMode": {
+          "$ref": "#/$defs/BacktestResearchMode"
+        },
+        "selectionPolicyVersion": {
+          "$ref": "#/$defs/BacktestSelectionPolicyVersion"
+        },
+        "experimentVersion": {
+          "$ref": "#/$defs/BacktestExperimentVersion"
+        },
+        "snapshotReference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestSnapshotReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reliabilityReportId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resultLimitations": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 7,
+          "items": {
+            "$ref": "#/$defs/BacktestResultLimitation"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        },
+        "retrospectiveItems": {
+          "type": "array",
+          "maxItems": 200,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestRetrospectiveFoldSummary"
+          }
         }
       },
-      "description": "Only atomically published complete runs expose result rows. Before full publication items is empty and completedFolds identifies durable partial folds; never aggregate independent folds.",
+      "description": "Only atomically published complete runs expose result rows. Before full publication items is empty and completedFolds identifies durable partial folds; never aggregate independent folds. REQ-RRB-006; T-RRB-008/010. Additive context fields are optional for legacy schema compatibility; servers emit all fields for every run, projecting legacy rows as STRICT_PIT. Current warnings are separate from immutable experiment identity.",
       "allOf": [
         {
           "not": {
@@ -1526,6 +2172,166 @@
                 "additionalProperties": true
               },
               "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "RETROSPECTIVE_EXPLORATORY"
+                  }
+                },
+                "additionalProperties": true,
+                "required": [
+                  "researchMode"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "RETROSPECTIVE_EXPLORATORY"
+                  },
+                  "selectionPolicyVersion": {
+                    "type": "string",
+                    "const": "retrospective-v1"
+                  },
+                  "experimentVersion": {
+                    "type": "string",
+                    "const": "retrospective-experiment-v1"
+                  },
+                  "snapshotReference": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/BacktestSnapshotReference"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reliabilityReportId": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/BacktestId"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "resultLimitations": {
+                    "$ref": "#/$defs/BacktestResultLimitations"
+                  }
+                },
+                "additionalProperties": true,
+                "required": [
+                  "researchMode",
+                  "selectionPolicyVersion",
+                  "experimentVersion",
+                  "snapshotReference",
+                  "reliabilityReportId",
+                  "resultLimitations"
+                ]
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "allOf": [
+                  {
+                    "properties": {
+                      "researchMode": {
+                        "type": "string",
+                        "const": "RETROSPECTIVE_EXPLORATORY"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "researchMode"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "const": "SUCCEEDED"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "status"
+                    ]
+                  }
+                ],
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "snapshotReference": {
+                    "$ref": "#/$defs/BacktestSnapshotReference"
+                  },
+                  "reliabilityReportId": {
+                    "$ref": "#/$defs/BacktestId"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "RETROSPECTIVE_EXPLORATORY"
+                  }
+                },
+                "additionalProperties": true,
+                "required": [
+                  "researchMode"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "items": {
+                    "maxItems": 0
+                  },
+                  "retrospectiveItems": {
+                    "type": "array",
+                    "maxItems": 200,
+                    "minItems": 0,
+                    "items": {
+                      "$ref": "#/$defs/BacktestRetrospectiveFoldSummary"
+                    }
+                  }
+                },
+                "additionalProperties": true,
+                "required": [
+                  "retrospectiveItems"
+                ]
+              },
+              "additionalProperties": true,
+              "else": {
+                "properties": {
+                  "retrospectiveItems": {
+                    "maxItems": 0
+                  }
+                },
+                "additionalProperties": true
+              }
             }
           }
         }
@@ -1598,9 +2404,51 @@
             "null"
           ],
           "pattern": "^[0-9a-f]{64}$"
+        },
+        "researchMode": {
+          "$ref": "#/$defs/BacktestResearchMode"
+        },
+        "selectionPolicyVersion": {
+          "$ref": "#/$defs/BacktestSelectionPolicyVersion"
+        },
+        "experimentVersion": {
+          "$ref": "#/$defs/BacktestExperimentVersion"
+        },
+        "snapshotReference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestSnapshotReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reliabilityReportId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resultLimitations": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 7,
+          "items": {
+            "$ref": "#/$defs/BacktestResultLimitation"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
         }
       },
-      "description": "Only atomically published complete runs expose result rows. Before full publication items is empty and completedFolds identifies durable partial folds; never aggregate independent folds.",
+      "description": "Only atomically published complete runs expose result rows. Before full publication items is empty and completedFolds identifies durable partial folds; never aggregate independent folds. REQ-RRB-006; T-RRB-008/010. Additive context fields are optional for legacy schema compatibility; servers emit all fields for every run, projecting legacy rows as STRICT_PIT. Current warnings are separate from immutable experiment identity.",
       "allOf": [
         {
           "not": {
@@ -1641,6 +2489,120 @@
                   },
                   "resultHash": {
                     "type": "null"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "RETROSPECTIVE_EXPLORATORY"
+                  }
+                },
+                "additionalProperties": true,
+                "required": [
+                  "researchMode"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "RETROSPECTIVE_EXPLORATORY"
+                  },
+                  "selectionPolicyVersion": {
+                    "type": "string",
+                    "const": "retrospective-v1"
+                  },
+                  "experimentVersion": {
+                    "type": "string",
+                    "const": "retrospective-experiment-v1"
+                  },
+                  "snapshotReference": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/BacktestSnapshotReference"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reliabilityReportId": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/BacktestId"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "resultLimitations": {
+                    "$ref": "#/$defs/BacktestResultLimitations"
+                  }
+                },
+                "additionalProperties": true,
+                "required": [
+                  "researchMode",
+                  "selectionPolicyVersion",
+                  "experimentVersion",
+                  "snapshotReference",
+                  "reliabilityReportId",
+                  "resultLimitations"
+                ]
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "allOf": [
+                  {
+                    "properties": {
+                      "researchMode": {
+                        "type": "string",
+                        "const": "RETROSPECTIVE_EXPLORATORY"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "researchMode"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "const": "SUCCEEDED"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "status"
+                    ]
+                  }
+                ],
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "snapshotReference": {
+                    "$ref": "#/$defs/BacktestSnapshotReference"
+                  },
+                  "reliabilityReportId": {
+                    "$ref": "#/$defs/BacktestId"
                   }
                 },
                 "additionalProperties": true
@@ -1718,9 +2680,59 @@
             "null"
           ],
           "pattern": "^[0-9a-f]{64}$"
+        },
+        "researchMode": {
+          "$ref": "#/$defs/BacktestResearchMode"
+        },
+        "selectionPolicyVersion": {
+          "$ref": "#/$defs/BacktestSelectionPolicyVersion"
+        },
+        "experimentVersion": {
+          "$ref": "#/$defs/BacktestExperimentVersion"
+        },
+        "snapshotReference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestSnapshotReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reliabilityReportId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resultLimitations": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 7,
+          "items": {
+            "$ref": "#/$defs/BacktestResultLimitation"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        },
+        "retrospectiveItems": {
+          "type": "array",
+          "maxItems": 200,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestRetrospectiveFill"
+          }
         }
       },
-      "description": "Only atomically published complete runs expose result rows. Before full publication items is empty and completedFolds identifies durable partial folds; never aggregate independent folds.",
+      "description": "Only atomically published complete runs expose result rows. Before full publication items is empty and completedFolds identifies durable partial folds; never aggregate independent folds. REQ-RRB-006; T-RRB-008/010. Additive context fields are optional for legacy schema compatibility; servers emit all fields for every run, projecting legacy rows as STRICT_PIT. Current warnings are separate from immutable experiment identity.",
       "allOf": [
         {
           "not": {
@@ -1761,6 +2773,166 @@
                   },
                   "resultHash": {
                     "type": "null"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "RETROSPECTIVE_EXPLORATORY"
+                  }
+                },
+                "additionalProperties": true,
+                "required": [
+                  "researchMode"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "RETROSPECTIVE_EXPLORATORY"
+                  },
+                  "selectionPolicyVersion": {
+                    "type": "string",
+                    "const": "retrospective-v1"
+                  },
+                  "experimentVersion": {
+                    "type": "string",
+                    "const": "retrospective-experiment-v1"
+                  },
+                  "snapshotReference": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/BacktestSnapshotReference"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reliabilityReportId": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/BacktestId"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "resultLimitations": {
+                    "$ref": "#/$defs/BacktestResultLimitations"
+                  }
+                },
+                "additionalProperties": true,
+                "required": [
+                  "researchMode",
+                  "selectionPolicyVersion",
+                  "experimentVersion",
+                  "snapshotReference",
+                  "reliabilityReportId",
+                  "resultLimitations"
+                ]
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "allOf": [
+                  {
+                    "properties": {
+                      "researchMode": {
+                        "type": "string",
+                        "const": "RETROSPECTIVE_EXPLORATORY"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "researchMode"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "const": "SUCCEEDED"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "status"
+                    ]
+                  }
+                ],
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "snapshotReference": {
+                    "$ref": "#/$defs/BacktestSnapshotReference"
+                  },
+                  "reliabilityReportId": {
+                    "$ref": "#/$defs/BacktestId"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "required": [
+                  "researchMode"
+                ],
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "RETROSPECTIVE_EXPLORATORY"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "required": [
+                  "retrospectiveItems"
+                ],
+                "properties": {
+                  "items": {
+                    "maxItems": 0
+                  },
+                  "retrospectiveItems": {
+                    "type": "array",
+                    "maxItems": 200,
+                    "minItems": 0,
+                    "items": {
+                      "$ref": "#/$defs/BacktestRetrospectiveFill"
+                    }
+                  }
+                },
+                "additionalProperties": true
+              },
+              "else": {
+                "properties": {
+                  "retrospectiveItems": {
+                    "maxItems": 0
                   }
                 },
                 "additionalProperties": true
@@ -1980,6 +3152,2095 @@
           "additionalProperties": true
         }
       ]
+    },
+    "BacktestResearchMode": {
+      "type": "string",
+      "enum": [
+        "STRICT_PIT",
+        "RETROSPECTIVE_EXPLORATORY"
+      ],
+      "default": "STRICT_PIT"
+    },
+    "BacktestSelectionPolicyVersion": {
+      "type": "string",
+      "enum": [
+        "strict-pit-v1",
+        "retrospective-v1"
+      ]
+    },
+    "BacktestExperimentVersion": {
+      "type": "string",
+      "enum": [
+        "backtest-experiment-v1",
+        "retrospective-experiment-v1"
+      ]
+    },
+    "BacktestSnapshotReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshotVersion",
+        "snapshotAt"
+      ],
+      "properties": {
+        "snapshotVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "snapshotAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      },
+      "description": "Immutable complete-commit dataset boundary; later commits remain excluded even when their timestamps are earlier."
+    },
+    "BacktestAssessmentRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instrumentId",
+        "strategyId",
+        "version",
+        "parameters",
+        "startCash",
+        "feeUsd",
+        "slippageBps",
+        "quantityStep",
+        "folds",
+        "researchMode",
+        "selectionPolicyVersion"
+      ],
+      "properties": {
+        "instrumentId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "strategyId": {
+          "$ref": "#/$defs/BacktestStrategyId"
+        },
+        "version": {
+          "type": "string",
+          "const": "1"
+        },
+        "parameters": {
+          "$ref": "#/$defs/BacktestParameters"
+        },
+        "startCash": {
+          "$ref": "#/$defs/BacktestStartCash"
+        },
+        "feeUsd": {
+          "$ref": "#/$defs/BacktestFeeUsd"
+        },
+        "slippageBps": {
+          "$ref": "#/$defs/BacktestSlippageBps"
+        },
+        "quantityStep": {
+          "type": "string",
+          "const": "0.000001"
+        },
+        "folds": {
+          "type": "array",
+          "maxItems": 12,
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/BacktestFold"
+          }
+        },
+        "researchMode": {
+          "type": "string",
+          "const": "RETROSPECTIVE_EXPLORATORY"
+        },
+        "selectionPolicyVersion": {
+          "type": "string",
+          "const": "retrospective-v1"
+        }
+      },
+      "description": "REQ-RRB-001/004/008/012; T-RRB-002/008/011/013/020. Closed retrospective preview protocol; bounded local snapshot inspection only, without simulation. Same chronological, instrument, strategy and Decimal bounds as BacktestRequest.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "strategyId": {
+                "type": "string",
+                "const": "sma-cross-v1"
+              }
+            },
+            "additionalProperties": true
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/BacktestSmaParameters"
+              }
+            },
+            "additionalProperties": true
+          },
+          "else": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/BacktestEmptyParameters"
+              }
+            },
+            "additionalProperties": true
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "BacktestResultLimitation": {
+      "type": "string",
+      "enum": [
+        "NOT_STRICT_PIT",
+        "PRICE_ONLY",
+        "DIVIDENDS_EXCLUDED",
+        "IEX_PARTIAL_MARKET",
+        "SURVIVORSHIP_BIAS",
+        "EX_POST_REVISIONS",
+        "NO_TRADING_AUTHORIZATION"
+      ]
+    },
+    "BacktestResultLimitations": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "$ref": "#/$defs/BacktestResultLimitation"
+      },
+      "not": {
+        "not": {
+          "uniqueItems": true
+        }
+      }
+    },
+    "BacktestReportCursor": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 2048,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "description": "Opaque signed cursor bound to reportId, immutable reportHash/version, section and category/fold filters. Invalid signature => 400 CURSOR_INVALID; changed report/filter/version => 409 SNAPSHOT_CONFLICT. Example tokens demonstrate syntax only."
+    },
+    "BacktestReliabilityDimensionName": {
+      "type": "string",
+      "enum": [
+        "INTEGRITY",
+        "CALENDAR",
+        "CORPORATE_ACTIONS",
+        "HISTORICAL_AVAILABILITY",
+        "FEED",
+        "LICENSE"
+      ]
+    },
+    "BacktestReliabilityRating": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "LIMITED",
+        "UNKNOWN",
+        "BLOCKED",
+        "NOT_EVALUATED"
+      ]
+    },
+    "BacktestReliabilityEligibility": {
+      "type": "string",
+      "enum": [
+        "BLOCKED",
+        "EXPLORATORY_WITH_LIMITATIONS"
+      ]
+    },
+    "BacktestReliabilityFindingCode": {
+      "type": "string",
+      "enum": [
+        "MISSING_BARS",
+        "UNEXPECTED_BARS",
+        "INVALID_OHLCV",
+        "REVISION_CONFLICT",
+        "REFERENCE_MISSING",
+        "SNAPSHOT_BOUNDARY",
+        "CALENDAR_UNKNOWN",
+        "SESSION_CONFLICT",
+        "MIXED_FEED",
+        "MIXED_ADJUSTMENT",
+        "INSTRUMENT_UNRESOLVED",
+        "STRUCTURAL_CORPORATE_ACTION",
+        "CORPORATE_ACTION_CONFLICT",
+        "CORPORATE_ACTIONS_UNKNOWN",
+        "DIVIDENDS_EXCLUDED",
+        "RAW_DISCONTINUITY",
+        "HISTORICAL_AVAILABILITY_NOT_PROVEN",
+        "EX_POST_CALENDAR",
+        "EX_POST_REVISIONS",
+        "IEX_PARTIAL_MARKET",
+        "SURVIVORSHIP_BIAS",
+        "LICENSE_UNKNOWN",
+        "LICENSE_DENIED",
+        "TRUST_REVOKED",
+        "TRUST_UNAVAILABLE",
+        "BUDGET_EXHAUSTED",
+        "NOT_EVALUATED"
+      ]
+    },
+    "BacktestReliabilityDimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rating",
+        "reasonCodes"
+      ],
+      "properties": {
+        "rating": {
+          "$ref": "#/$defs/BacktestReliabilityRating"
+        },
+        "reasonCodes": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 30,
+          "items": {
+            "$ref": "#/$defs/BacktestReliabilityFindingCode"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "BacktestReliabilityDimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "INTEGRITY",
+        "CALENDAR",
+        "CORPORATE_ACTIONS",
+        "HISTORICAL_AVAILABILITY",
+        "FEED",
+        "LICENSE"
+      ],
+      "properties": {
+        "INTEGRITY": {
+          "$ref": "#/$defs/BacktestReliabilityDimension"
+        },
+        "CALENDAR": {
+          "$ref": "#/$defs/BacktestReliabilityDimension"
+        },
+        "CORPORATE_ACTIONS": {
+          "$ref": "#/$defs/BacktestReliabilityDimension"
+        },
+        "HISTORICAL_AVAILABILITY": {
+          "$ref": "#/$defs/BacktestReliabilityDimension"
+        },
+        "FEED": {
+          "$ref": "#/$defs/BacktestReliabilityDimension"
+        },
+        "LICENSE": {
+          "$ref": "#/$defs/BacktestReliabilityDimension"
+        }
+      }
+    },
+    "BacktestReliabilityPeriod": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "end": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      }
+    },
+    "BacktestReliabilityBarCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected",
+        "present",
+        "missing",
+        "unexpected"
+      ],
+      "properties": {
+        "expected": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "present": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "missing": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unexpected": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        }
+      },
+      "description": "Counts cover the explicit fold section. Expected/missing remain null when calendar denominator is unknown; zero never represents unknown.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "expected": {
+                    "type": "null"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "missing": {
+                    "type": "null"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true,
+              "else": {
+                "properties": {
+                  "missing": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100000
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "BacktestReliabilityFold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "foldIndex",
+        "window",
+        "warmupPeriod",
+        "barCounts",
+        "eligibility"
+      ],
+      "properties": {
+        "foldIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        },
+        "window": {
+          "$ref": "#/$defs/BacktestFold"
+        },
+        "warmupPeriod": {
+          "$ref": "#/$defs/BacktestReliabilityPeriod"
+        },
+        "barCounts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "warmup",
+            "training",
+            "test"
+          ],
+          "properties": {
+            "warmup": {
+              "$ref": "#/$defs/BacktestReliabilityBarCounts"
+            },
+            "training": {
+              "$ref": "#/$defs/BacktestReliabilityBarCounts"
+            },
+            "test": {
+              "$ref": "#/$defs/BacktestReliabilityBarCounts"
+            }
+          }
+        },
+        "eligibility": {
+          "$ref": "#/$defs/BacktestReliabilityEligibility"
+        }
+      }
+    },
+    "BacktestRetrospectiveRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bar",
+        "revisionId",
+        "localRevision",
+        "fingerprint",
+        "ingestedAt",
+        "availableAt",
+        "firstObservedAt",
+        "publishedAt"
+      ],
+      "properties": {
+        "bar": {
+          "$ref": "#/$defs/BacktestBarIdentity"
+        },
+        "revisionId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "localRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "ingestedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "availableAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "firstObservedAt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "publishedAt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "description": "Actual revision evidence preserved without timestamp rewriting. Unknown genuine first observation/provider publication is null. Historical market bounds are separate from these current observations."
+    },
+    "BacktestRetrospectiveDecisionInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "valuationAt",
+        "knowledgeAt",
+        "inputHash",
+        "revisions"
+      ],
+      "properties": {
+        "valuationAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "knowledgeAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "inputHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "revisions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100000,
+          "items": {
+            "$ref": "#/$defs/BacktestRetrospectiveRevision"
+          }
+        }
+      }
+    },
+    "BacktestRetrospectiveOutcomeInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "simulatedMarketCutoff"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/BacktestRetrospectiveRevision"
+        },
+        "simulatedMarketCutoff": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      },
+      "description": "Outcome-only price evidence, isolated from strategy inputs. Simulated market cutoff asserts no historical local receipt time."
+    },
+    "BacktestCalendarReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "source",
+        "version",
+        "purpose",
+        "historicalAvailability"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/BacktestEvidenceRevision"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "REGULAR_SESSION",
+            "HOLIDAY",
+            "EARLY_CLOSE",
+            "WARMUP"
+          ]
+        },
+        "historicalAvailability": {
+          "type": "string",
+          "const": "NOT_PROVEN"
+        }
+      }
+    },
+    "BacktestLicenseReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receiptId",
+        "provider",
+        "status",
+        "recordedAt",
+        "fingerprint"
+      ],
+      "properties": {
+        "receiptId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "provider": {
+          "type": "string",
+          "const": "ALPACA"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "DECLARED_CONFIRMED",
+            "DENIED"
+          ]
+        },
+        "recordedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/BacktestHash"
+        }
+      },
+      "description": "Immutable actual snapshot receipt from the narrow current license port. CONFIRMED is a declaration, not verified personal rights; source BLOCKED maps to DENIED."
+    },
+    "BacktestTrustReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "recordedAt",
+        "evidenceRevisions"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "recordedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "evidenceRevisions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100000,
+          "items": {
+            "$ref": "#/$defs/BacktestEvidenceRevision"
+          }
+        }
+      }
+    },
+    "BacktestRetrospectiveAssumptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "simulation",
+        "provider",
+        "feed",
+        "interval",
+        "adjustment",
+        "currency",
+        "positionPolicy",
+        "fillModel",
+        "signalDelaySeconds",
+        "decimalPrecision",
+        "rounding",
+        "moneyScale",
+        "returnScale",
+        "dividendsIncluded",
+        "forceLiquidation",
+        "outcomeSelection",
+        "qualityPolicyVersion",
+        "discontinuityPolicyVersion"
+      ],
+      "properties": {
+        "simulation": {
+          "type": "string",
+          "const": "LOCAL_SIMULATION"
+        },
+        "provider": {
+          "type": "string",
+          "const": "ALPACA"
+        },
+        "feed": {
+          "type": "string",
+          "const": "iex"
+        },
+        "interval": {
+          "type": "string",
+          "const": "15Min"
+        },
+        "adjustment": {
+          "type": "string",
+          "const": "raw"
+        },
+        "currency": {
+          "type": "string",
+          "const": "USD"
+        },
+        "positionPolicy": {
+          "type": "string",
+          "const": "LONG_FLAT"
+        },
+        "fillModel": {
+          "type": "string",
+          "const": "next-regular-bar-open-v1"
+        },
+        "signalDelaySeconds": {
+          "type": "integer",
+          "const": 60
+        },
+        "decimalPrecision": {
+          "type": "integer",
+          "const": 38
+        },
+        "rounding": {
+          "type": "string",
+          "const": "ROUND_HALF_EVEN"
+        },
+        "moneyScale": {
+          "type": "integer",
+          "const": 8
+        },
+        "returnScale": {
+          "type": "integer",
+          "const": 12
+        },
+        "dividendsIncluded": {
+          "type": "boolean",
+          "const": false
+        },
+        "forceLiquidation": {
+          "type": "boolean",
+          "const": false
+        },
+        "outcomeSelection": {
+          "type": "string",
+          "const": "SNAPSHOT_BOUND_MARKET_EVENT"
+        },
+        "qualityPolicyVersion": {
+          "type": "string",
+          "const": "retrospective-quality-v1"
+        },
+        "discontinuityPolicyVersion": {
+          "type": "string",
+          "const": "raw-discontinuity-v1"
+        }
+      }
+    },
+    "BacktestRetrospectiveManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifestHash",
+        "inputHash",
+        "request",
+        "symbol",
+        "strategyVersion",
+        "simulatorVersion",
+        "metricsVersion",
+        "codeVersion",
+        "snapshot",
+        "assumptions",
+        "folds",
+        "decisionInputs",
+        "outcomeInputs",
+        "calendarRevisions",
+        "qualityRevisions",
+        "corporateActionCoverage",
+        "researchMode",
+        "selectionPolicyVersion",
+        "experimentVersion",
+        "snapshotReference",
+        "calendarReferences",
+        "trustReference",
+        "licenseReceipt",
+        "qualityPolicyVersion",
+        "resultLimitations"
+      ],
+      "properties": {
+        "manifestHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "inputHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "request": {
+          "$ref": "#/$defs/BacktestAssessmentRequest"
+        },
+        "symbol": {
+          "type": "string",
+          "enum": [
+            "SPY",
+            "QQQ"
+          ]
+        },
+        "strategyVersion": {
+          "type": "string",
+          "const": "1"
+        },
+        "simulatorVersion": {
+          "type": "string",
+          "const": "backtest-simulator-v1"
+        },
+        "metricsVersion": {
+          "type": "string",
+          "const": "backtest-metrics-v1"
+        },
+        "codeVersion": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/BacktestSnapshot"
+        },
+        "assumptions": {
+          "$ref": "#/$defs/BacktestRetrospectiveAssumptions"
+        },
+        "folds": {
+          "type": "array",
+          "maxItems": 12,
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/BacktestBoundFold"
+          }
+        },
+        "decisionInputs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100000,
+          "items": {
+            "$ref": "#/$defs/BacktestRetrospectiveDecisionInput"
+          }
+        },
+        "outcomeInputs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100000,
+          "items": {
+            "$ref": "#/$defs/BacktestRetrospectiveOutcomeInput"
+          }
+        },
+        "calendarRevisions": {
+          "type": "array",
+          "maxItems": 100000,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestEvidenceRevision"
+          }
+        },
+        "qualityRevisions": {
+          "type": "array",
+          "maxItems": 100000,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestEvidenceRevision"
+          }
+        },
+        "corporateActionCoverage": {
+          "type": "array",
+          "maxItems": 100000,
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/BacktestEvidenceRevision"
+          }
+        },
+        "researchMode": {
+          "type": "string",
+          "const": "RETROSPECTIVE_EXPLORATORY"
+        },
+        "selectionPolicyVersion": {
+          "type": "string",
+          "const": "retrospective-v1"
+        },
+        "experimentVersion": {
+          "type": "string",
+          "const": "retrospective-experiment-v1"
+        },
+        "snapshotReference": {
+          "$ref": "#/$defs/BacktestSnapshotReference"
+        },
+        "calendarReferences": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100000,
+          "items": {
+            "$ref": "#/$defs/BacktestCalendarReference"
+          }
+        },
+        "trustReference": {
+          "$ref": "#/$defs/BacktestTrustReference"
+        },
+        "licenseReceipt": {
+          "$ref": "#/$defs/BacktestLicenseReceipt"
+        },
+        "qualityPolicyVersion": {
+          "type": "string",
+          "const": "retrospective-quality-v1"
+        },
+        "resultLimitations": {
+          "$ref": "#/$defs/BacktestResultLimitations"
+        }
+      },
+      "description": "REQ-RRB-002/003/004; T-RRB-003/004/005/006/007/008. Complete immutable retrospective experiment-v1 input binding, distinct from byte-identical legacy Strict manifests. request is the normalized preview protocol excluding receipt IDs/hash; no circular assessment identity. SHA256 uses canonical Decimal/UTC serialization. Runtime IDs/timings and current warnings are excluded. All revisions are fingerprint-bound, never latest; maximum 100000 combined revision/metadata rows and 12 MiB publication are additionally checked semantically."
+    },
+    "BacktestReliabilityMethods": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifestHash",
+        "protocol",
+        "experimentVersion",
+        "strategyVersion",
+        "simulatorVersion",
+        "metricsVersion",
+        "codeVersion",
+        "assumptions",
+        "benchmarks",
+        "qualityPolicyVersion"
+      ],
+      "properties": {
+        "manifestHash": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestHash"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protocol": {
+          "$ref": "#/$defs/BacktestAssessmentRequest"
+        },
+        "experimentVersion": {
+          "type": "string",
+          "const": "retrospective-experiment-v1"
+        },
+        "strategyVersion": {
+          "type": "string",
+          "const": "1"
+        },
+        "simulatorVersion": {
+          "type": "string",
+          "const": "backtest-simulator-v1"
+        },
+        "metricsVersion": {
+          "type": "string",
+          "const": "backtest-metrics-v1"
+        },
+        "codeVersion": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "assumptions": {
+          "$ref": "#/$defs/BacktestRetrospectiveAssumptions"
+        },
+        "benchmarks": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "enum": [
+              "flat-v1",
+              "buy-hold-v1"
+            ]
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        },
+        "qualityPolicyVersion": {
+          "type": "string",
+          "const": "retrospective-quality-v1"
+        }
+      },
+      "description": "Binds the complete manifest by its canonical hash; full input revisions are available in run detail and paginated report revision references. Null manifestHash means binding did not complete and never permits simulation. Costs/parameters/folds are explicit in protocol; fill/rounding/warm-up rules are bound by manifest and assumptions."
+    },
+    "BacktestReliabilityReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "referenceId",
+        "fingerprint",
+        "localRevision",
+        "recordedAt",
+        "period"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "BAR",
+            "CALENDAR",
+            "QUALITY",
+            "CORPORATE_ACTION",
+            "LICENSE",
+            "TRUST"
+          ]
+        },
+        "referenceId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "localRevision": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "recordedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestReliabilityPeriod"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BacktestReliabilityFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "findingId",
+        "category",
+        "code",
+        "severity",
+        "foldIndex",
+        "period",
+        "references"
+      ],
+      "properties": {
+        "findingId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "category": {
+          "$ref": "#/$defs/BacktestReliabilityDimensionName"
+        },
+        "code": {
+          "$ref": "#/$defs/BacktestReliabilityFindingCode"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "INFO",
+            "LIMITATION",
+            "BLOCKER"
+          ]
+        },
+        "foldIndex": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestReliabilityPeriod"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "references": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/BacktestReliabilityReference"
+          }
+        }
+      },
+      "description": "Whitelist-only finding, without provider payload/free-text diagnostics. Current revocations/corrections are reported separately from this immutable finding."
+    },
+    "BacktestCurrentReliabilityWarning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "category",
+        "checkedAt",
+        "blocksNewExecution"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/BacktestReliabilityFindingCode"
+        },
+        "category": {
+          "$ref": "#/$defs/BacktestReliabilityDimensionName"
+        },
+        "checkedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "blocksNewExecution": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BacktestReliabilityReportV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reportId",
+        "version",
+        "reportHash",
+        "phase",
+        "assessmentId",
+        "runId",
+        "protocolHash",
+        "snapshotReference",
+        "researchMode",
+        "selectionPolicyVersion",
+        "experimentVersion",
+        "instrumentId",
+        "symbol",
+        "provider",
+        "feed",
+        "interval",
+        "adjustment",
+        "period",
+        "folds",
+        "dimensions",
+        "overallStatus",
+        "corporateActionStatus",
+        "licenseStatus",
+        "historicalAvailabilityStatus",
+        "methods",
+        "resultLimitations",
+        "findingsCount",
+        "revisionReferenceCount"
+      ],
+      "properties": {
+        "reportId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "version": {
+          "type": "string",
+          "const": "reliability-report-v1"
+        },
+        "reportHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "phase": {
+          "type": "string",
+          "enum": [
+            "PREVIEW",
+            "FINAL"
+          ]
+        },
+        "assessmentId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "runId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protocolHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "snapshotReference": {
+          "$ref": "#/$defs/BacktestSnapshotReference"
+        },
+        "researchMode": {
+          "type": "string",
+          "const": "RETROSPECTIVE_EXPLORATORY"
+        },
+        "selectionPolicyVersion": {
+          "type": "string",
+          "const": "retrospective-v1"
+        },
+        "experimentVersion": {
+          "type": "string",
+          "const": "retrospective-experiment-v1"
+        },
+        "instrumentId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "symbol": {
+          "type": "string",
+          "enum": [
+            "SPY",
+            "QQQ"
+          ]
+        },
+        "provider": {
+          "type": "string",
+          "const": "ALPACA"
+        },
+        "feed": {
+          "type": "string",
+          "const": "iex"
+        },
+        "interval": {
+          "type": "string",
+          "const": "15Min"
+        },
+        "adjustment": {
+          "type": "string",
+          "const": "raw"
+        },
+        "period": {
+          "$ref": "#/$defs/BacktestReliabilityPeriod"
+        },
+        "folds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "$ref": "#/$defs/BacktestReliabilityFold"
+          }
+        },
+        "dimensions": {
+          "$ref": "#/$defs/BacktestReliabilityDimensions"
+        },
+        "overallStatus": {
+          "$ref": "#/$defs/BacktestReliabilityEligibility"
+        },
+        "corporateActionStatus": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "NO_ACTIONS",
+            "DIVIDENDS_EXCLUDED",
+            "STRUCTURAL_ACTION",
+            "CONFLICT",
+            "NOT_EVALUATED"
+          ]
+        },
+        "licenseStatus": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "DECLARED_CONFIRMED",
+            "DENIED"
+          ]
+        },
+        "historicalAvailabilityStatus": {
+          "type": "string",
+          "const": "NOT_PROVEN"
+        },
+        "methods": {
+          "$ref": "#/$defs/BacktestReliabilityMethods"
+        },
+        "resultLimitations": {
+          "$ref": "#/$defs/BacktestResultLimitations"
+        },
+        "findingsCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "revisionReferenceCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        }
+      },
+      "description": "REQ-RRB-008/009/010/011/012; T-RRB-013..020. Immutable report overview repeated on every report page; qualitative independent dimensions never form a score or certify Strict PIT. Findings and revision references are separately paginated. UNKNOWN corporate actions never means NO_ACTIONS; raw-discontinuity-v1 >=20 percent is a blocker, not proof of action freedom. Semantic checks enforce matching fold/protocol/snapshot/manifest bindings and block incomplete budgets.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "phase": {
+                    "type": "string",
+                    "const": "FINAL"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "runId": {
+                    "$ref": "#/$defs/BacktestId"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "overallStatus": {
+                    "type": "string",
+                    "const": "EXPLORATORY_WITH_LIMITATIONS"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "methods": {
+                    "properties": {
+                      "manifestHash": {
+                        "$ref": "#/$defs/BacktestHash"
+                      }
+                    },
+                    "additionalProperties": true
+                  },
+                  "licenseStatus": {
+                    "type": "string",
+                    "enum": [
+                      "UNKNOWN",
+                      "DECLARED_CONFIRMED"
+                    ]
+                  },
+                  "corporateActionStatus": {
+                    "type": "string",
+                    "enum": [
+                      "UNKNOWN",
+                      "NO_ACTIONS",
+                      "DIVIDENDS_EXCLUDED"
+                    ]
+                  },
+                  "dimensions": {
+                    "properties": {
+                      "INTEGRITY": {
+                        "properties": {
+                          "rating": {
+                            "type": "string",
+                            "enum": [
+                              "PASS",
+                              "LIMITED",
+                              "UNKNOWN"
+                            ]
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "CALENDAR": {
+                        "properties": {
+                          "rating": {
+                            "type": "string",
+                            "enum": [
+                              "PASS",
+                              "LIMITED",
+                              "UNKNOWN"
+                            ]
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "CORPORATE_ACTIONS": {
+                        "properties": {
+                          "rating": {
+                            "type": "string",
+                            "enum": [
+                              "PASS",
+                              "LIMITED",
+                              "UNKNOWN"
+                            ]
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "HISTORICAL_AVAILABILITY": {
+                        "properties": {
+                          "rating": {
+                            "type": "string",
+                            "enum": [
+                              "PASS",
+                              "LIMITED",
+                              "UNKNOWN"
+                            ]
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "FEED": {
+                        "properties": {
+                          "rating": {
+                            "type": "string",
+                            "enum": [
+                              "PASS",
+                              "LIMITED",
+                              "UNKNOWN"
+                            ]
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "LICENSE": {
+                        "properties": {
+                          "rating": {
+                            "type": "string",
+                            "enum": [
+                              "PASS",
+                              "LIMITED",
+                              "UNKNOWN"
+                            ]
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "corporateActionStatus": {
+                    "type": "string",
+                    "const": "UNKNOWN"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "properties": {
+                      "CORPORATE_ACTIONS": {
+                        "properties": {
+                          "rating": {
+                            "type": "string",
+                            "const": "UNKNOWN"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "licenseStatus": {
+                    "type": "string",
+                    "const": "UNKNOWN"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "properties": {
+                      "LICENSE": {
+                        "properties": {
+                          "rating": {
+                            "type": "string",
+                            "const": "UNKNOWN"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "licenseStatus": {
+                    "type": "string",
+                    "const": "DENIED"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "overallStatus": {
+                    "type": "string",
+                    "const": "BLOCKED"
+                  },
+                  "dimensions": {
+                    "properties": {
+                      "LICENSE": {
+                        "properties": {
+                          "rating": {
+                            "type": "string",
+                            "const": "BLOCKED"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "properties": {
+                "dimensions": {
+                  "properties": {
+                    "HISTORICAL_AVAILABILITY": {
+                      "properties": {
+                        "rating": {
+                          "type": "string",
+                          "const": "UNKNOWN"
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "corporateActionStatus": {
+                    "type": "string",
+                    "const": "NO_ACTIONS"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "properties": {
+                      "CORPORATE_ACTIONS": {
+                        "properties": {
+                          "rating": {
+                            "type": "string",
+                            "const": "PASS"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "BacktestReliabilityReportPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "report",
+        "section",
+        "findings",
+        "revisionReferences",
+        "nextCursor",
+        "currentWarnings"
+      ],
+      "properties": {
+        "report": {
+          "$ref": "#/$defs/BacktestReliabilityReportV1"
+        },
+        "section": {
+          "type": "string",
+          "enum": [
+            "findings",
+            "revisions"
+          ]
+        },
+        "findings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/BacktestReliabilityFinding"
+          }
+        },
+        "revisionReferences": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/BacktestReliabilityReference"
+          }
+        },
+        "nextCursor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestReportCursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "currentWarnings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/BacktestCurrentReliabilityWarning"
+          }
+        }
+      },
+      "description": "Immutable overview on every page. limit 1..200 applies to selected section. Empty terminal pages use null cursor; cursor binds report/hash/version/filter. Current warnings are mutable read-time facts excluded from historical report hash; trust port failure never becomes a positive warning-free execution permission.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "section": {
+                    "type": "string",
+                    "const": "findings"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "revisionReferences": {
+                    "maxItems": 0
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true,
+              "else": {
+                "properties": {
+                  "findings": {
+                    "maxItems": 0
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "BacktestAssessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assessmentId",
+        "assessmentHash",
+        "status",
+        "request",
+        "inputHash",
+        "acceptedAt",
+        "updatedAt",
+        "completedAt",
+        "researchMode",
+        "selectionPolicyVersion",
+        "experimentVersion",
+        "snapshotReference",
+        "reliabilityReportId",
+        "resultLimitations",
+        "eligibility",
+        "blockers",
+        "attempt"
+      ],
+      "properties": {
+        "assessmentId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "assessmentHash": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestHash"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/BacktestState"
+        },
+        "request": {
+          "$ref": "#/$defs/BacktestAssessmentRequest"
+        },
+        "inputHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "acceptedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "completedAt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "researchMode": {
+          "type": "string",
+          "const": "RETROSPECTIVE_EXPLORATORY"
+        },
+        "selectionPolicyVersion": {
+          "type": "string",
+          "const": "retrospective-v1"
+        },
+        "experimentVersion": {
+          "type": "string",
+          "const": "retrospective-experiment-v1"
+        },
+        "snapshotReference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestSnapshotReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reliabilityReportId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resultLimitations": {
+          "$ref": "#/$defs/BacktestResultLimitations"
+        },
+        "eligibility": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestReliabilityEligibility"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "blockers": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/BacktestReliabilityFinding"
+          }
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        }
+      },
+      "description": "REQ-RRB-001/002/005/008/012; T-RRB-002/008/009/011/013/020. Durable preview only, never starts simulation. assessmentHash binds exact normalized protocol/snapshot/report. SUCCEEDED means completed eligible exploration, never Strict ELIGIBLE; current trust and exact binding are rechecked when run is explicitly created.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ACCEPTED",
+                      "RUNNING"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "completedAt": {
+                    "type": "null"
+                  },
+                  "assessmentHash": {
+                    "type": "null"
+                  },
+                  "eligibility": {
+                    "type": "null"
+                  },
+                  "reliabilityReportId": {
+                    "type": "null"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "const": "SUCCEEDED"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "completedAt": {
+                    "$ref": "#/$defs/BacktestTimestamp"
+                  },
+                  "assessmentHash": {
+                    "$ref": "#/$defs/BacktestHash"
+                  },
+                  "snapshotReference": {
+                    "$ref": "#/$defs/BacktestSnapshotReference"
+                  },
+                  "reliabilityReportId": {
+                    "$ref": "#/$defs/BacktestId"
+                  },
+                  "eligibility": {
+                    "type": "string",
+                    "const": "EXPLORATORY_WITH_LIMITATIONS"
+                  },
+                  "blockers": {
+                    "maxItems": 0
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "BLOCKED",
+                      "FAILED"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "completedAt": {
+                    "$ref": "#/$defs/BacktestTimestamp"
+                  },
+                  "eligibility": {
+                    "type": "string",
+                    "const": "BLOCKED"
+                  },
+                  "blockers": {
+                    "minItems": 1
+                  }
+                },
+                "additionalProperties": true
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "BacktestRetrospectiveCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedBars",
+        "observedBars",
+        "warmupExpectedBars",
+        "warmupObservedBars",
+        "complete",
+        "corporateActionStatus",
+        "historicalAvailabilityStatus"
+      ],
+      "properties": {
+        "expectedBars": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "observedBars": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "warmupExpectedBars": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "warmupObservedBars": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "complete": {
+          "type": "boolean",
+          "const": true
+        },
+        "corporateActionStatus": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "NO_ACTIONS",
+            "DIVIDENDS_EXCLUDED"
+          ]
+        },
+        "historicalAvailabilityStatus": {
+          "type": "string",
+          "const": "NOT_PROVEN"
+        }
+      },
+      "description": "Retrospective successful bar completeness is independent of corporate-action evidence. UNKNOWN never asserts certified action absence; historical local availability is unproven."
+    },
+    "BacktestRetrospectiveFoldSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "foldIndex",
+        "resultHash",
+        "window",
+        "metrics",
+        "references",
+        "coverage"
+      ],
+      "properties": {
+        "foldIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        },
+        "resultHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "window": {
+          "$ref": "#/$defs/BacktestFold"
+        },
+        "metrics": {
+          "$ref": "#/$defs/BacktestMetrics"
+        },
+        "references": {
+          "type": "array",
+          "maxItems": 2,
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/BacktestReferenceMetrics"
+          }
+        },
+        "coverage": {
+          "$ref": "#/$defs/BacktestRetrospectiveCoverage"
+        }
+      }
+    },
+    "BacktestRetrospectiveFill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "foldIndex",
+        "strategyId",
+        "sequence",
+        "signalAt",
+        "executedAt",
+        "side",
+        "quantity",
+        "rawOpen",
+        "price",
+        "notionalUsd",
+        "feeUsd",
+        "slippageUsd",
+        "cashAfter",
+        "quantityAfter",
+        "revisionId",
+        "simulatedMarketCutoff"
+      ],
+      "properties": {
+        "foldIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        },
+        "strategyId": {
+          "$ref": "#/$defs/BacktestStrategyId"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "signalAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "executedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "BUY",
+            "SELL"
+          ]
+        },
+        "quantity": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "rawOpen": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "price": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "notionalUsd": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "feeUsd": {
+          "$ref": "#/$defs/BacktestFeeUsd"
+        },
+        "slippageUsd": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "cashAfter": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "quantityAfter": {
+          "$ref": "#/$defs/BacktestNonnegativeDecimal"
+        },
+        "revisionId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "simulatedMarketCutoff": {
+          "$ref": "#/$defs/BacktestTimestamp",
+          "description": "Simulated market-event boundary only. This is not a historical local receipt or provider publication claim; actual observed/available/ingested times remain in the bound manifest."
+        }
+      }
     }
   }
 }

@@ -3811,6 +3811,14 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/BacktestRequest'
+              not:
+                required:
+                - researchMode
+                properties:
+                  researchMode:
+                    const: RETROSPECTIVE_EXPLORATORY
+                    type: string
+                additionalProperties: true
             example:
               instrumentId: 11111111-1111-4111-8111-111111111111
               strategyId: sma-cross-v1
@@ -5089,6 +5097,328 @@ paths:
             example:
               enabled: false
               expectedVersion: 1
+  /api/v1/research/backtests/assessments:
+    post:
+      tags:
+      - Backtesting
+      operationId: createBacktestAssessment
+      summary: Accept a bounded retrospective snapshot assessment without simulation
+      security:
+      - LocalSession: []
+      description: REQ-RRB-001/004/006/008/012; T-RRB-002/008/010/011/013/020. Authenticated local research only;
+        trusted Origin checked before side effects. No provider, broker, credential or trading capability. Unknown
+        fields/versions => 400 INVALID_REQUEST; missing/foreign references => 404; protocol/snapshot conflicts =>
+        409 SNAPSHOT_CONFLICT; exhausted shared worker budget => 503 UNAVAILABLE.
+      responses:
+        '202':
+          description: Durable immutable preview receipt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BacktestAssessment'
+        '400':
+          description: CURSOR_INVALID
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 400
+                code: CURSOR_INVALID
+                traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 401
+                code: UNAUTHORIZED
+                traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 403
+                code: FORBIDDEN
+                traceId: cccccccccccccccccccccccccccccccc
+        '404':
+          description: NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 404
+                code: NOT_FOUND
+                traceId: cccccccccccccccccccccccccccccccc
+        '409':
+          description: IDEMPOTENCY_CONFLICT
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 409
+                code: IDEMPOTENCY_CONFLICT
+                traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 503
+                code: UNAVAILABLE
+                traceId: cccccccccccccccccccccccccccccccc
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BacktestAssessmentRequest'
+  /api/v1/research/backtests/assessments/{assessmentId}:
+    get:
+      tags:
+      - Backtesting
+      operationId: getBacktestAssessment
+      summary: Read durable retrospective assessment state and snapshot binding
+      security:
+      - LocalSession: []
+      description: REQ-RRB-001/004/006/008/012; T-RRB-002/008/010/011/013/020. Authenticated local research only;
+        trusted Origin checked before side effects. No provider, broker, credential or trading capability. Unknown
+        fields/versions => 400 INVALID_REQUEST; missing/foreign references => 404; protocol/snapshot conflicts =>
+        409 SNAPSHOT_CONFLICT; exhausted shared worker budget => 503 UNAVAILABLE.
+      responses:
+        '200':
+          description: Bound structured local research representation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BacktestAssessment'
+        '400':
+          description: CURSOR_INVALID
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 400
+                code: CURSOR_INVALID
+                traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 401
+                code: UNAUTHORIZED
+                traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 403
+                code: FORBIDDEN
+                traceId: cccccccccccccccccccccccccccccccc
+        '404':
+          description: NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 404
+                code: NOT_FOUND
+                traceId: cccccccccccccccccccccccccccccccc
+        '409':
+          description: IDEMPOTENCY_CONFLICT
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 409
+                code: IDEMPOTENCY_CONFLICT
+                traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 503
+                code: UNAVAILABLE
+                traceId: cccccccccccccccccccccccccccccccc
+      parameters:
+      - name: assessmentId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/BacktestId'
+  /api/v1/research/backtests/reliability-reports/{reportId}:
+    get:
+      tags:
+      - Backtesting
+      operationId: getBacktestReliabilityReport
+      summary: Read a bounded immutable reliability report page with current warnings
+      security:
+      - LocalSession: []
+      description: REQ-RRB-001/004/006/008/012; T-RRB-002/008/010/011/013/020. Authenticated local research only;
+        trusted Origin checked before side effects. No provider, broker, credential or trading capability. Unknown
+        fields/versions => 400 INVALID_REQUEST; missing/foreign references => 404; protocol/snapshot conflicts =>
+        409 SNAPSHOT_CONFLICT; exhausted shared worker budget => 503 UNAVAILABLE.
+      responses:
+        '200':
+          description: Bound structured local research representation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BacktestReliabilityReportPage'
+        '400':
+          description: CURSOR_INVALID
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 400
+                code: CURSOR_INVALID
+                traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 401
+                code: UNAUTHORIZED
+                traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 403
+                code: FORBIDDEN
+                traceId: cccccccccccccccccccccccccccccccc
+        '404':
+          description: NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 404
+                code: NOT_FOUND
+                traceId: cccccccccccccccccccccccccccccccc
+        '409':
+          description: IDEMPOTENCY_CONFLICT
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 409
+                code: IDEMPOTENCY_CONFLICT
+                traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BacktestProblem'
+              example:
+                type: urn:agentic-trading-lab:backtest-problem
+                title: Backtest request failed
+                status: 503
+                code: UNAVAILABLE
+                traceId: cccccccccccccccccccccccccccccccc
+      parameters:
+      - name: reportId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/BacktestId'
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+      - name: cursor
+        in: query
+        schema:
+          $ref: '#/components/schemas/BacktestReportCursor'
+      - name: section
+        in: query
+        schema:
+          type: string
+          enum:
+          - findings
+          - revisions
+          default: findings
+      - name: category
+        in: query
+        schema:
+          $ref: '#/components/schemas/BacktestReliabilityDimensionName'
+      - name: foldIndex
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 11
 components:
   securitySchemes:
     LocalSession:
@@ -9570,8 +9900,20 @@ components:
           minItems: 1
           items:
             $ref: '#/components/schemas/BacktestFold'
+        researchMode:
+          $ref: '#/components/schemas/BacktestResearchMode'
+        selectionPolicyVersion:
+          type: string
+          const: retrospective-v1
+        assessmentId:
+          $ref: '#/components/schemas/BacktestId'
+        assessmentHash:
+          $ref: '#/components/schemas/BacktestHash'
       description: REQ-BKT-001/006/007; T-BKT-002/011/014. Only catalog instrument IDs resolving to SPY or QQQ. Server
-        binds every manifest reference. Semantic window and SMA ordering checks run before persistence.
+        binds every manifest reference. Semantic window and SMA ordering checks run before persistence. REQ-RRB-001/004/006/012;
+        T-RRB-002/008/010/011/020. Omitted or explicit STRICT_PIT preserves legacy hash/idempotency identity. Only retrospective
+        starts accept and require policy plus exact assessment ID/hash; normalized protocol and current trust are revalidated
+        before execution.
       allOf:
       - if:
           properties:
@@ -9590,6 +9932,54 @@ components:
               $ref: '#/components/schemas/BacktestEmptyParameters'
           additionalProperties: true
         additionalProperties: true
+      - not:
+          not:
+            if:
+              required:
+              - researchMode
+              properties:
+                researchMode:
+                  type: string
+                  const: RETROSPECTIVE_EXPLORATORY
+              additionalProperties: true
+            then:
+              required:
+              - selectionPolicyVersion
+              - assessmentId
+              - assessmentHash
+              additionalProperties: true
+              properties:
+                selectionPolicyVersion:
+                  type: string
+                  const: retrospective-v1
+                assessmentId:
+                  $ref: '#/components/schemas/BacktestId'
+                assessmentHash:
+                  $ref: '#/components/schemas/BacktestHash'
+            additionalProperties: true
+            else:
+              not:
+                anyOf:
+                - required:
+                  - selectionPolicyVersion
+                  properties:
+                    selectionPolicyVersion:
+                      type: string
+                      const: retrospective-v1
+                  additionalProperties: true
+                - required:
+                  - assessmentId
+                  properties:
+                    assessmentId:
+                      $ref: '#/components/schemas/BacktestId'
+                  additionalProperties: true
+                - required:
+                  - assessmentHash
+                  properties:
+                    assessmentHash:
+                      $ref: '#/components/schemas/BacktestHash'
+                  additionalProperties: true
+              additionalProperties: true
     BacktestInstrument:
       type: object
       additionalProperties: false
@@ -9789,6 +10179,15 @@ components:
           $ref: '#/components/schemas/BacktestBudgets'
         observedAt:
           $ref: '#/components/schemas/BacktestTimestamp'
+        supportedResearchModes:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/BacktestResearchMode'
+          not:
+            not:
+              uniqueItems: true
     BacktestState:
       type: string
       enum:
@@ -10156,8 +10555,33 @@ components:
           maximum: 3
         publicationComplete:
           type: boolean
+        researchMode:
+          $ref: '#/components/schemas/BacktestResearchMode'
+        selectionPolicyVersion:
+          $ref: '#/components/schemas/BacktestSelectionPolicyVersion'
+        experimentVersion:
+          $ref: '#/components/schemas/BacktestExperimentVersion'
+        snapshotReference:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestSnapshotReference'
+          - type: 'null'
+        reliabilityReportId:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestId'
+          - type: 'null'
+        resultLimitations:
+          type: array
+          minItems: 0
+          maxItems: 7
+          items:
+            $ref: '#/components/schemas/BacktestResultLimitation'
+          not:
+            not:
+              uniqueItems: true
       description: Durable receipt returned on initial and identical replayed requests. BLOCKED/FAILED may retain completed
-        fold references; never a run-wide return.
+        fold references; never a run-wide return. REQ-RRB-006; T-RRB-008/010. Additive context fields are optional for
+        legacy schema compatibility; servers emit all fields for every run, projecting legacy rows as STRICT_PIT. Current
+        warnings are separate from immutable experiment identity.
       allOf:
       - not:
           not:
@@ -10223,6 +10647,100 @@ components:
                   minItems: 1
               additionalProperties: true
             additionalProperties: true
+      - not:
+          not:
+            if:
+              anyOf:
+              - properties:
+                  request:
+                    properties:
+                      researchMode:
+                        type: string
+                        const: RETROSPECTIVE_EXPLORATORY
+                    additionalProperties: true
+                    required:
+                    - researchMode
+                additionalProperties: true
+                required:
+                - request
+              - properties:
+                  researchMode:
+                    type: string
+                    const: RETROSPECTIVE_EXPLORATORY
+                additionalProperties: true
+                required:
+                - researchMode
+              additionalProperties: true
+            then:
+              properties:
+                researchMode:
+                  type: string
+                  const: RETROSPECTIVE_EXPLORATORY
+                selectionPolicyVersion:
+                  type: string
+                  const: retrospective-v1
+                experimentVersion:
+                  type: string
+                  const: retrospective-experiment-v1
+                snapshotReference:
+                  anyOf:
+                  - $ref: '#/components/schemas/BacktestSnapshotReference'
+                  - type: 'null'
+                reliabilityReportId:
+                  anyOf:
+                  - $ref: '#/components/schemas/BacktestId'
+                  - type: 'null'
+                resultLimitations:
+                  $ref: '#/components/schemas/BacktestResultLimitations'
+                request:
+                  properties:
+                    researchMode:
+                      type: string
+                      const: RETROSPECTIVE_EXPLORATORY
+                  additionalProperties: true
+                  required:
+                  - researchMode
+              additionalProperties: true
+              required:
+              - researchMode
+              - selectionPolicyVersion
+              - experimentVersion
+              - snapshotReference
+              - reliabilityReportId
+              - resultLimitations
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              allOf:
+              - properties:
+                  request:
+                    properties:
+                      researchMode:
+                        type: string
+                        const: RETROSPECTIVE_EXPLORATORY
+                    additionalProperties: true
+                    required:
+                    - researchMode
+                additionalProperties: true
+                required:
+                - request
+              - properties:
+                  status:
+                    type: string
+                    const: SUCCEEDED
+                additionalProperties: true
+                required:
+                - status
+              additionalProperties: true
+            then:
+              properties:
+                snapshotReference:
+                  $ref: '#/components/schemas/BacktestSnapshotReference'
+                reliabilityReportId:
+                  $ref: '#/components/schemas/BacktestId'
+              additionalProperties: true
+            additionalProperties: true
     BacktestRunDetail:
       type: object
       additionalProperties: false
@@ -10236,6 +10754,173 @@ components:
           anyOf:
           - $ref: '#/components/schemas/BacktestManifest'
           - type: 'null'
+        researchMode:
+          $ref: '#/components/schemas/BacktestResearchMode'
+        selectionPolicyVersion:
+          $ref: '#/components/schemas/BacktestSelectionPolicyVersion'
+        experimentVersion:
+          $ref: '#/components/schemas/BacktestExperimentVersion'
+        snapshotReference:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestSnapshotReference'
+          - type: 'null'
+        reliabilityReportId:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestId'
+          - type: 'null'
+        resultLimitations:
+          type: array
+          minItems: 0
+          maxItems: 7
+          items:
+            $ref: '#/components/schemas/BacktestResultLimitation'
+          not:
+            not:
+              uniqueItems: true
+        retrospectiveManifest:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestRetrospectiveManifest'
+          - type: 'null'
+      description: ' REQ-RRB-006; T-RRB-008/010. Additive context fields are optional for legacy schema compatibility;
+        servers emit all fields for every run, projecting legacy rows as STRICT_PIT. Current warnings are separate from
+        immutable experiment identity.'
+      allOf:
+      - not:
+          not:
+            if:
+              anyOf:
+              - properties:
+                  run:
+                    anyOf:
+                    - properties:
+                        request:
+                          properties:
+                            researchMode:
+                              type: string
+                              const: RETROSPECTIVE_EXPLORATORY
+                          additionalProperties: true
+                          required:
+                          - researchMode
+                      additionalProperties: true
+                      required:
+                      - request
+                    - properties:
+                        researchMode:
+                          type: string
+                          const: RETROSPECTIVE_EXPLORATORY
+                      additionalProperties: true
+                      required:
+                      - researchMode
+                    additionalProperties: true
+                additionalProperties: true
+                required:
+                - run
+              - properties:
+                  researchMode:
+                    type: string
+                    const: RETROSPECTIVE_EXPLORATORY
+                additionalProperties: true
+                required:
+                - researchMode
+              additionalProperties: true
+            then:
+              properties:
+                researchMode:
+                  type: string
+                  const: RETROSPECTIVE_EXPLORATORY
+                selectionPolicyVersion:
+                  type: string
+                  const: retrospective-v1
+                experimentVersion:
+                  type: string
+                  const: retrospective-experiment-v1
+                snapshotReference:
+                  anyOf:
+                  - $ref: '#/components/schemas/BacktestSnapshotReference'
+                  - type: 'null'
+                reliabilityReportId:
+                  anyOf:
+                  - $ref: '#/components/schemas/BacktestId'
+                  - type: 'null'
+                resultLimitations:
+                  $ref: '#/components/schemas/BacktestResultLimitations'
+                manifest:
+                  type: 'null'
+                retrospectiveManifest:
+                  anyOf:
+                  - $ref: '#/components/schemas/BacktestRetrospectiveManifest'
+                  - type: 'null'
+                run:
+                  properties:
+                    researchMode:
+                      type: string
+                      const: RETROSPECTIVE_EXPLORATORY
+                  additionalProperties: true
+                  required:
+                  - researchMode
+              additionalProperties: true
+              required:
+              - researchMode
+              - selectionPolicyVersion
+              - experimentVersion
+              - snapshotReference
+              - reliabilityReportId
+              - resultLimitations
+              - retrospectiveManifest
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              allOf:
+              - properties:
+                  run:
+                    anyOf:
+                    - properties:
+                        request:
+                          properties:
+                            researchMode:
+                              type: string
+                              const: RETROSPECTIVE_EXPLORATORY
+                          additionalProperties: true
+                          required:
+                          - researchMode
+                      additionalProperties: true
+                      required:
+                      - request
+                    - properties:
+                        researchMode:
+                          type: string
+                          const: RETROSPECTIVE_EXPLORATORY
+                      additionalProperties: true
+                      required:
+                      - researchMode
+                    additionalProperties: true
+                additionalProperties: true
+                required:
+                - run
+              - properties:
+                  run:
+                    properties:
+                      status:
+                        type: string
+                        const: SUCCEEDED
+                    additionalProperties: true
+                    required:
+                    - status
+                additionalProperties: true
+                required:
+                - run
+              additionalProperties: true
+            then:
+              properties:
+                snapshotReference:
+                  $ref: '#/components/schemas/BacktestSnapshotReference'
+                reliabilityReportId:
+                  $ref: '#/components/schemas/BacktestId'
+                retrospectiveManifest:
+                  $ref: '#/components/schemas/BacktestRetrospectiveManifest'
+              additionalProperties: true
+            additionalProperties: true
     BacktestCursor:
       type: string
       minLength: 32
@@ -10538,8 +11223,39 @@ components:
           - string
           - 'null'
           pattern: ^[0-9a-f]{64}$
+        researchMode:
+          $ref: '#/components/schemas/BacktestResearchMode'
+        selectionPolicyVersion:
+          $ref: '#/components/schemas/BacktestSelectionPolicyVersion'
+        experimentVersion:
+          $ref: '#/components/schemas/BacktestExperimentVersion'
+        snapshotReference:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestSnapshotReference'
+          - type: 'null'
+        reliabilityReportId:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestId'
+          - type: 'null'
+        resultLimitations:
+          type: array
+          minItems: 0
+          maxItems: 7
+          items:
+            $ref: '#/components/schemas/BacktestResultLimitation'
+          not:
+            not:
+              uniqueItems: true
+        retrospectiveItems:
+          type: array
+          maxItems: 200
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestRetrospectiveFoldSummary'
       description: Only atomically published complete runs expose result rows. Before full publication items is empty
-        and completedFolds identifies durable partial folds; never aggregate independent folds.
+        and completedFolds identifies durable partial folds; never aggregate independent folds. REQ-RRB-006; T-RRB-008/010.
+        Additive context fields are optional for legacy schema compatibility; servers emit all fields for every run, projecting
+        legacy rows as STRICT_PIT. Current warnings are separate from immutable experiment identity.
       allOf:
       - not:
           not:
@@ -10570,6 +11286,102 @@ components:
                   type: 'null'
               additionalProperties: true
             additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                researchMode:
+                  type: string
+                  const: RETROSPECTIVE_EXPLORATORY
+              additionalProperties: true
+              required:
+              - researchMode
+            then:
+              properties:
+                researchMode:
+                  type: string
+                  const: RETROSPECTIVE_EXPLORATORY
+                selectionPolicyVersion:
+                  type: string
+                  const: retrospective-v1
+                experimentVersion:
+                  type: string
+                  const: retrospective-experiment-v1
+                snapshotReference:
+                  anyOf:
+                  - $ref: '#/components/schemas/BacktestSnapshotReference'
+                  - type: 'null'
+                reliabilityReportId:
+                  anyOf:
+                  - $ref: '#/components/schemas/BacktestId'
+                  - type: 'null'
+                resultLimitations:
+                  $ref: '#/components/schemas/BacktestResultLimitations'
+              additionalProperties: true
+              required:
+              - researchMode
+              - selectionPolicyVersion
+              - experimentVersion
+              - snapshotReference
+              - reliabilityReportId
+              - resultLimitations
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              allOf:
+              - properties:
+                  researchMode:
+                    type: string
+                    const: RETROSPECTIVE_EXPLORATORY
+                additionalProperties: true
+                required:
+                - researchMode
+              - properties:
+                  status:
+                    type: string
+                    const: SUCCEEDED
+                additionalProperties: true
+                required:
+                - status
+              additionalProperties: true
+            then:
+              properties:
+                snapshotReference:
+                  $ref: '#/components/schemas/BacktestSnapshotReference'
+                reliabilityReportId:
+                  $ref: '#/components/schemas/BacktestId'
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                researchMode:
+                  type: string
+                  const: RETROSPECTIVE_EXPLORATORY
+              additionalProperties: true
+              required:
+              - researchMode
+            then:
+              properties:
+                items:
+                  maxItems: 0
+                retrospectiveItems:
+                  type: array
+                  maxItems: 200
+                  minItems: 0
+                  items:
+                    $ref: '#/components/schemas/BacktestRetrospectiveFoldSummary'
+              additionalProperties: true
+              required:
+              - retrospectiveItems
+            additionalProperties: true
+            else:
+              properties:
+                retrospectiveItems:
+                  maxItems: 0
+              additionalProperties: true
     BacktestEquityPage:
       type: object
       additionalProperties: false
@@ -10625,8 +11437,33 @@ components:
           - string
           - 'null'
           pattern: ^[0-9a-f]{64}$
+        researchMode:
+          $ref: '#/components/schemas/BacktestResearchMode'
+        selectionPolicyVersion:
+          $ref: '#/components/schemas/BacktestSelectionPolicyVersion'
+        experimentVersion:
+          $ref: '#/components/schemas/BacktestExperimentVersion'
+        snapshotReference:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestSnapshotReference'
+          - type: 'null'
+        reliabilityReportId:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestId'
+          - type: 'null'
+        resultLimitations:
+          type: array
+          minItems: 0
+          maxItems: 7
+          items:
+            $ref: '#/components/schemas/BacktestResultLimitation'
+          not:
+            not:
+              uniqueItems: true
       description: Only atomically published complete runs expose result rows. Before full publication items is empty
-        and completedFolds identifies durable partial folds; never aggregate independent folds.
+        and completedFolds identifies durable partial folds; never aggregate independent folds. REQ-RRB-006; T-RRB-008/010.
+        Additive context fields are optional for legacy schema compatibility; servers emit all fields for every run, projecting
+        legacy rows as STRICT_PIT. Current warnings are separate from immutable experiment identity.
       allOf:
       - not:
           not:
@@ -10655,6 +11492,73 @@ components:
                   type: 'null'
                 resultHash:
                   type: 'null'
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                researchMode:
+                  type: string
+                  const: RETROSPECTIVE_EXPLORATORY
+              additionalProperties: true
+              required:
+              - researchMode
+            then:
+              properties:
+                researchMode:
+                  type: string
+                  const: RETROSPECTIVE_EXPLORATORY
+                selectionPolicyVersion:
+                  type: string
+                  const: retrospective-v1
+                experimentVersion:
+                  type: string
+                  const: retrospective-experiment-v1
+                snapshotReference:
+                  anyOf:
+                  - $ref: '#/components/schemas/BacktestSnapshotReference'
+                  - type: 'null'
+                reliabilityReportId:
+                  anyOf:
+                  - $ref: '#/components/schemas/BacktestId'
+                  - type: 'null'
+                resultLimitations:
+                  $ref: '#/components/schemas/BacktestResultLimitations'
+              additionalProperties: true
+              required:
+              - researchMode
+              - selectionPolicyVersion
+              - experimentVersion
+              - snapshotReference
+              - reliabilityReportId
+              - resultLimitations
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              allOf:
+              - properties:
+                  researchMode:
+                    type: string
+                    const: RETROSPECTIVE_EXPLORATORY
+                additionalProperties: true
+                required:
+                - researchMode
+              - properties:
+                  status:
+                    type: string
+                    const: SUCCEEDED
+                additionalProperties: true
+                required:
+                - status
+              additionalProperties: true
+            then:
+              properties:
+                snapshotReference:
+                  $ref: '#/components/schemas/BacktestSnapshotReference'
+                reliabilityReportId:
+                  $ref: '#/components/schemas/BacktestId'
               additionalProperties: true
             additionalProperties: true
     BacktestFillsPage:
@@ -10712,8 +11616,39 @@ components:
           - string
           - 'null'
           pattern: ^[0-9a-f]{64}$
+        researchMode:
+          $ref: '#/components/schemas/BacktestResearchMode'
+        selectionPolicyVersion:
+          $ref: '#/components/schemas/BacktestSelectionPolicyVersion'
+        experimentVersion:
+          $ref: '#/components/schemas/BacktestExperimentVersion'
+        snapshotReference:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestSnapshotReference'
+          - type: 'null'
+        reliabilityReportId:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestId'
+          - type: 'null'
+        resultLimitations:
+          type: array
+          minItems: 0
+          maxItems: 7
+          items:
+            $ref: '#/components/schemas/BacktestResultLimitation'
+          not:
+            not:
+              uniqueItems: true
+        retrospectiveItems:
+          type: array
+          maxItems: 200
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestRetrospectiveFill'
       description: Only atomically published complete runs expose result rows. Before full publication items is empty
-        and completedFolds identifies durable partial folds; never aggregate independent folds.
+        and completedFolds identifies durable partial folds; never aggregate independent folds. REQ-RRB-006; T-RRB-008/010.
+        Additive context fields are optional for legacy schema compatibility; servers emit all fields for every run, projecting
+        legacy rows as STRICT_PIT. Current warnings are separate from immutable experiment identity.
       allOf:
       - not:
           not:
@@ -10742,6 +11677,102 @@ components:
                   type: 'null'
                 resultHash:
                   type: 'null'
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                researchMode:
+                  type: string
+                  const: RETROSPECTIVE_EXPLORATORY
+              additionalProperties: true
+              required:
+              - researchMode
+            then:
+              properties:
+                researchMode:
+                  type: string
+                  const: RETROSPECTIVE_EXPLORATORY
+                selectionPolicyVersion:
+                  type: string
+                  const: retrospective-v1
+                experimentVersion:
+                  type: string
+                  const: retrospective-experiment-v1
+                snapshotReference:
+                  anyOf:
+                  - $ref: '#/components/schemas/BacktestSnapshotReference'
+                  - type: 'null'
+                reliabilityReportId:
+                  anyOf:
+                  - $ref: '#/components/schemas/BacktestId'
+                  - type: 'null'
+                resultLimitations:
+                  $ref: '#/components/schemas/BacktestResultLimitations'
+              additionalProperties: true
+              required:
+              - researchMode
+              - selectionPolicyVersion
+              - experimentVersion
+              - snapshotReference
+              - reliabilityReportId
+              - resultLimitations
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              allOf:
+              - properties:
+                  researchMode:
+                    type: string
+                    const: RETROSPECTIVE_EXPLORATORY
+                additionalProperties: true
+                required:
+                - researchMode
+              - properties:
+                  status:
+                    type: string
+                    const: SUCCEEDED
+                additionalProperties: true
+                required:
+                - status
+              additionalProperties: true
+            then:
+              properties:
+                snapshotReference:
+                  $ref: '#/components/schemas/BacktestSnapshotReference'
+                reliabilityReportId:
+                  $ref: '#/components/schemas/BacktestId'
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              required:
+              - researchMode
+              properties:
+                researchMode:
+                  type: string
+                  const: RETROSPECTIVE_EXPLORATORY
+              additionalProperties: true
+            then:
+              required:
+              - retrospectiveItems
+              properties:
+                items:
+                  maxItems: 0
+                retrospectiveItems:
+                  type: array
+                  maxItems: 200
+                  minItems: 0
+                  items:
+                    $ref: '#/components/schemas/BacktestRetrospectiveFill'
+              additionalProperties: true
+            else:
+              properties:
+                retrospectiveItems:
+                  maxItems: 0
               additionalProperties: true
             additionalProperties: true
     BacktestResults:
@@ -12387,6 +13418,14 @@ components:
           $ref: '#/components/schemas/ReadinessEligibility'
         request:
           $ref: '#/components/schemas/BacktestRequest'
+          not:
+            required:
+            - researchMode
+            properties:
+              researchMode:
+                const: RETROSPECTIVE_EXPLORATORY
+                type: string
+            additionalProperties: true
         requestHash:
           $ref: '#/components/schemas/ReadinessHash'
         acceptedAt:
@@ -13461,3 +14500,1490 @@ components:
     ReadinessNonnegativeDecimal:
       type: string
       pattern: ^(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$(?![\s\S])
+    BacktestResearchMode:
+      type: string
+      enum:
+      - STRICT_PIT
+      - RETROSPECTIVE_EXPLORATORY
+      default: STRICT_PIT
+    BacktestSelectionPolicyVersion:
+      type: string
+      enum:
+      - strict-pit-v1
+      - retrospective-v1
+    BacktestExperimentVersion:
+      type: string
+      enum:
+      - backtest-experiment-v1
+      - retrospective-experiment-v1
+    BacktestSnapshotReference:
+      type: object
+      additionalProperties: false
+      required:
+      - snapshotVersion
+      - snapshotAt
+      properties:
+        snapshotVersion:
+          type: integer
+          minimum: 0
+          maximum: 9223372036854775807
+        snapshotAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+      description: Immutable complete-commit dataset boundary; later commits remain excluded even when their timestamps
+        are earlier.
+    BacktestAssessmentRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - instrumentId
+      - strategyId
+      - version
+      - parameters
+      - startCash
+      - feeUsd
+      - slippageBps
+      - quantityStep
+      - folds
+      - researchMode
+      - selectionPolicyVersion
+      properties:
+        instrumentId:
+          $ref: '#/components/schemas/BacktestId'
+        strategyId:
+          $ref: '#/components/schemas/BacktestStrategyId'
+        version:
+          type: string
+          const: '1'
+        parameters:
+          $ref: '#/components/schemas/BacktestParameters'
+        startCash:
+          $ref: '#/components/schemas/BacktestStartCash'
+        feeUsd:
+          $ref: '#/components/schemas/BacktestFeeUsd'
+        slippageBps:
+          $ref: '#/components/schemas/BacktestSlippageBps'
+        quantityStep:
+          type: string
+          const: '0.000001'
+        folds:
+          type: array
+          maxItems: 12
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/BacktestFold'
+        researchMode:
+          type: string
+          const: RETROSPECTIVE_EXPLORATORY
+        selectionPolicyVersion:
+          type: string
+          const: retrospective-v1
+      description: REQ-RRB-001/004/008/012; T-RRB-002/008/011/013/020. Closed retrospective preview protocol; bounded
+        local snapshot inspection only, without simulation. Same chronological, instrument, strategy and Decimal bounds
+        as BacktestRequest.
+      allOf:
+      - if:
+          properties:
+            strategyId:
+              type: string
+              const: sma-cross-v1
+          additionalProperties: true
+        then:
+          properties:
+            parameters:
+              $ref: '#/components/schemas/BacktestSmaParameters'
+          additionalProperties: true
+        else:
+          properties:
+            parameters:
+              $ref: '#/components/schemas/BacktestEmptyParameters'
+          additionalProperties: true
+        additionalProperties: true
+    BacktestResultLimitation:
+      type: string
+      enum:
+      - NOT_STRICT_PIT
+      - PRICE_ONLY
+      - DIVIDENDS_EXCLUDED
+      - IEX_PARTIAL_MARKET
+      - SURVIVORSHIP_BIAS
+      - EX_POST_REVISIONS
+      - NO_TRADING_AUTHORIZATION
+    BacktestResultLimitations:
+      type: array
+      minItems: 7
+      maxItems: 7
+      items:
+        $ref: '#/components/schemas/BacktestResultLimitation'
+      not:
+        not:
+          uniqueItems: true
+    BacktestReportCursor:
+      type: string
+      minLength: 32
+      maxLength: 2048
+      pattern: ^[A-Za-z0-9_-]+$
+      description: Opaque signed cursor bound to reportId, immutable reportHash/version, section and category/fold filters.
+        Invalid signature => 400 CURSOR_INVALID; changed report/filter/version => 409 SNAPSHOT_CONFLICT. Example tokens
+        demonstrate syntax only.
+    BacktestReliabilityDimensionName:
+      type: string
+      enum:
+      - INTEGRITY
+      - CALENDAR
+      - CORPORATE_ACTIONS
+      - HISTORICAL_AVAILABILITY
+      - FEED
+      - LICENSE
+    BacktestReliabilityRating:
+      type: string
+      enum:
+      - PASS
+      - LIMITED
+      - UNKNOWN
+      - BLOCKED
+      - NOT_EVALUATED
+    BacktestReliabilityEligibility:
+      type: string
+      enum:
+      - BLOCKED
+      - EXPLORATORY_WITH_LIMITATIONS
+    BacktestReliabilityFindingCode:
+      type: string
+      enum:
+      - MISSING_BARS
+      - UNEXPECTED_BARS
+      - INVALID_OHLCV
+      - REVISION_CONFLICT
+      - REFERENCE_MISSING
+      - SNAPSHOT_BOUNDARY
+      - CALENDAR_UNKNOWN
+      - SESSION_CONFLICT
+      - MIXED_FEED
+      - MIXED_ADJUSTMENT
+      - INSTRUMENT_UNRESOLVED
+      - STRUCTURAL_CORPORATE_ACTION
+      - CORPORATE_ACTION_CONFLICT
+      - CORPORATE_ACTIONS_UNKNOWN
+      - DIVIDENDS_EXCLUDED
+      - RAW_DISCONTINUITY
+      - HISTORICAL_AVAILABILITY_NOT_PROVEN
+      - EX_POST_CALENDAR
+      - EX_POST_REVISIONS
+      - IEX_PARTIAL_MARKET
+      - SURVIVORSHIP_BIAS
+      - LICENSE_UNKNOWN
+      - LICENSE_DENIED
+      - TRUST_REVOKED
+      - TRUST_UNAVAILABLE
+      - BUDGET_EXHAUSTED
+      - NOT_EVALUATED
+    BacktestReliabilityDimension:
+      type: object
+      additionalProperties: false
+      required:
+      - rating
+      - reasonCodes
+      properties:
+        rating:
+          $ref: '#/components/schemas/BacktestReliabilityRating'
+        reasonCodes:
+          type: array
+          minItems: 0
+          maxItems: 30
+          items:
+            $ref: '#/components/schemas/BacktestReliabilityFindingCode'
+          not:
+            not:
+              uniqueItems: true
+    BacktestReliabilityDimensions:
+      type: object
+      additionalProperties: false
+      required:
+      - INTEGRITY
+      - CALENDAR
+      - CORPORATE_ACTIONS
+      - HISTORICAL_AVAILABILITY
+      - FEED
+      - LICENSE
+      properties:
+        INTEGRITY:
+          $ref: '#/components/schemas/BacktestReliabilityDimension'
+        CALENDAR:
+          $ref: '#/components/schemas/BacktestReliabilityDimension'
+        CORPORATE_ACTIONS:
+          $ref: '#/components/schemas/BacktestReliabilityDimension'
+        HISTORICAL_AVAILABILITY:
+          $ref: '#/components/schemas/BacktestReliabilityDimension'
+        FEED:
+          $ref: '#/components/schemas/BacktestReliabilityDimension'
+        LICENSE:
+          $ref: '#/components/schemas/BacktestReliabilityDimension'
+    BacktestReliabilityPeriod:
+      type: object
+      additionalProperties: false
+      required:
+      - start
+      - end
+      properties:
+        start:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        end:
+          $ref: '#/components/schemas/BacktestTimestamp'
+    BacktestReliabilityBarCounts:
+      type: object
+      additionalProperties: false
+      required:
+      - expected
+      - present
+      - missing
+      - unexpected
+      properties:
+        expected:
+          anyOf:
+          - type: integer
+            minimum: 0
+            maximum: 100000
+          - type: 'null'
+        present:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        missing:
+          anyOf:
+          - type: integer
+            minimum: 0
+            maximum: 100000
+          - type: 'null'
+        unexpected:
+          type: integer
+          minimum: 0
+          maximum: 100000
+      description: Counts cover the explicit fold section. Expected/missing remain null when calendar denominator is
+        unknown; zero never represents unknown.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                expected:
+                  type: 'null'
+              additionalProperties: true
+            then:
+              properties:
+                missing:
+                  type: 'null'
+              additionalProperties: true
+            additionalProperties: true
+            else:
+              properties:
+                missing:
+                  type: integer
+                  minimum: 0
+                  maximum: 100000
+              additionalProperties: true
+    BacktestReliabilityFold:
+      type: object
+      additionalProperties: false
+      required:
+      - foldIndex
+      - window
+      - warmupPeriod
+      - barCounts
+      - eligibility
+      properties:
+        foldIndex:
+          type: integer
+          minimum: 0
+          maximum: 11
+        window:
+          $ref: '#/components/schemas/BacktestFold'
+        warmupPeriod:
+          $ref: '#/components/schemas/BacktestReliabilityPeriod'
+        barCounts:
+          type: object
+          additionalProperties: false
+          required:
+          - warmup
+          - training
+          - test
+          properties:
+            warmup:
+              $ref: '#/components/schemas/BacktestReliabilityBarCounts'
+            training:
+              $ref: '#/components/schemas/BacktestReliabilityBarCounts'
+            test:
+              $ref: '#/components/schemas/BacktestReliabilityBarCounts'
+        eligibility:
+          $ref: '#/components/schemas/BacktestReliabilityEligibility'
+    BacktestRetrospectiveRevision:
+      type: object
+      additionalProperties: false
+      required:
+      - bar
+      - revisionId
+      - localRevision
+      - fingerprint
+      - ingestedAt
+      - availableAt
+      - firstObservedAt
+      - publishedAt
+      properties:
+        bar:
+          $ref: '#/components/schemas/BacktestBarIdentity'
+        revisionId:
+          $ref: '#/components/schemas/BacktestId'
+        localRevision:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        fingerprint:
+          $ref: '#/components/schemas/BacktestHash'
+        ingestedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        availableAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        firstObservedAt:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestTimestamp'
+          - type: 'null'
+        publishedAt:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestTimestamp'
+          - type: 'null'
+      description: Actual revision evidence preserved without timestamp rewriting. Unknown genuine first observation/provider
+        publication is null. Historical market bounds are separate from these current observations.
+    BacktestRetrospectiveDecisionInput:
+      type: object
+      additionalProperties: false
+      required:
+      - valuationAt
+      - knowledgeAt
+      - inputHash
+      - revisions
+      properties:
+        valuationAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        knowledgeAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        inputHash:
+          $ref: '#/components/schemas/BacktestHash'
+        revisions:
+          type: array
+          minItems: 0
+          maxItems: 100000
+          items:
+            $ref: '#/components/schemas/BacktestRetrospectiveRevision'
+    BacktestRetrospectiveOutcomeInput:
+      type: object
+      additionalProperties: false
+      required:
+      - revision
+      - simulatedMarketCutoff
+      properties:
+        revision:
+          $ref: '#/components/schemas/BacktestRetrospectiveRevision'
+        simulatedMarketCutoff:
+          $ref: '#/components/schemas/BacktestTimestamp'
+      description: Outcome-only price evidence, isolated from strategy inputs. Simulated market cutoff asserts no historical
+        local receipt time.
+    BacktestCalendarReference:
+      type: object
+      additionalProperties: false
+      required:
+      - revision
+      - source
+      - version
+      - purpose
+      - historicalAvailability
+      properties:
+        revision:
+          $ref: '#/components/schemas/BacktestEvidenceRevision'
+        source:
+          type: string
+          minLength: 1
+          maxLength: 80
+        version:
+          type: string
+          minLength: 1
+          maxLength: 80
+        purpose:
+          type: string
+          enum:
+          - REGULAR_SESSION
+          - HOLIDAY
+          - EARLY_CLOSE
+          - WARMUP
+        historicalAvailability:
+          type: string
+          const: NOT_PROVEN
+    BacktestLicenseReceipt:
+      type: object
+      additionalProperties: false
+      required:
+      - receiptId
+      - provider
+      - status
+      - recordedAt
+      - fingerprint
+      properties:
+        receiptId:
+          $ref: '#/components/schemas/BacktestId'
+        provider:
+          type: string
+          const: ALPACA
+        status:
+          type: string
+          enum:
+          - UNKNOWN
+          - DECLARED_CONFIRMED
+          - DENIED
+        recordedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        fingerprint:
+          $ref: '#/components/schemas/BacktestHash'
+      description: Immutable actual snapshot receipt from the narrow current license port. CONFIRMED is a declaration,
+        not verified personal rights; source BLOCKED maps to DENIED.
+    BacktestTrustReference:
+      type: object
+      additionalProperties: false
+      required:
+      - version
+      - recordedAt
+      - evidenceRevisions
+      properties:
+        version:
+          $ref: '#/components/schemas/BacktestHash'
+        recordedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        evidenceRevisions:
+          type: array
+          minItems: 0
+          maxItems: 100000
+          items:
+            $ref: '#/components/schemas/BacktestEvidenceRevision'
+    BacktestRetrospectiveAssumptions:
+      type: object
+      additionalProperties: false
+      required:
+      - simulation
+      - provider
+      - feed
+      - interval
+      - adjustment
+      - currency
+      - positionPolicy
+      - fillModel
+      - signalDelaySeconds
+      - decimalPrecision
+      - rounding
+      - moneyScale
+      - returnScale
+      - dividendsIncluded
+      - forceLiquidation
+      - outcomeSelection
+      - qualityPolicyVersion
+      - discontinuityPolicyVersion
+      properties:
+        simulation:
+          type: string
+          const: LOCAL_SIMULATION
+        provider:
+          type: string
+          const: ALPACA
+        feed:
+          type: string
+          const: iex
+        interval:
+          type: string
+          const: 15Min
+        adjustment:
+          type: string
+          const: raw
+        currency:
+          type: string
+          const: USD
+        positionPolicy:
+          type: string
+          const: LONG_FLAT
+        fillModel:
+          type: string
+          const: next-regular-bar-open-v1
+        signalDelaySeconds:
+          type: integer
+          const: 60
+        decimalPrecision:
+          type: integer
+          const: 38
+        rounding:
+          type: string
+          const: ROUND_HALF_EVEN
+        moneyScale:
+          type: integer
+          const: 8
+        returnScale:
+          type: integer
+          const: 12
+        dividendsIncluded:
+          type: boolean
+          const: false
+        forceLiquidation:
+          type: boolean
+          const: false
+        outcomeSelection:
+          type: string
+          const: SNAPSHOT_BOUND_MARKET_EVENT
+        qualityPolicyVersion:
+          type: string
+          const: retrospective-quality-v1
+        discontinuityPolicyVersion:
+          type: string
+          const: raw-discontinuity-v1
+    BacktestRetrospectiveManifest:
+      type: object
+      additionalProperties: false
+      required:
+      - manifestHash
+      - inputHash
+      - request
+      - symbol
+      - strategyVersion
+      - simulatorVersion
+      - metricsVersion
+      - codeVersion
+      - snapshot
+      - assumptions
+      - folds
+      - decisionInputs
+      - outcomeInputs
+      - calendarRevisions
+      - qualityRevisions
+      - corporateActionCoverage
+      - researchMode
+      - selectionPolicyVersion
+      - experimentVersion
+      - snapshotReference
+      - calendarReferences
+      - trustReference
+      - licenseReceipt
+      - qualityPolicyVersion
+      - resultLimitations
+      properties:
+        manifestHash:
+          $ref: '#/components/schemas/BacktestHash'
+        inputHash:
+          $ref: '#/components/schemas/BacktestHash'
+        request:
+          $ref: '#/components/schemas/BacktestAssessmentRequest'
+        symbol:
+          type: string
+          enum:
+          - SPY
+          - QQQ
+        strategyVersion:
+          type: string
+          const: '1'
+        simulatorVersion:
+          type: string
+          const: backtest-simulator-v1
+        metricsVersion:
+          type: string
+          const: backtest-metrics-v1
+        codeVersion:
+          type: string
+          pattern: ^[0-9a-f]{40}$
+        snapshot:
+          $ref: '#/components/schemas/BacktestSnapshot'
+        assumptions:
+          $ref: '#/components/schemas/BacktestRetrospectiveAssumptions'
+        folds:
+          type: array
+          maxItems: 12
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/BacktestBoundFold'
+        decisionInputs:
+          type: array
+          minItems: 0
+          maxItems: 100000
+          items:
+            $ref: '#/components/schemas/BacktestRetrospectiveDecisionInput'
+        outcomeInputs:
+          type: array
+          minItems: 0
+          maxItems: 100000
+          items:
+            $ref: '#/components/schemas/BacktestRetrospectiveOutcomeInput'
+        calendarRevisions:
+          type: array
+          maxItems: 100000
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestEvidenceRevision'
+        qualityRevisions:
+          type: array
+          maxItems: 100000
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestEvidenceRevision'
+        corporateActionCoverage:
+          type: array
+          maxItems: 100000
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BacktestEvidenceRevision'
+        researchMode:
+          type: string
+          const: RETROSPECTIVE_EXPLORATORY
+        selectionPolicyVersion:
+          type: string
+          const: retrospective-v1
+        experimentVersion:
+          type: string
+          const: retrospective-experiment-v1
+        snapshotReference:
+          $ref: '#/components/schemas/BacktestSnapshotReference'
+        calendarReferences:
+          type: array
+          minItems: 0
+          maxItems: 100000
+          items:
+            $ref: '#/components/schemas/BacktestCalendarReference'
+        trustReference:
+          $ref: '#/components/schemas/BacktestTrustReference'
+        licenseReceipt:
+          $ref: '#/components/schemas/BacktestLicenseReceipt'
+        qualityPolicyVersion:
+          type: string
+          const: retrospective-quality-v1
+        resultLimitations:
+          $ref: '#/components/schemas/BacktestResultLimitations'
+      description: REQ-RRB-002/003/004; T-RRB-003/004/005/006/007/008. Complete immutable retrospective experiment-v1
+        input binding, distinct from byte-identical legacy Strict manifests. request is the normalized preview protocol
+        excluding receipt IDs/hash; no circular assessment identity. SHA256 uses canonical Decimal/UTC serialization.
+        Runtime IDs/timings and current warnings are excluded. All revisions are fingerprint-bound, never latest; maximum
+        100000 combined revision/metadata rows and 12 MiB publication are additionally checked semantically.
+    BacktestReliabilityMethods:
+      type: object
+      additionalProperties: false
+      required:
+      - manifestHash
+      - protocol
+      - experimentVersion
+      - strategyVersion
+      - simulatorVersion
+      - metricsVersion
+      - codeVersion
+      - assumptions
+      - benchmarks
+      - qualityPolicyVersion
+      properties:
+        manifestHash:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestHash'
+          - type: 'null'
+        protocol:
+          $ref: '#/components/schemas/BacktestAssessmentRequest'
+        experimentVersion:
+          type: string
+          const: retrospective-experiment-v1
+        strategyVersion:
+          type: string
+          const: '1'
+        simulatorVersion:
+          type: string
+          const: backtest-simulator-v1
+        metricsVersion:
+          type: string
+          const: backtest-metrics-v1
+        codeVersion:
+          type: string
+          pattern: ^[0-9a-f]{40}$
+        assumptions:
+          $ref: '#/components/schemas/BacktestRetrospectiveAssumptions'
+        benchmarks:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            type: string
+            enum:
+            - flat-v1
+            - buy-hold-v1
+          not:
+            not:
+              uniqueItems: true
+        qualityPolicyVersion:
+          type: string
+          const: retrospective-quality-v1
+      description: Binds the complete manifest by its canonical hash; full input revisions are available in run detail
+        and paginated report revision references. Null manifestHash means binding did not complete and never permits
+        simulation. Costs/parameters/folds are explicit in protocol; fill/rounding/warm-up rules are bound by manifest
+        and assumptions.
+    BacktestReliabilityReference:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - referenceId
+      - fingerprint
+      - localRevision
+      - recordedAt
+      - period
+      properties:
+        kind:
+          type: string
+          enum:
+          - BAR
+          - CALENDAR
+          - QUALITY
+          - CORPORATE_ACTION
+          - LICENSE
+          - TRUST
+        referenceId:
+          $ref: '#/components/schemas/BacktestId'
+        fingerprint:
+          $ref: '#/components/schemas/BacktestHash'
+        localRevision:
+          anyOf:
+          - type: integer
+            minimum: 1
+            maximum: 2147483647
+          - type: 'null'
+        recordedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        period:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestReliabilityPeriod'
+          - type: 'null'
+    BacktestReliabilityFinding:
+      type: object
+      additionalProperties: false
+      required:
+      - findingId
+      - category
+      - code
+      - severity
+      - foldIndex
+      - period
+      - references
+      properties:
+        findingId:
+          $ref: '#/components/schemas/BacktestId'
+        category:
+          $ref: '#/components/schemas/BacktestReliabilityDimensionName'
+        code:
+          $ref: '#/components/schemas/BacktestReliabilityFindingCode'
+        severity:
+          type: string
+          enum:
+          - INFO
+          - LIMITATION
+          - BLOCKER
+        foldIndex:
+          anyOf:
+          - type: integer
+            minimum: 0
+            maximum: 11
+          - type: 'null'
+        period:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestReliabilityPeriod'
+          - type: 'null'
+        references:
+          type: array
+          minItems: 0
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/BacktestReliabilityReference'
+      description: Whitelist-only finding, without provider payload/free-text diagnostics. Current revocations/corrections
+        are reported separately from this immutable finding.
+    BacktestCurrentReliabilityWarning:
+      type: object
+      additionalProperties: false
+      required:
+      - code
+      - category
+      - checkedAt
+      - blocksNewExecution
+      properties:
+        code:
+          $ref: '#/components/schemas/BacktestReliabilityFindingCode'
+        category:
+          $ref: '#/components/schemas/BacktestReliabilityDimensionName'
+        checkedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        blocksNewExecution:
+          type: boolean
+    BacktestReliabilityReportV1:
+      type: object
+      additionalProperties: false
+      required:
+      - reportId
+      - version
+      - reportHash
+      - phase
+      - assessmentId
+      - runId
+      - protocolHash
+      - snapshotReference
+      - researchMode
+      - selectionPolicyVersion
+      - experimentVersion
+      - instrumentId
+      - symbol
+      - provider
+      - feed
+      - interval
+      - adjustment
+      - period
+      - folds
+      - dimensions
+      - overallStatus
+      - corporateActionStatus
+      - licenseStatus
+      - historicalAvailabilityStatus
+      - methods
+      - resultLimitations
+      - findingsCount
+      - revisionReferenceCount
+      properties:
+        reportId:
+          $ref: '#/components/schemas/BacktestId'
+        version:
+          type: string
+          const: reliability-report-v1
+        reportHash:
+          $ref: '#/components/schemas/BacktestHash'
+        phase:
+          type: string
+          enum:
+          - PREVIEW
+          - FINAL
+        assessmentId:
+          $ref: '#/components/schemas/BacktestId'
+        runId:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestId'
+          - type: 'null'
+        protocolHash:
+          $ref: '#/components/schemas/BacktestHash'
+        snapshotReference:
+          $ref: '#/components/schemas/BacktestSnapshotReference'
+        researchMode:
+          type: string
+          const: RETROSPECTIVE_EXPLORATORY
+        selectionPolicyVersion:
+          type: string
+          const: retrospective-v1
+        experimentVersion:
+          type: string
+          const: retrospective-experiment-v1
+        instrumentId:
+          $ref: '#/components/schemas/BacktestId'
+        symbol:
+          type: string
+          enum:
+          - SPY
+          - QQQ
+        provider:
+          type: string
+          const: ALPACA
+        feed:
+          type: string
+          const: iex
+        interval:
+          type: string
+          const: 15Min
+        adjustment:
+          type: string
+          const: raw
+        period:
+          $ref: '#/components/schemas/BacktestReliabilityPeriod'
+        folds:
+          type: array
+          minItems: 1
+          maxItems: 12
+          items:
+            $ref: '#/components/schemas/BacktestReliabilityFold'
+        dimensions:
+          $ref: '#/components/schemas/BacktestReliabilityDimensions'
+        overallStatus:
+          $ref: '#/components/schemas/BacktestReliabilityEligibility'
+        corporateActionStatus:
+          type: string
+          enum:
+          - UNKNOWN
+          - NO_ACTIONS
+          - DIVIDENDS_EXCLUDED
+          - STRUCTURAL_ACTION
+          - CONFLICT
+          - NOT_EVALUATED
+        licenseStatus:
+          type: string
+          enum:
+          - UNKNOWN
+          - DECLARED_CONFIRMED
+          - DENIED
+        historicalAvailabilityStatus:
+          type: string
+          const: NOT_PROVEN
+        methods:
+          $ref: '#/components/schemas/BacktestReliabilityMethods'
+        resultLimitations:
+          $ref: '#/components/schemas/BacktestResultLimitations'
+        findingsCount:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        revisionReferenceCount:
+          type: integer
+          minimum: 0
+          maximum: 100000
+      description: REQ-RRB-008/009/010/011/012; T-RRB-013..020. Immutable report overview repeated on every report page;
+        qualitative independent dimensions never form a score or certify Strict PIT. Findings and revision references
+        are separately paginated. UNKNOWN corporate actions never means NO_ACTIONS; raw-discontinuity-v1 >=20 percent
+        is a blocker, not proof of action freedom. Semantic checks enforce matching fold/protocol/snapshot/manifest
+        bindings and block incomplete budgets.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                phase:
+                  type: string
+                  const: FINAL
+              additionalProperties: true
+            then:
+              properties:
+                runId:
+                  $ref: '#/components/schemas/BacktestId'
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                overallStatus:
+                  type: string
+                  const: EXPLORATORY_WITH_LIMITATIONS
+              additionalProperties: true
+            then:
+              properties:
+                methods:
+                  properties:
+                    manifestHash:
+                      $ref: '#/components/schemas/BacktestHash'
+                  additionalProperties: true
+                licenseStatus:
+                  type: string
+                  enum:
+                  - UNKNOWN
+                  - DECLARED_CONFIRMED
+                corporateActionStatus:
+                  type: string
+                  enum:
+                  - UNKNOWN
+                  - NO_ACTIONS
+                  - DIVIDENDS_EXCLUDED
+                dimensions:
+                  properties:
+                    INTEGRITY:
+                      properties:
+                        rating:
+                          type: string
+                          enum:
+                          - PASS
+                          - LIMITED
+                          - UNKNOWN
+                      additionalProperties: true
+                    CALENDAR:
+                      properties:
+                        rating:
+                          type: string
+                          enum:
+                          - PASS
+                          - LIMITED
+                          - UNKNOWN
+                      additionalProperties: true
+                    CORPORATE_ACTIONS:
+                      properties:
+                        rating:
+                          type: string
+                          enum:
+                          - PASS
+                          - LIMITED
+                          - UNKNOWN
+                      additionalProperties: true
+                    HISTORICAL_AVAILABILITY:
+                      properties:
+                        rating:
+                          type: string
+                          enum:
+                          - PASS
+                          - LIMITED
+                          - UNKNOWN
+                      additionalProperties: true
+                    FEED:
+                      properties:
+                        rating:
+                          type: string
+                          enum:
+                          - PASS
+                          - LIMITED
+                          - UNKNOWN
+                      additionalProperties: true
+                    LICENSE:
+                      properties:
+                        rating:
+                          type: string
+                          enum:
+                          - PASS
+                          - LIMITED
+                          - UNKNOWN
+                      additionalProperties: true
+                  additionalProperties: true
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                corporateActionStatus:
+                  type: string
+                  const: UNKNOWN
+              additionalProperties: true
+            then:
+              properties:
+                dimensions:
+                  properties:
+                    CORPORATE_ACTIONS:
+                      properties:
+                        rating:
+                          type: string
+                          const: UNKNOWN
+                      additionalProperties: true
+                  additionalProperties: true
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                licenseStatus:
+                  type: string
+                  const: UNKNOWN
+              additionalProperties: true
+            then:
+              properties:
+                dimensions:
+                  properties:
+                    LICENSE:
+                      properties:
+                        rating:
+                          type: string
+                          const: UNKNOWN
+                      additionalProperties: true
+                  additionalProperties: true
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                licenseStatus:
+                  type: string
+                  const: DENIED
+              additionalProperties: true
+            then:
+              properties:
+                overallStatus:
+                  type: string
+                  const: BLOCKED
+                dimensions:
+                  properties:
+                    LICENSE:
+                      properties:
+                        rating:
+                          type: string
+                          const: BLOCKED
+                      additionalProperties: true
+                  additionalProperties: true
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            properties:
+              dimensions:
+                properties:
+                  HISTORICAL_AVAILABILITY:
+                    properties:
+                      rating:
+                        type: string
+                        const: UNKNOWN
+                    additionalProperties: true
+                additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                corporateActionStatus:
+                  type: string
+                  const: NO_ACTIONS
+              additionalProperties: true
+            then:
+              properties:
+                dimensions:
+                  properties:
+                    CORPORATE_ACTIONS:
+                      properties:
+                        rating:
+                          type: string
+                          const: PASS
+                      additionalProperties: true
+                  additionalProperties: true
+              additionalProperties: true
+            additionalProperties: true
+    BacktestReliabilityReportPage:
+      type: object
+      additionalProperties: false
+      required:
+      - report
+      - section
+      - findings
+      - revisionReferences
+      - nextCursor
+      - currentWarnings
+      properties:
+        report:
+          $ref: '#/components/schemas/BacktestReliabilityReportV1'
+        section:
+          type: string
+          enum:
+          - findings
+          - revisions
+        findings:
+          type: array
+          minItems: 0
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/BacktestReliabilityFinding'
+        revisionReferences:
+          type: array
+          minItems: 0
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/BacktestReliabilityReference'
+        nextCursor:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestReportCursor'
+          - type: 'null'
+        currentWarnings:
+          type: array
+          minItems: 0
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/BacktestCurrentReliabilityWarning'
+      description: Immutable overview on every page. limit 1..200 applies to selected section. Empty terminal pages
+        use null cursor; cursor binds report/hash/version/filter. Current warnings are mutable read-time facts excluded
+        from historical report hash; trust port failure never becomes a positive warning-free execution permission.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                section:
+                  type: string
+                  const: findings
+              additionalProperties: true
+            then:
+              properties:
+                revisionReferences:
+                  maxItems: 0
+              additionalProperties: true
+            additionalProperties: true
+            else:
+              properties:
+                findings:
+                  maxItems: 0
+              additionalProperties: true
+    BacktestAssessment:
+      type: object
+      additionalProperties: false
+      required:
+      - assessmentId
+      - assessmentHash
+      - status
+      - request
+      - inputHash
+      - acceptedAt
+      - updatedAt
+      - completedAt
+      - researchMode
+      - selectionPolicyVersion
+      - experimentVersion
+      - snapshotReference
+      - reliabilityReportId
+      - resultLimitations
+      - eligibility
+      - blockers
+      - attempt
+      properties:
+        assessmentId:
+          $ref: '#/components/schemas/BacktestId'
+        assessmentHash:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestHash'
+          - type: 'null'
+        status:
+          $ref: '#/components/schemas/BacktestState'
+        request:
+          $ref: '#/components/schemas/BacktestAssessmentRequest'
+        inputHash:
+          $ref: '#/components/schemas/BacktestHash'
+        acceptedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        updatedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        completedAt:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestTimestamp'
+          - type: 'null'
+        researchMode:
+          type: string
+          const: RETROSPECTIVE_EXPLORATORY
+        selectionPolicyVersion:
+          type: string
+          const: retrospective-v1
+        experimentVersion:
+          type: string
+          const: retrospective-experiment-v1
+        snapshotReference:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestSnapshotReference'
+          - type: 'null'
+        reliabilityReportId:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestId'
+          - type: 'null'
+        resultLimitations:
+          $ref: '#/components/schemas/BacktestResultLimitations'
+        eligibility:
+          anyOf:
+          - $ref: '#/components/schemas/BacktestReliabilityEligibility'
+          - type: 'null'
+        blockers:
+          type: array
+          minItems: 0
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/BacktestReliabilityFinding'
+        attempt:
+          type: integer
+          minimum: 0
+          maximum: 3
+      description: REQ-RRB-001/002/005/008/012; T-RRB-002/008/009/011/013/020. Durable preview only, never starts simulation.
+        assessmentHash binds exact normalized protocol/snapshot/report. SUCCEEDED means completed eligible exploration,
+        never Strict ELIGIBLE; current trust and exact binding are rechecked when run is explicitly created.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  type: string
+                  enum:
+                  - ACCEPTED
+                  - RUNNING
+              additionalProperties: true
+            then:
+              properties:
+                completedAt:
+                  type: 'null'
+                assessmentHash:
+                  type: 'null'
+                eligibility:
+                  type: 'null'
+                reliabilityReportId:
+                  type: 'null'
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  type: string
+                  const: SUCCEEDED
+              additionalProperties: true
+            then:
+              properties:
+                completedAt:
+                  $ref: '#/components/schemas/BacktestTimestamp'
+                assessmentHash:
+                  $ref: '#/components/schemas/BacktestHash'
+                snapshotReference:
+                  $ref: '#/components/schemas/BacktestSnapshotReference'
+                reliabilityReportId:
+                  $ref: '#/components/schemas/BacktestId'
+                eligibility:
+                  type: string
+                  const: EXPLORATORY_WITH_LIMITATIONS
+                blockers:
+                  maxItems: 0
+              additionalProperties: true
+            additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                status:
+                  type: string
+                  enum:
+                  - BLOCKED
+                  - FAILED
+              additionalProperties: true
+            then:
+              properties:
+                completedAt:
+                  $ref: '#/components/schemas/BacktestTimestamp'
+                eligibility:
+                  type: string
+                  const: BLOCKED
+                blockers:
+                  minItems: 1
+              additionalProperties: true
+            additionalProperties: true
+    BacktestRetrospectiveCoverage:
+      type: object
+      additionalProperties: false
+      required:
+      - expectedBars
+      - observedBars
+      - warmupExpectedBars
+      - warmupObservedBars
+      - complete
+      - corporateActionStatus
+      - historicalAvailabilityStatus
+      properties:
+        expectedBars:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        observedBars:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        warmupExpectedBars:
+          type: integer
+          minimum: 0
+          maximum: 99
+        warmupObservedBars:
+          type: integer
+          minimum: 0
+          maximum: 99
+        complete:
+          type: boolean
+          const: true
+        corporateActionStatus:
+          type: string
+          enum:
+          - UNKNOWN
+          - NO_ACTIONS
+          - DIVIDENDS_EXCLUDED
+        historicalAvailabilityStatus:
+          type: string
+          const: NOT_PROVEN
+      description: Retrospective successful bar completeness is independent of corporate-action evidence. UNKNOWN never
+        asserts certified action absence; historical local availability is unproven.
+    BacktestRetrospectiveFoldSummary:
+      type: object
+      additionalProperties: false
+      required:
+      - foldIndex
+      - resultHash
+      - window
+      - metrics
+      - references
+      - coverage
+      properties:
+        foldIndex:
+          type: integer
+          minimum: 0
+          maximum: 11
+        resultHash:
+          $ref: '#/components/schemas/BacktestHash'
+        window:
+          $ref: '#/components/schemas/BacktestFold'
+        metrics:
+          $ref: '#/components/schemas/BacktestMetrics'
+        references:
+          type: array
+          maxItems: 2
+          minItems: 2
+          items:
+            $ref: '#/components/schemas/BacktestReferenceMetrics'
+        coverage:
+          $ref: '#/components/schemas/BacktestRetrospectiveCoverage'
+    BacktestRetrospectiveFill:
+      type: object
+      additionalProperties: false
+      required:
+      - foldIndex
+      - strategyId
+      - sequence
+      - signalAt
+      - executedAt
+      - side
+      - quantity
+      - rawOpen
+      - price
+      - notionalUsd
+      - feeUsd
+      - slippageUsd
+      - cashAfter
+      - quantityAfter
+      - revisionId
+      - simulatedMarketCutoff
+      properties:
+        foldIndex:
+          type: integer
+          minimum: 0
+          maximum: 11
+        strategyId:
+          $ref: '#/components/schemas/BacktestStrategyId'
+        sequence:
+          type: integer
+          minimum: 1
+          maximum: 100000
+        signalAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        executedAt:
+          $ref: '#/components/schemas/BacktestTimestamp'
+        side:
+          type: string
+          enum:
+          - BUY
+          - SELL
+        quantity:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        rawOpen:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        price:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        notionalUsd:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        feeUsd:
+          $ref: '#/components/schemas/BacktestFeeUsd'
+        slippageUsd:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        cashAfter:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        quantityAfter:
+          $ref: '#/components/schemas/BacktestNonnegativeDecimal'
+        revisionId:
+          $ref: '#/components/schemas/BacktestId'
+        simulatedMarketCutoff:
+          $ref: '#/components/schemas/BacktestTimestamp'
+          description: Simulated market-event boundary only. This is not a historical local receipt or provider publication
+            claim; actual observed/available/ingested times remain in the bound manifest.

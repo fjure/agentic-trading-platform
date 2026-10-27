@@ -1,6 +1,6 @@
 # GitHub-Arbeitspakete
 
-Alle Issues sind offen und ausschließlich für spätere Implementierung vorbereitet. Managedblocks enthalten Requirements/Szenarien, konkrete Pfade, Verhalten, Akzeptanz, Tests und DoD. `openspec` und `change:retrospective-research-backtesting` dienen der Zuordnung; kein Milestone angelegt, keine Kommentare oder PRs erstellt.
+Apply ist seit dem 27.10.2026 freigegeben. RRB-01/#69 ist implementiert und vertragsseitig geprüft; Evidenz: `docs/evidence/rrb-01.md`. RRB-02..08 bleiben offen. Managedblocks enthalten Requirements/Szenarien, konkrete Pfade, Verhalten, Akzeptanz, Tests und DoD. `openspec` und `change:retrospective-research-backtesting` dienen der Zuordnung; kein Milestone angelegt, keine Kommentare oder PRs erstellt.
 
 | Task | Issue | Abhängig von |
 |---|---|---|

@@ -1,0 +1,18 @@
+{
+  "retrospective-request.valid.json": "BacktestRequest",
+  "retrospective-assessment-request.valid.json": "BacktestAssessmentRequest",
+  "retrospective-assessment-accepted.valid.json": "BacktestAssessment",
+  "retrospective-assessment-succeeded.valid.json": "BacktestAssessment",
+  "retrospective-manifest.valid.json": "BacktestRetrospectiveManifest",
+  "retrospective-report.valid.json": "BacktestReliabilityReportV1",
+  "retrospective-report-findings-page.valid.json": "BacktestReliabilityReportPage",
+  "retrospective-report-revisions-page.valid.json": "BacktestReliabilityReportPage",
+  "retrospective-assessment-blocked.valid.json": "BacktestAssessment",
+  "retrospective-report-unknown-calendar.valid.json": "BacktestReliabilityReportV1",
+  "retrospective-report-final.valid.json": "BacktestReliabilityReportV1",
+  "retrospective-run-accepted.valid.json": "BacktestRun",
+  "retrospective-run-detail.valid.json": "BacktestRunDetail",
+  "retrospective-summary-page.valid.json": "BacktestSummaryPage",
+  "retrospective-equity-page.valid.json": "BacktestEquityPage",
+  "retrospective-fills-page.valid.json": "BacktestFillsPage"
+}
