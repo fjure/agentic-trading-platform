@@ -26,6 +26,14 @@ vorhandene Runtimefunktion und ersetzt keine späteren HTTP-/SQL-/Authprüfungen
 
 ## Interpretation der Diagnose
 
+RDR-02 liefert jetzt den netzwerkfreien Assessor und die gemeinsamen Kalender-,
+Coverage- und Qualitätsprimitive. `TrustSnapshot` bindet den aktuellen Vertrauensstand;
+ein späterer Widerruf wird bei einer neuen Prüfung auch für ältere Daten berücksichtigt.
+Mehrere unabhängige Blocker bleiben sichtbar. Beispielsweise bleibt ein negativer
+Kapitalmaßnahmenbeleg BLOCKED, wenn der Kalender zugleich UNKNOWN ist. Lokale Aussagen
+bezeichnen ausschließlich lokale Herkunft und Commit-Sichtbarkeit und bestätigen keine
+historische Providerpublikation. API und dauerhafte Diagnose folgen in RDR-05.
+
 Ausführungsstatus und Datenzulässigkeit sind getrennt. SUCCEEDED bezeichnet eine abgeschlossene
 Diagnose; es kann gleichzeitig BLOCKED gelten. Die vier Zulässigkeitszustände sind ELIGIBLE,
 BLOCKED, UNKNOWN und NOT_EVALUATED. Ein noch nicht gestarteter Auftrag ist NOT_EVALUATED;
