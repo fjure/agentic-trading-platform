@@ -114,3 +114,14 @@ Beispiele als TypeScript. Generierten Code niemals manuell Ã¤ndern. VollstÃ¤ndig
 benÃ¶tigt auÃŸerdem Redocly, Angular-Produktionsbuild, Bestandsregression, unabhÃ¤ngigen Review,
 SourceScan und verifizierten Issue-Sync. Befunde und tatsÃ¤chliche Ergebnisse werden in
 `docs/evidence/rdr-01.md` festgehalten.
+
+## Verifizierter Offlineimport (RDR-09)
+
+Der separate CLI-Port `scripts/import-research-evidence.py` prüft höchstens 1MiB
+mit Ed25519 und RFC8785 gegen ein unabhängig zugelassenes Register. Produktion
+beginnt mit leerem Register; mitgelieferte Schlüssel sind keine Trustanker.
+Das ausschließlich lokale Libpq-Serviceziel ist auf Loopback gebunden. Runtime
+erhält weder Importrechte noch Zertifizierungsfunktionen. Signatur ohne
+unabhängigen Publikationsbeweis bleibt zeitlich UNKNOWN. Wiederholungen werden
+atomar auf denselben Receipt gebunden; Widerrufe wirken bei jeder neuen Nutzung.
+Details und tatsächlich ausgeführte Prüfungen: `docs/evidence/rdr-09-import.md`.

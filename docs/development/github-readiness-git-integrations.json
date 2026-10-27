@@ -33,6 +33,21 @@
       "unitTestsPassed": 114,
       "postgresRegressionPassed": true,
       "evidence": "docs/evidence/rdr-02-domain.md"
+    },
+    {
+      "taskId": "RDR-03",
+      "issueNumber": 62,
+      "branch": "codex/ptv-62-readiness-storage",
+      "commit": "e6dc531bf494c673a0e60bbc68eafe711ca5dde0",
+      "mainMerge": "2ab7c0c593676098847c29c4b112cf2af4f2355b",
+      "implementationTree": "a5b9cf785e5e4ee1510f5033cc84745b8f097596",
+      "remoteVerified": true,
+      "identicalImplementationTrees": true,
+      "issueCommitReachableFromMain": true,
+      "verifiedAt": "2026-10-27T08:49:09.616411+00:00",
+      "postgresStorageAndRestorePassed": true,
+      "postgresRolesAndRestorePassed": true,
+      "evidence": "docs/evidence/rdr-03-storage.md"
     }
   ]
 }
