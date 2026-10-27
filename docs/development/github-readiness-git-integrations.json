@@ -123,6 +123,34 @@
       "syntheticBrowserTestsPassed": 8,
       "existingBrowserRegressionPassed": true,
       "evidence": "docs/evidence/rdr-07-ui.md"
+    },
+    {
+      "taskId": "RDR-08",
+      "issueNumber": 67,
+      "branch": "codex/ptv-67-readiness-acceptance",
+      "commit": "413e293f6a763384aecc16ec6001247c9396b8c7",
+      "mainMerge": "408c153d5d434a0fbd8aa3f41b61738036d7b3fc",
+      "implementationTree": "4bcc24cd3903cdef241f8afab9570de048f0c8d2",
+      "remoteVerified": true,
+      "identicalImplementationTrees": true,
+      "issueCommitReachableFromMain": true,
+      "verifiedAt": "2026-10-27T18:53:59.481390+00:00",
+      "contractTestsPassed": 1531,
+      "unitTestsPassed": 1073,
+      "unitPlatformSkips": 1,
+      "finalPostgresSafetyAndIsolationTestsPassed": 3,
+      "finalPostgresSeconds": "47.13",
+      "evidence": "docs/evidence/rdr-implementation-verification.md"
     }
-  ]
+  ],
+  "completion": {
+    "implementedTasks": 9,
+    "closedIssues": 9,
+    "secondSyncIssueUpdates": 0,
+    "openP1P2Findings": 0,
+    "globalCollectionEnabled": false,
+    "productionTrustRegistryPopulated": false,
+    "deployed": false,
+    "note": "Nachfolgender Metadatencommit ergaenzt nur diesen Gitnachweis; Implementierung unveraendert."
+  }
 }
