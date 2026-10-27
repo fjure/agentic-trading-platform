@@ -92,6 +92,21 @@
       "contractTestsPassed": 1505,
       "postgresHttpRecoveryRegressionPassed": true,
       "evidence": "docs/evidence/rdr-05-api.md"
+    },
+    {
+      "taskId": "RDR-06",
+      "issueNumber": 65,
+      "branch": "codex/ptv-65-collection-control",
+      "commit": "16293a7fb032e1e0d483f7cb385008ddaa2d3846",
+      "mainMerge": "d241ae62266f84ad1d36ac393e27b7b16eace7f5",
+      "implementationTree": "efd6625cb540538648426615bbd7741a4e658798",
+      "remoteVerified": true,
+      "identicalImplementationTrees": true,
+      "issueCommitReachableFromMain": true,
+      "verifiedAt": "2026-10-27T18:45:23.118986+00:00",
+      "contractTestsPassed": 1531,
+      "postgresPlanCasPauseAndMetricsFailurePassed": true,
+      "evidence": "docs/evidence/rdr-06-api.md"
     }
   ]
 }

@@ -10,6 +10,7 @@ import { Observable, Subject, firstValueFrom, takeUntil } from 'rxjs';
 import { BacktestingService } from '../api/generated/control-api/api/backtesting.service';
 import type { BacktestRequest, BacktestRun, BacktestRunDetail, BacktestStrategyCatalog, BacktestStrategyId, BacktestSummaryPage, BacktestEquityPage, BacktestFillsPage } from '../api/generated/control-api/model/models';
 import { httpStatus, safeError } from '../state/supervisor-api';
+import { ReadinessComponent } from './readiness.component';
 
 const ACTIVE = new Set(['ACCEPTED', 'RUNNING']);
 const UTC_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$/;
@@ -31,7 +32,7 @@ function decimalBound(value: string, max: bigint, positive = false): boolean {
 
 @Component({
   selector: 'atl-backtesting',
-  imports: [JsonPipe, ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [JsonPipe, ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule, ReadinessComponent],
   templateUrl: './backtesting.component.html',
   styleUrl: './backtesting.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -114,15 +115,21 @@ export class BacktestingComponent implements OnInit, OnDestroy {
     }
     return last - first <= 366 * 86400000;
   }
-  async submit(): Promise<void> {
-    if (!this.alive() || !this.validRequest || this.sending()) return;
+  get diagnosticRequest(): BacktestRequest | null {
+    return this.validRequest ? this.experimentRequest() : null;
+  }
+  private experimentRequest(): BacktestRequest {
     const value = this.form.getRawValue();
-    const request: BacktestRequest = {
+    return {
       instrumentId: value.instrumentId, strategyId: value.strategyId, version: '1',
       parameters: value.strategyId === 'sma-cross-v1' ? { fast: +value.fast, slow: +value.slow } : {},
       startCash: value.startCash, feeUsd: value.feeUsd, slippageBps: value.slippageBps,
       quantityStep: '0.000001', folds: value.folds,
     };
+  }
+  async submit(): Promise<void> {
+    if (!this.alive() || !this.validRequest || this.sending()) return;
+    const request = this.experimentRequest();
     const payload = JSON.stringify(request);
     if (this.pending?.payload !== payload) this.pending = { payload, key: crypto.randomUUID() };
     this.sending.set(true); this.error.set('');

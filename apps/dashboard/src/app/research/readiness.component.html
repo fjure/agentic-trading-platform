@@ -1,0 +1,99 @@
+<section aria-labelledby="readiness-title">
+  <h3 id="readiness-title">Datenzulässigkeit</h3>
+  <p>Diagnose für das oben eingestellte Experiment. Sie prüft gespeicherte Nachweise und startet weder Datenabruf noch Simulation oder Handel.</p>
+  @if (error()) { <p role="alert">{{ error() }}</p> }
+  @if (notice()) { <p role="status">{{ notice() }}</p> }
+  <div class="actions">
+    <button mat-flat-button type="button" (click)="diagnose()" [disabled]="!request() || sending() || !authorized()">Datenzulässigkeit prüfen</button>
+    @if (assessment()) { <button mat-button type="button" (click)="refreshAssessment()" [disabled]="loading() || !authorized()">Diagnose aktualisieren</button> }
+  </div>
+  @if (!request()) { <p>Für eine neue Diagnose zunächst das Experimentformular vervollständigen. Ein gespeicherter Bericht bleibt separat lesbar.</p> }
+  @if (loading()) { <p role="status">Diagnose laden …</p> }
+  @if (assessment(); as assessment) {
+    <mat-card aria-label="Diagnosebericht">
+      <mat-card-header><mat-card-title>{{ assessment.assessmentId }}</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <p>Ausführungsstatus: {{ assessment.status }} · Versuch {{ assessment.attempt }}<br>
+          Angenommen {{ assessment.acceptedAt }} · Aktualisiert {{ assessment.updatedAt }} · Beendet {{ assessment.completedAt ?? 'noch nicht beendet' }}</p>
+        <p class="eligibility">Datenzulässigkeit: {{ assessment.eligibility }}</p>
+        <p>Dieser Stand ist an ein Protokoll und einen Snapshot gebunden. Ein neuer Backtest prüft seine eigenen Nachweise erneut.</p>
+        @if (assessment.failureCode) { <p role="status">{{ assessment.failureCode }} · Eine unvollständige Diagnose bestätigt keine Zulässigkeit.</p> }
+        <aside aria-label="Aktuelle Vertrauenswarnungen" [class.warning]="assessment.currentRevocation.warnings.length || !assessment.currentRevocation.complete">
+          <h4>Aktuelle Vertrauensprüfung</h4>
+          <p>Stand {{ assessment.currentRevocation.checkedAt }} · Trustversion {{ assessment.currentRevocation.currentTrustVersion }} / {{ assessment.currentRevocation.currentTrustPolicyVersion }}</p>
+          @for (warning of assessment.currentRevocation.warnings; track $index) {
+            <p role="status">{{ warning.reason }} · Wirksam {{ warning.effectiveAt ?? 'unbekannt' }} · Erfasst {{ warning.recordedAt }}<br>
+              Entscheidung {{ warning.decisionRef.id }} · Kompromittierungszeit bekannt: {{ warning.compromiseTimeKnown ? 'ja' : 'nein' }}</p>
+          } @empty { <p>{{ assessment.currentRevocation.complete ? 'Keine aktuellen Widerrufshinweise in dieser Projektion.' : 'Aktuelle Warnprüfung unvollständig; heutige Vertrauenswürdigkeit bleibt unbekannt.' }}</p> }
+          <p>Diese aktuelle Projektion verändert den ursprünglichen Bericht und seinen Hash nicht.</p>
+        </aside>
+        @if (report(); as report) {
+          <h4>Unveränderlicher Bericht</h4>
+          <p>Ursprüngliche Zulässigkeit: {{ report.eligibility }} · Prüfung vollständig: {{ report.evaluationComplete ? 'ja' : 'nein' }} · Veröffentlicht: {{ assessment.publicationComplete ? 'ja' : 'nein' }}</p>
+          <p>Snapshot {{ report.snapshot.snapshotAt }} / {{ report.snapshot.snapshotVersion }}<br>
+            Gebundene Trustversion {{ report.snapshot.trustVersion }} / {{ report.snapshot.trustPolicyVersion }}<br>
+            Regel {{ report.policyVersion }} · Code {{ report.codeVersion }}<br>Berichthash <code>{{ report.reportHash }}</code></p>
+          <atl-readiness-trust [trust]="report.trust" />
+          <p>VERIFIED gilt nur für die benannte Prüfung. Eine Signatur bestätigt keine historische Veröffentlichung, Vollständigkeit oder fachliche Qualität.</p>
+          <p>Quellenrechte: {{ report.providerRights.licenseStatus }} · Providerprüfung: {{ report.providerRights.providerVerification }} · {{ report.providerRights.reason }}</p>
+          <p>Befunde: {{ report.findingCount }} · Überlappende Kategorien werden nicht als zusätzliche Abdeckung addiert.</p>
+          @for (category of report.categories; track category.category) { <p>{{ category.category }}: {{ category.findingCount }} Befunde / {{ category.disjointIntervalCount }} disjunkte Intervalle</p> }
+          <details><summary>Erfassungsmetriken und nutzbare Fenster</summary><atl-readiness-metrics [metrics]="report.metrics" [windows]="report.windows" /></details>
+          <h4>Foldbefunde</h4>
+          <mat-form-field><mat-label>Befundkategorie</mat-label><mat-select [formControl]="category"><mat-option value="">Alle Kategorien</mat-option>
+            @for (category of categories; track category) { <mat-option [value]="category">{{ category }}</mat-option> }
+          </mat-select></mat-form-field>
+          <p>{{ findings().length }} von {{ totalMatching() }} passenden Befunden geladen.</p>
+          @for (finding of findings(); track finding.findingId) {
+            <article class="finding" [attr.aria-label]="'Befund ' + finding.findingId">
+              <strong>Fold {{ finding.foldIndex + 1 }} · {{ finding.area }} · {{ finding.category }} · {{ finding.eligibility }}</strong>
+              <p>{{ finding.period.start }} bis {{ finding.period.end }} · Wissenszeitpunkt {{ finding.knowledgeAt }}<br>Backtestgrund {{ finding.backtestReason ?? 'nicht ausgewertet' }}</p>
+              <p>{{ finding.remedy }}</p>
+              <details><summary>Vertrauen und Belegreferenzen</summary><atl-readiness-trust [trust]="finding.trust" />
+                @for (reference of finding.references; track $index) { <p>{{ reference.kind }} · {{ reference.id }} · Revision {{ reference.revision ?? 'unbekannt' }} · {{ reference.fingerprint ?? 'kein Fingerprint' }}</p> }
+              </details>
+              @if (finding.observation; as observation) {
+                <details><summary>Sechs getrennte Zeitbegriffe</summary><dl>
+                  <dt>Marktereignis</dt><dd>{{ observation.times.marketEventAt }}</dd><dt>Barende</dt><dd>{{ observation.times.barCloseAt }}</dd>
+                  <dt>Providerpublikation</dt><dd>{{ observation.times.providerPublishedAt ?? 'unbekannt' }}</dd><dt>Erster lokaler Empfang</dt><dd>{{ observation.times.firstObservedAt ?? 'unbekannt' }}</dd>
+                  <dt>DBaufnahme</dt><dd>{{ observation.times.ingestedAt ?? 'unbekannt' }}</dd><dt>Commitbestätigung</dt><dd>{{ observation.times.commitConfirmedAt ?? 'unbekannt' }}</dd>
+                </dl><p>Commitversion {{ observation.times.commitVersion ?? 'unbekannt' }} · Uhrvergleich {{ observation.times.clockStatus }} · {{ observation.purpose }}</p></details>
+              }
+            </article>
+          } @empty { <p>Keine Befunde für diese Auswahl geladen.</p> }
+          @if (nextCursor()) { <button mat-button (click)="loadFindings(true)" [disabled]="findingsLoading() || !authorized()">Weitere Befunde</button> }
+        } @else { <p>Noch kein unveränderlicher Bericht veröffentlicht. NOT_EVALUATED ist keine Datenfreigabe.</p> }
+      </mat-card-content>
+    </mat-card>
+  }
+  <mat-card aria-label="Sammlungspläne">
+    <mat-card-header><mat-card-title>Vorwärtsbeobachtung</mat-card-title></mat-card-header>
+    <mat-card-content>
+      <p>Feste Erfassung für SPY und QQQ · Alpaca IEX · 15Min/raw. Ein aktiver Plan bestätigt keine Strict-PIT-Eignung oder Nutzungsrechte und aktiviert keinen Handel.</p>
+      <button mat-button (click)="refreshPlans()" [disabled]="plansLoading() || !authorized()">Sammlungspläne aktualisieren</button>
+      @for (plan of plans(); track plan.instrumentId) {
+        <article class="collection-plan" [attr.aria-label]="'Sammlungsplan ' + plan.symbol">
+          <h4>{{ plan.symbol }} · {{ plan.status }}</h4>
+          <p>Gespeicherter Wunsch: {{ plan.enabled ? 'aktiviert' : 'deaktiviert' }} · Version {{ plan.version }} · Generation {{ plan.generation }}<br>
+            Globale Erhebung: {{ plan.globalEnabled ? 'aktiviert' : 'deaktiviert' }} · Gründe {{ plan.reasons.join(', ') || 'keine' }}<br>
+            Quellenrechte {{ plan.providerRights.licenseStatus }} · Providerprüfung {{ plan.providerRights.providerVerification }} · {{ plan.providerRights.reason }}</p>
+          <p>Nächste Fälligkeit {{ plan.nextDueAt ?? 'unbekannt' }} · Letzter Versuch {{ plan.lastAttemptAt ?? 'keiner' }}<br>
+            Bereits begonnene Abrufe {{ plan.outstandingStartedDispatches }} · Letzter Auftrag {{ plan.lastJobId ?? 'keiner' }}</p>
+          <div class="actions">
+            <button mat-flat-button (click)="updatePlan(plan, true)" [disabled]="plan.enabled || !!planSending() || !authorized()">Sammlung {{ plan.symbol }} aktivieren</button>
+            <button mat-button (click)="updatePlan(plan, false)" [disabled]="!plan.enabled || !!planSending() || !authorized()">Sammlung {{ plan.symbol }} pausieren</button>
+          </div>
+          <p>Pause wird nach dauerhaftem Speichern bestätigt. Bereits begonnene Abrufe dürfen noch abgeschlossen werden.</p>
+          <details><summary>Lücken, Messungen und Fenster</summary>
+            <p>Fester Kalenderabruf {{ plan.schedule.calendarRefreshUtc }} · Vorschau {{ plan.schedule.calendarLookaheadDays }} Tage · Tick {{ plan.schedule.tickSeconds }}s.<br>
+              Erste Bar ab +{{ plan.schedule.firstBarDelaySeconds }}s · Nachbeobachtung ab +{{ plan.schedule.reobserveDelaySeconds }}s · Wiederaufnahme höchstens {{ plan.schedule.recoveryHours }} Stunden mit {{ plan.schedule.overlapMinutes }} Minuten Überlappung.<br>
+              Höchstens {{ plan.schedule.maxDuePerUtcDay }} Fälligkeiten pro UTC-Tag, {{ plan.schedule.maxOpenJobsTotal }} offene Jobs und {{ plan.schedule.maxConcurrentHttpGets }} HTTPabruf gleichzeitig. Diese Planung garantiert keine Frist.</p>
+            <p>Lückenliste vollständig: {{ plan.gapsComplete ? 'ja' : 'nein' }}</p>
+            @for (gap of plan.gaps; track $index) { <p>{{ gap.reason }} · {{ gap.period.start }} bis {{ gap.period.end }}</p> }
+            <atl-readiness-metrics [metrics]="plan.metrics" [windows]="plan.windows" />
+          </details>
+        </article>
+      } @empty { <p>Keine Sammlungspläne geladen; ihr Zustand ist unbekannt.</p> }
+    </mat-card-content>
+  </mat-card>
+</section>

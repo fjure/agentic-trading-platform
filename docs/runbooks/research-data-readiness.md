@@ -159,3 +159,14 @@ zugelassene Abrufe werden gezählt. Auch ein Diagnosebudget-/SQLfehler verhinder
 keine Pause. Metriken werden auf höchstens 24 Stunden begrenzt; ohne gebundenes
 Experimentprotokoll werden keine vollständigen Experimentfenster behauptet.
 Nachweise: `docs/evidence/rdr-06-api.md`.
+
+## Materialoberfläche (RDR-07)
+
+Die Diagnose verwendet denselben gültigen Experimentrequest wie das bestehende
+Backtestformular und bleibt eine getrennte Aktion. Die Assessment-ID in der URL
+lädt den dauerhaft gespeicherten Bericht nach Reload. Originalvertrauen, aktuelle
+Warnungen, Metriknenner und Bar-/Strict-PIT-Fenster bleiben getrennt. Seiten und
+Filter sind snapshotgebunden. Planänderungen verwenden erwartete Versionen; ein
+409 erfordert erneutes Lesen, keinen automatischen Schreibretry. Sessionverlust
+stoppt die Bedienung und das Polling. Reale Providerrechte bleiben unverifiziert.
+Prüfungen und Bestandsregression: `docs/evidence/rdr-07-ui.md`.
