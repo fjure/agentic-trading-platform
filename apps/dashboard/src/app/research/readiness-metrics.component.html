@@ -1,0 +1,36 @@
+@for (metric of metrics(); track $index) {
+  <article aria-label="Erfassungsmetriken">
+    <h4>{{ metric.sourceId }} · {{ metric.instrumentId }}</h4>
+    <p>{{ metric.period.start }} bis {{ metric.period.end }} · {{ metric.feed }} / {{ metric.interval }} / {{ metric.adjustment }}<br>
+      Kalender: {{ metric.calendarVersion ?? 'unbekannt' }} · Snapshot {{ metric.snapshot.snapshotVersion }} / {{ metric.snapshot.snapshotAt }}</p>
+    <p>Erwartete eindeutige Bars: {{ metric.expectedBars }} · Beobachtete Bars: {{ metric.observedBars }} · Unbekannte Kalendertage: {{ metric.unknownCalendarDays }}</p>
+    <div class="table-scroll"><table aria-label="Fristen und Nenner"><thead><tr><th>Metrik</th><th>Zähler / Nenner</th><th>Status / unbekannt</th></tr></thead><tbody>
+      @for (row of ratios(metric); track row.label) {
+        <tr><th scope="row">{{ row.label }}</th><td>{{ row.value.numerator }} / {{ row.value.denominator }} · {{ row.value.denominatorBasis }}</td><td>{{ row.value.status }} · {{ row.value.unknownCount }}</td></tr>
+      }
+      <tr><th scope="row">Korrigierte Bars</th><td>{{ metric.correctedBars.numerator }} / {{ metric.correctedBars.denominator }} · {{ metric.correctedBars.denominatorBasis }}</td><td>{{ metric.correctedBars.status }} · {{ metric.correctedBars.unknownCount }}</td></tr>
+      <tr><th scope="row">Wiederholte Antworten</th><td>{{ metric.duplicateResponses.numerator }} / {{ metric.duplicateResponses.denominator }} · {{ metric.duplicateResponses.denominatorBasis }}</td><td>{{ metric.duplicateResponses.status }} · {{ metric.duplicateResponses.unknownCount }}</td></tr>
+    </tbody></table></div>
+    <div class="table-scroll"><table aria-label="Getrennte Latenzen"><thead><tr><th>Uhrpaar</th><th>p50 / p95 / Maximum Sekunden</th><th>Gültig / unbekannt / ungültig</th></tr></thead><tbody>
+      @for (row of latencies(metric); track row.label) {
+        <tr><th scope="row">{{ row.label }}</th><td>{{ row.value.p50Seconds ?? 'unbekannt' }} / {{ row.value.p95Seconds ?? 'unbekannt' }} / {{ row.value.maximumSeconds ?? 'unbekannt' }}</td><td>{{ row.value.sampleCount }} / {{ row.value.unknownPairCount }} / {{ row.value.invalidPairCount }} · {{ row.value.status }}</td></tr>
+      }
+    </tbody></table></div>
+    @for (limitation of metric.limitations; track $index) { <p>{{ limitation }}</p> }
+  </article>
+} @empty { <p>Keine Erfassungsmetriken nachgewiesen. Fehlende Messungen bleiben unbekannt.</p> }
+<p>Empfang und Verwendbarkeit sind getrennt. Nenner enthalten erwartete fehlende Bars; Wiederholungen vergrößern den Sollbarnenner nicht. Keine Quote ersetzt einen einzelnen Nachweis.</p>
+<h4>Zusammenhängende nutzbare Fenster</h4>
+<p>Fensterprüfung vollständig: {{ windows().complete ? 'ja' : 'nein' }}. Barbeobachtung allein beweist keine Strict-PIT-Eignung.</p>
+@for (group of windowGroups(); track group.label) {
+  <details><summary>{{ group.label }}: {{ group.items.length }}</summary>
+    @for (window of group.items; track $index) {
+      <article class="window"><p>{{ window.period.start }} bis {{ window.period.end }} · {{ window.expectedBars }} erwartete Bars · Frist +{{ window.deadlineSeconds }}s</p>
+        <p>Erste Bar {{ window.firstBar.start }} bis {{ window.firstBar.end }} · Letzte Bar {{ window.lastBar.start }} bis {{ window.lastBar.end }}<br>
+          Grenze links: {{ window.leftBoundary.reason }} · rechts: {{ window.rightBoundary.reason }}<br>
+          Snapshot {{ window.snapshot.snapshotVersion }} · Regel {{ window.policyVersion }} · Fold {{ window.foldIndex === null ? 'nicht gebunden' : window.foldIndex + 1 }}</p>
+      </article>
+    } @empty { <p>Keine entsprechenden Fenster nachgewiesen.</p> }
+  </details>
+}
+@if (!windows().completeExperiment.length) { <p>Keine vollständigen Strict-PIT-Experimentfenster nachgewiesen.</p> }

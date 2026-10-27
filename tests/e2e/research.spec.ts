@@ -101,7 +101,8 @@ test('explicit import is idempotent, reloads persisted status and stops on sessi
     const response = page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname === '/api/v1/research/ingestion-jobs');
     await research(page).getByRole('button', { name: 'Historienimport ausdrücklich starten', exact: true }).click();
     expect((await response).status()).toBe(202);
-    await expect(research(page).getByRole('status')).toContainText('dauerhaft angenommen');
+    await expect(research(page).getByRole('status').filter({ hasText: 'Importauftrag' }))
+      .toContainText('dauerhaft angenommen');
   }
   expect(keys).toHaveLength(2); expect(keys[0]).toBeTruthy(); expect(keys[1]).toBe(keys[0]);
   const response = await page.request.get('/api/v1/research/ingestion-jobs?limit=50');
@@ -118,16 +119,19 @@ test('explicit import is idempotent, reloads persisted status and stops on sessi
   expect(partial!.pages).toBe(1); expect(partial!.bars).toBe(2);
   const partialCard = research(page).locator('article.job').filter({ hasText: partial!.jobId });
   const resumedResponse = page.waitForResponse(reply => reply.request().method() === 'POST'
-    && new URL(reply.url()).pathname === '/api/v1/research/ingestion-jobs');
+    && new URL(reply.url()).pathname === '/api/v1/research/ingestion-jobs')
+    .then(async reply => ({ status: reply.status(),
+      body: await reply.json() as ResearchJobPage['items'][number],
+      key: reply.request().headers()['idempotency-key'] }));
   await partialCard.getByRole('button', { name: 'Fortsetzung ausdrücklich starten', exact: true }).click();
   const resumedReply = await resumedResponse;
-  expect(resumedReply.status()).toBe(202);
-  const resumed = await resumedReply.json();
+  expect(resumedReply.status).toBe(202);
+  const resumed = resumedReply.body;
   expect(resumed.jobId).toBe(partial!.jobId); expect(resumed.status).toBe('ACCEPTED');
   expect(resumed.pages).toBe(partial!.pages); expect(resumed.bars).toBe(partial!.bars);
   await expect(partialCard).toContainText('ACCEPTED');
   await expect(partialCard.getByRole('button', { name: 'Fortsetzung ausdrücklich starten', exact: true })).toHaveCount(0);
-  const resumeKey = resumedReply.request().headers()['idempotency-key'];
+  const resumeKey = resumedReply.key;
   expect(resumeKey).toBeTruthy();
   const repeatedResume = await page.request.post('/api/v1/research/ingestion-jobs', {
     data: { action: 'RESUME', jobId: partial!.jobId },
