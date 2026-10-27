@@ -18,6 +18,21 @@
       "clientFilesVerified": 251,
       "evidence": "docs/evidence/rdr-01.md",
       "note": "SHAs bezeichnen den verifizierten Implementierungspush und Merge. Nachfolgende reine Evidenzcommits ändern keine Implementierung."
+    },
+    {
+      "taskId": "RDR-02",
+      "issueNumber": 61,
+      "branch": "codex/ptv-61-readiness-assessor",
+      "commit": "9fd61b3cf768ab74460a5defe33940bd2cd18cdd",
+      "mainMerge": "566654797352877051f190632529c1bfd11e039f",
+      "implementationTree": "7cdd8c1191a1253706cad02cf95336f0da55d593",
+      "remoteVerified": true,
+      "identicalImplementationTrees": true,
+      "issueCommitReachableFromMain": true,
+      "verifiedAt": "2026-10-27T08:36:37.672663+00:00",
+      "unitTestsPassed": 114,
+      "postgresRegressionPassed": true,
+      "evidence": "docs/evidence/rdr-02-domain.md"
     }
   ]
 }
