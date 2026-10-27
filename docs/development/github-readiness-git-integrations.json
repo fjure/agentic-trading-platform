@@ -48,6 +48,20 @@
       "postgresStorageAndRestorePassed": true,
       "postgresRolesAndRestorePassed": true,
       "evidence": "docs/evidence/rdr-03-storage.md"
+    },
+    {
+      "taskId": "RDR-09",
+      "issueNumber": 68,
+      "branch": "codex/ptv-68-trusted-evidence-import",
+      "commit": "698794e76a97f0a81f1048814c8d9c14f6c359c5",
+      "mainMerge": "7246bf8bfbeb5b37c4cb896e3394e5535e0fb92c",
+      "implementationTree": "9aa76b815f8e2eea67c9c434d7e89c469ded97b4",
+      "remoteVerified": true,
+      "identicalImplementationTrees": true,
+      "issueCommitReachableFromMain": true,
+      "verifiedAt": "2026-10-27T13:33:46.794717+00:00",
+      "securityAndBundleTestsPassed": 239,
+      "evidence": "docs/evidence/rdr-09-import.md"
     }
   ]
 }

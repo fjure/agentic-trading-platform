@@ -14,6 +14,7 @@ from packages.brokers.alpaca_history import AlpacaHistorySource, CalendarSession
 from packages.domain.models import utc_time
 from packages.research.calendar import NEW_YORK, ResearchSession
 from packages.research.calendar_storage import append_sessions, read_calendar
+from packages.research.collection import CollectionStore, Dispatch
 from packages.research.jobs import Lease, ResearchJobError, ResearchJobs
 from packages.research.limits import SharedAccountHostLimiter
 from packages.research.models import (
@@ -124,6 +125,7 @@ class ResearchIngestion:
         source_observer: Callable | None = None,
         quality_observer: Callable | None = None,
         error_observer: Callable | None = None,
+        collection: CollectionStore | None = None,
     ) -> None:
         if type(enabled) is not bool or not callable(source_factory):
             raise ValueError("invalid research dispatch configuration")
@@ -133,6 +135,7 @@ class ResearchIngestion:
         self._source_observer = source_observer
         self._quality_observer = quality_observer
         self._error_observer = error_observer
+        self._collection = collection
 
     def _load_plan(self, connection, row: Mapping, lease: Lease | None = None) -> TickPlan:
         request = (
@@ -288,6 +291,7 @@ class ResearchIngestion:
         if not self.enabled or safety_busy:
             return False
         lease, source, host = None, None, _DATA_HOST
+        dispatch, dispatch_state, measured = None, "UNKNOWN", []
         try:
             planned = self._preflight()
             if planned is None:
@@ -308,6 +312,16 @@ class ResearchIngestion:
                 raise SourceError(SourceErrorCode.BLOCKED_LICENSE)
             if capability.status != SourceStatus.IMPLEMENTED:
                 raise SourceError(SourceErrorCode.BLOCKED_CREDENTIALS)
+            if self._collection is not None:
+                admitted = self._collection.admit(
+                    lease.job_id, lease.fence, global_enabled=self.enabled,
+                    owner=lease.owner,
+                    safety_busy=safety_busy or self.limiter.safety_busy(),
+                )
+                if admitted is False:
+                    self.jobs.commit_metadata(lease, lambda connection: None)
+                    return False
+                dispatch = admitted if isinstance(admitted, Dispatch) else None
             if not plan.sessions:
                 start_day = plan.request.start.astimezone(NEW_YORK).date()
                 end_day = (plan.request.end - timedelta(microseconds=1)).astimezone(NEW_YORK).date()
@@ -320,9 +334,25 @@ class ResearchIngestion:
                     )
                     for item in calendar.sessions
                 )
-                self.jobs.commit_metadata(
-                    lease, lambda connection: append_sessions(connection, sessions)
-                )
+                received_at = getattr(calendar, "received_at", None)
+
+                def write_calendar(connection):
+                    append_sessions(connection, sessions)
+                    if dispatch is not None:
+                        measured.append(self._collection.record(
+                            connection, dispatch, state="COMPLETED",
+                            first_observed_at=received_at,
+                            body={"calendarResponseFingerprint": content_fingerprint(sessions)},
+                        ))
+
+                self.jobs.commit_metadata(lease, write_calendar)
+                if measured:
+                    with self.jobs.engine.begin() as connection:
+                        for receipt in measured:
+                            connection.execute(text(
+                                "SELECT research.confirm_receipt(:id,'OBSERVATION')"
+                            ), dict(id=receipt))
+                dispatch_state = "COMPLETED"
                 return True
             current_hash = cursor_hash(lease.private_cursor)
             if current_hash in plan.cursor_hashes:
@@ -330,6 +360,7 @@ class ResearchIngestion:
             page = await source.fetch_page(
                 plan.request, lease.private_cursor, sessions=plan.sessions
             )
+            received_at = getattr(page, "received_at", None)
             if page.next_page_token is not None and (
                 cursor_hash(page.next_page_token) == current_hash
                 or cursor_hash(page.next_page_token) in plan.cursor_hashes
@@ -352,7 +383,19 @@ class ResearchIngestion:
 
             def write(connection):
                 for bar in bars:
-                    self._store.append_bar(connection, bar, symbol=plan.request.symbol)
+                    stored = self._store.append_bar(connection, bar, symbol=plan.request.symbol)
+                    if dispatch is not None:
+                        measured.append(self._collection.record(
+                            connection, dispatch, state="COMPLETED",
+                            first_observed_at=received_at, bar=stored,
+                            body=dict(
+                                contentFingerprint=stored.fingerprint,
+                                revisionId=str(stored.revision_id),
+                                predecessorId=(str(stored.predecessor_id)
+                                               if stored.predecessor_id else None),
+                                localRevision=stored.local_revision,
+                            ),
+                        ))
                 if self._source_observer is not None:
                     self._source_observer(connection, lease, len(bars))
                 if (
@@ -371,6 +414,14 @@ class ResearchIngestion:
                 write,
                 more_partitions=plan.more_partitions,
             )
+            dispatch_state = "COMPLETED"
+            if measured:
+                # Neue Transaktion, nachdem das gemeinsame Bar-/Receiptcommit bestätigt ist.
+                with self.jobs.engine.begin() as connection:
+                    for receipt in measured:
+                        connection.execute(text(
+                            "SELECT research.confirm_receipt(:id,'OBSERVATION')"
+                        ), dict(id=receipt))
             return True
         except SourceError as error:
             if lease is not None:
@@ -404,6 +455,11 @@ class ResearchIngestion:
                     pass
             return lease is not None
         finally:
+            if dispatch is not None:
+                try:
+                    self._collection.finish(dispatch, state=dispatch_state)
+                except Exception:
+                    pass  # Fehlende Bestätigung bleibt UNKNOWN, kein fingiertes Messresultat.
             if source is not None:
                 try:
                     await source.close()

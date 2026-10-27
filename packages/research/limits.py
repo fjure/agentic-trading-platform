@@ -162,6 +162,11 @@ class SharedAccountHostLimiter:
         with self._lock:
             self._safety_busy = busy
 
+    def safety_busy(self) -> bool:
+        """Aktuelle Safetypriorität vor dauerhafter Dispatchzulassung erneut lesen."""
+        with self._lock:
+            return self._safety_busy
+
     def block_research(self, host: str, retry_after: float) -> None:
         """Block research GETs to a host for a bounded Retry-After interval."""
         normalized = _host(host)
