@@ -8,6 +8,7 @@ from uuid import UUID
 from sqlalchemy import text
 
 from packages.backtesting.calendar import (
+    calendar_reference,
     first_signal_knowledge,
     relevant_schedule_rows,
     schedule_windows,
@@ -250,6 +251,70 @@ class FoldDataset:
     outcome_cutoffs: tuple[tuple[UUID, datetime], ...] = ()
 
 
+@dataclass(frozen=True)
+class FoldPlan:
+    test_windows: tuple[tuple[datetime, datetime], ...]
+    warm_windows: tuple[tuple[datetime, datetime], ...]
+    warm_start: datetime
+    warmup_missing: bool
+    unknown_dates: tuple = ()
+
+
+def plan_fold(frozen, fold, warmup_count, calendar_rows, checkpoint=lambda: None, *, strict=True):
+    """One calendar/warm-up binding shared by diagnosis and materialization."""
+    first = first_signal_knowledge(
+        calendar_rows, fold.test_start, fold.test_end, frozen.snapshot, checkpoint
+    )
+    if first is None:
+        raise DatasetBlocked("BLOCKED_CALENDAR_UNKNOWN", fold.test_start)
+    _, planned = schedule_windows(
+        calendar_rows,
+        fold.training_start if warmup_count else fold.test_start,
+        fold.test_end,
+        first,
+        frozen.snapshot,
+    )
+    if planned.unknown_dates and strict:
+        raise DatasetBlocked("BLOCKED_CALENDAR_UNKNOWN", planned.unknown_dates[0])
+    test = tuple(w for w in planned.windows if w[0] >= fold.test_start)
+    if not test:
+        raise DatasetBlocked("BLOCKED_MISSING_DATA", fold.test_start)
+    preceding = tuple(w for w in planned.windows if w[1] <= fold.test_start)
+    missing = len(preceding) < warmup_count
+    if missing and strict:
+        raise DatasetBlocked("BLOCKED_WARMUP_MISSING", fold.test_start)
+    warm = preceding[-warmup_count:] if warmup_count else ()
+    return FoldPlan(
+        test, warm, warm[0][0] if warm else fold.test_start, missing, planned.unknown_dates
+    )
+
+
+def input_candidates(visible, instrument_id, warm_start):
+    """Canonical source selection, including ambiguous natural identities."""
+    by_start, ambiguous = {}, []
+    for bar in visible:
+        if (
+            bar.identity.instrument_id != instrument_id
+            or bar.identity.provider != "alpaca"
+            or bar.identity.bar_start < warm_start
+        ):
+            continue
+        if bar.identity.bar_start in by_start:
+            ambiguous.append(bar.identity.bar_start)
+        by_start[bar.identity.bar_start] = bar
+    return by_start, tuple(ambiguous)
+
+
+def outcome_candidates(visible, instrument_id, start):
+    return tuple(
+        bar
+        for bar in visible
+        if bar.identity.instrument_id == instrument_id
+        and bar.identity.provider == "alpaca"
+        and bar.identity.bar_start == start
+    )
+
+
 def materialize_fold(
     frozen,
     fold,
@@ -259,6 +324,7 @@ def materialize_fold(
     quality_rows=(),
     coverage_proofs=(),
     checkpoint=lambda: None,
+    trust_check=None,
 ):
     """Bind complete regular windows; no skipping missing warmup or result bars."""
     if not isinstance(fold, Fold) or type(warmup_count) is not int or not 0 <= warmup_count < 100:
@@ -268,28 +334,8 @@ def materialize_fold(
     if any(len(rows) > MAX_REVISIONS for rows in (calendar_rows, quality_rows, coverage_proofs)):
         raise DatasetBudgetExceeded("metadata row budget exhausted")
     snapshot = frozen.snapshot
-    first_knowledge = first_signal_knowledge(
-        calendar_rows, fold.test_start, fold.test_end, snapshot, checkpoint
-    )
-    if first_knowledge is None:
-        raise DatasetBlocked("BLOCKED_CALENDAR_UNKNOWN", fold.test_start)
-    _, planned = schedule_windows(
-        calendar_rows,
-        fold.training_start if warmup_count else fold.test_start,
-        fold.test_end,
-        first_knowledge,
-        snapshot,
-    )
-    if planned.unknown_dates:
-        raise DatasetBlocked("BLOCKED_CALENDAR_UNKNOWN", planned.unknown_dates[0])
-    test_windows = tuple(w for w in planned.windows if w[0] >= fold.test_start)
-    if not test_windows:
-        raise DatasetBlocked("BLOCKED_MISSING_DATA", fold.test_start)
-    preceding = tuple(w for w in planned.windows if w[1] <= fold.test_start)
-    if len(preceding) < warmup_count:
-        raise DatasetBlocked("BLOCKED_WARMUP_MISSING", fold.test_start)
-    warm_windows = preceding[-warmup_count:] if warmup_count else ()
-    warm_start = warm_windows[0][0] if warm_windows else fold.test_start
+    plan = plan_fold(frozen, fold, warmup_count, calendar_rows, checkpoint)
+    test_windows, warm_windows, warm_start = (plan.test_windows, plan.warm_windows, plan.warm_start)
     binding = WarmupBinding(warm_start, fold.test_start, tuple(w[0] for w in warm_windows))
     expected = tuple(w[0] for w in test_windows)
     signals, outcomes = frozen.sweep(), frozen.sweep()
@@ -311,28 +357,32 @@ def materialize_fold(
                 calendar_rows, start, fold.test_end, knowledge, snapshot
             )
         )
+        if trust_check is not None:
+            for row in relevant_schedule_rows(
+                calendar_rows, start, fold.test_end, knowledge, snapshot
+            ):
+                if trust_check("CALENDAR_REVISION", calendar_reference(row), knowledge) is not None:
+                    raise DatasetBlocked("BLOCKED_CALENDAR_UNKNOWN", start)
         proof = covering_proof(
-            coverage_proofs, instrument_id, warm_start, fold.test_end, knowledge, snapshot
+            coverage_proofs,
+            instrument_id,
+            warm_start,
+            fold.test_end,
+            knowledge,
+            snapshot,
+            trust_check,
         )
         if proof is None:
             raise DatasetBlocked("BLOCKED_CORPORATE_ACTIONS_UNKNOWN", start)
         coverage_refs.add(str(proof.coverage_id))
-        okay, refs = quality_at(quality_rows, warm_start, end, knowledge, snapshot)
+        okay, refs = quality_at(quality_rows, warm_start, end, knowledge, snapshot, trust_check)
         if not okay:
             raise DatasetBlocked("BLOCKED_QUALITY", start)
         quality_refs.update(refs)
         visible = signals.visible(end, knowledge)
-        by_start = {}
-        for bar in visible:
-            if (
-                bar.identity.instrument_id != instrument_id
-                or bar.identity.provider != "alpaca"
-                or bar.identity.bar_start < warm_start
-            ):
-                continue
-            if bar.identity.bar_start in by_start:
-                raise DatasetBlocked("BLOCKED_AMBIGUOUS_DATA", bar.identity.bar_start)
-            by_start[bar.identity.bar_start] = bar
+        by_start, ambiguous = input_candidates(visible, instrument_id, warm_start)
+        if ambiguous:
+            raise DatasetBlocked("BLOCKED_AMBIGUOUS_DATA", ambiguous[0])
         # Every test identity is checked when it first becomes a signal. Keep
         # only the registered strategy's rolling window in each immutable step;
         # copying the complete prefix would make manifest size quadratic.
@@ -346,6 +396,10 @@ def materialize_fold(
                     required,
                 )
         input_bars = tuple(by_start[key] for key in needed)
+        if trust_check is not None:
+            for bar in input_bars:
+                if trust_check("BAR_REVISION", str(bar.revision_id), knowledge) is not None:
+                    raise DatasetBlocked("BLOCKED_MISSING_DATA", bar.identity.bar_start)
         if index == 0:
             warmup = input_bars[:warmup_count]
         target = next((w[0] for w in planned_now.windows if w[0] >= knowledge), None)
@@ -353,18 +407,18 @@ def materialize_fold(
             raise DatasetBlocked("BLOCKED_CALENDAR_CHANGED", target)
         steps.append(DecisionStep(by_start[start], input_bars, target))
         outcome_cutoff = end + OUTCOME_DELAY
-        okay, refs = quality_at(quality_rows, start, end, outcome_cutoff, snapshot)
+        okay, refs = quality_at(quality_rows, start, end, outcome_cutoff, snapshot, trust_check)
         if not okay:
             raise DatasetBlocked("BLOCKED_QUALITY", start)
         quality_refs.update(refs)
-        eligible = tuple(
-            b
-            for b in outcomes.visible(end, outcome_cutoff)
-            if b.identity.instrument_id == instrument_id
-            and b.identity.provider == "alpaca"
-            and b.identity.bar_start == start
-        )
+        eligible = outcome_candidates(outcomes.visible(end, outcome_cutoff), instrument_id, start)
         if len(eligible) != 1:
+            raise DatasetBlocked("BLOCKED_OUTCOME_MISSING", start)
+        if (
+            trust_check is not None
+            and trust_check("BAR_REVISION", str(eligible[0].revision_id), outcome_cutoff)
+            is not None
+        ):
             raise DatasetBlocked("BLOCKED_OUTCOME_MISSING", start)
         result_bars.append(eligible[0])
         cutoffs.append((eligible[0].revision_id, outcome_cutoff))

@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import text
 
+from packages.backtesting.coverage import managed_evidence_installed
 from packages.backtesting.models import BacktestBudgetExceeded
 from packages.research.calendar import NEW_YORK, expected_windows
 from packages.research.calendar_storage import coverage_from_rows
@@ -21,9 +22,23 @@ def read_schedule_rows(connection, snapshot):
             dict(version=snapshot.version, snapshot=snapshot.at),
         ).mappings()
     )
-    if len(rows) > 100000:
+    imported = ()
+    if managed_evidence_installed(connection):
+        from packages.research.calendar_storage import read_evidence_calendar_rows
+
+        imported = read_evidence_calendar_rows(connection, snapshot.version, snapshot.at)
+    if len(rows) + len(imported) > 100000:
         raise BacktestBudgetExceeded("calendar metadata budget exhausted")
-    return rows
+    return tuple(
+        sorted(
+            (*rows, *imported),
+            key=lambda row: (row["ingested_at"], row["commit_version"], row["session_id"]),
+        )
+    )
+
+
+def calendar_reference(row):
+    return str(row.get("evidence_id", row["version"]))
 
 
 def schedule_at(rows, knowledge_at, snapshot):
@@ -32,7 +47,8 @@ def schedule_at(rows, knowledge_at, snapshot):
     query = PointInTimeQuery(
         datetime.max.replace(tzinfo=UTC), knowledge_at, snapshot.at, snapshot.version
     )
-    return coverage_from_rows(rows, query)
+    usable = tuple(row for row in rows if row.get("managed_trust_state") in (None, "VERIFIED"))
+    return coverage_from_rows(usable, query)
 
 
 def relevant_schedule_rows(rows, start, end, knowledge_at, snapshot):
