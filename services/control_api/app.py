@@ -203,6 +203,7 @@ def create_app(
     research=None,
     backtesting=None,
     readiness=None,
+    collection=None,
 ) -> FastAPI:
     from services.control_api.paper_commands import PaperCommandError
     from services.control_api.paper_routes import paper_problem, register_paper_routes
@@ -211,7 +212,8 @@ def create_app(
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
 
     def public_problem(request, status, code):
-        if request.url.path.startswith("/api/v1/research/data-readiness/"):
+        if request.url.path.startswith(("/api/v1/research/data-readiness/",
+                                        "/api/v1/research/collection/")):
             from services.control_api.readiness_routes import readiness_problem
             if status == 401:
                 code = "UNAUTHORIZED"
@@ -481,6 +483,8 @@ def create_app(
     register_backtest_routes(app, backtesting=backtesting, body_reader=_body, key_reader=key)
     from services.control_api.readiness_routes import register_readiness_routes
     register_readiness_routes(app, readiness=readiness, body_reader=_body, key_reader=key)
+    from services.control_api.collection_routes import register_collection_routes
+    register_collection_routes(app, collection=collection, body_reader=_body, key_reader=key)
     return app
 
 

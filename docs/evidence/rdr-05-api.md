@@ -114,23 +114,23 @@ werden zusÃ¤tzlich in RDR-08 gemeinsam abgenommen. Die Diagnose fÃ¼hrt weder
 Sammlung noch Import noch Backtest automatisch aus. Reale Providerrechte,
 externe historische Zeitbeweise und reale Eignung bleiben unverifiziert.
 
-## Unabhängige Integration und Regression
+## UnabhÃ¤ngige Integration und Regression
 
-Der Hauptagent prüfte Queue-/Fence-/Publikations- und HTTP-/Cursorgrenzen
-unabhängig vom Implementierer. Der private Headerfehler wurde geschlossen;
+Der Hauptagent prÃ¼fte Queue-/Fence-/Publikations- und HTTP-/Cursorgrenzen
+unabhÃ¤ngig vom Implementierer. Der private Headerfehler wurde geschlossen;
 fehlerhafte Eingaben erzeugen redigierte 400-Antworten. Im isolierten RDR-05-Stand
 ohne die noch offenen Planoperationen bestanden alle **1505 Vertragstests in
-39,12s**, einschließlich beider exakter Runtime-Routentests und sämtlicher drei
+39,12s**, einschlieÃŸlich beider exakter Runtime-Routentests und sÃ¤mtlicher drei
 Diagnoseoperationen. Die Transportsuite bestand separat mit 33 Tests in 2,49s.
 
-Die unabhängige gemeinsame PG-Abnahme prüfte tatsächliche importierte Referenzen:
-zukünftiger Widerruf und eine fremde Quelle mit gleicher Schlüssel-ID erzeugen
+Die unabhÃ¤ngige gemeinsame PG-Abnahme prÃ¼fte tatsÃ¤chliche importierte Referenzen:
+zukÃ¼nftiger Widerruf und eine fremde Quelle mit gleicher SchlÃ¼ssel-ID erzeugen
 keine falschen Warnungen; aktuelle Witness-/Source-Widerrufe zeigen die exakten
 Entscheidungsreferenzen und aktuelle Trustversion. Originalbericht und dessen
-Cursor bleiben unverändert gebunden. Keine offenen P1/P2 im geprüften Umfang.
+Cursor bleiben unverÃ¤ndert gebunden. Keine offenen P1/P2 im geprÃ¼ften Umfang.
 
-Das strikte Paper-Provisionierungsmanifest unterstützt die exakt hinzugekommenen
-0030-/0031-Rechte; vorhandene Finanzrechte bleiben byteweise als Menge geprüft.
-Die tatsächliche Paper-Safetyprüfung unter laufender Diagnose bestand nach dieser
-Korrektur. Gesamtunitregression: 1073 bestanden, eine Linuxprüfung unter Windows
-übersprungen; Credentialscan: 1119 Dateien ohne Befund.
+Das strikte Paper-Provisionierungsmanifest unterstÃ¼tzt die exakt hinzugekommenen
+0030-/0031-Rechte; vorhandene Finanzrechte bleiben byteweise als Menge geprÃ¼ft.
+Die tatsÃ¤chliche Paper-SafetyprÃ¼fung unter laufender Diagnose bestand nach dieser
+Korrektur. Gesamtunitregression: 1073 bestanden, eine LinuxprÃ¼fung unter Windows
+Ã¼bersprungen; Credentialscan: 1119 Dateien ohne Befund.

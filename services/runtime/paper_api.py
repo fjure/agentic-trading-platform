@@ -52,7 +52,8 @@ class ProfileContext(Context):
     payload: dict
 
 
-def create_private_paper_app(commands, *, research=None, backtesting=None, readiness=None):
+def create_private_paper_app(commands, *, research=None, backtesting=None, readiness=None,
+                             collection=None):
     app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None, redirect_slashes=False)
 
     @app.middleware("http")
@@ -185,6 +186,9 @@ def create_private_paper_app(commands, *, research=None, backtesting=None, readi
                              key_reader=research_key)
     from services.control_api.readiness_routes import register_readiness_routes
     register_readiness_routes(app, readiness=readiness, body_reader=_body, key_reader=research_key)
+    from services.control_api.collection_routes import register_collection_routes
+    register_collection_routes(app, collection=collection, body_reader=_body,
+                               key_reader=research_key)
     return app
 
 
@@ -196,12 +200,14 @@ def run_private_paper_api(engine):
     from services.runtime.config import database_engine
 
     research_engine = database_engine("api", deployment="paper", isolated_research=True)
+    from services.control_api.collection_service import CollectionPlanService
     from services.runtime.backtesting import configured_readiness_service, configured_service
 
     application = create_private_paper_app(
         commands, research=ResearchService(research_engine),
         backtesting=configured_service(research_engine),
         readiness=configured_readiness_service(research_engine),
+        collection=CollectionPlanService(research_engine),
     )
 
     def health_loop():
