@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "repository": "fjure/agentic-trading-platform",
+  "changeId": "retrospective-research-backtesting",
+  "source": "openspec/changes/retrospective-research-backtesting/tasks.md",
+  "transport": "authorized-gh-cli-fallback-mcp-write-403",
+  "tasks": [
+    {
+      "taskId": "RRB-01",
+      "issueNumber": 69,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/69",
+      "contentHash": "006345f2be0699c35b8c982848dc97b2821242fb1d8383016107f03dae7b8267",
+      "syncedAt": "2026-10-27T19:39:31.282913+00:00",
+      "dependsOn": [],
+      "state": "open",
+      "nativeDependsOn": []
+    },
+    {
+      "taskId": "RRB-02",
+      "issueNumber": 70,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/70",
+      "contentHash": "2e500d858e635e88ae1b83e7b003faaaf5a59395bb994efbeb7877ab7c9667c1",
+      "syncedAt": "2026-10-27T19:39:31.282913+00:00",
+      "dependsOn": [
+        "RRB-01"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        69
+      ]
+    },
+    {
+      "taskId": "RRB-03",
+      "issueNumber": 71,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/71",
+      "contentHash": "051534805849f13a178f01fd953c3ddc5a974ec6a42418046c353b4e89c703bb",
+      "syncedAt": "2026-10-27T19:39:31.282913+00:00",
+      "dependsOn": [
+        "RRB-01"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        69
+      ]
+    },
+    {
+      "taskId": "RRB-04",
+      "issueNumber": 72,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/72",
+      "contentHash": "854c80404a60a3d572cf0daceb569754fd3f4675c68f6b815cddcbe07c63e3ea",
+      "syncedAt": "2026-10-27T19:39:31.282913+00:00",
+      "dependsOn": [
+        "RRB-02"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        70
+      ]
+    },
+    {
+      "taskId": "RRB-05",
+      "issueNumber": 73,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/73",
+      "contentHash": "7ba7b0219c2bc33a42fee75bd4727ebb6c0a34954caf85ac74c1a68db0eb3a35",
+      "syncedAt": "2026-10-27T19:39:31.282913+00:00",
+      "dependsOn": [
+        "RRB-02"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        70
+      ]
+    },
+    {
+      "taskId": "RRB-06",
+      "issueNumber": 74,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/74",
+      "contentHash": "edc9671e06b264d48934b9ae001c35c59af380a48c9cd333bc5145c05145171a",
+      "syncedAt": "2026-10-27T19:39:31.282913+00:00",
+      "dependsOn": [
+        "RRB-03",
+        "RRB-04",
+        "RRB-05"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        71,
+        72,
+        73
+      ]
+    },
+    {
+      "taskId": "RRB-07",
+      "issueNumber": 75,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/75",
+      "contentHash": "807493ee53f4bfb7cf8ea3dce311cfb0206e6a8191f6f6b584642ba1771f834e",
+      "syncedAt": "2026-10-27T19:39:31.282913+00:00",
+      "dependsOn": [
+        "RRB-06"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        74
+      ]
+    },
+    {
+      "taskId": "RRB-08",
+      "issueNumber": 76,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/76",
+      "contentHash": "89f47524369ece6e4b86c17069c7a4da7f9868a059cbc05fe0c33671b0e7ea25",
+      "syncedAt": "2026-10-27T19:39:31.282913+00:00",
+      "dependsOn": [
+        "RRB-01",
+        "RRB-02",
+        "RRB-03",
+        "RRB-04",
+        "RRB-05",
+        "RRB-06",
+        "RRB-07"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75
+      ]
+    }
+  ],
+  "lastSyncRun": {
+    "syncedAt": "2026-10-27T19:39:31.282913+00:00",
+    "created": 8,
+    "updated": 7,
+    "unchanged": 1,
+    "readBack": 8,
+    "repositoryWideVerified": true
+  },
+  "nativeDependencies": "verified-forward-and-reverse",
+  "nativeDependencyVerification": {
+    "verifiedAt": "2026-10-27T19:42:05.664492+00:00",
+    "edges": 15,
+    "added": 15,
+    "forwardReadBack": 8,
+    "reverseReadBack": 8,
+    "exactGraph": true
+  }
+}
