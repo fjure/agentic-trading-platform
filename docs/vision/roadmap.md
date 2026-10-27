@@ -16,6 +16,10 @@ Vor Nutzung eines Datenproviders sind Lizenz, Speicherung, Weitergabe, Anpassung
 
 **Umgesetzt und offline geprüft:** feste SPY-/QQQ-Long/Flat-Benchmarks, beobachtungsgebundene Datensichten, deterministischer Decimal-Simulator, unabhängige chronologische Folds, persistente begrenzte Workerjobs, authentifizierte Verträge und Materialoberfläche. [Abnahme, unabhängiger Review und Grenzen](../evidence/bkt-implementation-verification.md). Standarddispatch bleibt deaktiviert; echte historische Nutzbarkeit hängt weiterhin von tatsächlich damaliger Verfügbarkeit und expliziten Kalender-/Kapitalmaßnahmenbelegen ab. Heutige Backfills können korrekt vollständig blockieren. Kein automatischer Übergang in Paper oder LIVE.
 
+## Umgesetzter Baustein: research-data-readiness
+
+**Umgesetzt und offline geprüft:** dauerhafte Datenzulässigkeitsdiagnosen mit getrennten Vertrauensdimensionen, aktuellen Widerrufswarnungen und snapshotgebundenen Befunden; begrenzte Execution-Sammlung mit versionierten Plänen und dauerhafter Pausenbarriere; separater Ed25519-Offlineimport mit tatsächlicher Aufnahmezeit; Angular-Materialoberfläche mit Reload und Pagination. [Gemeinsame Abnahme, unabhängiger Review und Grenzen](../evidence/rdr-implementation-verification.md). Sammlung bleibt global deaktiviert und das Produktionstrustregister leer. Eine Signatur oder hohe Beobachtungsquote beweist keine historische PIT-Eignung; jeder Backtest prüft seine eigenen Nachweise. Reale Providerrechte, Uhrvergleichbarkeit und historische Veröffentlichung bleiben unverifiziert. Keine zusätzliche Paper- oder LIVE-Freigabe.
+
 ## Danach: weiterführende Research und Strategieprüfung
 
 **Langfristig:** versionierte Strategien, lokale Replay- und Shadowvergleiche, robuste Out-of-sample-Auswertung und ein Dashboard für Quellen, Kalender, Datenqualität, Annahmen und Ergebnisse. Neue Märkte werden erst ergänzt, wenn Datenrechte, Handelskalender, Instrumentregeln, Liquidität und Risikoparameter ausreichend belegt sind. Mehr Märkte bedeuten getrennte Quellen- und Marktregeln, nicht bloß zusätzliche Symbole.

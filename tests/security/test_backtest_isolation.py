@@ -11,7 +11,7 @@ from uuid import uuid4
 MARKER = "PASS backtest actual container/CPU/memory/mounts/internal-network/SQL-role/no-provider"
 
 
-def isolated_worker_host():
+def isolated_worker_host(module="tests.security.test_backtest_isolation", marker=MARKER):
     from tests.integration.test_paper_provision import POSTGRES
 
     root = Path(__file__).resolve().parents[2]
@@ -132,7 +132,6 @@ def isolated_worker_host():
                 "python",
             ]
             image = "agentic-trading-lab-research-test:local"
-            module = "tests.security.test_backtest_isolation"
             assert (
                 docker("run", "--rm", "--network", admin_net, *common, image, "-m", module, "seed")
                 == "SEEDED"
@@ -156,7 +155,7 @@ def isolated_worker_host():
                 module,
                 "probe",
             )
-            assert result == MARKER
+            assert result == marker
             actual = json.loads(docker("inspect", worker))[0]
             assert list(actual["NetworkSettings"]["Networks"]) == [worker_net]
             assert actual["HostConfig"]["ReadonlyRootfs"] is True
