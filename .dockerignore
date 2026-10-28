@@ -6,7 +6,12 @@
 apps
 docs
 openspec
-contracts
+contracts/*
+!contracts/schemas
+contracts/schemas/*
+!contracts/schemas/v1
+contracts/schemas/v1/*
+!contracts/schemas/v1/backtesting.schema.json
 tests
 __pycache__
 *.pyc

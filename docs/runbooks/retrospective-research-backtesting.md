@@ -16,6 +16,14 @@ Strict und Retrospektiv verwenden denselben Decimal-Simulator und dieselben Stra
 
 Der reine Reliabilityassessor liefert sechs getrennte Dimensionen und dieselben snapshotgebundenen Regeln für Vorschau und Finalreport. Bekannte Maßnahmenkonflikte, notwendige Datenlücken und Preisbrüche ab 20 Prozent blockieren; fehlende Belege bleiben sichtbar unbekannt. Ein positiver Report verlangt das exakt gebundene Manifest. Nachweis: `docs/evidence/rrb-05.md`. Worker/API und Oberfläche folgen ihren eigenen Paketen.
 
+## Persistenzlieferung RRB-03
+
+Die additive Speicherung bindet konkrete Datenrevisionen, Kalender, Truststand, Build und tatsächliche lokale Lizenzreceipt an denselben Vorschau-Snapshot. Übersicht, Befunde und Revisionsreferenzen bilden einen unveränderlichen gemeinsamen Report-Envelope; der vollständige Fingerprint bindet auch später paginierte Einträge. Runs, Strict-Readiness und retrospektive Vorschauen teilen Queue100, oldest-job-Admission und Lease-/Workergrenzen. Altworker können neue Varianten ohne Policykontext nicht übernehmen. Nachweis und tatsächliche Prüfergebnisse: docs/evidence/rrb-03.md.
+
+Der schmale Lizenzport bestätigt keine persönlichen Providerrechte. Vor neuer Ausführung und positiver Publikation muss die Workerintegration aktuelle negative Rechte/Truststände separat prüfen; historische Receipts und Reports werden dabei nicht umgeschrieben. Vorschau und Finalreport bleiben getrennte unveränderliche Versionen. RRB-03 allein implementiert noch keinen neuen HTTP-/Workerpfad.
+
+Rollback stoppt neue Erstellung/Dispatch und behandelt nichtterminale neue Jobs vor Rückkehr alter Worker ausdrücklich. Neue Varianten werden niemals zu Strict umgedeutet; veröffentlichte Daten/Reports bleiben erhalten. Entwicklungstests verwenden einen PID-1-Init für PostgreSQL, damit verwaiste Health-/Execprozesse keinen Server-Neustart auslösen. Isolierte Testvolumes ersetzen keine oder reparieren keine historischen Nutzerbelege.
+
 ## Researchmodi und Ein-/Ausgaben
 
 Bestehende `POST /api/v1/research/backtests/runs`-Requests bleiben ohne Modusauswahl Strict PIT. `STRICT_PIT` ist auch ausdrücklich auswählbar. Die bisherige historische Beleg-/Fehlersemantik, Zeitgrenzen und Idempotenz bleiben erhalten. Ein blockierter Strict-Lauf löst niemals automatisch einen retrospektiven Lauf aus.

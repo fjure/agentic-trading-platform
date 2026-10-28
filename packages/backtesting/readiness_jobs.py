@@ -130,6 +130,8 @@ class ReadinessJobs:
                   AND lease_until>clock_timestamp())
                   OR EXISTS(SELECT FROM backtest.readiness_jobs WHERE status='RUNNING'
                   AND lease_until>clock_timestamp())
+                  OR EXISTS(SELECT FROM backtest.retrospective_assessments WHERE status='RUNNING'
+                  AND lease_until>clock_timestamp())
             """)
             ).scalar_one():
                 return None
@@ -137,14 +139,7 @@ class ReadinessJobs:
             # same advisory lock plus SQL trigger also protects legacy claimers.
             first = connection.execute(
                 text("""
-                SELECT kind FROM (
-                  SELECT 'readiness' AS kind,accepted_at,assessment_id AS id
-                    FROM backtest.readiness_jobs WHERE status='ACCEPTED'
-                    OR(status='RUNNING' AND lease_until<=clock_timestamp() AND attempts<3)
-                  UNION ALL SELECT 'backtest',accepted_at,run_id FROM backtest.runs
-                    WHERE status='ACCEPTED' OR(status='RUNNING'
-                    AND lease_until<=clock_timestamp() AND attempts<3)
-                ) q ORDER BY accepted_at,id LIMIT 1
+                SELECT kind FROM backtest.oldest_job()
             """)
             ).scalar_one_or_none()
             if first != "readiness":

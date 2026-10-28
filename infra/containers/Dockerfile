@@ -12,6 +12,7 @@ COPY --from=build /opt/lab/.venv /opt/lab/.venv
 COPY services /opt/lab/services
 COPY packages /opt/lab/packages
 COPY config /opt/lab/config
+COPY contracts/schemas/v1/backtesting.schema.json /opt/lab/contracts/schemas/v1/backtesting.schema.json
 COPY alembic.ini /opt/lab/alembic.ini
 ARG SOURCE_REVISION=""
 RUN printf '%s' "$SOURCE_REVISION" > /opt/lab/git-revision

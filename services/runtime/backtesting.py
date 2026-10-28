@@ -8,7 +8,10 @@ from time import sleep
 
 def source_fingerprint(root):
     """Version exactly the copied implementation, public config and pinned dependencies."""
-    paths = [root / name for name in ("pyproject.toml", "uv.lock")]
+    paths = [
+        root / name
+        for name in ("pyproject.toml", "uv.lock", "contracts/schemas/v1/backtesting.schema.json")
+    ]
     for name in ("packages", "services", "config"):
         paths.extend(
             path
