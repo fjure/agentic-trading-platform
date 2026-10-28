@@ -327,6 +327,8 @@ def materialize_fold(
     trust_check=None,
 ):
     """Bind complete regular windows; no skipping missing warmup or result bars."""
+    if type(frozen) is not FrozenDataset:
+        raise ValueError("Strict PIT requires its own frozen dataset")
     if not isinstance(fold, Fold) or type(warmup_count) is not int or not 0 <= warmup_count < 100:
         raise ValueError("typed fold and bounded warmup required")
     if fold.test_end > frozen.snapshot.at:

@@ -4,6 +4,10 @@
 
 Der Apply-Auftrag vom 27.10.2026 beginnt mit RRB-01/#69. Dieses Paket liefert additive Verträge, Schema-/Negativtests und den mechanisch generierten Angularclient. Die neuen Vorschau-/Reportoperationen werden erst mit RRB-06 als tatsächliche Runtimefunktionen abgenommen. Eine gültige Vertragsfixture beweist weder historische Datenqualität noch ein lauffähiges Experiment.
 
+## Domainlieferung RRB-02
+
+Die getrennte retrospektive Datenselektion und ihre unveränderlichen Manifest-/Replaymodelle sind implementiert. Sie bewahren tatsächliche Zeitfelder und lassen neue Korrekturen nur in neue Snapshots einfließen. Feste Strict-Identitäten bleiben als Regression abgesichert. Es gibt dadurch noch keinen neuen lauffähigen HTTP-/Workerpfad; Qualitätsreport, Persistenz und gemeinsame Simulation folgen ihren eigenen Paketen. Nachweis: `docs/evidence/rrb-02.md`.
+
 ## Researchmodi und Ein-/Ausgaben
 
 Bestehende `POST /api/v1/research/backtests/runs`-Requests bleiben ohne Modusauswahl Strict PIT. `STRICT_PIT` ist auch ausdrücklich auswählbar. Die bisherige historische Beleg-/Fehlersemantik, Zeitgrenzen und Idempotenz bleiben erhalten. Ein blockierter Strict-Lauf löst niemals automatisch einen retrospektiven Lauf aus.
