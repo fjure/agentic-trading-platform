@@ -12,6 +12,10 @@ Die getrennte retrospektive Datenselektion und ihre unveränderlichen Manifest-/
 
 Strict und Retrospektiv verwenden denselben Decimal-Simulator und dieselben Strategien/Metriken mit getrennten validierten Dateneingängen. Öffentliche Aufrufe prüfen die vollständige Manifestbindung; die vier Strict-Hashorakel bleiben unverändert. Eine neue Worker-/HTTPausführung ist damit noch nicht freigegeben oder implementiert. Nachweis: `docs/evidence/rrb-04.md`.
 
+## Qualitätslieferung RRB-05
+
+Der reine Reliabilityassessor liefert sechs getrennte Dimensionen und dieselben snapshotgebundenen Regeln für Vorschau und Finalreport. Bekannte Maßnahmenkonflikte, notwendige Datenlücken und Preisbrüche ab 20 Prozent blockieren; fehlende Belege bleiben sichtbar unbekannt. Ein positiver Report verlangt das exakt gebundene Manifest. Nachweis: `docs/evidence/rrb-05.md`. Worker/API und Oberfläche folgen ihren eigenen Paketen.
+
 ## Researchmodi und Ein-/Ausgaben
 
 Bestehende `POST /api/v1/research/backtests/runs`-Requests bleiben ohne Modusauswahl Strict PIT. `STRICT_PIT` ist auch ausdrücklich auswählbar. Die bisherige historische Beleg-/Fehlersemantik, Zeitgrenzen und Idempotenz bleiben erhalten. Ein blockierter Strict-Lauf löst niemals automatisch einen retrospektiven Lauf aus.
