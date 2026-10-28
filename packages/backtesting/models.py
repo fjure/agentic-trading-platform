@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import ClassVar
 from uuid import UUID
 
 from packages.domain.models import decimal_value, utc_time
@@ -14,6 +15,37 @@ from packages.research.models import content_fingerprint
 SIMULATOR_VERSION = "backtest-simulator-v1"
 METRICS_VERSION = "backtest-metrics-v1"
 WARMUP_VERSION = "regular-bars-slow-minus-one-v1"
+
+
+@dataclass(frozen=True)
+class StrictPitPolicyV1:
+    """The default policy; deliberately absent from legacy hash preimages."""
+
+    research_mode: ClassVar[str] = "STRICT_PIT"
+    selection_policy_version: ClassVar[str] = "strict-pit-v1"
+
+
+@dataclass(frozen=True)
+class RetrospectivePolicyV1:
+    """Explicit current-snapshot research, never historical receipt evidence."""
+
+    research_mode: ClassVar[str] = "RETROSPECTIVE_EXPLORATORY"
+    selection_policy_version: ClassVar[str] = "retrospective-v1"
+    experiment_version: ClassVar[str] = "retrospective-experiment-v1"
+
+
+def selection_policy(research_mode=None, selection_policy_version=None):
+    """Normalize only the two closed policies; an omitted mode stays Strict."""
+    if research_mode in (None, "STRICT_PIT"):
+        if selection_policy_version not in (None, "strict-pit-v1"):
+            raise ValueError("Strict policy mismatch")
+        return StrictPitPolicyV1()
+    if (research_mode, selection_policy_version) == (
+        "RETROSPECTIVE_EXPLORATORY",
+        "retrospective-v1",
+    ):
+        return RetrospectivePolicyV1()
+    raise ValueError("unsupported research mode or selection policy")
 
 
 class BacktestBlocked(ValueError):
