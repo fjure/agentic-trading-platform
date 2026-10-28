@@ -3,6 +3,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 from packages.backtesting.evaluation import evaluate
+from packages.backtesting.models import WarmupBinding
 from packages.backtesting.simulator import SimulationBlocked
 from tests.unit.test_backtest_models import config
 from tests.unit.test_backtest_simulator import bar, dataset
@@ -20,7 +21,11 @@ def test_folds_reset_and_references_use_same_costs():
     two = dataset(
         tuple(bar(i, start=second.test_start + timedelta(minutes=15 * i)) for i in range(4)), cfg
     )
-    two.fold = second
+    two = replace(
+        two,
+        fold=second,
+        warmup_binding=WarmupBinding(second.test_start, second.test_start, ()),
+    )
     result = evaluate(cfg, (one, two))
     assert result.status == "SUCCEEDED"
     assert result.folds[0].strategy.metrics == result.folds[1].strategy.metrics

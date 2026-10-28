@@ -1,11 +1,12 @@
 from dataclasses import replace
 from datetime import timedelta
 from decimal import Decimal, localcontext
-from types import SimpleNamespace
 from uuid import UUID
 
 import pytest
 
+from packages.backtesting.dataset import DecisionStep, FoldDataset
+from packages.backtesting.models import WarmupBinding
 from packages.backtesting.simulator import SimulationBlocked, simulate
 from packages.research.models import BarIdentity, BarInterval, BarRevision
 from tests.unit.test_backtest_models import T, config
@@ -33,7 +34,7 @@ def dataset(bars=None, cfg=None):
     cfg = cfg or config()
     bars = bars or tuple(bar(i) for i in range(4))
     steps = tuple(
-        SimpleNamespace(
+        DecisionStep(
             signal_bar=b,
             input_bars=bars[: i + 1],
             fill_target=next(
@@ -47,12 +48,13 @@ def dataset(bars=None, cfg=None):
         )
         for i, b in enumerate(bars)
     )
-    return SimpleNamespace(
+    return FoldDataset(
         fold=cfg.folds[0],
         steps=steps,
         outcome_bars=bars,
         expected_bar_starts=tuple(b.identity.bar_start for b in bars),
         warmup=(),
+        warmup_binding=WarmupBinding(cfg.folds[0].test_start, cfg.folds[0].test_start, ()),
     )
 
 
@@ -78,11 +80,13 @@ def test_zero_quantity_missing_bar_and_fill_before_signal():
     cfg = config(start_cash=Decimal("0.5"), fee_usd=Decimal("1"))
     assert not simulate(cfg, dataset(cfg=cfg)).fills
     data = dataset()
-    data.outcome_bars = data.outcome_bars[:2] + data.outcome_bars[3:]
+    data = replace(data, outcome_bars=data.outcome_bars[:2] + data.outcome_bars[3:])
     with pytest.raises(SimulationBlocked, match="OUTCOME_DATA_MISSING"):
         simulate(config(), data)
     data = dataset()
-    data.steps[0].fill_target = T + timedelta(minutes=15)
+    data = replace(
+        data, steps=(replace(data.steps[0], fill_target=T + timedelta(minutes=15)), *data.steps[1:])
+    )
     with pytest.raises(SimulationBlocked, match="FILL_BEFORE_SIGNAL"):
         simulate(config(), data)
 
@@ -90,15 +94,24 @@ def test_zero_quantity_missing_bar_and_fill_before_signal():
 def test_future_outcomes_do_not_change_decision_hash():
     data = dataset()
     original = simulate(config(), data)
-    data.outcome_bars = tuple(
-        replace(b, open=Decimal("20"), high=Decimal("20")) if i >= 2 else b
-        for i, b in enumerate(data.outcome_bars)
+    data = replace(
+        data,
+        outcome_bars=tuple(
+            replace(b, open=Decimal("20"), high=Decimal("20")) if i >= 2 else b
+            for i, b in enumerate(data.outcome_bars)
+        ),
     )
     changed = simulate(config(), data)
     assert changed.decisions == original.decisions
     assert changed.fills != original.fills
     bad = dataset()
-    bad.steps[0].input_bars = (bad.steps[0].signal_bar, bad.outcome_bars[1])
+    bad = replace(
+        bad,
+        steps=(
+            replace(bad.steps[0], input_bars=(bad.steps[0].signal_bar, bad.outcome_bars[1])),
+            *bad.steps[1:],
+        ),
+    )
     with pytest.raises(SimulationBlocked, match="POINT_IN_TIME"):
         simulate(config(), bad)
 
@@ -106,14 +119,17 @@ def test_future_outcomes_do_not_change_decision_hash():
 def test_late_outcome_revision_and_overnight_fill():
     data = dataset()
     late = data.outcome_bars[2]
-    data.outcome_bars = (
-        *data.outcome_bars[:2],
-        replace(
-            late,
-            available_at=late.identity.bar_end + timedelta(seconds=301),
-            ingested_at=late.identity.bar_end + timedelta(seconds=301),
+    data = replace(
+        data,
+        outcome_bars=(
+            *data.outcome_bars[:2],
+            replace(
+                late,
+                available_at=late.identity.bar_end + timedelta(seconds=301),
+                ingested_at=late.identity.bar_end + timedelta(seconds=301),
+            ),
+            data.outcome_bars[3],
         ),
-        data.outcome_bars[3],
     )
     with pytest.raises(SimulationBlocked, match="OUTCOME_DATA_INVALID"):
         simulate(config(), data)
@@ -136,9 +152,13 @@ def sma_dataset():
         bar(101, "2", start=T - timedelta(minutes=15)),
     )
     data = dataset(bars, cfg)
-    data.warmup = warmup
-    for i, step in enumerate(data.steps):
-        step.input_bars = warmup + bars[: i + 1]
+    data = replace(
+        data,
+        warmup=warmup,
+        steps=tuple(
+            replace(step, input_bars=warmup + bars[: i + 1]) for i, step in enumerate(data.steps)
+        ),
+    )
     return cfg, data
 
 
@@ -158,13 +178,19 @@ def test_sma_sale_and_no_warmup_fills_independent_math():
 
 def test_sale_fee_must_be_covered_and_sma_missing_warmup_blocks():
     cfg, data = sma_dataset()
-    data.outcome_bars = tuple(
-        bar(4, "0.01") if i == 4 else b for i, b in enumerate(data.outcome_bars)
+    data = replace(
+        data,
+        outcome_bars=tuple(
+            bar(4, "0.01") if i == 4 else b for i, b in enumerate(data.outcome_bars)
+        ),
     )
     with pytest.raises(SimulationBlocked, match="SELL_FEE_EXCEEDS_PROCEEDS"):
         simulate(cfg, data)
     cfg, data = sma_dataset()
-    data.steps[0].input_bars = (data.steps[0].signal_bar,)
+    data = replace(
+        data,
+        steps=(replace(data.steps[0], input_bars=(data.steps[0].signal_bar,)), *data.steps[1:]),
+    )
     with pytest.raises(SimulationBlocked, match="WARMUP_MISSING"):
         simulate(cfg, data)
 
@@ -179,6 +205,6 @@ def test_checkpoint_each_bar_and_last_signal_expires():
 
 def test_missing_schedule_target_blocks_instead_of_silent_fill_skip():
     data = dataset()
-    data.steps[0].fill_target = None
+    data = replace(data, steps=(replace(data.steps[0], fill_target=None), *data.steps[1:]))
     with pytest.raises(SimulationBlocked, match="FILL_SCHEDULE_MISMATCH"):
         simulate(config(), data)

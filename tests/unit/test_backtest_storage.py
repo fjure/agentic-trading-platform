@@ -6,7 +6,7 @@ import pytest
 
 from packages.backtesting.evaluation import evaluate
 from packages.backtesting.jobs import encoded
-from packages.backtesting.models import BacktestBudgetExceeded, WarmupBinding
+from packages.backtesting.models import BacktestBudgetExceeded
 from packages.backtesting.storage import fold_public
 from tests.unit.test_backtest_models import config
 from tests.unit.test_backtest_simulator import dataset
@@ -15,8 +15,6 @@ from tests.unit.test_backtest_simulator import dataset
 def test_public_cash_projection_is_context_independent_and_matches_terminal_equity():
     cfg = config(fee_usd=Decimal("1"), slippage_bps=Decimal("100"))
     data = dataset(cfg=cfg)
-    data.warmup = ()
-    data.warmup_binding = WarmupBinding(cfg.folds[0].test_start, cfg.folds[0].test_start, ())
     result = evaluate(cfg, (data,)).folds[0]
     expected = fold_public(result, data, {})
     with localcontext() as caller:

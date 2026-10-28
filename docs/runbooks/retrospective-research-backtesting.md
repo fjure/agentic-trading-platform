@@ -8,6 +8,10 @@ Der Apply-Auftrag vom 27.10.2026 beginnt mit RRB-01/#69. Dieses Paket liefert ad
 
 Die getrennte retrospektive Datenselektion und ihre unveränderlichen Manifest-/Replaymodelle sind implementiert. Sie bewahren tatsächliche Zeitfelder und lassen neue Korrekturen nur in neue Snapshots einfließen. Feste Strict-Identitäten bleiben als Regression abgesichert. Es gibt dadurch noch keinen neuen lauffähigen HTTP-/Workerpfad; Qualitätsreport, Persistenz und gemeinsame Simulation folgen ihren eigenen Paketen. Nachweis: `docs/evidence/rrb-02.md`.
 
+## Simulationslieferung RRB-04
+
+Strict und Retrospektiv verwenden denselben Decimal-Simulator und dieselben Strategien/Metriken mit getrennten validierten Dateneingängen. Öffentliche Aufrufe prüfen die vollständige Manifestbindung; die vier Strict-Hashorakel bleiben unverändert. Eine neue Worker-/HTTPausführung ist damit noch nicht freigegeben oder implementiert. Nachweis: `docs/evidence/rrb-04.md`.
+
 ## Researchmodi und Ein-/Ausgaben
 
 Bestehende `POST /api/v1/research/backtests/runs`-Requests bleiben ohne Modusauswahl Strict PIT. `STRICT_PIT` ist auch ausdrücklich auswählbar. Die bisherige historische Beleg-/Fehlersemantik, Zeitgrenzen und Idempotenz bleiben erhalten. Ein blockierter Strict-Lauf löst niemals automatisch einen retrospektiven Lauf aus.

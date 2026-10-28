@@ -5,7 +5,8 @@ from dataclasses import dataclass
 
 from .metrics import FoldMetrics, calculate_metrics
 from .models import BacktestBlocked, ExperimentConfig, fingerprint
-from .simulator import SimulationBlocked, SimulationResult, simulate
+from .retrospective import RetrospectiveValidationContext
+from .simulator import SimulationBlocked, SimulationResult, _simulate_bound, simulate
 
 
 @dataclass(frozen=True)
@@ -40,11 +41,20 @@ def evaluate(
     *,
     checkpoint: Callable[[], None] = lambda: None,
     on_fold: Callable[[FoldEvaluation], None] = lambda fold: None,
+    validation_context: RetrospectiveValidationContext | None = None,
 ) -> EvaluationResult:
     """Consume datasets lazily so later blocking preserves completed fold references."""
     complete = []
     iterator = iter(datasets)
     try:
+        if validation_context is not None:
+            if type(validation_context) is not RetrospectiveValidationContext:
+                raise ValueError("closed retrospective validation context required")
+            validation_context.__post_init__()
+            # Revalidate every immutable reference before evaluating any fold.
+            validation_context.manifest.__post_init__()
+            if config != validation_context.manifest.config:
+                raise SimulationBlocked("BLOCKED_DATASET_BINDING")
         for index, fold in enumerate(config.folds):
             checkpoint()
             try:
@@ -55,7 +65,14 @@ def evaluate(
                 raise ValueError("dataset does not match bound fold")
             values = []
             for strategy in (config.strategy_id, "flat-v1", "buy-hold-v1"):
-                result = simulate(config, dataset, strategy_id=strategy, checkpoint=checkpoint)
+                simulation = simulate if validation_context is None else _simulate_bound
+                result = simulation(
+                    config,
+                    dataset,
+                    strategy_id=strategy,
+                    checkpoint=checkpoint,
+                    validation_context=validation_context,
+                )
                 values.append(EvaluatedStrategy(result, calculate_metrics(result)))
             complete.append(FoldEvaluation(index, *values))
             on_fold(complete[-1])
