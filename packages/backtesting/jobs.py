@@ -106,6 +106,7 @@ class BacktestJobs:
               UPDATE backtest.runs SET status='FAILED',error_code='BUDGET_EXHAUSTED',
                 owner=NULL,lease_until=NULL,updated_at=clock_timestamp()
               WHERE status='RUNNING' AND lease_until<=clock_timestamp() AND attempts>=3
+                AND research_mode IS NULL
               RETURNING run_id,fence,trace_id
             """)
                 )
@@ -116,15 +117,34 @@ class BacktestJobs:
                 self.audit(connection, row, "FAILED")
             if connection.execute(
                 text("""SELECT EXISTS(SELECT FROM backtest.runs
-              WHERE status='RUNNING' AND lease_until>clock_timestamp())""")
+              WHERE status='RUNNING' AND lease_until>clock_timestamp())
+              OR EXISTS(SELECT FROM backtest.readiness_jobs WHERE status='RUNNING'
+                AND lease_until>clock_timestamp())
+              OR EXISTS(SELECT FROM backtest.retrospective_assessments WHERE status='RUNNING'
+                AND lease_until>clock_timestamp())""")
             ).scalar_one():
+                return None
+            first = (
+                connection.execute(text("SELECT * FROM backtest.oldest_job()"))
+                .mappings()
+                .one_or_none()
+            )
+            if first is None or first["kind"] != "backtest":
+                return None
+            if (
+                connection.execute(
+                    text("SELECT research_mode FROM backtest.runs WHERE run_id=:id"),
+                    {"id": first["id"]},
+                ).scalar_one()
+                is not None
+            ):
                 return None
             row = (
                 connection.execute(
                     text("""
               WITH candidate AS (SELECT run_id FROM backtest.runs
-                WHERE status='ACCEPTED' OR
-                  (status='RUNNING' AND lease_until<=clock_timestamp() AND attempts<3)
+                WHERE research_mode IS NULL AND (status='ACCEPTED' OR
+                  (status='RUNNING' AND lease_until<=clock_timestamp() AND attempts<3))
                 ORDER BY accepted_at,run_id FOR UPDATE SKIP LOCKED LIMIT 1)
               UPDATE backtest.runs r SET status='RUNNING',owner=:owner,fence=fence+1,
                 attempts=attempts+1,started_at=clock_timestamp(),

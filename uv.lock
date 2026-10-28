@@ -11,6 +11,7 @@ dependencies = [
     { name = "cryptography" },
     { name = "fastapi" },
     { name = "httpx" },
+    { name = "jsonschema" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-sdk" },
     { name = "psycopg", extra = ["binary", "pool"] },
@@ -24,7 +25,6 @@ dependencies = [
 dev = [
     { name = "build" },
     { name = "hypothesis" },
-    { name = "jsonschema" },
     { name = "pip-audit" },
     { name = "pytest" },
     { name = "pyyaml" },
@@ -37,6 +37,7 @@ requires-dist = [
     { name = "cryptography", specifier = "==50.0.2" },
     { name = "fastapi", specifier = "==0.143.0" },
     { name = "httpx", specifier = "==0.28.1" },
+    { name = "jsonschema", specifier = "==4.26.0" },
     { name = "opentelemetry-api", specifier = "==1.45.1" },
     { name = "opentelemetry-sdk", specifier = "==1.45.1" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = "==3.3.6" },
@@ -50,7 +51,6 @@ requires-dist = [
 dev = [
     { name = "build", specifier = "==1.6.1" },
     { name = "hypothesis", specifier = "==6.169.0" },
-    { name = "jsonschema", specifier = "==4.26.0" },
     { name = "pip-audit", specifier = "==2.10.1" },
     { name = "pytest", specifier = "==9.1.1" },
     { name = "pyyaml", specifier = "==6.0.3" },
