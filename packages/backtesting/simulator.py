@@ -7,18 +7,17 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import ROUND_FLOOR, ROUND_HALF_EVEN, Decimal, localcontext
-from typing import TYPE_CHECKING
 from uuid import UUID
 
 from packages.research.models import QualityStatus
 
+from .dataset import FoldDataset
 from .models import BacktestBlocked, ExperimentConfig, fingerprint
+from .retrospective import RetrospectiveFoldDataset, RetrospectiveValidationContext
 from .strategies import Target, decide
 
-if TYPE_CHECKING:
-    from .dataset import FoldDataset
-
 USD_SCALE = Decimal("0.00000001")
+RETROSPECTIVE_VALUATION_METHOD = "raw-iex-close-retrospective-market-v1"
 
 
 class SimulationBlocked(BacktestBlocked):
@@ -77,21 +76,70 @@ class SimulationResult:
 
 def simulate(
     config: ExperimentConfig,
-    dataset: FoldDataset,
+    dataset: FoldDataset | RetrospectiveFoldDataset,
     *,
     strategy_id: str | None = None,
     checkpoint: Callable[[], None] = lambda: None,
+    validation_context: RetrospectiveValidationContext | None = None,
 ) -> SimulationResult:
     """Outcome bars are only consumed here; decide receives historical closes only."""
+    if validation_context is not None:
+        if type(validation_context) is not RetrospectiveValidationContext:
+            raise ValueError("closed retrospective validation context required")
+        validation_context.__post_init__()
+        validation_context.manifest.__post_init__()
+    return _simulate_bound(
+        config,
+        dataset,
+        strategy_id=strategy_id,
+        checkpoint=checkpoint,
+        validation_context=validation_context,
+    )
+
+
+def _simulate_bound(
+    config,
+    dataset,
+    *,
+    strategy_id=None,
+    checkpoint=lambda: None,
+    validation_context=None,
+) -> SimulationResult:
+    """Private kernel entry; evaluate has revalidated the complete manifest once."""
+    _validate_dataset(config, dataset, validation_context)
     strategy = strategy_id or config.strategy_id
     parameters = config.parameters if strategy == config.strategy_id else ()
     with localcontext() as ctx:
         ctx.prec = 38
         ctx.rounding = ROUND_HALF_EVEN
-        return _simulate(config, dataset, strategy, parameters, checkpoint)
+        return _simulate(config, dataset, strategy, parameters, checkpoint, validation_context)
 
 
-def _simulate(config, dataset, strategy, parameters, checkpoint) -> SimulationResult:
+def _validate_dataset(config, dataset, validation_context):
+    if validation_context is None:
+        if type(dataset) is not FoldDataset:
+            raise ValueError(
+                "Strict PIT requires its own fold dataset without retrospective context"
+            )
+    elif type(validation_context) is not RetrospectiveValidationContext:
+        raise ValueError("closed retrospective validation context required")
+    else:
+        validation_context.validate(config, dataset)
+
+
+def _outcome_cutoff(bar, validation_context):
+    if validation_context is None:
+        cutoff = bar.identity.bar_end + timedelta(seconds=300)
+        if bar.available_at > cutoff or bar.ingested_at > cutoff:
+            raise SimulationBlocked("BLOCKED_OUTCOME_DATA_INVALID", str(bar.revision_id))
+        return cutoff
+    # A simulated market boundary, never a historical local observation claim.
+    return bar.identity.bar_end
+
+
+def _simulate(
+    config, dataset, strategy, parameters, checkpoint, validation_context
+) -> SimulationResult:
     outcomes = {bar.identity.bar_start: bar for bar in dataset.outcome_bars}
     expected = dataset.expected_bar_starts
     if not expected or len(outcomes) != len(dataset.outcome_bars):
@@ -111,13 +159,8 @@ def _simulate(config, dataset, strategy, parameters, checkpoint) -> SimulationRe
         bar = outcomes.get(start)
         if bar is None:
             raise SimulationBlocked("BLOCKED_OUTCOME_DATA_MISSING", start.isoformat())
-        cutoff = bar.identity.bar_end + timedelta(seconds=300)
-        if (
-            bar.quality != QualityStatus.VALID
-            or bar.available_at > cutoff
-            or bar.ingested_at > cutoff
-            or bar.identity.instrument_id != config.instrument_id
-        ):
+        cutoff = _outcome_cutoff(bar, validation_context)
+        if bar.quality != QualityStatus.VALID or bar.identity.instrument_id != config.instrument_id:
             raise SimulationBlocked("BLOCKED_OUTCOME_DATA_INVALID", str(bar.revision_id))
         target = pending.pop(start, None)
         if target == Target.LONG and quantity == 0:
@@ -142,7 +185,7 @@ def _simulate(config, dataset, strategy, parameters, checkpoint) -> SimulationRe
                         price,
                         notional,
                         fee,
-                            money(bar.open * config.slippage_bps / 10000 * amount),
+                        money(bar.open * config.slippage_bps / 10000 * amount),
                         bar.revision_id,
                         cutoff,
                     )
@@ -160,7 +203,7 @@ def _simulate(config, dataset, strategy, parameters, checkpoint) -> SimulationRe
                     price,
                     notional,
                     fee,
-                        money(bar.open * config.slippage_bps / 10000 * quantity),
+                    money(bar.open * config.slippage_bps / 10000 * quantity),
                     bar.revision_id,
                     cutoff,
                 )
@@ -187,8 +230,10 @@ def _simulate(config, dataset, strategy, parameters, checkpoint) -> SimulationRe
             or inputs[-1] != step.signal_bar
             or any(
                 b.identity.bar_end > step.signal_bar.identity.bar_end
-                or b.available_at > signal_at
-                or b.ingested_at > signal_at
+                or (
+                    validation_context is None
+                    and (b.available_at > signal_at or b.ingested_at > signal_at)
+                )
                 or b.quality != QualityStatus.VALID
                 or b.identity.instrument_id != config.instrument_id
                 for b in inputs
@@ -232,6 +277,16 @@ def _simulate(config, dataset, strategy, parameters, checkpoint) -> SimulationRe
                 fill_target,
             )
         )
-    return SimulationResult(
+    result = SimulationResult(
         strategy, money(config.start_cash), tuple(decisions), tuple(fills), tuple(equity)
     )
+    if validation_context is not None:
+        return SimulationResult(
+            result.strategy_id,
+            result.start_cash,
+            result.decisions,
+            result.fills,
+            result.equity,
+            RETROSPECTIVE_VALUATION_METHOD,
+        )
+    return result
