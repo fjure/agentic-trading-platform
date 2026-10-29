@@ -47,7 +47,7 @@ def relay():
         server.serve_forever()
 
 
-def host():
+def host(*, retrospective=False):
     with socket.socket() as probe:
         probe.bind(("127.0.0.1", 4223))
     identity = "atl-backtest-browser-" + uuid4().hex[:20]
@@ -130,6 +130,10 @@ def host():
             (ROOT / "packages", "/opt/lab/packages"),
             (ROOT / "services", "/opt/lab/services"),
             (ROOT / "alembic.ini", "/opt/lab/alembic.ini"),
+            (
+                ROOT / "contracts/schemas/v1/backtesting.schema.json",
+                "/opt/lab/contracts/schemas/v1/backtesting.schema.json",
+            ),
             (ROOT / "apps/dashboard/dist/dashboard/browser", "/opt/lab/dashboard"),
             (Path(__file__), "/opt/lab/backtest_browser_support.py"),
         ]:
@@ -140,7 +144,7 @@ def host():
             "agentic-trading-lab-research-test:local",
             "-u",
             "backtest_browser_support.py",
-            "guest",
+            "guest-retrospective" if retrospective else "guest",
         ]
         child = subprocess.Popen(
             command,
@@ -185,6 +189,11 @@ def host():
             BACKTEST_BROWSER_START=ready["start"],
             BACKTEST_BROWSER_END=ready["end"],
             BACKTEST_BROWSER_KNOWLEDGE=ready["knowledge"],
+            BACKTEST_BROWSER_RETROSPECTIVE="1" if retrospective else "0",
+            BACKTEST_BROWSER_RETRO_START=ready.get("retroStart", ""),
+            BACKTEST_BROWSER_RETRO_END=ready.get("retroEnd", ""),
+            BACKTEST_BROWSER_SPLIT_START=ready.get("splitStart", ""),
+            BACKTEST_BROWSER_SPLIT_END=ready.get("splitEnd", ""),
             PLAYWRIGHT_NO_COPY_PROMPT="1",
         )
         result = subprocess.run(
@@ -340,7 +349,220 @@ def seed_backtest_fixture(engine):
     )
 
 
-def guest():
+def seed_retrospective_fixture(engine):
+    """Current DB receipts for synthetic historical QQQ, separate from Strict SPY."""
+    import hashlib
+
+    from sqlalchemy import text
+
+    from packages.domain.models import utc_string
+    from packages.research.evidence_storage import EvidenceInput, EvidenceStore, unknown_trust
+    from packages.research.models import BarIdentity, BarInterval, BarRevision
+    from packages.research.registry import definitions
+    from packages.research.storage import ResearchStore
+
+    instrument = definitions()[1][0]
+    first = datetime(2026, 10, 20, 13, 30, tzinfo=UTC)
+    split = first + timedelta(days=1)
+    store = ResearchStore()
+    with engine.begin() as connection:
+        now = connection.execute(text("SELECT clock_timestamp()")).scalar_one()
+        for session in (first, split):
+            for index in range(26):
+                opening = session + timedelta(minutes=15 * index)
+                revision = store.append_bar(
+                    connection,
+                    BarRevision(
+                        uuid4(),
+                        BarIdentity(
+                            instrument.instrument_id,
+                            "alpaca",
+                            "iex",
+                            BarInterval.FIFTEEN_MINUTES,
+                            opening,
+                            opening + timedelta(minutes=15),
+                        ),
+                        Decimal("100"),
+                        Decimal("101"),
+                        Decimal("99"),
+                        Decimal("100"),
+                        Decimal("1000"),
+                        now,
+                        now,
+                    ),
+                    symbol="QQQ",
+                )
+                assert revision.ingested_at > revision.identity.bar_end
+            connection.execute(
+                text("""INSERT INTO research.calendar_versions
+                (session_id,session_date,opens_at,closes_at,version,source)
+                VALUES(:id,:day,:opening,:closing,:version,'alpaca-v2-calendar')"""),
+                dict(
+                    id=uuid4(),
+                    day=session.date(),
+                    opening=session,
+                    closing=session + timedelta(hours=6, minutes=30),
+                    version="c" * 64,
+                ),
+            )
+        authority = dict(
+            decisionId=str(uuid4()),
+            sourceId="synthetic-browser-actions",
+            keyId="synthetic-browser-key",
+            witnessId=None,
+            authorityType="SOURCE",
+            effectiveAt=now - timedelta(seconds=2),
+            validFrom=now - timedelta(days=1),
+            validTo=now + timedelta(days=1),
+            revoked=False,
+            compromisedAt=None,
+            compromiseTimeKnown=True,
+            policyVersion="synthetic-browser-v1",
+            reason="SYNTHETIC_BROWSER_FIXTURE",
+            scope=dict(instrumentIds=[str(instrument.instrument_id)], kinds=["CORPORATE_ACTION"]),
+            publicKey="A" * 43 + "=",
+            algorithm="Ed25519",
+            methods=["RFC8785-UTF8-v1"],
+            actorRef="synthetic-browser-owner",
+            documentFingerprint="d" * 64,
+            testOnly=True,
+            predecessorDecisionId=None,
+        )
+        trust = {
+            name: {
+                **dict(value),
+                "status": "UNKNOWN" if name == "temporalAuthenticity" else "VERIFIED",
+            }
+            for name, value in unknown_trust().items()
+        }
+        trust["sourceAuthenticity"]["evidenceRefs"] = [
+            dict(
+                kind="KEY",
+                id=authority["keyId"],
+                revision="1",
+                fingerprint=hashlib.sha256(bytes(32)).hexdigest(),
+            )
+        ]
+        evidence = EvidenceInput(
+            uuid4(),
+            authority["sourceId"],
+            "synthetic-known-split",
+            "CORPORATE_ACTION",
+            instrument.instrument_id,
+            split - timedelta(minutes=30),
+            split + timedelta(hours=6, minutes=30),
+            now - timedelta(seconds=1),
+            None,
+            1,
+            None,
+            "e" * 64,
+            dict(
+                type="CORPORATE_ACTION_COVERAGE",
+                conclusion="ACTIONS_PRESENT",
+                actions=[
+                    dict(
+                        type="SPLIT",
+                        ratio="2",
+                        effectiveAt=utc_string(split + timedelta(minutes=15)),
+                    ),
+                ],
+            ),
+            trust,
+            dict(
+                content=dict(
+                    keyId=authority["keyId"], signedAt=utc_string(now - timedelta(seconds=1))
+                )
+            ),
+        )
+        evidence_store = EvidenceStore()
+        cap = connection.execute(
+            text("SELECT version FROM research.trust_version_state WHERE singleton")
+        ).scalar_one()
+        evidence_store.append_trust_decision(connection, authority, cap)
+        evidence_store.append_bundle(
+            connection, "browser-retrospective-split-0001", "e" * 64, (evidence,), cap + 1
+        )
+    return dict(
+        retroStart=utc_string(first),
+        retroEnd=utc_string(first + timedelta(hours=6, minutes=30)),
+        splitStart=utc_string(split),
+        splitEnd=utc_string(split + timedelta(hours=6, minutes=30)),
+        retroInstrument=str(instrument.instrument_id),
+        barCount=56,
+    )
+
+
+def seed_retrospective_history(control, worker, fixture):
+    """Four actual completed jobs exercise history loading above API admission two."""
+    from sqlalchemy import text
+
+    from packages.backtesting.retrospective_storage import RetrospectiveStorage
+    from packages.domain.models import utc_string
+
+    protocol = dict(
+        instrumentId=fixture["retroInstrument"],
+        strategyId="buy-hold-v1",
+        version="1",
+        parameters={},
+        startCash="1000",
+        feeUsd="0",
+        slippageBps="0",
+        quantityStep="0.000001",
+        researchMode="RETROSPECTIVE_EXPLORATORY",
+        selectionPolicyVersion="retrospective-v1",
+        folds=[
+            dict(
+                trainingStart=utc_string(
+                    datetime.fromisoformat(fixture["retroStart"]) - timedelta(minutes=30)
+                ),
+                trainingEnd=fixture["retroStart"],
+                testStart=fixture["retroStart"],
+                testEnd=fixture["retroEnd"],
+            )
+        ],
+    )
+    storage = RetrospectiveStorage(control)
+    assessment = storage.enqueue_assessment(
+        protocol,
+        "local-operator",
+        "browser-history-preview-0001",
+        "a" * 32,
+        "b" * 40,
+    )
+    assert worker.tick()
+    with control.connect() as connection:
+        row = (
+            connection.execute(
+                text("""SELECT status,assessment_hash
+          FROM backtest.retrospective_assessments WHERE assessment_id=:id"""),
+                {"id": assessment["assessment_id"]},
+            )
+            .mappings()
+            .one()
+        )
+        assert row["status"] == "SUCCEEDED"
+        bound = {
+            **protocol,
+            "assessmentId": str(assessment["assessment_id"]),
+            "assessmentHash": row["assessment_hash"],
+        }
+    for index in range(4):
+        storage.enqueue_run(
+            bound, "local-operator", f"browser-history-run-{index:04d}", "a" * 32, "b" * 40
+        )
+    for _ in range(4):
+        assert worker.tick()
+    with control.connect() as connection:
+        assert (
+            connection.execute(
+                text("""SELECT count(*) FROM backtest.runs
+          WHERE research_mode='RETROSPECTIVE_EXPLORATORY' AND status='SUCCEEDED'""")
+            ).scalar_one()
+            == 4
+        )
+
+
+def guest(*, retrospective=False):
     import logging
 
     import uvicorn
@@ -390,8 +612,12 @@ def guest():
         command.upgrade(migration, "head")
     seed(PostgresLedger(engine=admin), Decimal("10000"))
     fixture = seed_backtest_fixture(admin)
+    if retrospective:
+        fixture.update(seed_retrospective_fixture(admin))
     control, worker_engine = engine("atl_control_api"), engine("atl_backtest_worker")
     worker = BacktestWorker(worker_engine, enabled=True, code_version="b" * 40)
+    if retrospective:
+        seed_retrospective_history(control, worker, fixture)
     done, failures = threading.Event(), []
 
     def work():
@@ -446,6 +672,11 @@ def guest():
                 start=fixture["start"],
                 end=fixture["end"],
                 knowledge="2026-10-26T00:00:00Z",
+                **{
+                    key: fixture[key]
+                    for key in ("retroStart", "retroEnd", "splitStart", "splitEnd")
+                    if key in fixture
+                },
             )
         ),
         flush=True,
@@ -460,14 +691,26 @@ def guest():
                     ).scalar_one()
                     == 0
                 )
-                assert (
-                    connection.execute(
-                        text("SELECT count(*) FROM research.bar_revisions")
-                    ).scalar_one()
-                    == 4
-                )
+                assert connection.execute(
+                    text("SELECT count(*) FROM research.bar_revisions")
+                ).scalar_one() == fixture.get("barCount", 4)
                 states = set(connection.execute(text("SELECT status FROM backtest.runs")).scalars())
                 assert {"SUCCEEDED", "BLOCKED"} <= states, states
+                if retrospective:
+                    assert (
+                        connection.execute(
+                            text("""SELECT count(*) FROM backtest.runs
+                    WHERE research_mode='RETROSPECTIVE_EXPLORATORY' AND status='SUCCEEDED'""")
+                        ).scalar_one()
+                        >= 1
+                    )
+                    assert (
+                        connection.execute(
+                            text("""SELECT count(*) FROM backtest.retrospective_assessments
+                    WHERE status='BLOCKED'""")
+                        ).scalar_one()
+                        >= 1
+                    )
             print(
                 "PASS SQL: real Backtest browser, durable states and no orders/provider reads",
                 flush=True,
@@ -484,7 +727,13 @@ def guest():
 
 if __name__ == "__main__":
     try:
-        {"host": host, "guest": guest, "relay": relay}[sys.argv[1]]()
+        {
+            "host": host,
+            "guest": guest,
+            "relay": relay,
+            "host-retrospective": lambda: host(retrospective=True),
+            "guest-retrospective": lambda: guest(retrospective=True),
+        }[sys.argv[1]]()
     except Exception as error:
         import traceback
 

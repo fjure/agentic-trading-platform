@@ -1,0 +1,54 @@
+<h2 mat-dialog-title>Qualitäts- und Grenzenreport</h2>
+<mat-dialog-content>
+  @if (error()) { <p role="alert">{{ error() }}</p> }
+  @if (report(); as report) {
+    <p>{{ report.phase }} · {{ report.overallStatus }} · {{ report.reportId }}</p>
+    <p>Historischer Reporthash: {{ report.reportHash }}</p>
+    <atl-backtest-context [value]="report" [report]="report" />
+    <h3>Unabhängige Qualitätsdimensionen</h3>
+    <p>Qualitätsurteil und Rendite sind getrennt. UNKNOWN ist kein Nachweis fehlender Kapitalmaßnahmen. Preisrendite ohne Dividenden; keine Handelsfreigabe.</p>
+    <dl>@for (dimension of dimensions; track dimension) {
+      <dt>{{ dimension }}</dt><dd>{{ report.dimensions[dimension].rating }} · {{ report.dimensions[dimension].reasonCodes.join(', ') }}</dd>
+    }</dl>
+    <h3>Aktuelle Hinweise · getrennt vom historischen Report</h3>
+    @for (warning of warnings(); track warning.code) {
+      <p class="current-warning">{{ warning.code }} · {{ warning.checkedAt }} · {{ warning.blocksNewExecution ? 'Neue Ausführung gesperrt' : 'Hinweis ohne Ausführungsfreigabe' }}</p>
+    } @empty { <p>Keine aktuellen Hinweise aus der letzten Prüfung.</p> }
+    <p>Historische Verfügbarkeit: {{ report.historicalAvailabilityStatus }} · Lizenzreceipt: {{ report.licenseStatus }} (persönliche Rechte bleiben ungeprüft).</p>
+    <p>Zeitraum {{ report.period.start }} bis {{ report.period.end }} · {{ report.findingsCount }} Befunde · {{ report.revisionReferenceCount }} Revisionsreferenzen.</p>
+  }
+  <div class="filters">
+    <mat-form-field><mat-label>Reportbereich</mat-label><mat-select [formControl]="section">
+      <mat-option value="findings">Befunde</mat-option><mat-option value="revisions">Revisionen</mat-option>
+    </mat-select></mat-form-field>
+    <mat-form-field><mat-label>Reportkategorie</mat-label><mat-select [formControl]="category">
+      <mat-option value="">Alle Kategorien</mat-option>
+      @for (value of categories; track value) { <mat-option [value]="value">{{ value }}</mat-option> }
+    </mat-select></mat-form-field>
+    <mat-form-field><mat-label>Reportfold</mat-label><mat-select [formControl]="fold">
+      <mat-option value="">Alle Folds</mat-option>
+      @for (value of report()?.folds ?? []; track value.foldIndex) { <mat-option [value]="value.foldIndex">Fold {{ value.foldIndex + 1 }}</mat-option> }
+    </mat-select></mat-form-field>
+  </div>
+  @if (loading()) { <p role="status">Reportseiten laden …</p> }
+  @if (section.value === 'findings') {
+    @for (finding of findings(); track finding.findingId) {
+      <article class="report-row" aria-label="Reportbefund"><strong>{{ finding.category }} · {{ finding.code }} · {{ finding.severity }}</strong>
+        <p>Fold: {{ finding.foldIndex === null ? 'übergreifend' : finding.foldIndex + 1 }} · {{ finding.period | json }}</p>
+        @for (reference of finding.references; track $index) { <p>{{ reference.kind }} · {{ reference.referenceId }} · {{ reference.fingerprint }}</p> }
+      </article>
+    } @empty { @if (!loading()) { <p>Keine Befunde für diese Filter.</p> } }
+  } @else {
+    @for (reference of revisions(); track reference.kind + reference.referenceId) {
+      <article class="report-row" aria-label="Reportrevision"><strong>{{ reference.kind }} · {{ reference.referenceId }}</strong>
+        <p>Fingerprint: {{ reference.fingerprint }} · Revision: {{ reference.localRevision ?? 'nicht nummeriert' }} · aufgenommen {{ reference.recordedAt }}</p>
+        <p>{{ reference.period | json }}</p>
+      </article>
+    } @empty { @if (!loading()) { <p>Keine Revisionen für diese Filter.</p> } }
+  }
+  @if (nextCursor()) { <button mat-button (click)="load(true)" [disabled]="loading()">Weitere Reportzeilen</button> }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="reset()" [disabled]="loading()">Report aktualisieren</button>
+  <button mat-flat-button (click)="close()">Report schließen</button>
+</mat-dialog-actions>

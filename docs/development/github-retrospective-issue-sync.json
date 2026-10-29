@@ -6,7 +6,7 @@
   "transport": "authorized-gh-cli-fallback-mcp-write-403",
   "nativeDependencies": "verified-forward-and-reverse",
   "nativeDependencyVerification": {
-    "verifiedAt": "2026-10-29T08:42:41.220905+00:00",
+    "verifiedAt": "2026-10-29T21:20:27.860927+00:00",
     "edges": 15,
     "added": 0,
     "forwardReadBack": 8,
@@ -19,7 +19,7 @@
       "issueNumber": 69,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/69",
       "contentHash": "620a291c8870d94863d5028a1824ebd51a6b19aa68c29bf166e1b717b2899e60",
-      "syncedAt": "2026-10-29T08:42:41.220905+00:00",
+      "syncedAt": "2026-10-29T21:20:27.860927+00:00",
       "dependsOn": [],
       "state": "closed",
       "nativeDependsOn": []
@@ -29,7 +29,7 @@
       "issueNumber": 70,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/70",
       "contentHash": "72459310b273db605ee095761d20ef082679583e16b692b785de7575e83e7c3f",
-      "syncedAt": "2026-10-29T08:42:41.220905+00:00",
+      "syncedAt": "2026-10-29T21:20:27.860927+00:00",
       "dependsOn": [
         "RRB-01"
       ],
@@ -43,7 +43,7 @@
       "issueNumber": 71,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/71",
       "contentHash": "5b7c13ef5c1314212c7ba67518b5496af059ddb3865f778c1485402373d89886",
-      "syncedAt": "2026-10-29T08:42:41.220905+00:00",
+      "syncedAt": "2026-10-29T21:20:27.860927+00:00",
       "dependsOn": [
         "RRB-01"
       ],
@@ -57,7 +57,7 @@
       "issueNumber": 72,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/72",
       "contentHash": "effcba091f8fc0fb27bfb870b390e06c9f0db0a9f4dc5191767378dd73834421",
-      "syncedAt": "2026-10-29T08:42:41.220905+00:00",
+      "syncedAt": "2026-10-29T21:20:27.860927+00:00",
       "dependsOn": [
         "RRB-02"
       ],
@@ -71,7 +71,7 @@
       "issueNumber": 73,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/73",
       "contentHash": "39781dfdc38571ccc4e6f18186b04a56eca0816f03b6f514a52b5039ddf71279",
-      "syncedAt": "2026-10-29T08:42:41.220905+00:00",
+      "syncedAt": "2026-10-29T21:20:27.860927+00:00",
       "dependsOn": [
         "RRB-02"
       ],
@@ -85,7 +85,7 @@
       "issueNumber": 74,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/74",
       "contentHash": "ca9d203ba5bbaddb7d0d4aac80a7c58687b8ccb0bc0f42ab9ffe4fb6c61e6891",
-      "syncedAt": "2026-10-29T08:42:41.220905+00:00",
+      "syncedAt": "2026-10-29T21:20:27.860927+00:00",
       "dependsOn": [
         "RRB-03",
         "RRB-04",
@@ -102,12 +102,12 @@
       "taskId": "RRB-07",
       "issueNumber": 75,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/75",
-      "contentHash": "807493ee53f4bfb7cf8ea3dce311cfb0206e6a8191f6f6b584642ba1771f834e",
-      "syncedAt": "2026-10-29T08:42:41.220905+00:00",
+      "contentHash": "220051645e8d8f15b5674d995826645a59c55ea9e84e4cba8aa43a71c555d8a5",
+      "syncedAt": "2026-10-29T21:20:27.860927+00:00",
       "dependsOn": [
         "RRB-06"
       ],
-      "state": "open",
+      "state": "closed",
       "nativeDependsOn": [
         74
       ]
@@ -117,7 +117,7 @@
       "issueNumber": 76,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/76",
       "contentHash": "89f47524369ece6e4b86c17069c7a4da7f9868a059cbc05fe0c33671b0e7ea25",
-      "syncedAt": "2026-10-29T08:42:41.220905+00:00",
+      "syncedAt": "2026-10-29T21:20:27.860927+00:00",
       "dependsOn": [
         "RRB-01",
         "RRB-02",
@@ -140,7 +140,7 @@
     }
   ],
   "lastSyncRun": {
-    "syncedAt": "2026-10-29T08:42:41.220905+00:00",
+    "syncedAt": "2026-10-29T21:20:27.860927+00:00",
     "created": 0,
     "updated": 0,
     "unchanged": 8,
