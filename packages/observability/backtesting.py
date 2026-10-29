@@ -5,7 +5,18 @@ import re
 from collections import Counter, deque
 from threading import Lock
 
-OPERATIONS = frozenset({"read_strategies", "create_run", "read_runs", "read_run", "read_results"})
+OPERATIONS = frozenset(
+    {
+        "read_strategies",
+        "create_run",
+        "read_runs",
+        "read_run",
+        "read_results",
+        "create_assessment",
+        "read_assessment",
+        "read_reliability_report",
+    }
+)
 CODES = frozenset(
     {
         "INVALID_REQUEST",

@@ -211,6 +211,92 @@ class RetrospectiveStorage:
         if cls.current_license(connection)["status"] == "DENIED":
             raise BacktestError(409, "SNAPSHOT_CONFLICT")
 
+    @classmethod
+    def current_assessment_gate(cls, connection, assessment_id):
+        """Current negative facts only; never replace the immutable snapshot receipt."""
+        return connection.execute(
+            text("SELECT backtest.current_retrospective_gate(:id)"), {"id": assessment_id}
+        ).scalar_one()
+
+    @staticmethod
+    def has_retrospective_correction(connection, assessment_id):
+        """Only a bounded correction flag leaves the SQL owner boundary."""
+        return connection.execute(
+            text("SELECT backtest.has_retrospective_correction(:id)"), {"id": assessment_id}
+        ).scalar_one()
+
+    def current_gate(self, lease):
+        """Fail closed on current-port failure, independently of historical diagnostics."""
+        from packages.research.evidence_storage import EvidenceBudgetExceeded
+
+        try:
+            with self.transaction(lease=lease) as connection:
+                self.fenced(connection, lease)
+                return self.current_assessment_gate(connection, lease.assessment_id)
+        except BacktestError as error:
+            if error.code == "LEASE_LOST":
+                raise
+            return "TRUST_UNAVAILABLE"
+        except EvidenceBudgetExceeded:
+            return "TRUST_UNAVAILABLE"
+
+    def preview_report(self, assessment_id):
+        with self.transaction() as connection:
+            row = (
+                connection.execute(
+                    text(
+                        "SELECT * FROM backtest.retrospective_reports WHERE assessment_id=:id "
+                        "AND phase='PREVIEW'"
+                    ),
+                    {"id": assessment_id},
+                )
+                .mappings()
+                .one_or_none()
+            )
+            if row is None:
+                raise BacktestError(404, "NOT_FOUND")
+            return dict(row)
+
+    def block_current_gate(self, lease, code):
+        """Terminal current-gate refusal with an unchanged historical report and no result."""
+        if lease.run_id is None or code not in (
+            "LICENSE_DENIED",
+            "TRUST_REVOKED",
+            "TRUST_UNAVAILABLE",
+            "STRUCTURAL_CORPORATE_ACTION",
+            "CORPORATE_ACTION_CONFLICT",
+        ):
+            raise ValueError("run lease and closed current gate required")
+        preview = self.preview_report(lease.assessment_id)
+        report = dict(
+            preview["body"], reportId=str(uuid4()), phase="FINAL", runId=str(lease.run_id)
+        )
+        with self.transaction(lease=lease) as connection:
+            self.fenced(connection, lease)
+            self._insert_report(
+                connection, lease, report, preview["findings"], preview["revision_references"]
+            )
+            connection.execute(
+                text(
+                    "INSERT INTO backtest.retrospective_execution_gates(run_id,code,fence) "
+                    "VALUES(:id,:code,:fence)"
+                ),
+                {"id": lease.run_id, "code": code, "fence": lease.fence},
+            )
+            row = (
+                connection.execute(
+                    text(
+                        "UPDATE backtest.runs SET status='BLOCKED',error_code=:code,owner=NULL,"
+                        "lease_until=NULL,updated_at=clock_timestamp() WHERE run_id=:id RETURNING *"
+                    ),
+                    {"id": lease.run_id, "code": code},
+                )
+                .mappings()
+                .one()
+            )
+            self._audit(connection, row, "BLOCKED", True)
+            return dict(row)
+
     @staticmethod
     def _audit(connection, row, event, run=False):
         if run:
@@ -350,7 +436,7 @@ class RetrospectiveStorage:
             "identity": {name: identity[name] for name in _IDENTITY[kind]},
         }
 
-    def bind_dataset(self, lease, content, references=()):
+    def bind_dataset(self, lease, content, references=(), *, checkpoint=lambda: None):
         if lease.run_id is not None:
             raise ValueError("assessment owns dataset binding")
         references = tuple(references)
@@ -360,10 +446,10 @@ class RetrospectiveStorage:
             raise ValueError("duplicate revision binding")
         with self.transaction(lease=lease) as connection:
             self.fenced(connection, lease)
-            bindings = [
-                self._reference(connection, *reference)
-                for reference in sorted(references, key=lambda r: (r[0], str(r[1])))
-            ]
+            bindings = []
+            for reference in sorted(references, key=lambda r: (r[0], str(r[1]))):
+                checkpoint()
+                bindings.append(self._reference(connection, *reference))
             license_fingerprint = connection.execute(
                 text("SELECT fingerprint FROM backtest.license_receipts WHERE assessment_id=:id"),
                 {"id": lease.assessment_id},
@@ -409,6 +495,7 @@ class RetrospectiveStorage:
                 },
             )
             for binding in bindings:
+                checkpoint()
                 column = _SOURCES[binding["kind"]][3]
                 connection.execute(
                     text(f"""INSERT INTO backtest.retrospective_revision_bindings
@@ -425,7 +512,7 @@ class RetrospectiveStorage:
             self.fenced(connection, lease)
             return fingerprint
 
-    def load_dataset(self, assessment_id):
+    def load_dataset(self, assessment_id, *, checkpoint=lambda: None):
         """Exact bound bodies and source rows, rechecking every stored fingerprint."""
         if not isinstance(assessment_id, UUID):
             raise ValueError("typed assessment id required")
@@ -444,6 +531,7 @@ class RetrospectiveStorage:
                 raise BacktestError(409, "SNAPSHOT_CONFLICT")
             rows = []
             for reference in dataset["body"]["bindings"]:
+                checkpoint()
                 restored = self._reference(
                     connection,
                     reference["kind"],
@@ -461,7 +549,10 @@ class RetrospectiveStorage:
                     .mappings()
                     .one()
                 )
-                rows.append((reference["kind"], dict(row)))
+                restored_row = dict(row)
+                if reference["kind"] == "QUALITY":
+                    restored_row["fingerprint"] = reference["fingerprint"]
+                rows.append((reference["kind"], restored_row))
             return dict(dataset), tuple(rows)
 
     def _insert_report(self, connection, lease, report, findings=(), revision_references=()):
@@ -656,7 +747,11 @@ class RetrospectiveStorage:
         with self.transaction(lease=lease) as connection:
             self.fenced(connection, lease)
             if status == "SUCCEEDED":
-                self.require_current_license(connection)
+                gate = self.current_assessment_gate(connection, lease.assessment_id)
+                if gate == "TRUST_UNAVAILABLE":
+                    raise BacktestError(503, "UNAVAILABLE")
+                if gate is not None:
+                    raise BacktestError(409, "SNAPSHOT_CONFLICT")
             self._insert_report(connection, lease, report, findings, revision_references)
             self._bind_run_manifest(connection, lease, manifest)
             connection.execute(
@@ -668,7 +763,11 @@ class RetrospectiveStorage:
             )
             self.fenced(connection, lease)
             if status == "SUCCEEDED":
-                self.require_current_license(connection)
+                gate = self.current_assessment_gate(connection, lease.assessment_id)
+                if gate == "TRUST_UNAVAILABLE":
+                    raise BacktestError(503, "UNAVAILABLE")
+                if gate is not None:
+                    raise BacktestError(409, "SNAPSHOT_CONFLICT")
             row = (
                 connection.execute(
                     text("""UPDATE backtest.runs SET status=:status,owner=NULL,

@@ -14,6 +14,7 @@ TABLES = tuple(
         "retrospective_reports",
         "retrospective_audit",
         "license_receipts",
+        "retrospective_execution_gates",
         "runs",
         "manifests",
         "results",
@@ -801,32 +802,21 @@ def guest():
         "SNAPSHOT_CONFLICT",
     )
     denied(lambda: raw_positive_publication(blocked_lease), "UNAVAILABLE")
-    denied_report = {
-        **report(blocked_lease, "BLOCKED"),
-        "licenseStatus": "DENIED",
-        "findingsCount": 1,
-        "dimensions": {
-            **report(blocked_lease, "BLOCKED")["dimensions"],
-            "LICENSE": {"rating": "BLOCKED", "reasonCodes": ["LICENSE_DENIED"]},
-        },
-    }
-    assert (
-        jobs.publish_run(
-            blocked_lease,
-            {"blocked": True},
-            denied_report,
-            manifest={"blocked": True},
-            findings=[
-                {
-                    **finding,
-                    "findingId": str(uuid4()),
-                    "severity": "BLOCKER",
-                    "code": "LICENSE_DENIED",
-                }
-            ],
-        )["status"]
-        == "BLOCKED"
-    )
+    assert jobs.block_current_gate(blocked_lease, "LICENSE_DENIED")["status"] == "BLOCKED"
+    with engine.connect() as connection:
+        denied_report = connection.execute(
+            text("SELECT body FROM backtest.retrospective_reports WHERE run_id=:id"),
+            {"id": blocked_lease.run_id},
+        ).scalar_one()
+        assert denied_report["licenseStatus"] == "UNKNOWN"
+        assert denied_report["overallStatus"] == "EXPLORATORY_WITH_LIMITATIONS"
+        assert (
+            connection.execute(
+                text("SELECT count(*) FROM backtest.results WHERE run_id=:id"),
+                {"id": blocked_lease.run_id},
+            ).scalar_one()
+            == 0
+        )
     # Even unavailable current rights permits bookkeeping to terminalize the
     # oldest job honestly. It never permits positive publication or simulation.
     unavailable_run = reads.enqueue_run(
@@ -845,27 +835,17 @@ def guest():
             "UNAVAILABLE",
         )
         denied(lambda: raw_positive_publication(unavailable_lease), "UNAVAILABLE")
-        unavailable_report = {
-            **report(unavailable_lease, "BLOCKED"),
-            "findingsCount": 1,
-        }
         assert (
-            jobs.publish_run(
-                unavailable_lease,
-                {"blocked": True},
-                unavailable_report,
-                manifest={"blocked": True},
-                findings=[
-                    {
-                        **finding,
-                        "findingId": str(uuid4()),
-                        "severity": "BLOCKER",
-                        "code": "TRUST_UNAVAILABLE",
-                    }
-                ],
-            )["status"]
-            == "BLOCKED"
+            jobs.block_current_gate(unavailable_lease, "TRUST_UNAVAILABLE")["status"] == "BLOCKED"
         )
+        with engine.connect() as connection:
+            assert (
+                connection.execute(
+                    text("SELECT count(*) FROM backtest.results WHERE run_id=:id"),
+                    {"id": unavailable_lease.run_id},
+                ).scalar_one()
+                == 0
+            )
     finally:
         with engine.begin() as connection:
             connection.execute(
