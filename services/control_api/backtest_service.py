@@ -13,11 +13,9 @@ from uuid import UUID
 from sqlalchemy import text
 
 from packages.backtesting.jobs import BacktestError, BacktestJobs
-from packages.backtesting.request import canonical_request
 from packages.backtesting.storage import ASSUMPTIONS, BUDGETS
 from packages.domain.models import utc_string
 from packages.research.registry import definitions
-from services.control_api.backtest_dto import BacktestRequest
 
 STATES = frozenset({"ACCEPTED", "RUNNING", "SUCCEEDED", "BLOCKED", "FAILED"})
 REASONS = frozenset(
@@ -93,6 +91,9 @@ class BacktestService:
         if not isinstance(cursor_key, bytes) or len(cursor_key) < 32:
             raise ValueError("cursor signing material required")
         self._cursor_key = cursor_key
+        from services.control_api.retrospective_service import RetrospectiveService
+
+        self.retrospective = RetrospectiveService(self)
 
     def _sign(self, value):
         raw = encoded(value)
@@ -152,6 +153,10 @@ class BacktestService:
         )
 
     def _run(self, connection, row, *, include_manifest=False):
+        from services.control_api.retrospective_service import MODE, context
+
+        if row.get("research_mode") == MODE:
+            return self.retrospective.run(connection, row, include_manifest=include_manifest)
         identifier = row["run_id"]
         metadata = (
             connection.execute(
@@ -243,6 +248,7 @@ class BacktestService:
             blockers=blockers,
             attempt=row["attempts"],
             publicationComplete=successful,
+            **context(row),
         ), manifest
 
     def read_strategies(self):
@@ -273,25 +279,49 @@ class BacktestService:
             assumptions=dict(ASSUMPTIONS),
             budgets=dict(BUDGETS),
             observedAt=utc_string(now),
+            supportedResearchModes=["STRICT_PIT", "RETROSPECTIVE_EXPLORATORY"],
         )
 
     def create_run(self, payload, actor, key, trace):
         if actor != "local-operator":
             raise BacktestError(403, "FORBIDDEN")
-        value = BacktestRequest.model_validate(payload).model_dump()
+        from services.control_api.retrospective_service import MODE, normalize_request
+
         with self.jobs.transaction() as connection:
             now = connection.execute(text("SELECT clock_timestamp()")).scalar_one()
-        value = canonical_request(value, now)
-        row = self.jobs.enqueue(value, actor, key, trace, self.code_version)
+        value = normalize_request(payload, now)
+        if value.get("researchMode") == MODE:
+            row = self.retrospective.storage.enqueue_run(
+                value, actor, key, trace, self.code_version
+            )
+        else:
+            row = self.jobs.enqueue(value, actor, key, trace, self.code_version)
         with self.jobs.transaction() as connection:
             return self._run(connection, row)[0]
 
     def read_run(self, run_id):
+        from services.control_api.retrospective_service import CONTEXT_KEYS, MODE
+
         with self.jobs.transaction() as connection:
             run, manifest = self._run(
                 connection, self._row(connection, run_id), include_manifest=True
             )
-        return {"run": run, "manifest": manifest}
+        retro = run["researchMode"] == MODE
+        return {
+            "run": run,
+            "manifest": None if retro else manifest,
+            "retrospectiveManifest": manifest if retro else None,
+            **{key: run[key] for key in CONTEXT_KEYS},
+        }
+
+    def create_assessment(self, payload, actor, key, trace):
+        return self.retrospective.create_assessment(payload, actor, key, trace)
+
+    def read_assessment(self, assessment_id):
+        return self.retrospective.read_assessment(assessment_id)
+
+    def read_reliability_report(self, report_id, values):
+        return self.retrospective.read_reliability_report(report_id, values)
 
     def read_runs(self, values):
         limit = int(values.get("limit", 50))
@@ -347,6 +377,8 @@ class BacktestService:
         return dict(items=items, nextCursor=next_cursor, snapshotAt=utc_string(snapshot))
 
     def read_results(self, run_id, values):
+        from services.control_api.retrospective_service import CONTEXT_KEYS, MODE
+
         kind = values.get("resultType", "summary")
         limit = int(values.get("limit", 50))
         filters = {"runId": run_id, "resultType": kind, "foldIndex": values.get("foldIndex")}
@@ -394,14 +426,17 @@ class BacktestService:
                     )
             elif token:
                 raise BacktestError(409, "SNAPSHOT_CONFLICT")
+        retrospective_items = run["researchMode"] == MODE and kind in {"summary", "fills"}
         return dict(
             runId=run_id,
             status=run["status"],
             resultType=kind,
             publicationComplete=run["publicationComplete"],
             completedFolds=run["completedFolds"],
-            items=items,
+            items=[] if retrospective_items else items,
             nextCursor=next_cursor,
             manifestHash=run["manifestHash"],
             resultHash=run["resultHash"],
+            **{key: run[key] for key in CONTEXT_KEYS},
+            **({"retrospectiveItems": items} if retrospective_items else {}),
         )

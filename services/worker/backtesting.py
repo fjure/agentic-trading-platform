@@ -50,6 +50,11 @@ class BacktestWorker:
             raise ValueError("actual code version required")
         self.code_version = code_version
         self.owner = uuid4()
+        from services.worker.retrospective_backtesting import RetrospectiveWorker
+
+        self.retrospective_worker = RetrospectiveWorker(
+            engine, owner=self.owner, code_version=self.code_version, timer=timer
+        )
 
     def tick(self):
         if not self.enabled:
@@ -58,6 +63,9 @@ class BacktestWorker:
             readiness = self.readiness_jobs.claim(self.owner)
             if readiness is not None:
                 return self._assess(readiness)
+            retrospective = self.retrospective_worker.tick()
+            if retrospective is not None:
+                return retrospective
             lease = self.jobs.claim(self.owner)
         except BacktestError:
             return False

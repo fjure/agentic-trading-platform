@@ -24,6 +24,16 @@ Der schmale Lizenzport bestätigt keine persönlichen Providerrechte. Vor neuer 
 
 Rollback stoppt neue Erstellung/Dispatch und behandelt nichtterminale neue Jobs vor Rückkehr alter Worker ausdrücklich. Neue Varianten werden niemals zu Strict umgedeutet; veröffentlichte Daten/Reports bleiben erhalten. Entwicklungstests verwenden einen PID-1-Init für PostgreSQL, damit verwaiste Health-/Execprozesse keinen Server-Neustart auslösen. Isolierte Testvolumes ersetzen keine oder reparieren keine historischen Nutzerbelege.
 
+## Worker- und APIintegration RRB-06
+
+Die drei Vorschau-/Reportrouten sind einschließlich öffentlichem BacktestClient und privatem SQLservice implementiert. Der bestehende Dispatcher verarbeitet retrospektive Jobs im selben begrenzten Pool wie Strict-Backtests und Strict-Readiness. Dispatch bleibt standardmäßig deaktiviert. Eine Vorschau startet keine Simulation; ein späterer Lauf benötigt ihre exakte Protokoll-/Snapshotbindung. Crashwiederaufnahme verwendet die gespeicherten Referenzen und lädt keine neuen Kursstände nach. Prüfevidenz und Abnahmestand: docs/evidence/rrb-06.md.
+
+Vor Ausführung und positiver Veröffentlichung prüft der Worker aktuelle negative Rechte, relevante Trustwiderrufe und inzwischen bekannte strukturelle Maßnahmen erneut. Migration 0034_retrospective_gate schützt auch direkte SQL-Publikation. Ein separat dauerhaft blockierter Lauf erhält kein Ergebnis; sein finaler Snapshotbericht darf unverändert UNKNOWN oder explorativ bleiben. Historische Reportbefunde und Lizenzreceipt werden nicht nachträglich umgeschrieben.
+
+Reportseiten enthalten getrennte aktuelle Warnungen mit tatsächlicher Prüfzeit. Spätere Änderungen gebundener Bar-, Kalender-, Evidenz- oder Qualityidentitäten erzeugen EX_POST_REVISIONS, ohne die alte Snapshotwiedergabe zu ändern. Aktuelle Lizenz-/Trust-/Maßnahmensperren blockieren neue Ausführung; ein nicht verfügbarer Prüfport ergibt keine positive Freigabe. Die Korrekturabfrage liefert lediglich einen booleschen Hinweis über einen engen SQLport. Referenzpagination bindet Report, Abschnitt, Filter und vollständigen gespeicherten Fingerprint; ein fremder Cursor ist ein Konflikt.
+
+Der Runtimebuild enthält das kanonische Backtestschema und die gepinnte Produktionsabhängigkeit jsonschema. Keine Erweiterung von Broker-/Jev-/Providerzugriffen, Credentials, Netzwerken, Mounts oder Finanzrechten. Schema-Downgrade löscht keine Evidenz: Rollback bleibt der oben beschriebene Stop-/Drainablauf.
+
 ## Researchmodi und Ein-/Ausgaben
 
 Bestehende `POST /api/v1/research/backtests/runs`-Requests bleiben ohne Modusauswahl Strict PIT. `STRICT_PIT` ist auch ausdrücklich auswählbar. Die bisherige historische Beleg-/Fehlersemantik, Zeitgrenzen und Idempotenz bleiben erhalten. Ein blockierter Strict-Lauf löst niemals automatisch einen retrospektiven Lauf aus.

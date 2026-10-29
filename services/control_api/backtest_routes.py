@@ -12,8 +12,9 @@ from fastapi.responses import JSONResponse
 from packages.backtesting.jobs import BacktestError
 from packages.observability.backtesting import CODES, BacktestMetrics
 from services.control_api.auth import AuthDenied
-from services.control_api.backtest_dto import RESPONSE_MODELS, BacktestProblem, BacktestRequest
+from services.control_api.backtest_dto import RESPONSE_MODELS, BacktestProblem
 from services.control_api.backtest_service import STATES, identity
+from services.control_api.retrospective_dto import COMPONENT_MODELS, BacktestCreateRequest
 
 CURRENT_TRACE = ContextVar("backtest_trace", default=None)
 BASE = "/api/v1/research/backtests"
@@ -44,10 +45,16 @@ def backtest_problem(status, code, trace):
     )
 
 
-def read_query(request, *, paged=False, results=False):
+def read_query(request, *, paged=False, results=False, report=False):
     allowed = {"limit", "cursor"} if paged else set()
     if paged:
-        allowed |= {"resultType", "foldIndex"} if results else {"status", "instrumentId"}
+        allowed |= (
+            {"section", "category", "foldIndex"}
+            if report
+            else {"resultType", "foldIndex"}
+            if results
+            else {"status", "instrumentId"}
+        )
     values = {}
     for key, value in request.query_params.multi_items():
         if key not in allowed or key in values or len(value) > 2048:
@@ -67,6 +74,17 @@ def read_query(request, *, paged=False, results=False):
         raise ValueError("invalid result kind")
     if "foldIndex" in values and not re.fullmatch(r"(?:[0-9]|1[01])", values["foldIndex"]):
         raise ValueError("bounded fold required")
+    if "section" in values and values["section"] not in {"findings", "revisions"}:
+        raise ValueError("invalid report section")
+    if "category" in values and values["category"] not in {
+        "INTEGRITY",
+        "CALENDAR",
+        "CORPORATE_ACTIONS",
+        "HISTORICAL_AVAILABILITY",
+        "FEED",
+        "LICENSE",
+    }:
+        raise ValueError("invalid report category")
     return values
 
 
@@ -117,11 +135,13 @@ def register_backtest_routes(app, *, backtesting, body_reader, key_reader):
                 trace=request.state.trace_id,
             )
 
-    def add_read(suffix, operation, method, *, paged=False, results=False):
+    def add_read(
+        suffix, operation, method, *, paged=False, results=False, report=False, id_name="runId"
+    ):
         async def read(request: Request):
             try:
-                values = read_query(request, paged=paged, results=results)
-                run_id = request.path_params.get("runId")
+                values = read_query(request, paged=paged, results=results, report=report)
+                run_id = request.path_params.get(id_name)
                 if run_id:
                     identity(run_id)
             except (ValueError, TypeError) as error:
@@ -131,7 +151,13 @@ def register_backtest_routes(app, *, backtesting, body_reader, key_reader):
                     request.state.trace_id,
                 )
             args = (
-                [run_id, values] if results else [run_id] if run_id else [values] if paged else []
+                [run_id, values]
+                if results or report
+                else [run_id]
+                if run_id
+                else [values]
+                if paged
+                else []
             )
             return await execute(request, method, *args)
 
@@ -143,13 +169,27 @@ def register_backtest_routes(app, *, backtesting, body_reader, key_reader):
     add_read(
         "/runs/{runId}/results", "getBacktestResults", "read_results", paged=True, results=True
     )
+    add_read(
+        "/assessments/{assessmentId}",
+        "getBacktestAssessment",
+        "read_assessment",
+        id_name="assessmentId",
+    )
+    add_read(
+        "/reliability-reports/{reportId}",
+        "getBacktestReliabilityReport",
+        "read_reliability_report",
+        paged=True,
+        report=True,
+        id_name="reportId",
+    )
 
     @app.post(BASE + "/runs", operation_id="createBacktestRun")
     async def create(request: Request):
         try:
             read_query(request)
             key = key_reader(request)
-            payload = await body_reader(request, BacktestRequest)
+            payload = await body_reader(request, BacktestCreateRequest)
         except (AuthDenied, ValueError) as error:
             return backtest_problem(
                 getattr(error, "status", 400), "INVALID_REQUEST", request.state.trace_id
@@ -157,6 +197,26 @@ def register_backtest_routes(app, *, backtesting, body_reader, key_reader):
         return await execute(
             request,
             "create_run",
+            payload,
+            request.state.actor_id,
+            key,
+            request.state.trace_id,
+            accepted=True,
+        )
+
+    @app.post(BASE + "/assessments", operation_id="createBacktestAssessment")
+    async def assess(request: Request):
+        try:
+            read_query(request)
+            key = key_reader(request)
+            payload = await body_reader(request, COMPONENT_MODELS["BacktestAssessmentRequest"])
+        except (AuthDenied, ValueError) as error:
+            return backtest_problem(
+                getattr(error, "status", 400), "INVALID_REQUEST", request.state.trace_id
+            )
+        return await execute(
+            request,
+            "create_assessment",
             payload,
             request.state.actor_id,
             key,

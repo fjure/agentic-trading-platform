@@ -20,6 +20,7 @@ class BacktestClient:
 
     def _request(self, operation, path, *, params=None, body=None, key=None):
         failure = (503, "UNAVAILABLE")
+        creation = operation in {"create_run", "create_assessment"}
         try:
             with httpx.Client(
                 transport=self._transport, timeout=5, trust_env=False, follow_redirects=False
@@ -31,7 +32,7 @@ class BacktestClient:
                 if trace:
                     headers["traceparent"] = "00-" + trace + "-" + secrets.token_hex(8) + "-00"
                 with client.stream(
-                    "POST" if operation == "create_run" else "GET",
+                    "POST" if creation else "GET",
                     "http://paper-api:8012/api/v1/research/backtests/" + path,
                     params=params,
                     json=body,
@@ -57,7 +58,7 @@ class BacktestClient:
                         object_pairs_hook=pairs,
                         parse_constant=lambda _: (_ for _ in ()).throw(ValueError()),
                     )
-                    if response.status_code == (202 if operation == "create_run" else 200):
+                    if response.status_code == (202 if creation else 200):
                         return RESPONSE_MODELS[operation].model_validate(value).model_dump()
                     error = BacktestProblem.model_validate(value)
                     if error.status == response.status_code:
@@ -84,3 +85,18 @@ class BacktestClient:
     def read_results(self, run_id, values):
         identity(run_id)
         return self._request("read_results", "runs/" + run_id + "/results", params=values)
+
+    def create_assessment(self, payload, actor, key, trace):
+        if actor != "local-operator":
+            raise BacktestError(403, "FORBIDDEN")
+        return self._request("create_assessment", "assessments", body=payload, key=key)
+
+    def read_assessment(self, assessment_id):
+        identity(assessment_id)
+        return self._request("read_assessment", "assessments/" + assessment_id)
+
+    def read_reliability_report(self, report_id, values):
+        identity(report_id)
+        return self._request(
+            "read_reliability_report", "reliability-reports/" + report_id, params=values
+        )

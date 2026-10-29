@@ -477,3 +477,18 @@ RESPONSE_MODELS = {
     "read_run": BacktestRunDetail,
     "read_results": BacktestResults,
 }
+
+# Keep the legacy classes above for Strict readiness consumers. Backtest HTTP
+# responses validate against the additive canonical dual-mode contract.
+from services.control_api.retrospective_dto import COMPONENT_MODELS  # noqa: E402
+
+RESPONSE_MODELS = {
+    "read_strategies": COMPONENT_MODELS["BacktestStrategyCatalog"],
+    "create_run": COMPONENT_MODELS["BacktestRun"],
+    "read_runs": COMPONENT_MODELS["BacktestRunPage"],
+    "read_run": COMPONENT_MODELS["BacktestRunDetail"],
+    "read_results": COMPONENT_MODELS["BacktestResults"],
+    "create_assessment": COMPONENT_MODELS["BacktestAssessment"],
+    "read_assessment": COMPONENT_MODELS["BacktestAssessment"],
+    "read_reliability_report": COMPONENT_MODELS["BacktestReliabilityReportPage"],
+}
