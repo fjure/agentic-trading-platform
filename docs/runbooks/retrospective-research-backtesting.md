@@ -36,6 +36,10 @@ Der Runtimebuild enthält das kanonische Backtestschema und die gepinnte Produkt
 
 ## Researchmodi und Ein-/Ausgaben
 
+Die Materialoberfläche ist in RRB-07 implementiert und mit echter lokaler PostgreSQL-/API-/Browserkette geprüft; Evidenz: docs/evidence/rrb-07.md. Forschungsmodus ausdrücklich wählen, retrospektive Vorschau erstellen, deren Blocker und Einschränkungen prüfen und erst anschließend die Simulation beauftragen. Jede Eingabeänderung verwirft die Vorschau. Dauerhafte Links verwenden backtestAssessment, backtestRun und backtestReport; Reload stellt Protokoll beziehungsweise Ergebnis wieder her. Vor jedem expliziten retrospektiven Start werden aktuelle Reportwarnungen erneut geprüft. Ein nicht verfügbarer Prüfstand erlaubt keinen Start.
+
+Der Qualitäts- und Grenzenreport bietet paginierte Befunde und Revisionen mit Kategorie-/Foldfilter. Historischer Reporthash und aktuelle Warnungen bleiben getrennt. Sessionverlust entfernt Reportdaten und beendet Abrufe; eine neue Sitzung löst keine automatische Auftragserstellung aus. scripts/test-backtest-browser.ps1 prüft bestehende und retrospektive Browserfälle in jeweils eigener isolierter Testumgebung; -RetrospectiveOnly ist die fokussierte neue Matrix.
+
 Bestehende `POST /api/v1/research/backtests/runs`-Requests bleiben ohne Modusauswahl Strict PIT. `STRICT_PIT` ist auch ausdrücklich auswählbar. Die bisherige historische Beleg-/Fehlersemantik, Zeitgrenzen und Idempotenz bleiben erhalten. Ein blockierter Strict-Lauf löst niemals automatisch einen retrospektiven Lauf aus.
 
 `RETROSPECTIVE_EXPLORATORY` erfordert eine ausdrücklich gewählte Policyversion und die Referenz einer Vorschau mit Eingabe-/Snapshotbindung. Unterschiedliche Modi sind unterschiedliche Nutzlasten; wiederverwendete Idempotenzkennungen mit anderem Inhalt sind Konflikte. Freie Programme, URLs, Strategien außerhalb des Katalogs und unbekannte Felder/Versionen sind unzulässig.

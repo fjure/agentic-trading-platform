@@ -1,7 +1,11 @@
 <section aria-labelledby="backtest-title">
   <h2 id="backtest-title">Lokale Simulation</h2>
-  <p>Benchmarkstrategien für SPY/QQQ · raw IEX · 15Min · USD · Long/Flat. IEX bildet nicht den Gesamtmarkt ab.
-    Dividenden und Kapitalmaßnahmen sind ausgeschlossen; fehlende damalige Daten oder Abdeckungsbelege blockieren den Lauf.</p>
+  <p>Benchmarkstrategien für SPY/QQQ · raw IEX · 15Min · USD · Long/Flat. IEX bildet nicht den Gesamtmarkt ab. Dividenden werden nicht simuliert.</p>
+  @if (retrospective) {
+    <p>Fehlende benötigte Bars und bekannte strukturelle Kapitalmaßnahmen blockieren. Unbewiesene damalige Verfügbarkeit oder UNKNOWN-Maßnahmenabdeckung bleiben ausdrücklich explorative Einschränkungen.</p>
+  } @else {
+    <p>Strict PIT: Fehlende damalige Daten oder Abdeckungsbelege blockieren den Lauf. Kapitalmaßnahmen werden nicht simuliert.</p>
+  }
   <p>Open und Close sind nachträglich begrenzte Preisproxys. Ergebnisse erteilen keine Handelsfreigabe.</p>
   @if (error()) { <p role="alert">{{ error() }}</p> }
   <mat-card>
@@ -9,6 +13,10 @@
     <mat-card-content>
       <form [formGroup]="form" (ngSubmit)="submit()">
         <div class="fields">
+          <mat-form-field><mat-label>Forschungsmodus</mat-label><mat-select formControlName="researchMode">
+            <mat-option value="STRICT_PIT">Strict PIT</mat-option>
+            <mat-option value="RETROSPECTIVE_EXPLORATORY">Retrospektiv explorativ</mat-option>
+          </mat-select></mat-form-field>
           <mat-form-field><mat-label>Backtest Instrument</mat-label><mat-select formControlName="instrumentId">
             @for (instrument of catalog()?.instruments ?? []; track instrument.instrumentId) {
               <mat-option [value]="instrument.instrumentId">{{ instrument.symbol }}</mat-option>
@@ -44,19 +52,45 @@
         </div>
         <div class="actions">
           <button mat-button type="button" (click)="addFold()" [disabled]="form.controls.folds.length >= 12 || !authorized()">Fold hinzufügen</button>
-          <button mat-flat-button type="submit" [disabled]="!validRequest || sending()">Lokale Simulation beauftragen</button>
+          @if (retrospective) {
+            <button mat-button type="button" (click)="preview()" [disabled]="!validRequest || sending()">Retrospektive Vorschau erstellen</button>
+            <button mat-flat-button type="submit" [disabled]="!canRunRetrospective || sending()">Retrospektive Simulation beauftragen</button>
+          } @else {
+            <button mat-flat-button type="submit" [disabled]="!validRequest || sending()">Lokale Simulation beauftragen</button>
+          }
         </div>
         @if (!validRequest && authorized()) { <p role="status">Eingaben prüfen: gültige UTC-Zeit mit Z, feste Dezimalwerte und chronologische Fenster; keine zukünftigen Tests.</p> }
       </form>
     </mat-card-content>
   </mat-card>
-  <atl-readiness [request]="diagnosticRequest" (sessionLost)="sessionLost.emit()" />
+  @if (!retrospective) { <atl-readiness [request]="diagnosticRequest" (sessionLost)="sessionExpired()" /> }
+  @if (retrospective) {
+    <p>Explorative Ergebnisse sind kein Strict-PIT-Nachweis und keine Handelsfreigabe. UNKNOWN ist kein Beleg für fehlende Kapitalmaßnahmen.
+      Nach jeder Formularänderung ist eine neue Vorschau nötig. Vorschau und Simulation werden nur ausdrücklich beauftragt; fehlgeschlagene POSTs werden nicht automatisch wiederholt.</p>
+  }
+  @if (assessment(); as assessment) {
+    <mat-card aria-label="Retrospektive Vorschau"><mat-card-header><mat-card-title>Retrospektive Vorschau · {{ assessment.status }}</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <a [href]="link('backtestAssessment', assessment.assessmentId)">Gespeicherte Vorschau {{ assessment.assessmentId }}</a>
+        <p>{{ assessment.eligibility }} · {{ assessment.assessmentHash }}</p>
+        @if (!previewBound()) { <p role="status">Diese gespeicherte Vorschau ist nicht an die aktuellen Formulareingaben gebunden. Neue Vorschau erstellen.</p> }
+        <atl-backtest-context [value]="assessment" [report]="reportFor(assessment.reliabilityReportId)" />
+        @for (blocker of assessment.blockers; track $index) { <p>{{ blocker.code }}</p> }
+        @for (warning of warnings()[assessment.reliabilityReportId || ''] ?? []; track $index) { <p>Aktueller Hinweis: {{ warning.code }} · {{ warning.checkedAt }}</p> }
+        @if (assessment.reliabilityReportId; as reportId) {
+          <button mat-button (click)="openReport(reportId)" [disabled]="!authorized()">Qualitätsreport öffnen</button>
+          <a [href]="link('backtestReport', reportId)">Gespeicherter Vorschau-Report</a>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
   <mat-card>
     <mat-card-header><mat-card-title>Gespeicherte Simulationen</mat-card-title></mat-card-header>
     <mat-card-content>
       <button mat-button (click)="refreshRuns()" [disabled]="!authorized()">Simulationen aktualisieren</button>
       @for (run of runs(); track run.runId) {
         <article class="backtest-run" [attr.aria-label]="'Simulation ' + run.runId">
+          <atl-backtest-context [value]="run" [report]="reportFor(run.reliabilityReportId)" />
           <strong>{{ run.status }} · {{ run.request.strategyId }}</strong><p>{{ run.runId }} · {{ run.acceptedAt }}</p>
           @for (blocker of run.blockers; track $index) { <p>{{ blocker.code }}</p> }
           <button mat-button (click)="select(run.runId)" [disabled]="!authorized()">Simulation öffnen</button>
@@ -70,20 +104,26 @@
     <mat-card aria-label="Simulationsdetail">
       <mat-card-header><mat-card-title>{{ detail.run.status }} · {{ detail.run.runId }}</mat-card-title></mat-card-header>
       <mat-card-content>
-        <p>Snapshot: {{ detail.run.snapshot | json }}</p>
+        <atl-backtest-context [value]="detail.run" [report]="reportFor(detail.run.reliabilityReportId)" />
+        <a [href]="link('backtestRun', detail.run.runId)">Gespeichertes Simulationsdetail</a>
+        @if (detail.run.reliabilityReportId; as reportId) {
+          <button mat-button (click)="openReport(reportId)" [disabled]="!authorized()">Qualitätsreport öffnen</button>
+          <a [href]="link('backtestReport', reportId)">Gespeicherter Ergebnisreport</a>
+          @for (warning of warnings()[reportId] ?? []; track $index) { <p>Aktueller Hinweis: {{ warning.code }} · {{ warning.checkedAt }}</p> }
+        }
         <p>Manifesthash: {{ detail.run.manifestHash || 'noch nicht gebunden' }}<br>Ergebnishash: {{ detail.run.resultHash || 'noch nicht veröffentlicht' }}</p>
         @for (blocker of detail.run.blockers; track $index) { <p role="status">{{ blocker.code }} · {{ blocker | json }}</p> }
         @if (!detail.run.publicationComplete) {
           <p>Keine vollständigen Ergebniszeilen veröffentlicht. Abgeschlossene Folds bleiben als Teilergebnisreferenzen sichtbar. Keine Gesamtrendite.</p>
           <pre aria-label="Abgeschlossene Foldreferenzen">{{ detail.run.completedFolds | json }}</pre>
         }
-        @if (detail.manifest; as manifest) {
+        @if (detail.retrospectiveManifest || detail.manifest; as manifest) {
           <p>{{ manifest.symbol }} · {{ manifest.simulatorVersion }} · {{ manifest.metricsVersion }} · {{ manifest.codeVersion }}</p>
           <details><summary>Unveränderliches Manifest mit Daten- und Warm-up-Belegen</summary><pre aria-label="Backtest Manifest">{{ manifest | json }}</pre></details>
         } @else { <p>Manifest noch nicht materialisiert.</p> }
-        @for (fold of summary()?.items ?? []; track fold.foldIndex) {
+        @for (fold of foldRows(); track fold.foldIndex) {
           <article class="fold-result" [attr.aria-label]="'Foldresultat ' + fold.foldIndex">
-            <h3>Fold {{ fold.foldIndex + 1 }}</h3><p>{{ fold.window.testStart }} bis {{ fold.window.testEnd }} · {{ fold.resultHash }}</p>
+            <h3>Fold {{ fold.foldIndex + 1 }}</h3><atl-backtest-context [value]="summary()" [report]="reportFor(detail.run.reliabilityReportId)" /><p>{{ fold.window.testStart }} bis {{ fold.window.testEnd }} · {{ fold.resultHash }}</p>
             <dl><dt>Nettorendite</dt><dd>{{ fold.metrics.netReturn }}</dd><dt>Maximaler Drawdown</dt><dd>{{ fold.metrics.maxDrawdown }}</dd>
               <dt>Turnover</dt><dd>{{ fold.metrics.turnover }}</dd><dt>Gebühren USD</dt><dd>{{ fold.metrics.feeTotalUsd }}</dd>
               <dt>Slippage USD</dt><dd>{{ fold.metrics.slippageTotalUsd }}</dd><dt>Endequity USD</dt><dd>{{ fold.metrics.endEquity }}</dd>
@@ -102,6 +142,7 @@
           <mat-form-field><mat-label>Equity Fold</mat-label><mat-select [value]="selectedFold()" (selectionChange)="selectedFold.set($event.value)">
             @for (fold of detail.run.request.folds; track $index) { <mat-option [value]="$index">Fold {{ $index + 1 }}</mat-option> }
           </mat-select></mat-form-field>
+          <atl-backtest-context [value]="equity()" [report]="reportFor(detail.run.reliabilityReportId)" />
           <figure><figcaption>Equitykurve · {{ detail.run.request.strategyId }} · Fold {{ selectedFold() + 1 }} · geladene Punkte</figcaption>
             <svg viewBox="0 0 600 190" role="img" aria-label="Backtest Equitykurve"><polyline [attr.points]="curve()" fill="none" stroke="currentColor" stroke-width="2" /></svg>
           </figure>
@@ -110,8 +151,9 @@
           </tbody></table></div>
         }
         @if (equity()?.nextCursor) { <button mat-button (click)="loadResults('equity', true)">Weitere Equitypunkte</button> }
-        <div class="table-scroll"><table aria-label="Backtest Fills"><thead><tr><th>Fold / Strategie</th><th>Signal UTC</th><th>Ausführung UTC</th><th>Seite</th><th>Menge</th><th>Preis</th><th>Gebühr / Slippage USD</th><th>Beobachtungscutoff</th></tr></thead><tbody>
-          @for (fill of fills()?.items ?? []; track $index) { <tr><td>{{ fill.foldIndex + 1 }} / {{ fill.strategyId }}</td><td>{{ fill.signalAt }}</td><td>{{ fill.executedAt }}</td><td>{{ fill.side }}</td><td>{{ fill.quantity }}</td><td>{{ fill.price }}</td><td>{{ fill.feeUsd }} / {{ fill.slippageUsd }}</td><td>{{ fill.observationCutoff }}</td></tr> }
+        <atl-backtest-context [value]="fills() || detail.run" [report]="reportFor(detail.run.reliabilityReportId)" />
+        <div class="table-scroll"><table aria-label="Backtest Fills"><thead><tr><th>Fold / Strategie</th><th>Signal UTC</th><th>Ausführung UTC</th><th>Seite</th><th>Menge</th><th>Preis</th><th>Gebühr / Slippage USD</th><th>{{ detail.run.researchMode === 'RETROSPECTIVE_EXPLORATORY' ? 'Simulierter Marktcutoff (kein damaliger Datenbeleg)' : 'Beobachtungscutoff' }}</th></tr></thead><tbody>
+          @for (fill of fillRows(); track $index) { <tr><td>{{ fill.foldIndex + 1 }} / {{ fill.strategyId }}</td><td>{{ fill.signalAt }}</td><td>{{ fill.executedAt }}</td><td>{{ fill.side }}</td><td>{{ fill.quantity }}</td><td>{{ fill.price }}</td><td>{{ fill.feeUsd }} / {{ fill.slippageUsd }}</td><td>{{ fillCutoff(fill) }}</td></tr> }
         </tbody></table></div>
         @if (fills()?.nextCursor) { <button mat-button (click)="loadResults('fills', true)">Weitere Fills</button> }
       </mat-card-content>

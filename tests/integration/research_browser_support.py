@@ -132,6 +132,10 @@ def host():
             (ROOT / "packages", "/opt/lab/packages"),
             (ROOT / "services", "/opt/lab/services"),
             (ROOT / "alembic.ini", "/opt/lab/alembic.ini"),
+            (
+                ROOT / "contracts/schemas/v1/backtesting.schema.json",
+                "/opt/lab/contracts/schemas/v1/backtesting.schema.json",
+            ),
             (ROOT / "apps/dashboard/dist/dashboard/browser", "/opt/lab/dashboard"),
             (Path(__file__), "/opt/lab/research_browser_support.py"),
         ]:
