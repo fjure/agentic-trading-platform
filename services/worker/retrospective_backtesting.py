@@ -144,55 +144,72 @@ def restore_trust(snapshot, content, evidence):
 def public_manifest(manifest, request, report, receipt, checkpoint=lambda: None):
     """Canonical retrospective wire binding, with no synthetic receipt deadlines."""
     folds, decisions, outcomes = [], [], []
-    count = 0
+    evidence_bytes = 0
+
+    def charge(value):
+        nonlocal evidence_bytes
+        # Charge emitted objects before retaining them; final encoding also checks
+        # the remaining headers and JSON punctuation against the same byte limit.
+        evidence_bytes += len(encoded(value).encode("utf-8"))
+        if evidence_bytes > 12 * 1024 * 1024:
+            raise BacktestBudgetExceeded("manifest evidence byte budget exhausted")
+        return value
+
     for index, dataset in enumerate(manifest.datasets):
         checkpoint()
         binding = dataset.warmup_binding
         folds.append(
-            dict(
-                foldIndex=index,
-                window=request["folds"][index],
-                warmupStart=utc_string(binding.warmup_start),
-                warmupEnd=utc_string(binding.warmup_end),
-                warmupRuleVersion=binding.rule_version,
-                expectedWarmupBars=[bar_identity(bar) for bar in dataset.warmup],
+            charge(
+                dict(
+                    foldIndex=index,
+                    window=request["folds"][index],
+                    warmupStart=utc_string(binding.warmup_start),
+                    warmupEnd=utc_string(binding.warmup_end),
+                    warmupRuleVersion=binding.rule_version,
+                    expectedWarmupBars=[bar_identity(bar) for bar in dataset.warmup],
+                )
             )
         )
         for step in dataset.steps:
             checkpoint()
-            count += len(step.input_bars)
-            if count > 10000:
-                raise BacktestBudgetExceeded("manifest evidence byte budget exhausted")
-            decisions.append(
+            decision = charge(
                 dict(
                     valuationAt=utc_string(step.signal_bar.identity.bar_end),
                     knowledgeAt=utc_string(step.knowledge_at),
                     inputHash=fingerprint(
                         tuple((b.revision_id, b.fingerprint) for b in step.input_bars)
                     ),
-                    revisions=[
-                        RetrospectiveRevisionReference.from_bar(b).to_dict()
-                        for b in step.input_bars
-                    ],
+                    revisions=[],
                 )
             )
-        outcomes.extend(
-            dict(
-                revision=RetrospectiveRevisionReference.from_bar(b).to_dict(),
-                simulatedMarketCutoff=utc_string(b.identity.bar_end),
+            for bar in step.input_bars:
+                checkpoint()
+                decision["revisions"].append(
+                    charge(RetrospectiveRevisionReference.from_bar(bar).to_dict())
+                )
+            decisions.append(decision)
+        for bar in dataset.outcome_bars:
+            checkpoint()
+            outcomes.append(
+                charge(
+                    dict(
+                        revision=RetrospectiveRevisionReference.from_bar(bar).to_dict(),
+                        simulatedMarketCutoff=utc_string(bar.identity.bar_end),
+                    )
+                )
             )
-            for b in dataset.outcome_bars
-        )
     calendars = sorted(
         {ref for d in manifest.datasets for ref in d.calendar_references},
         key=lambda ref: (str(ref.session_id), ref.version),
     )
     calendar_revisions = [
-        dict(
-            evidenceId=str(r.evidence_id or r.session_id),
-            fingerprint=r.version,
-            revision=max(1, r.commit_version),
-            ingestedAt=utc_string(r.ingested_at),
+        charge(
+            dict(
+                evidenceId=str(r.evidence_id or r.session_id),
+                fingerprint=r.version,
+                revision=max(1, r.commit_version),
+                ingestedAt=utc_string(r.ingested_at),
+            )
         )
         for r in calendars
     ]
@@ -213,19 +230,21 @@ def public_manifest(manifest, request, report, receipt, checkpoint=lambda: None)
         decisionInputs=decisions,
         outcomeInputs=outcomes,
         calendarRevisions=calendar_revisions,
-        qualityRevisions=[r.to_dict() for r in manifest.quality_references],
-        corporateActionCoverage=[r.to_dict() for r in manifest.corporate_action_references],
+        qualityRevisions=[charge(r.to_dict()) for r in manifest.quality_references],
+        corporateActionCoverage=[charge(r.to_dict()) for r in manifest.corporate_action_references],
         researchMode="RETROSPECTIVE_EXPLORATORY",
         selectionPolicyVersion="retrospective-v1",
         experimentVersion="retrospective-experiment-v1",
         snapshotReference=snapshot_reference(manifest.snapshot),
         calendarReferences=[
-            dict(
-                revision=ref,
-                source=raw.source,
-                version=raw.version,
-                purpose="REGULAR_SESSION",
-                historicalAvailability="NOT_PROVEN",
+            charge(
+                dict(
+                    revision=ref,
+                    source=raw.source,
+                    version=raw.version,
+                    purpose="REGULAR_SESSION",
+                    historicalAvailability="NOT_PROVEN",
+                )
             )
             for raw, ref in zip(calendars, calendar_revisions, strict=True)
         ],
@@ -285,6 +304,8 @@ class RetrospectiveWorker:
                 (
                     "BAR",
                     "SELECT * FROM research.bar_revisions WHERE instrument_id=:instrument "
+                    "AND provider='alpaca' AND feed='iex' AND interval='15Min' "
+                    "AND adjustment='raw' "
                     "AND bar_start>=:start AND bar_end<=:end",
                 ),
                 ("CALENDAR", "SELECT * FROM research.calendar_versions WHERE true"),
@@ -292,7 +313,7 @@ class RetrospectiveWorker:
                     "QUALITY",
                     "SELECT r.*,encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex') "
                     "AS fingerprint FROM research.quality_observations r "
-                    "WHERE instrument_id=:instrument "
+                    "WHERE instrument_id=:instrument AND interval='15Min' "
                     "AND start_at<:end AND end_at>:start",
                 ),
                 (

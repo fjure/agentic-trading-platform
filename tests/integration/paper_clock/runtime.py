@@ -8,11 +8,11 @@ COMMIT = "86b37fde2fed7336ea2d0c17928e3015a55d9b4a"
 SOURCE_SHA256 = "d98aa7beeb21344b3612f60cbfe08196541a2ef25525b3774b11871493a4726e"
 PYTHON_IMAGE = (
     "agentic-trading-lab-paper-test-clock-python@sha256:"
-    "dcbaadfd8868e6a760868ee15da5a138483ef768aa3623e2c7dfca8fe93032ea"
+    "aa02183f67a30b2c9757c09486a98d831dea59fbc5886eaea87b25d6179cd84b"
 )
 POSTGRES_IMAGE = (
     "agentic-trading-lab-paper-test-clock-postgres@sha256:"
-    "98bc30efae325fe37f8bd4a0d8a465dd84a4a0dbe16427f9babfc2e1b21411c5"
+    "d1aca1848ba6d3695791d5d3a92662b3547a10eab754bdd7344d87e13a1ca4f0"
 )
 LIBRARY_SHA256 = {
     "libfaketime.so.1": "e5138d1791a687608bfc9611dbc5327e2c85f85c7cc4bf526038f422baada25b",
@@ -20,7 +20,7 @@ LIBRARY_SHA256 = {
 }
 PYTHON_BASE = (
     "agentic-trading-lab-dev-build-smoke@sha256:"
-    "9e72bdc3eee8d7be022e6a9331aea2bc498a5d2cdaf9c084ea523eaa16d78eb1"
+    "c40719cab30222c1dd7032d68efd6b7206834ccfd3cdc3c06034b607248f7f14"
 )
 POSTGRES_BASE = (
     "postgres:18.6-trixie@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336"
