@@ -280,22 +280,18 @@ def _create_identities(connection, directory, existing):
         _write_new_secret(directory / FILES[role], login, password)
 
 
-def _verify_dormant_privileges(connection):
-    """Enforce the exact manifest of the database's already-applied revision."""
-    identities = tuple(PAPER_ROLES.values()) + tuple(
-        name + "_login" for name in PAPER_ROLES.values()
-    )
-    version_table = connection.execute("SELECT to_regclass('public.alembic_version')").fetchone()[0]
-    revisions = (
-        connection.execute("SELECT version_num FROM public.alembic_version").fetchall()
-        if version_table is not None
-        else []
+def _dormant_privilege_manifest(revisions):
+    """Exact reviewed ACLs only; unknown or multiple migration heads fail closed."""
+    retrospective_revision = (
+        revisions[0][0]
+        if revisions in ([("0033_retrospective_storage",)], [("0034_retrospective_gate",)])
+        else None
     )
     readiness_revision = (
         revisions[0][0] if revisions in (
             [("0030_readiness_storage",)], [("0031_readiness_jobs",)],
             [("0032_collection_control",)],
-        ) else None
+        ) else "0032_collection_control" if retrospective_revision else None
     )
     backtest_revision = (
         revisions[0][0]
@@ -701,6 +697,45 @@ def _verify_dormant_privileges(connection):
                 for name in ("research.collection_plan_projection(uuid)",
                              "research.set_collection_plan(uuid,boolean,bigint,text,text,text,jsonb)")
             )
+    if retrospective_revision:
+        expected.update(
+            ("relation", "backtest." + name, "atl_paper_control_api", "SELECT", False)
+            for name in (
+                "retrospective_assessments", "license_receipts", "retrospective_datasets",
+                "retrospective_revision_bindings", "retrospective_reports", "retrospective_audit",
+            )
+        )
+        expected.update(
+            ("function", "backtest." + name, "atl_paper_control_api", "EXECUTE", False)
+            for name in (
+                "request_retrospective_assessment(uuid,text,text,jsonb,text,text,text)",
+                "request_retrospective_run(uuid,text,text,jsonb,text,text,text)",
+            )
+        )
+    if retrospective_revision == "0034_retrospective_gate":
+        expected.update(
+            ("relation", "backtest." + name, "atl_paper_control_api", "SELECT", False)
+            for name in ("retrospective_execution_gates", "source_license_status")
+        )
+        expected.update(
+            ("function", "backtest." + name, "atl_paper_control_api", "EXECUTE", False)
+            for name in ("current_retrospective_gate(uuid)", "has_retrospective_correction(uuid)")
+        )
+    return expected
+
+
+def _verify_dormant_privileges(connection):
+    """Enforce the exact manifest of the database's already-applied revision."""
+    identities = tuple(PAPER_ROLES.values()) + tuple(
+        name + "_login" for name in PAPER_ROLES.values()
+    )
+    version_table = connection.execute("SELECT to_regclass('public.alembic_version')").fetchone()[0]
+    revisions = (
+        connection.execute("SELECT version_num FROM public.alembic_version").fetchall()
+        if version_table is not None
+        else []
+    )
+    expected = _dormant_privilege_manifest(revisions)
     # Empty/unmigrated databases and 0012 permit no direct object ACLs. Inspect
     # columns and login grantees too; initial SET ROLE is not a permission bound.
     actual = connection.execute(

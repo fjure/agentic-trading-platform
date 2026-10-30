@@ -1,19 +1,23 @@
 """Real pure assessment/simulation behind fake SQL ports; current facts remain separate."""
 
+import sqlite3
 from contextlib import contextmanager
 from dataclasses import replace
+from datetime import timedelta
 from types import SimpleNamespace
 from uuid import UUID
 
 import pytest
 
 from packages.backtesting.jobs import BacktestError
+from packages.backtesting.models import BacktestBudgetExceeded
 from packages.backtesting.retrospective_storage import RetrospectiveLease
 from packages.domain.models import utc_string
 from services.worker import retrospective_backtesting as worker_module
 from services.worker.backtesting import BacktestWorker
 from tests.contracts.test_retrospective_contracts import validator
 from tests.unit.test_research_reliability import prepared
+from tests.unit.test_retrospective_dataset import fixture
 
 
 def inputs():
@@ -247,3 +251,253 @@ def test_metadata_and_reference_budgets_do_not_reenter_the_locked_job_fence():
     assert content["trustState"]["records"] == []
     assert rows == ()
     assert False in calls and calls[-1] is True
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (("interval", "1Day"), ("provider", "other"), ("feed", "sip"), ("adjustment", "split")),
+)
+def test_shared_research_series_are_excluded_before_reference_binding(monkeypatch, field, value):
+    """Execute the worker's actual selection SQL; the real assessor sees only its series."""
+    config, lease, (_, rows), receipt_port = inputs()
+    lease = replace(lease, row={**lease.row, "trust_version": 0, "trust_policy_version": "test-v1"})
+    bars = [row for kind, row in rows if kind == "BAR"]
+    for row in bars:
+        row["fingerprint"] = worker_module.bar_from_row(row).fingerprint
+    unrelated = {**bars[0], "revision_id": UUID(int=9999), field: value}
+    daily_quality = dict(
+        observation_id=UUID(int=9998),
+        instrument_id=config.instrument_id,
+        interval="1Day",
+        start_at=config.folds[0].training_start,
+        end_at=config.folds[-1].test_end,
+        commit_version=1,
+        ingested_at=bars[0]["ingested_at"],
+        fingerprint="f" * 64,
+        quality="INVALID",
+        rule_version="research-quality-v1",
+        code="REJECTED_PROVIDER_RESPONSE",
+    )
+    by_id = {str(row["revision_id"]): row for row in (*bars, unrelated)}
+    with sqlite3.connect(":memory:") as database:
+        database.execute("ATTACH DATABASE ':memory:' AS research")
+        columns = (
+            "revision_id",
+            "instrument_id",
+            "provider",
+            "feed",
+            "interval",
+            "adjustment",
+            "bar_start",
+            "bar_end",
+            "commit_version",
+            "ingested_at",
+        )
+        database.execute(
+            "CREATE TABLE research.bar_revisions ("
+            + ",".join(
+                f"{name} {'INTEGER' if name == 'commit_version' else 'TEXT'}" for name in columns
+            )
+            + ")"
+        )
+        database.executemany(
+            "INSERT INTO research.bar_revisions VALUES (" + ",".join("?" for _ in columns) + ")",
+            [
+                tuple(row[name] if name == "commit_version" else str(row[name]) for name in columns)
+                for row in by_id.values()
+            ],
+        )
+        quality_columns = (
+            "observation_id",
+            "instrument_id",
+            "interval",
+            "start_at",
+            "end_at",
+            "commit_version",
+            "ingested_at",
+        )
+        database.execute(
+            "CREATE TABLE research.quality_observations ("
+            + ",".join(
+                f"{name} {'INTEGER' if name == 'commit_version' else 'TEXT'}"
+                for name in quality_columns
+            )
+            + ")"
+        )
+        database.execute(
+            "INSERT INTO research.quality_observations VALUES ("
+            + ",".join("?" for _ in quality_columns)
+            + ")",
+            tuple(
+                daily_quality[name] if name == "commit_version" else str(daily_quality[name])
+                for name in quality_columns
+            ),
+        )
+
+        class SelectionPort(MemoryPort):
+            content = None
+            references = ()
+            restored = ()
+
+            def execute(self, statement, parameters):
+                if "FROM research.bar_revisions" in str(statement):
+                    bound = {
+                        key: val if isinstance(val, int) else str(val)
+                        for key, val in parameters.items()
+                    }
+                    selected = database.execute(str(statement), bound).fetchall()
+                    result = [by_id[row[0]] for row in selected]
+                elif "FROM research.quality_observations" in str(statement):
+                    # Keep the actual selection predicate; only PostgreSQL's fingerprint
+                    # projection is replaced for the local SQL execution engine.
+                    predicate = str(statement).partition("WHERE ")[2]
+                    bound = {
+                        key: val if isinstance(val, int) else str(val)
+                        for key, val in parameters.items()
+                    }
+                    selected = database.execute(
+                        "SELECT observation_id FROM research.quality_observations WHERE "
+                        + predicate,
+                        bound,
+                    ).fetchall()
+                    result = [daily_quality for _ in selected]
+                elif "FROM research.calendar_versions" in str(statement):
+                    result = [row for kind, row in rows if kind == "CALENDAR"]
+                else:
+                    result = []
+                return SimpleNamespace(mappings=lambda: result)
+
+            @contextmanager
+            def transaction(self, **kwargs):
+                yield self
+
+            def fenced(self, connection, current):
+                assert current == lease
+
+            def load_dataset(self, identifier, *, checkpoint):
+                if self.content is None:
+                    raise BacktestError(404, "NOT_FOUND")
+                return {"body": {"content": self.content}}, self.restored
+
+            def bind_dataset(self, current, content, references, *, checkpoint):
+                self.content, self.references = content, references
+                selected = {(kind, identifier) for kind, identifier, _ in references}
+                id_fields = {
+                    "BAR": "revision_id",
+                    "CALENDAR": "session_id",
+                    "QUALITY": "observation_id",
+                }
+                self.restored = tuple(
+                    (kind, row)
+                    for kind, row in (*rows, ("BAR", unrelated), ("QUALITY", daily_quality))
+                    if (kind, row[id_fields[kind]]) in selected
+                )
+
+        port = SelectionPort(receipt_port.receipt)
+        worker = worker_module.RetrospectiveWorker(
+            None, owner=lease.owner, code_version="c" * 40, timer=lambda: 0
+        )
+        worker.storage = port
+        monkeypatch.setattr(worker_module, "parse_request", lambda request, now: config)
+        worker._read_inputs(lease, config, lambda **kwargs: None)
+        assert worker.process(lease)
+        assert port.failure is None
+        assert port.preview["body"]["overallStatus"] == "EXPLORATORY_WITH_LIMITATIONS"
+        assert {identifier for kind, identifier, _ in port.references if kind == "BAR"} == {
+            row["revision_id"] for row in bars
+        }
+        assert not any(kind == "QUALITY" for kind, _, _ in port.references)
+
+
+@pytest.mark.parametrize("bar_count", (208, 780))
+def test_manifest_budget_counts_canonical_bytes_not_repeated_revision_count(bar_count):
+    def series(warmup):
+        config, snapshot, bars, calendar = fixture()
+        start = bars[0].identity.bar_start
+        observed = start + timedelta(days=(bar_count + 25) // 26 + 1)
+        snapshot = replace(snapshot, version=10000, at=observed + timedelta(hours=1))
+        expanded = tuple(
+            replace(
+                bars[0],
+                revision_id=UUID(int=100 + index),
+                commit_version=index + 1,
+                identity=replace(
+                    bars[0].identity,
+                    bar_start=start + timedelta(days=index // 26, minutes=15 * (index % 26)),
+                    bar_end=start + timedelta(days=index // 26, minutes=15 * (index % 26 + 1)),
+                ),
+                ingested_at=observed,
+                available_at=observed,
+            )
+            for index in range(bar_count)
+        )
+        fold = replace(
+            config.folds[0],
+            training_start=start,
+            training_end=expanded[warmup].identity.bar_start,
+            test_start=expanded[warmup].identity.bar_start,
+            test_end=expanded[-1].identity.bar_end,
+        )
+        config = replace(
+            config,
+            strategy_id="sma-cross-v1",
+            parameters=(("fast", 2), ("slow", warmup + 1)),
+            folds=(fold,),
+        )
+        sessions = tuple(
+            {
+                **calendar[0],
+                "session_id": UUID(int=10000 + day),
+                "session_date": (start + timedelta(days=day)).date(),
+                "opens_at": expanded[day * 26].identity.bar_start,
+                "closes_at": expanded[min((day + 1) * 26, bar_count) - 1].identity.bar_end,
+                "ingested_at": observed,
+            }
+            for day in range((bar_count + 25) // 26)
+        )
+        return config, snapshot, expanded, sessions
+
+    value = prepared(warmup=99, fixture_factory=series)
+    manifest = value["manifest"]
+    assert manifest is not None
+    references = sum(
+        len(step.input_bars) for dataset in manifest.datasets for step in dataset.steps
+    )
+    assert references > 10000
+    assessment = worker_module.assess_reliability(**value)
+    report = assessment.to_dict(report_id=UUID(int=800), assessment_id=UUID(int=700))
+    _, lease, _, _ = inputs()
+    request = {
+        **lease.row["request"],
+        "strategyId": "sma-cross-v1",
+        "parameters": {"fast": 2, "slow": 100},
+        "folds": [
+            {
+                "trainingStart": utc_string(fold.training_start),
+                "trainingEnd": utc_string(fold.training_end),
+                "testStart": utc_string(fold.test_start),
+                "testEnd": utc_string(fold.test_end),
+            }
+            for fold in manifest.config.folds
+        ],
+    }
+    calls = 0
+
+    def checkpoint():
+        nonlocal calls
+        calls += 1
+
+    if bar_count == 208:
+        body = worker_module.public_manifest(
+            manifest, request, report, value["license_receipt"], checkpoint
+        )
+        assert sum(len(step["revisions"]) for step in body["decisionInputs"]) == references
+        assert len(worker_module.encoded(body).encode("utf-8")) < 12 * 1024 * 1024
+    else:
+        with pytest.raises(BacktestBudgetExceeded, match="byte budget"):
+            worker_module.public_manifest(
+                manifest, request, report, value["license_receipt"], checkpoint
+            )
+        assert calls < references, (
+            "oversize evidence must stop before materializing every repeated reference"
+        )
