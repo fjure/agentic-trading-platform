@@ -15,7 +15,21 @@ Dies ist ein Apply-Prüfplan; hier werden keine neuen Runtimeergebnisse behaupte
 | T-QCO-003 | alle neuen tatsächlichen Routes/Relaymethods, Auth/Origin/CSRF, stale Draft, fremde Cursor, payload conflict, alte Client/Manifestkompatibilität | vollständige Contractsuite; kanonischer Vertrag, oasdiff gegen Basis, zweifache Generatorausgabe bytegleich |
 | T-QCO-004 | Katalog->Builder->9er-Grid->Run->Report->Reload/Pagination; Validation/OOS klar getrennt, Exposition, Sessionverlust und verspätete Antworten/Dialogpolls | echter Chromium, öffentliche API, PostgreSQL und Worker, lokale historische Doubles |
 
-## Integration und Regression
+## Refinement: zusätzliche positive und negative Abnahme
+
+| Testgruppe | Konkrete Akzeptanz | Umgebung in Apply |
+|---|---|---|
+| T-QEX-008/009, S1..S12 | Return0.12/DD0.08 schlägt0.005/0.01 unter Limit0.10; alternative Kapitalerhaltung umgekehrt; Flat gegen positiv/negativ, explizites Aktivitätsminimum, Grenze exakt/darunter/darüber inklusive vor Rundung0.1000000000004; alle ineligible -> keine Ersatzstrategie; ein FAILED -> kein verkleinertes Ranking; Sharpe N/A ohne Pflichtmetrikverlust; Identität bei jeder Policy-/Parameteränderung, Ties/Mediane/Foldgrenzen | unabhängige Decimal-/Rationalorakel, Unit/Property, Contracts und persistierte Workerentscheidung |
+| T-QEX-010 | keine/leere/falsch geordnete Phase abweisen; NOT_TRAINABLE statt TRAINED_MODEL; In-Sample nur deskriptiv; Validation optimiert; identisches Protokoll gleiche Auswahl; alle Selections vor OOS; schlechter Holdout kein Tuning oder Wiederwahl; OOS-Perturbation ändert Selectionhash nicht | Unit/Property plus echte PG/Worker-Recovery/API |
+| T-QEX-011 | neun geplante Kandidaten vs tatsächliche Statuszahlen/Referenzen; frühere Validation/Analyse macht neues OOS/Holdout bekannt und umgekehrt; neue Hypothese/Revision/Actor keine Frische; Fehlversuche/supersedes bleiben sichtbar, Retry zählt einmal; parallele Admission registriert eindeutigen Vorgängerstand; spätere Warnung ändert gebundenen Hash nicht | echtes PostgreSQL, API/Worker und UI |
+| T-QCO-005 | vollständige barbasierte Investiertheit und Bruttoexposition, null Fills/Entry vs Fill, Teilpositionsgröße, offene Endposition, kein synthetischer Exit, wiederholte Wechsel/Gebühren/keine Tageszeitgewichtung; Nacht/Wochenende/Earlyclose/Fehlbars/Phasenreset; Nullnenner/ungültiges Ledger; exakte selectionValues vs zwölfstellige Anzeige; Warnung vs explizite Mindestaktivität vs Datenblocker | unabhängige numerische Methodikorakel, echte Simulation/Reports und Browser |
+| Forschungsworkflow | zwölf Schritte aus research-protocol.md, neun EMAkandidaten plus Referenzen, geschlossene Policy/Version, eingefrorene Grundlage, Auswahl-/Nichtwahlzweig, getrennte OOS-/Holdoutanzeige, Aktivität/Exposition/Reliability/Grenzen; kurzer Test korrekt N/A und SMALL_FOLD_SAMPLE | QSL-09 echte PG/HTTP/Worker/Chromiumkette, budgetierte synthetische Daten |
+
+Planungsvalidierung prüft Requirements/Tasks/Traceability und OpenSpec; sie ersetzt keinen dieser späteren Produkttests. Kein neuer statistischer Testframework, keine manuell editierten Clientdateien.
+
+T-QEX-011 prüft zusätzlich Upgrade mit nichtleeren historischen Strict-/Retrospective-Runs (einschließlich FAILED/BLOCKED/Retry), UNKNOWN bei unrekonstruierbaren Phasen und gleichzeitig eintreffende Legacy-/QSLadmission. Registrierung und Vorgängerstand müssen über beide SQLports atomar sein; alte Writer ohne Guard werden abgewiesen. T-QCO-005 prüft die HALF_EVEN-Ledgergrenze mit Cash0.00000001 ausdrücklich als gültigen Simulatorfall sowie jede quant-activity-warnings-v1-Schwelle exakt und beidseitig.
+
+## Integration und Regression (bestehende Pflichten)
 
 QSL-09 verbindet die vorher bereits getesteten Pakete. Tatsächlicher Backtestworkercontainer: 0.5 CPU/256MiB/read-only/UID10001, nur backtest_db, eigene DBidentität; Broker-/Provider-/Jev-Fähigkeitszähler null. Echte verweigerte SQLrechte (42501), HBA-Negative, unveränderte nichtleere Finanzledgerfingerprints. Shared100er-Queue während echter Simulation; Pause/Kill/Reconciliation bleiben unter der bestehenden5s-Fixturegrenze, unabhängig vom Researchfortschritt. Keine absichtliche echte Brokerorder, keine echten Credentials.
 

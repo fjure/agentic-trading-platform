@@ -1,31 +1,29 @@
-# Unabhängiger Planungsreview
+# Unabhängiger Planungsreview nach fachlichem Refinement
 
-30.10.2026; ausschließlich Propose. Zwei getrennte Reviewer mit frischem Kontext, read-only, keine Gitmutationen. Zusätzlich separater Review des begrenzten Issuesynchelpers. Hauptagent verantwortet Integration und Nachweise.
+30.10.2026, Ausgangs-HEAD bdb2ac7dd1f8a5e02183bf35276b1f63774af684. Zwei unabhängige Reviewer mit frischem Kontext, read-only; ausschließlich Planung, kein Apply. Der frühere Proposereview bleibt in Git nachvollziehbar und wird nicht als Prüfung dieses Refinements ausgegeben.
 
-## Quant / Leakage / Reproduzierbarkeit
+## Quant Research Review
 
-Reviewer quant_review las Proposal/Design/Methodik/Tasks/Traceability/Teststrategie, alle drei Deltas und relevante Bestandskomponenten. Ergebnis: keine P1/P2-Planungsblocker. EMA(2,3)- und Wilder-RSI(2)-Handwerte sowie Drawdown-/Return-/Varianzorakel unabhängig bestätigt. Validation-only-Auswahl, persistierte Inputhashes vor OOS, finale Auswahl ohne OOS, gemeinsame Seed-/Revisionbindung und Legacyhashschutz sind konsistent.
+Reviewer quant_refinement_review prüfte Policy/Methodik/Protokoll, Deltas, Tasks/Tests/Traceability und Simulator. Ein P2: zusätzlich verlangtes G=Equity-Cash widersprach wegen HALF_EVEN der gültigen Simulatorformel Equity=money(Cash+q*Close). Behoben: G=money(q*Close) separat; keine distributive Identität erzwingen. Konkretes positives Grenzorakel mit Cash0.00000001 ergänzt und nachgeprüft. Zweiter gemeinsamer Befund: S4 nannte noch gleiche Anzeige-/Selektionsquantisierung; jetzt explizit unquantisiertes DD0.1000000000004 über Limit0.1 trotz gleicher Anzeige.
 
-Übernommene Präzisierung: finale Holdout-Degradation explizit N/A NO_PAIRED_VALIDATION; nur foldweise gepaarte Val/Test-Tagesreihen liefern diese Kennzahl. Verbleibende bewusste Grenzen: Drawdown-first kann einen expliziten Flat-Suchkandidaten bevorzugen; endlich gesäte EMA hängt von gemeinsamem W ab; zwanzig Sitzungen und höchstens vier Folds ergeben keine statistische Gewissheit.
+Nachprüfung: keine P1/P2 im fachlichen Rechenkern. Return unter vorab festgelegtem DD-Limit, negative/Flat-Kandidaten, alle-Folds-Gates, unquantisierte selectionValues, Nichtwahl, Isolation und Warnungen sind konsistent. Unabhängige Decimal-/Bruchrechnung bestätigt Exposure37/190 und9510 Barschritte der technischen Neunerfixture. Review erkannte außerdem falsch zugeordnete Taskergänzungen: korrigiert auf exakte Task-ID, Kennzahlen06, Worker/API07, UI08, Gesamtabnahme09; abschließende gezielte Nachprüfung bestätigt QSL-06..09 und meldet keine offenen P1/P2.
 
-## Architektur / SQL / Worker / Safety
+## Architecture & Safety Review
 
-Reviewer safety_review las trading-safety-review/SKILL.md, Planungsartefakte und bestehende jobs.py, Worker, Migration0033/0034 sowie Container-/Privilegekonfiguration. Ergebnis: keine P1/P2-Planungsblocker. DBvalidierte Bindungen, Kompatibilitätsmarker, exakt altes Claim-SQL, gemeinsame gewichtete Admission, persistente Budgets/Fences und eng begrenzte Rechte passen zu den bestehenden Integrationsbarrieren. Taskgraph ist azyklisch mit klaren Dateizuständigkeiten.
+Reviewer safety_refinement_review wandte trading-safety-review an und prüfte bestehende Modelle/Worker-/DBgrenzen. P2: research-protocol setzte test_exposures irrtümlich als vorhanden voraus. Behoben: neue additive Tabelle, Backfill bekannter Legacyrollen, UNKNOWN bei fehlender Althistorie, gemeinsame atomare Strict-/Retrospective-/QSLadmission inklusive direkter SQLports und fail-closed Writerguard vor QSLzulassung. QSL-03 owns storage.py; T-QEX-011 prüft nichtleeres Upgrade und konkurrierende Legacy-/QSLadmission. Gezielte Nachprüfung bestätigt Korrektur und keine offenen Architektur-/Safety-P1/P2. Gemeinsamer S4-Befund ebenfalls nachgeprüft.
 
-| Invariante | Planungsbeleg / spätere Pflichtprüfung | Bewertung |
-|---|---|---|
-| Agent/Research ohne Broker-submit | REQ-QEX-006, D4/D7; QSL-09 echte Fähigkeitszähler/SQL42501/HBA | Plan erfüllt; neue Runtime unverified |
-| Deterministische Risk-/Executiongates und LIVE unerreichbar | unveränderte Main-Spec risk-execution; keine neuen Tradingrechte; QSL-09 Bestandsregression | Plan erfüllt; keine neue Zertifizierung |
-| DISABLED/fail-closed und sicherer Neustart | D4/D5/Migration Plan; Fence/Altworker-/frozen DISABLED-Smoke | Plan erfüllt; Applynachweis erforderlich |
-| Decimal/UTC | D2 und metrics-methodology.md; unabhängige Orakel | Formeln geprüft; Implementierung ausstehend |
-| Kill/PAUSE_NEW/Reconciliation unabhängig | gemeinsamer begrenzter Worker, QSL-09 echte volle Queue/CPU und5s-Fixture | Plan erfüllt; Lastwirkung unverified |
-| Execution-only-Credentials/Redaktion | keine neuen Mounts/Netzwerke/Providerrechte; echte Canary-/Rollennegative | Plan erfüllt; neue Runtime unverified |
-| Immutable Referenzen und Audit | D3/D4, Snapshots/Selections/Results/Exposition append-only | Plan erfüllt; SQLdurchsetzung ausstehend |
-| Budgetreservierung/Expiry/UNKNOWN/Timeout/Teilfill/Cancelrennen | QSL verändert diese Tradingpfade nicht; relevante Paper-/Risk-/Reconciliationregression in QSL-09 | Bestandsanforderungen erhalten; keine Ausführung hier |
-| Jevfehler blockiert keine Safetyoperation | keine Jevabhängigkeit im Researchworker; unabhängige Safety-/Reconciliationlastprobe | Plan erfüllt; tatsächliche Lastprobe in Apply |
+| Invariante | Planungsbewertung / notwendiger Applynachweis |
+|---|---|
+| Research/Agent ohne Broker-submit, Credentials oder Finanzwrites | Plan erfüllt, REQ-QEX-006; echte Fähigkeitszähler/42501/HBA in09 ausstehend |
+| Deterministische Risk-/Executiongates, LIVE unerreichbar | erhalten; Bestandsregression Pflicht, keine neue Runtimezertifizierung |
+| DISABLED, fail-closed, sichere Wiederaufnahme | D4/D5, alte Writer/Fences/Restarttests; Runtime unverified |
+| Decimal/UTC und Ledgeridentitäten | exakte Auswahlwerte, unabhängige Halbgeraden-/Grenzorakel, keine zusätzliche Ledgergeldrundung |
+| Kill/PAUSE_NEW/Reconciliation unabhängig, Jevfehler folgenlos | unveränderte Rechte/Abhängigkeiten, echte5s-Unterlastprüfung09 ausstehend |
+| Immutable Referenzen/Policy/Audit | alle Selektionen vor jedem OOS, append-only Register/Manifest; SQLdurchsetzung03/07 ausstehend |
+| Budgetreservierungen, Expiry/UNKNOWN/Timeout/Teilfill/Cancelrennen | keine Änderung der Tradingpfade; relevante Regression09 bleibt Pflicht |
+| Runtime-/Workerbudget | gemeinsame Queue100/Lease,295s/drei Versuche/12MiB unverändert; Lastnachweis nicht ausgeführt |
+| API-/Legacykompatibilität | additive QSLfelder, alte Datenselektionspolicy/Hashes unverändert, kanonischer Vertrag erst Apply |
 
-## Testabdeckung und Issuegraph
+## Grenzen und Abdeckung
 
-test-strategy.md deckt alle12 Requirements und16 Szenarien ab. Neun Pakete mit lokalen Tests, Testevidenz und eigenem DoD; QSL-09 integriert bereits einzeln getestete Komponenten. Separater Reviewer runtime_discovery prüfte scripts/sync-quant-lab-issues-gh.py: keine zusätzlichen Blocker; nur Zielrepository/Issues, Managedblock-/Manuallabelerhalt, Stop bei Mehrdeutigkeit, getrennte native Add- und Vorwärts/Rückwärts-Read-back-Pässe. Tatsächliche Remoteprüfung steht in github-quant-lab-issue-sync.json.
-
-Keine Runtime-/Marktzertifizierung: echte neue PostgreSQLgates, persistente Reservierung inklusive unbestätigter Crasharbeit, Speicher-/CPUgrenzen und Safetyunterlast müssen QSL-03/07/09 erst ausführen. Reale Datenrechte und historisches Vorwissen bleiben extern unverifiziert.
+16 Requirements,21 benannte Capability-Szenarien sowie S1..S12 und numerische Methodenorakel, neun offene Implementierungspakete, unveränderter DAG mit18 Kanten. Diese Zählung beschreibt die Planung, keine ausgeführten Produkttests. Kleine IEX-Historie, endlicher EMAseed, Testvorkenntnis und adaptive Mehrfachsuche bleiben Einschränkungen; keine Signifikanz, Marktvalidität oder Handelsfreigabe behauptet.

@@ -8,9 +8,10 @@ Einzelbacktests erlauben noch keine kontrollierte, dauerhaft nachvollziehbare Pa
 
 - Versionierter, geschlossener Strategiekatalog einschließlich EMA Crossover und RSI Mean Reversion mit exakten Initialisierungsregeln.
 - Begrenzte deterministische Grids, unveränderliche Experimentversionen, gemeinsamer Dataset-Snapshot und fairer Warm-up.
-- Chronologische Training-/Validation-/OOS-Protokolle, eingefrorene Auswahl, Erfassung wiederverwendeter Testzeiträume und unabhängige Foldresultate.
+- Chronologische In-Sample-/Parameterauswahl-/OOS-Protokolle mit separatem Holdout; unveränderliche versionierte Strategy Selection Policies, risikobegrenzte Nettorenditemaximierung als Standard und ausdrückliche Nichtwahl.
+- Transparenz über Multiple Testing, Kandidaten-/Rundenumfang und Wiederverwendung sämtlicher ausgewerteter Zeitrollen, ohne behauptete statistische Sicherheit.
 - Persistente Batches mit bestehenden Backtestresultaten, Reliabilityreferenzen, begrenzter Wiederaufnahme und gemeinsamem Workerbudget.
-- Serverseitige Vergleichsberichte, definierte deskriptive Kennzahlen und Materialoberfläche mit persistenten Links.
+- Serverseitige Vergleichsberichte einschließlich barbasierter Investiertheitsquote, Exposition, Fill-/Positionsaktivität und Materialoberfläche mit persistenten Links; keine versteckte Aktivitätspräferenz.
 - Additive versionierte Researchverträge, ohne LLM-Integration oder zusätzliche Handelsrechte.
 
 ## Capabilities

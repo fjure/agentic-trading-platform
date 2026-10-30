@@ -16,6 +16,25 @@ Alle Anforderungen besitzen Szenarien im jeweiligen Capabilitydelta; Details ste
 | REQ-QCO-002 | T-QCO-002 | D6/metrics-methodology.md | 01,06,07,08,09 |
 | REQ-QCO-003 | T-QCO-003 | D7 | 01,07,08,09 |
 | REQ-QCO-004 | T-QCO-004 | D7 | 01,08,09 |
+| REQ-QEX-007 | T-QEX-008/009; S1..S12 | D3/selection-policy.md | 01,02,03,05,06,07,08,09 |
+| REQ-QEX-008 | T-QEX-010 | D3/research-protocol.md | 01,02,04,05,07,08,09 |
+| REQ-QEX-009 | T-QEX-011 | D3/D4/research-protocol.md | 01,03,05,07,08,09 |
+| REQ-QCO-005 | T-QCO-005; Methodikorakel Aktivität | D6/metrics-methodology.md | 01,06,07,08,09 |
+
+## Vollständiger Forschungsworkflow
+
+Die zwölf Schritte des verbindlichen Beispiels in research-protocol.md sind abgedeckt:
+
+| Schritte | Requirements | Tasks / Vertrag / Prüfung |
+|---|---|---|
+| 1 Katalog, 2 neun Kandidaten | QSR-001/002, QEX-001 | 01/02/04/08; GET strategies, Definition-POST; QSR001..005/QEX001 |
+| 3 Modus/Daten, 4 vorab Policy, 5 Zeitrollen | QEX-002/003/006/007/008 | 01/02/05/08; geschlossene Definition/Validierung; QEX002/003/007..010 |
+| 6 validierte Version starten, 7 einfrieren | QEX-002/004/005/007/009 | 01/03/07; validations/batches, Idempotenz/hash; QEX002/005/006/009/011 |
+| 8 gleiche Validation, 9 Auswahl oder Nichtwahl | QEX-002/003/007, QCO-001 | 05/06/07; candidates/results/comparison, selectionValues/Gates; QEX008/009, S1..S12 |
+| 10 isoliertes OOS, 11 separater Holdout | QEX-003/007/008/009 | 05/07; Status/Resultate samt Nichtauswertung; QEX003/004/009/010/011 |
+| 12 ehrliche Ergebnisdarstellung | QCO-001..005, QEX-008/009 | 01/06/07/08/09; Comparison-/Materialansichten; gesamte QCO-Matrix |
+
+QSL-09 prüft den Workflow mit echter PG/API/Worker/Browserkette und synthetischer Kalender-/Datenfixture; kein neuer Runtimebeleg durch dieses Refinement. APIfelder werden erst in Apply kanonisch ergänzt, der aktuelle HTTPvertrag bleibt unverändert. Dependencygraph bleibt bei neun Paketen und 18 Kanten.
 
 ## Abdeckung des Nutzerauftrags
 
