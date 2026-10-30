@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "repository": "fjure/agentic-trading-platform",
+  "changeId": "quant-strategy-lab-v1",
+  "source": "openspec/changes/quant-strategy-lab-v1/tasks.md",
+  "transport": "authorized-gh-cli-fallback-mcp-write-403",
+  "nativeDependencies": "verified-forward-and-reverse",
+  "nativeDependencyVerification": {
+    "verifiedAt": "2026-10-30T10:13:04.738582+00:00",
+    "edges": 18,
+    "added": 0,
+    "forwardReadBack": 9,
+    "reverseReadBack": 9,
+    "exactGraph": true
+  },
+  "tasks": [
+    {
+      "taskId": "QSL-01",
+      "issueNumber": 77,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/77",
+      "contentHash": "90fa27e0b3d896f617e86aa34e2d4ee3b584bb5abc0e94d46cd07c3393e9317d",
+      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "dependsOn": [],
+      "state": "open",
+      "nativeDependsOn": []
+    },
+    {
+      "taskId": "QSL-02",
+      "issueNumber": 78,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/78",
+      "contentHash": "26e6845a706ecc3273432b62cb34e47d820fb46ea73ab0c049d8e225780a1ef3",
+      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "dependsOn": [
+        "QSL-01"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        77
+      ]
+    },
+    {
+      "taskId": "QSL-03",
+      "issueNumber": 79,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/79",
+      "contentHash": "327a7c0b231004464546c609cfb44bd51fe5d88bb4d12db3f7184cb19d84d1ab",
+      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "dependsOn": [
+        "QSL-01"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        77
+      ]
+    },
+    {
+      "taskId": "QSL-04",
+      "issueNumber": 80,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/80",
+      "contentHash": "311bd6bc423b4964932e15bf269039a96ea82709307bdc9778bc7c82df5ef232",
+      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "dependsOn": [
+        "QSL-02"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        78
+      ]
+    },
+    {
+      "taskId": "QSL-05",
+      "issueNumber": 81,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/81",
+      "contentHash": "15e32655e2766b39d2b13d2eb956dbb93ff8d67d7c080f4f06720b36bc07402e",
+      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "dependsOn": [
+        "QSL-02"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        78
+      ]
+    },
+    {
+      "taskId": "QSL-06",
+      "issueNumber": 82,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/82",
+      "contentHash": "020566282e7ec564c00f24f82198236a9313c6e75472a3240e9540ee90d3677f",
+      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "dependsOn": [
+        "QSL-02"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        78
+      ]
+    },
+    {
+      "taskId": "QSL-07",
+      "issueNumber": 83,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/83",
+      "contentHash": "a404460386783b154db0d077a9a3c46db30340828b39d6cc514c643109f80c43",
+      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "dependsOn": [
+        "QSL-03",
+        "QSL-04",
+        "QSL-05",
+        "QSL-06"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        79,
+        80,
+        81,
+        82
+      ]
+    },
+    {
+      "taskId": "QSL-08",
+      "issueNumber": 84,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/84",
+      "contentHash": "5eb816043c683487183e1c84d382767b3a6a043f734cb71d16b780a8e40eda4d",
+      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "dependsOn": [
+        "QSL-07"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        83
+      ]
+    },
+    {
+      "taskId": "QSL-09",
+      "issueNumber": 85,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/85",
+      "contentHash": "977d5827b50c5de7c8e3944f34f464475a4488bc52231d04ac03043a3caf482b",
+      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "dependsOn": [
+        "QSL-01",
+        "QSL-02",
+        "QSL-03",
+        "QSL-04",
+        "QSL-05",
+        "QSL-06",
+        "QSL-07",
+        "QSL-08"
+      ],
+      "state": "open",
+      "nativeDependsOn": [
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84
+      ]
+    }
+  ],
+  "lastSyncRun": {
+    "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+    "created": 0,
+    "updated": 0,
+    "unchanged": 9,
+    "readBack": 9,
+    "repositoryWideVerified": true
+  }
+}
