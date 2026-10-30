@@ -1,6 +1,6 @@
 # GitHub-Issues und Abhängigkeiten
 
-Alle Issues sind offen; Implementierung ausstehend. Transport: offizieller GitHub-MCP lesend erfolgreich, Issuecreate403; ausdrücklich autorisierter GH-CLI-Fallback für Issues/Labels/native Dependencies. Keine Kommentare, Pull Requests, Branchlöschungen oder fremden Repositories. Change-Label und openspec, kein Milestone.
+Alle Issues sind offen; Implementierung ausstehend. Transport: offizieller GitHub-MCP lesend erfolgreich, Issueupdate403 im Refinement; ausdrücklich autorisierter GH-CLI-Fallback für Issues/Labels/native Dependencies. Keine Kommentare, Pull Requests, Branchlöschungen oder fremden Repositories. Change-Label und openspec, kein Milestone.
 
 | Task | Issue / Ziel | Depends on |
 |---|---|---|
@@ -16,4 +16,4 @@ Alle Issues sind offen; Implementierung ausstehend. Transport: offizieller GitHu
 
 Neun Knoten,18 gerichtete native Kanten. Exaktes Vorwärts- und Rückwärts-Read-back jeder Adjazenzliste, Markereindeutigkeit über offene/geschlossene Repositoryissues, Titles/Managedblocks/Labels/Status und SHA256 sind in docs/development/github-quant-lab-issue-sync.json gespeichert. scripts/sync-quant-lab-issues-gh.py erzeugt ohne --apply ausschließlich Vorschau, mit --apply idempotenten Sync. Unerwartete Abhängigkeiten werden nicht gelöscht, sondern blockieren.
 
-Planungsbranch `codex/quant-strategy-lab-v1-proposal`; zukünftige Issueimplementierungen erhalten nach gesondertem Applyauftrag eigene Branches gemäß AGENTS.md. Propose schließt keines dieser neun Issues.
+Refinementbranch `codex/quant-strategy-lab-v1-refinement`; zukünftige Issueimplementierungen erhalten nach gesondertem Applyauftrag eigene Branches gemäß AGENTS.md. Refinement schließt keines dieser neun Issues.

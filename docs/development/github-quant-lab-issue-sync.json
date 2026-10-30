@@ -6,7 +6,7 @@
   "transport": "authorized-gh-cli-fallback-mcp-write-403",
   "nativeDependencies": "verified-forward-and-reverse",
   "nativeDependencyVerification": {
-    "verifiedAt": "2026-10-30T10:13:04.738582+00:00",
+    "verifiedAt": "2026-10-30T11:01:01.673893+00:00",
     "edges": 18,
     "added": 0,
     "forwardReadBack": 9,
@@ -18,8 +18,8 @@
       "taskId": "QSL-01",
       "issueNumber": 77,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/77",
-      "contentHash": "90fa27e0b3d896f617e86aa34e2d4ee3b584bb5abc0e94d46cd07c3393e9317d",
-      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "contentHash": "18029da0cc3b3321cbb185ee6755c1db776916e1eeb3d3234586c4c385f014fa",
+      "syncedAt": "2026-10-30T11:01:01.673893+00:00",
       "dependsOn": [],
       "state": "open",
       "nativeDependsOn": []
@@ -28,8 +28,8 @@
       "taskId": "QSL-02",
       "issueNumber": 78,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/78",
-      "contentHash": "26e6845a706ecc3273432b62cb34e47d820fb46ea73ab0c049d8e225780a1ef3",
-      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "contentHash": "c286dc33e4bbf3e73e203b82f507df9777fada1d68c437793c235a530bc19359",
+      "syncedAt": "2026-10-30T11:01:01.673893+00:00",
       "dependsOn": [
         "QSL-01"
       ],
@@ -42,8 +42,8 @@
       "taskId": "QSL-03",
       "issueNumber": 79,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/79",
-      "contentHash": "327a7c0b231004464546c609cfb44bd51fe5d88bb4d12db3f7184cb19d84d1ab",
-      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "contentHash": "3bed898c9a3f4aeb06fad966a0c85e1269324498cb77f275f20a9df5fd28d3f7",
+      "syncedAt": "2026-10-30T11:01:01.673893+00:00",
       "dependsOn": [
         "QSL-01"
       ],
@@ -56,8 +56,8 @@
       "taskId": "QSL-04",
       "issueNumber": 80,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/80",
-      "contentHash": "311bd6bc423b4964932e15bf269039a96ea82709307bdc9778bc7c82df5ef232",
-      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "contentHash": "88375234b30862db842ef49db62e6624885a2a7df23aa1b2eb63a92ed3ef2930",
+      "syncedAt": "2026-10-30T11:01:01.673893+00:00",
       "dependsOn": [
         "QSL-02"
       ],
@@ -70,8 +70,8 @@
       "taskId": "QSL-05",
       "issueNumber": 81,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/81",
-      "contentHash": "15e32655e2766b39d2b13d2eb956dbb93ff8d67d7c080f4f06720b36bc07402e",
-      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "contentHash": "8ab246de7309ee4d1090f6c6bd152124d58909902a4508325920fa064cc10834",
+      "syncedAt": "2026-10-30T11:01:01.673893+00:00",
       "dependsOn": [
         "QSL-02"
       ],
@@ -84,8 +84,8 @@
       "taskId": "QSL-06",
       "issueNumber": 82,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/82",
-      "contentHash": "020566282e7ec564c00f24f82198236a9313c6e75472a3240e9540ee90d3677f",
-      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "contentHash": "4a06c3423476bf1290a3cba1f1e55e2b2b4d19f5d223ad37dee63acad6d90999",
+      "syncedAt": "2026-10-30T11:01:01.673893+00:00",
       "dependsOn": [
         "QSL-02"
       ],
@@ -98,8 +98,8 @@
       "taskId": "QSL-07",
       "issueNumber": 83,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/83",
-      "contentHash": "a404460386783b154db0d077a9a3c46db30340828b39d6cc514c643109f80c43",
-      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "contentHash": "0f980d9feb40ba39a014558fb499b0b0588c74a4524cc464fc61ba6cc26bdd8b",
+      "syncedAt": "2026-10-30T11:01:01.673893+00:00",
       "dependsOn": [
         "QSL-03",
         "QSL-04",
@@ -118,8 +118,8 @@
       "taskId": "QSL-08",
       "issueNumber": 84,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/84",
-      "contentHash": "5eb816043c683487183e1c84d382767b3a6a043f734cb71d16b780a8e40eda4d",
-      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "contentHash": "8e8975467d141c6b544a9e2ae7ac31d3674dab3c22fd4dc3b89b4693a1c4cb01",
+      "syncedAt": "2026-10-30T11:01:01.673893+00:00",
       "dependsOn": [
         "QSL-07"
       ],
@@ -132,8 +132,8 @@
       "taskId": "QSL-09",
       "issueNumber": 85,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/85",
-      "contentHash": "977d5827b50c5de7c8e3944f34f464475a4488bc52231d04ac03043a3caf482b",
-      "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+      "contentHash": "3ab99ae673e55615dc735f6dfc458a5433e5f4083ae313b7a305718f563ccc6d",
+      "syncedAt": "2026-10-30T11:01:01.673893+00:00",
       "dependsOn": [
         "QSL-01",
         "QSL-02",
@@ -158,7 +158,7 @@
     }
   ],
   "lastSyncRun": {
-    "syncedAt": "2026-10-30T10:13:04.738582+00:00",
+    "syncedAt": "2026-10-30T11:01:01.673893+00:00",
     "created": 0,
     "updated": 0,
     "unchanged": 9,
