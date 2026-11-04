@@ -11,7 +11,7 @@ import re
 from bisect import bisect_left
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from uuid import UUID
 
 from packages.backtesting.calendar import relevant_schedule_rows
@@ -522,9 +522,12 @@ class RetrospectiveFoldDataset:
     revision_references: tuple[RetrospectiveRevisionReference, ...]
     calendar_references: tuple[RetrospectiveCalendarReference, ...]
     policy: RetrospectivePolicyV1 = RetrospectivePolicyV1()
+    seed_once: bool = False
 
     def __post_init__(self):
         _policy(self.policy)
+        if type(self.seed_once) is not bool:
+            raise ValueError("explicit seed input mode required")
         if type(self.fold) is not Fold or type(self.snapshot) is not Snapshot:
             raise ValueError("typed retrospective fold and snapshot required")
         for rows in (
@@ -546,7 +549,7 @@ class RetrospectiveFoldDataset:
 
     def binding(self):
         """Reference-based preimage; price content is already fingerprint-bound."""
-        return (
+        legacy = (
             self.policy.research_mode,
             self.policy.selection_policy_version,
             self.fold,
@@ -565,6 +568,9 @@ class RetrospectiveFoldDataset:
             ),
             tuple(b.revision_id for b in self.outcome_bars),
         )
+        return legacy + (("quant-common-seed-v1", "ONCE_THEN_ONE_CLOSE"),) if (
+            self.seed_once
+        ) else legacy
 
     @property
     def calendar_revision_ids(self):
@@ -617,7 +623,7 @@ class RetrospectiveFoldDataset:
                 or not step.input_bars
                 or step.input_bars[-1] != step.signal_bar
                 or tuple(b.identity.bar_start for b in step.input_bars)
-                != required_history[n : n + count + 1]
+                != ((expected[n],) if self.seed_once and n else required_history[n : n + count + 1])
                 or any(
                     b.identity.bar_end > step.signal_bar.identity.bar_end for b in step.input_bars
                 )
@@ -688,10 +694,13 @@ def materialize_retrospective_fold(
     *,
     trust_context=None,
     checkpoint=lambda: None,
+    seed_once=False,
 ):
     if type(dataset) is not RetrospectiveDataset:
         raise ValueError("retrospective dataset required")
     _policy(dataset.policy)
+    if type(seed_once) is not bool:
+        raise ValueError("explicit seed input mode required")
     if (
         type(fold) is not Fold
         or not isinstance(instrument_id, UUID)
@@ -771,7 +780,9 @@ def materialize_retrospective_fold(
         steps.append(
             DecisionStep(
                 by_start[start],
-                tuple(by_start[s] for s in history[n : n + warmup_count + 1]),
+                tuple(by_start[s] for s in (
+                    (start,) if seed_once and n else history[n : n + warmup_count + 1]
+                )),
                 expected[target_index] if target_index < len(expected) else None,
             )
         )
@@ -788,7 +799,48 @@ def materialize_retrospective_fold(
             RetrospectiveRevisionReference.from_bar(b) for b in sorted(selected, key=revision_key)
         ),
         calendar_refs,
+        seed_once=seed_once,
     )
+
+
+def materialize_quant_retrospective_phases(
+    dataset, definition, calendar_rows, *, trust_context=None, checkpoint=lambda: None
+):
+    """QSL counterpart of the Strict common-snapshot phase port; no fallback."""
+    from .dataset import QuantPhaseDataset, quant_phase_history_start
+    from .experiment import ExperimentDefinition, PhaseSeedBinding
+
+    if type(definition) is not ExperimentDefinition or (
+        definition.research_mode != "RETROSPECTIVE_EXPLORATORY"
+    ):
+        raise ValueError("explicit retrospective QSL definition required")
+    if type(dataset) is not RetrospectiveDataset:
+        raise ValueError("shared retrospective snapshot required")
+    _budget(
+        dataset.revisions, calendar_rows,
+        trust_context.records if trust_context else (),
+        trust_context.evidence_references if trust_context else (),
+    )
+    phases = []
+    for index, phase, _, window in definition.protocol.phases:
+        checkpoint()
+        history_start = quant_phase_history_start(
+            dataset.snapshot, window, definition.warmup_count, calendar_rows, strict=False
+        )
+        actual_seed_start = history_start if definition.warmup_count else window.start
+        if definition.protocol.holdout.end - actual_seed_start > timedelta(days=366):
+            raise ValueError("seed-inclusive span exceeds 366 days")
+        fold = Fold(history_start, window.start, window.start, window.end)
+        data = materialize_retrospective_fold(
+            dataset, fold, definition.instrument_id, definition.warmup_count,
+            calendar_rows, trust_context=trust_context, checkpoint=checkpoint, seed_once=True,
+        )
+        binding = PhaseSeedBinding(
+            index, phase, window, data.warmup_binding.expected_bar_starts,
+            data.expected_bar_starts,
+        )
+        phases.append(QuantPhaseDataset(binding, data))
+    return tuple(phases)
 
 
 @dataclass(frozen=True)
