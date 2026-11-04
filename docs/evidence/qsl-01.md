@@ -7,9 +7,10 @@ Issuebranch: `codex/ptv-77-quant-lab-contracts`.
 
 ## Ergebnis und Abnahmegrenze
 
-Vertragsimplementierung und Paketprüfungen abgeschlossen; Gitintegration und
-Issueabschluss werden anschließend verifiziert. Die Checkbox bleibt bis dahin
-offen. QSL-02 bis QSL-09 sind nicht durch dieses Paket implementiert.
+Vertragsimplementierung, Paketprüfungen und erste Codeintegration sind
+abgeschlossen. Nach bestätigter Remoteintegration wird die Checkbox geschlossen
+und der Issue-Sync im selben Durchlauf verifiziert. QSL-02 bis QSL-09 sind
+nicht durch dieses Paket implementiert.
 
 14 additive Operationen auf zwölf neuen Pfaden, 75 geschlossene QSL-Schemas,
 ein Standalone-Mirror mit 86 Definitionen und 53 typisierte öffentliche
@@ -93,3 +94,20 @@ Reale Datenrechte, historische PIT-Eignung und Profitabilität bleiben
 unverifiziert. Fremde Änderungen an README.md, apps/dashboard/angular.json
 und vorbestehende temporäre .tooling-Verzeichnisse bleiben außerhalb des
 Issuepakets. Keine Archivierung oder Main-Spec-Konsolidierung.
+
+## Geprüfte Codeintegration
+
+Implementierungscommit `eb513e519ca733aa9358f889f728f947e723539a` auf dem
+autorisierten Issuebranch gepusht und per ls-remote SHA-genau zurückgelesen.
+Regulärer main-Merge `463f0a9640be05da2ef15401c94ba21b80e319a6` ebenfalls
+gepusht und zurückgelesen. main und Issuebranch besitzen denselben geprüften
+Implementierungsbaum. Erst danach Taskabschluss/Issue-Sync; deren reiner
+Dokumentationsabschluss wird erneut regulär integriert. Kein Force-Push,
+keine Branchlöschung und keine Aufnahme fremder Änderungen.
+
+GitHub-MCP-Update am 04.11.2026 erneut mit HTTP403 verweigert. Daraufhin
+ausdrücklich autorisierter GH-CLI-Fallback: 0 erstellt, 1 geändert,
+8 unverändert, 9 Read-backs; #77 nach bestätigter Codeintegration geschlossen,
+18 native Kanten exakt vorwärts/rückwärts. Idempotenter Schlusslauf bestätigt
+0 erstellt, 0 geändert, 9 unverändert und erneut 9 Read-backs. Zusätzlich
+MCP-Read-back von #77: geschlossen und Body bytegenau wie vorgeschaut.
