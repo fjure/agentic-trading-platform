@@ -1,5 +1,6 @@
 """Read-only bounded snapshots, chronological PIT sweep and separated outcomes."""
 
+from bisect import bisect_left
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -249,6 +250,7 @@ class FoldDataset:
     quality_revision_ids: tuple[str, ...] = ()
     coverage_ids: tuple[str, ...] = ()
     outcome_cutoffs: tuple[tuple[UUID, datetime], ...] = ()
+    seed_once: bool = False
 
 
 @dataclass(frozen=True)
@@ -325,10 +327,14 @@ def materialize_fold(
     coverage_proofs=(),
     checkpoint=lambda: None,
     trust_check=None,
+    *,
+    seed_once=False,
 ):
     """Bind complete regular windows; no skipping missing warmup or result bars."""
     if type(frozen) is not FrozenDataset:
         raise ValueError("Strict PIT requires its own frozen dataset")
+    if type(seed_once) is not bool:
+        raise ValueError("explicit seed input mode required")
     if not isinstance(fold, Fold) or type(warmup_count) is not int or not 0 <= warmup_count < 100:
         raise ValueError("typed fold and bounded warmup required")
     if fold.test_end > frozen.snapshot.at:
@@ -388,7 +394,9 @@ def materialize_fold(
         # Every test identity is checked when it first becomes a signal. Keep
         # only the registered strategy's rolling window in each immutable step;
         # copying the complete prefix would make manifest size quadratic.
-        needed = history[index : index + warmup_count + 1]
+        needed = (
+            (start,) if seed_once and index else history[index : index + warmup_count + 1]
+        )
         for required in needed:
             if required not in by_start:
                 raise DatasetBlocked(
@@ -435,4 +443,148 @@ def materialize_fold(
         tuple(sorted(quality_refs)),
         tuple(sorted(coverage_refs)),
         tuple(cutoffs),
+        seed_once,
     )
+
+
+@dataclass(frozen=True)
+class QuantPhaseDataset:
+    """One independent phase, using the shared batch snapshot and seed width."""
+
+    binding: object
+    dataset: FoldDataset
+
+
+def validate_quant_phase_dataset(data, binding, snapshot):
+    """Validate the immutable Strict input port, without computing any signal."""
+    from .experiment import PhaseSeedBinding
+
+    if type(data) is not FoldDataset or type(binding) is not PhaseSeedBinding or (
+        type(snapshot) is not Snapshot or not data.seed_once
+    ):
+        raise ValueError("typed Strict single-seed phase dataset required")
+    expected = binding.expected_bar_starts
+    if type(data.steps) is not tuple or type(data.outcome_bars) is not tuple or (
+        type(data.warmup) is not tuple
+        or type(data.warmup_binding) is not WarmupBinding
+        or any(type(s) is not DecisionStep for s in data.steps)
+        or any(type(b) is not BarRevision for b in data.warmup + data.outcome_bars)
+    ):
+        raise ValueError("immutable typed Strict seed, steps and outcome bars required")
+    if (
+        data.expected_bar_starts != expected
+        or tuple(s.signal_bar.identity.bar_start for s in data.steps) != expected
+        or tuple(b.identity.bar_start for b in data.outcome_bars) != expected
+        or (data.fold.test_start, data.fold.test_end) != (binding.window.start, binding.window.end)
+        or data.warmup_binding.expected_bar_starts != binding.expected_seed_starts
+        or data.warmup_binding.warmup_end != binding.window.start
+        or tuple(b.identity.bar_start for b in data.warmup) != binding.expected_seed_starts
+    ):
+        raise ValueError("Strict phase/seed identities are incomplete or duplicated")
+    if data.outcome_cutoffs != tuple(
+        (bar.revision_id, bar.identity.bar_end + OUTCOME_DELAY) for bar in data.outcome_bars
+    ):
+        raise ValueError("complete canonical outcome cutoffs required")
+    for index, step in enumerate(data.steps):
+        if type(step) is not DecisionStep or type(step.input_bars) is not tuple or (
+            step.input_bars != (data.warmup + (step.signal_bar,) if index == 0 else (
+                step.signal_bar,
+            ))
+        ):
+            raise ValueError("one seed prefix followed by one signal close required")
+        target_index = bisect_left(expected, step.knowledge_at)
+        target = expected[target_index] if target_index < len(expected) else None
+        if step.fill_target != target:
+            raise ValueError("Strict fill schedule mismatch")
+        for bar in step.input_bars:
+            if (
+                bar.identity.bar_end > step.signal_bar.identity.bar_end
+                or bar.available_at > step.knowledge_at or bar.ingested_at > step.knowledge_at
+                or bar.commit_version > snapshot.version or bar.ingested_at > snapshot.at
+                or bar.quality != QualityStatus.VALID
+            ):
+                raise ValueError("Strict input revision violates causal cutoff")
+    for bar in data.outcome_bars:
+        cutoff = bar.identity.bar_end + OUTCOME_DELAY
+        if (
+            bar.available_at > cutoff or bar.ingested_at > cutoff
+            or cutoff > snapshot.at or bar.commit_version > snapshot.version
+            or bar.ingested_at > snapshot.at or bar.quality != QualityStatus.VALID
+        ):
+            raise ValueError("Strict outcome revision violates causal cutoff")
+
+
+def quant_phase_history_start(snapshot, window, count, calendar_rows, *, strict=True):
+    """Locate W preceding windows, then validate only their actual calendar span.
+
+    Unknown dates before the required seed do not create an arbitrary burn-in.
+    Unknown dates inside that seed remain blockers in the existing materializer.
+    """
+    from .experiment import PhaseWindow
+
+    if type(snapshot) is not Snapshot or type(window) is not PhaseWindow or (
+        type(count) is not int or not 0 <= count <= 99
+    ) or type(strict) is not bool:
+        raise ValueError("typed phase/snapshot and bounded seed count required")
+    if not count:
+        return window.start - timedelta(minutes=15)
+    knowledge = first_signal_knowledge(
+        calendar_rows, window.start, window.end, snapshot
+    ) if strict else snapshot.at
+    if knowledge is None:
+        raise DatasetBlocked("BLOCKED_CALENDAR_UNKNOWN", window.start)
+    _, planned = schedule_windows(
+        calendar_rows, window.end - timedelta(days=366), window.end, knowledge, snapshot
+    )
+    prior = tuple(w for w in planned.windows if w[1] <= window.start)
+    if len(prior) < count:
+        raise DatasetBlocked("BLOCKED_WARMUP_MISSING", window.start)
+    return prior[-count][0]
+
+
+def materialize_quant_phases(
+    frozen,
+    definition,
+    calendar_rows,
+    quality_rows=(),
+    coverage_proofs=(),
+    checkpoint=lambda: None,
+    trust_check=None,
+):
+    """All phase ports read one frozen revision set; no latest/second snapshot.
+
+    Seed history is emitted exactly once. Subsequent inputs contain only the new
+    causally available close, so later revisions cannot rewrite an indicator seed.
+    Calendar planning remains the existing evidence-bound implementation.
+    """
+    from .experiment import ExperimentDefinition, PhaseSeedBinding
+
+    if type(definition) is not ExperimentDefinition or definition.research_mode != "STRICT_PIT":
+        raise ValueError("Strict QSL definition required")
+    if type(frozen) is not FrozenDataset:
+        raise ValueError("shared Strict frozen snapshot required")
+    if sum(len(rows) for rows in (
+        frozen.revisions, calendar_rows, quality_rows, coverage_proofs
+    )) > MAX_REVISIONS:
+        raise DatasetBudgetExceeded("combined revision/metadata row budget exhausted")
+    phases = []
+    for index, phase, _, window in definition.protocol.phases:
+        checkpoint()
+        history_start = quant_phase_history_start(
+            frozen.snapshot, window, definition.warmup_count, calendar_rows
+        )
+        actual_seed_start = history_start if definition.warmup_count else window.start
+        if definition.protocol.holdout.end - actual_seed_start > timedelta(days=366):
+            raise ValueError("seed-inclusive span exceeds 366 days")
+        fold = Fold(history_start, window.start, window.start, window.end)
+        data = materialize_fold(
+            frozen, fold, definition.instrument_id, definition.warmup_count,
+            calendar_rows, quality_rows, coverage_proofs, checkpoint, trust_check,
+            seed_once=True,
+        )
+        binding = PhaseSeedBinding(
+            index, phase, window, data.warmup_binding.expected_bar_starts,
+            data.expected_bar_starts,
+        )
+        phases.append(QuantPhaseDataset(binding, data))
+    return tuple(phases)
