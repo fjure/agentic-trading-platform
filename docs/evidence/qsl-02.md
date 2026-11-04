@@ -104,6 +104,22 @@ geprüft. QSL-03-SQLänderungen im gemeinsamen Arbeitsverzeichnis gehören nicht
 zum QSL-02-Commit. Keine zusätzliche SQL-/Container-Safetyabnahme aus diesem
 reinen Domänenpaket behauptet.
 
+## Verifizierte Codeintegration
+
+Implementierungscommit `70ca40a920c0b494b2a8e412f62f5431271b2125` auf
+`codex/ptv-78-quant-lab-primitives` regulär gepusht und SHA-genau zurückgelesen.
+Regulärer main-Merge `f030903d0202a71a36bb4568219d7a2839e56a39` gepusht und
+Remote-SHA verifiziert; Implementierungsbäume beider Branches identisch.
+Erst anschließend Checkboxabschluss, Issue-Sync und reiner Nachweisabschluss.
+Keine QSL-03-Datei, fremde README-/Angularänderung oder temporäre Datei im Commit.
+
+Issue #78 anschließend geschlossen und über MCP zurückgelesen. Autorisierter
+GH-Fallback-Sync: 0 erstellt, 1 geändert, 8 unverändert, 9 Read-backs;
+idempotenter Schlusslauf: 0 Änderungen, 9 unverändert. Alle 18 nativen
+Abhängigkeiten exakt vorwärts/rückwärts, keine Duplikate. OpenSpec bestätigt
+2/9 abgeschlossene Tasks. Reiner Nachweisabschluss wird regulär nach main
+integriert; QSL-03 bleibt offen.
+
 ## Grenzen der zusätzlichen Hilfsversuche
 
 - `uv run pytest ...` startete keine Tests: der in PATH gefundene Chocolatey-
