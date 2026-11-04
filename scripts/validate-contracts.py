@@ -123,6 +123,18 @@ def main() -> None:
         ).validate(json.loads((EXAMPLES / filename).read_text(encoding="utf-8")))
     print(f"PASS: {len(retrospective_manifest)} retrospective research fixtures")
 
+    quant_manifest = json.loads((EXAMPLES / "quant-lab-fixtures.json").read_text("utf-8"))
+    if not quant_manifest:
+        fail("missing Quant Strategy Lab fixtures")
+    for filename, component in quant_manifest.items():
+        if Path(filename).name != filename or not filename.endswith(".valid.json"):
+            fail("invalid Quant Strategy Lab fixture filename")
+        Draft202012Validator(
+            {"$ref": openapi_id + "#/components/schemas/" + component},
+            registry=openapi_registry, format_checker=contract_formats(),
+        ).validate(json.loads((EXAMPLES / filename).read_text("utf-8")))
+    print(f"PASS: {len(quant_manifest)} Quant Strategy Lab fixtures (contract only)")
+
     operations: list[str] = []
     for path, path_item in document["paths"].items():
         if not path.startswith("/api/v1/") and path not in {"/health", "/ready"}:

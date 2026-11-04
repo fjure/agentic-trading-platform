@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "type": "urn:agentic-trading-lab:quant-lab-problem",
+  "title": "Research request failed",
+  "status": 404,
+  "code": "NOT_FOUND",
+  "traceId": "cccccccccccccccccccccccccccccccc"
+}

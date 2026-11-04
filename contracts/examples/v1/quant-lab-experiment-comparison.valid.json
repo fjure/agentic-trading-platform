@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "batchIds": [
+    "22222222-2222-4222-8222-222222222222"
+  ],
+  "groups": [
+    {
+      "comparisonFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "batchIds": [
+        "22222222-2222-4222-8222-222222222222"
+      ],
+      "reportIds": [
+        "44444444-4444-4444-8444-444444444444"
+      ]
+    }
+  ],
+  "incomparabilities": [],
+  "crossBatchRanking": null,
+  "limitations": [
+    "PRICE_ONLY",
+    "IEX_PARTIAL_MARKET",
+    "NO_STATISTICAL_GUARANTEE",
+    "NO_TRADING_AUTHORIZATION",
+    "EXTERNAL_KNOWLEDGE_UNKNOWN"
+  ]
+}

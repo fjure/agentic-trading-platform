@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "batchId": "22222222-2222-4222-8222-222222222222",
+  "candidateId": "0ea600e27af842e8bfe0046f1c5858ed0c9e12b48613c2ed84cde76a368aaa5d",
+  "reportHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "phase": "training",
+  "researchRole": "IN_SAMPLE_ANALYSIS",
+  "fold": 0,
+  "items": [
+    {
+      "at": "2026-01-05T14:45:00Z",
+      "drawdown": "0.000000000000"
+    },
+    {
+      "at": "2026-01-05T15:00:00Z",
+      "drawdown": "0.000000000000"
+    },
+    {
+      "at": "2026-01-05T15:15:00Z",
+      "drawdown": "0.000000000000"
+    },
+    {
+      "at": "2026-01-05T15:30:00Z",
+      "drawdown": "0.050000000000"
+    },
+    {
+      "at": "2026-01-05T15:45:00Z",
+      "drawdown": "0.000000000000"
+    }
+  ],
+  "nextCursor": null,
+  "sampling": "EXACT_BAR_CLOSE",
+  "totalPointCount": 5,
+  "limitations": [
+    "PRICE_ONLY",
+    "IEX_PARTIAL_MARKET",
+    "NO_STATISTICAL_GUARANTEE",
+    "NO_TRADING_AUTHORIZATION",
+    "EXTERNAL_KNOWLEDGE_UNKNOWN",
+    "PHASE_RESETS"
+  ]
+}

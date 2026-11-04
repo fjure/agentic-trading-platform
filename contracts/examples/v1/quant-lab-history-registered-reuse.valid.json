@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "registryVersion": "quant-exposure-v1",
+  "registryHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "boundAt": "2026-10-30T12:00:00Z",
+  "registeredRoundCount": 3,
+  "priorFailedRoundCount": 1,
+  "priorBlockedRoundCount": 1,
+  "supersededRoundCount": 1,
+  "overlapCount": 1,
+  "repeatedValidationCount": 1,
+  "reuseStatus": "REGISTERED_REUSE",
+  "externalKnowledgeStatus": "EXTERNAL_KNOWLEDGE_UNKNOWN",
+  "candidateCounts": {
+    "planned": 9,
+    "started": 0,
+    "complete": 0,
+    "failed": 0,
+    "blocked": 0,
+    "notEvaluated": 0
+  },
+  "referenceCounts": {
+    "planned": 2,
+    "started": 0,
+    "complete": 0,
+    "failed": 0,
+    "blocked": 0,
+    "notEvaluated": 0
+  },
+  "overlaps": [
+    {
+      "schemaVersion": "quant-lab-v1",
+      "currentRole": "FINAL_HOLDOUT",
+      "priorRole": "PARAMETER_SELECTION",
+      "currentInterval": {
+        "start": "2026-02-18T14:30:00Z",
+        "end": "2026-02-24T21:00:00Z"
+      },
+      "priorInterval": {
+        "start": "2026-02-18T14:30:00Z",
+        "end": "2026-02-24T21:00:00Z"
+      },
+      "overlapInterval": {
+        "start": "2026-02-18T14:30:00Z",
+        "end": "2026-02-24T21:00:00Z"
+      },
+      "priorBatchId": "22222222-2222-4222-8222-222222222222",
+      "priorRunId": null,
+      "priorDefinitionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "priorStatus": "FAILED",
+      "knowledgeStatus": "REQUESTED",
+      "overlapBarCount": 130
+    }
+  ],
+  "nextOverlapCursor": null,
+  "warmupOverlapCount": 0,
+  "limitations": [
+    "PRICE_ONLY",
+    "IEX_PARTIAL_MARKET",
+    "NO_STATISTICAL_GUARANTEE",
+    "NO_TRADING_AUTHORIZATION",
+    "EXTERNAL_KNOWLEDGE_UNKNOWN"
+  ]
+}

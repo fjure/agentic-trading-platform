@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "registryVersion": "quant-exposure-v1",
+  "registryHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "boundAt": "2026-10-30T12:00:00Z",
+  "registeredRoundCount": 0,
+  "priorFailedRoundCount": 0,
+  "priorBlockedRoundCount": 0,
+  "supersededRoundCount": 0,
+  "overlapCount": 0,
+  "repeatedValidationCount": 0,
+  "reuseStatus": "NO_REGISTERED_PRIOR_USE",
+  "externalKnowledgeStatus": "EXTERNAL_KNOWLEDGE_UNKNOWN",
+  "candidateCounts": {
+    "planned": 9,
+    "started": 0,
+    "complete": 0,
+    "failed": 0,
+    "blocked": 0,
+    "notEvaluated": 0
+  },
+  "referenceCounts": {
+    "planned": 2,
+    "started": 0,
+    "complete": 0,
+    "failed": 0,
+    "blocked": 0,
+    "notEvaluated": 0
+  },
+  "overlaps": [],
+  "nextOverlapCursor": null,
+  "warmupOverlapCount": 0,
+  "limitations": [
+    "PRICE_ONLY",
+    "IEX_PARTIAL_MARKET",
+    "NO_STATISTICAL_GUARANTEE",
+    "NO_TRADING_AUTHORIZATION",
+    "EXTERNAL_KNOWLEDGE_UNKNOWN"
+  ]
+}

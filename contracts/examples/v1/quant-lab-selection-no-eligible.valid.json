@@ -1,0 +1,195 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "selectionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "scope": "FOLD",
+  "fold": 0,
+  "status": "NO_ELIGIBLE_CANDIDATE",
+  "selectedCandidateId": null,
+  "strategySelectionPolicy": {
+    "policyId": "MAX_NET_RETURN_WITH_DRAWDOWN_CONSTRAINT_V1",
+    "maxDrawdown": "0.1",
+    "minValidationSessions": 20,
+    "minimumEntryCount": null,
+    "minimumInvestedBarRatio": null
+  },
+  "strategySelectionPolicyHash": "26fb544f75883dd12949dbb1eb36aefa28ab9b319bc561c24ad2723cdf1ebb1f",
+  "validationInputHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "candidateIds": [
+    "0ea600e27af842e8bfe0046f1c5858ed0c9e12b48613c2ed84cde76a368aaa5d",
+    "4b46b25c6163bf6a938b082b994700027a93f96f244ddcedce751d97c2076c5d"
+  ],
+  "candidateCount": 2,
+  "eligibleCount": 0,
+  "candidates": [
+    {
+      "schemaVersion": "quant-lab-v1",
+      "candidateId": "0ea600e27af842e8bfe0046f1c5858ed0c9e12b48613c2ed84cde76a368aaa5d",
+      "eligibility": "INELIGIBLE",
+      "validationValues": [
+        {
+          "fold": 0,
+          "selectionValues": {
+            "netReturn": "0.12",
+            "maxDrawdown": "0.1000000000004",
+            "turnover": "1.05",
+            "investedBarRatio": "0.4",
+            "entryCount": 1,
+            "completeValidationSessions": 21
+          },
+          "gates": [
+            {
+              "gate": "COMPLETE_DATA",
+              "status": "PASSED",
+              "threshold": "1",
+              "value": "1",
+              "reasonCodes": []
+            },
+            {
+              "gate": "RELIABILITY",
+              "status": "PASSED",
+              "threshold": null,
+              "value": null,
+              "reasonCodes": []
+            },
+            {
+              "gate": "MINIMUM_VALIDATION_SESSIONS",
+              "status": "PASSED",
+              "threshold": 20,
+              "value": 21,
+              "reasonCodes": []
+            },
+            {
+              "gate": "VALID_REQUIRED_METRICS",
+              "status": "PASSED",
+              "threshold": null,
+              "value": null,
+              "reasonCodes": []
+            },
+            {
+              "gate": "MAX_DRAWDOWN",
+              "status": "FAILED",
+              "threshold": "0.1",
+              "value": "0.1000000000004",
+              "reasonCodes": [
+                "MAX_DRAWDOWN_EXCEEDED"
+              ]
+            },
+            {
+              "gate": "MINIMUM_ENTRY_COUNT",
+              "status": "DISABLED",
+              "threshold": null,
+              "value": null,
+              "reasonCodes": []
+            },
+            {
+              "gate": "MINIMUM_INVESTED_BAR_RATIO",
+              "status": "DISABLED",
+              "threshold": null,
+              "value": null,
+              "reasonCodes": []
+            }
+          ]
+        }
+      ],
+      "medianSelectionValues": {
+        "netReturn": "0.12",
+        "maxDrawdown": "0.1000000000004",
+        "turnover": "1.05",
+        "investedBarRatio": "0.4"
+      },
+      "rankingKey": null,
+      "rank": null,
+      "reasons": [
+        "MAX_DRAWDOWN_EXCEEDED"
+      ]
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "candidateId": "4b46b25c6163bf6a938b082b994700027a93f96f244ddcedce751d97c2076c5d",
+      "eligibility": "INELIGIBLE",
+      "validationValues": [
+        {
+          "fold": 0,
+          "selectionValues": {
+            "netReturn": "0.005",
+            "maxDrawdown": "0.1000000000004",
+            "turnover": "1.05",
+            "investedBarRatio": "0.4",
+            "entryCount": 1,
+            "completeValidationSessions": 21
+          },
+          "gates": [
+            {
+              "gate": "COMPLETE_DATA",
+              "status": "PASSED",
+              "threshold": "1",
+              "value": "1",
+              "reasonCodes": []
+            },
+            {
+              "gate": "RELIABILITY",
+              "status": "PASSED",
+              "threshold": null,
+              "value": null,
+              "reasonCodes": []
+            },
+            {
+              "gate": "MINIMUM_VALIDATION_SESSIONS",
+              "status": "PASSED",
+              "threshold": 20,
+              "value": 21,
+              "reasonCodes": []
+            },
+            {
+              "gate": "VALID_REQUIRED_METRICS",
+              "status": "PASSED",
+              "threshold": null,
+              "value": null,
+              "reasonCodes": []
+            },
+            {
+              "gate": "MAX_DRAWDOWN",
+              "status": "FAILED",
+              "threshold": "0.1",
+              "value": "0.1000000000004",
+              "reasonCodes": [
+                "MAX_DRAWDOWN_EXCEEDED"
+              ]
+            },
+            {
+              "gate": "MINIMUM_ENTRY_COUNT",
+              "status": "DISABLED",
+              "threshold": null,
+              "value": null,
+              "reasonCodes": []
+            },
+            {
+              "gate": "MINIMUM_INVESTED_BAR_RATIO",
+              "status": "DISABLED",
+              "threshold": null,
+              "value": null,
+              "reasonCodes": []
+            }
+          ]
+        }
+      ],
+      "medianSelectionValues": {
+        "netReturn": "0.005",
+        "maxDrawdown": "0.1000000000004",
+        "turnover": "1.05",
+        "investedBarRatio": "0.4"
+      },
+      "rankingKey": null,
+      "rank": null,
+      "reasons": [
+        "MAX_DRAWDOWN_EXCEEDED"
+      ]
+    }
+  ],
+  "frozenAt": "2026-10-30T12:00:00Z",
+  "rankingReasons": [
+    "NO_ELIGIBLE_CANDIDATE"
+  ],
+  "selectorVersion": "quant-selection-v1",
+  "selectorFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

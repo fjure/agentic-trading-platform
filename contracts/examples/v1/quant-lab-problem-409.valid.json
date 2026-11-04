@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "type": "urn:agentic-trading-lab:quant-lab-problem",
+  "title": "Research request failed",
+  "status": 409,
+  "code": "DEFINITION_CONFLICT",
+  "traceId": "cccccccccccccccccccccccccccccccc"
+}

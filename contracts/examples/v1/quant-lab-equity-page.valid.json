@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "batchId": "22222222-2222-4222-8222-222222222222",
+  "candidateId": "0ea600e27af842e8bfe0046f1c5858ed0c9e12b48613c2ed84cde76a368aaa5d",
+  "reportHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "phase": "training",
+  "researchRole": "IN_SAMPLE_ANALYSIS",
+  "fold": 0,
+  "items": [
+    {
+      "at": "2026-01-05T14:45:00Z",
+      "cash": "1000.00000000",
+      "quantity": "0",
+      "close": "100",
+      "equity": "1000.00000000"
+    },
+    {
+      "at": "2026-01-05T15:00:00Z",
+      "cash": "1000.00000000",
+      "quantity": "0",
+      "close": "100",
+      "equity": "1000.00000000"
+    },
+    {
+      "at": "2026-01-05T15:15:00Z",
+      "cash": "500.00000000",
+      "quantity": "5",
+      "close": "100",
+      "equity": "1000.00000000"
+    },
+    {
+      "at": "2026-01-05T15:30:00Z",
+      "cash": "500.00000000",
+      "quantity": "5",
+      "close": "90",
+      "equity": "950.00000000"
+    },
+    {
+      "at": "2026-01-05T15:45:00Z",
+      "cash": "1050.00000000",
+      "quantity": "0",
+      "close": "110",
+      "equity": "1050.00000000"
+    }
+  ],
+  "nextCursor": null,
+  "sampling": "EXACT_BAR_CLOSE",
+  "totalPointCount": 5,
+  "limitations": [
+    "PRICE_ONLY",
+    "IEX_PARTIAL_MARKET",
+    "NO_STATISTICAL_GUARANTEE",
+    "NO_TRADING_AUTHORIZATION",
+    "EXTERNAL_KNOWLEDGE_UNKNOWN",
+    "PHASE_RESETS"
+  ]
+}

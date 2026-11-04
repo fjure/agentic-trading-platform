@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "hypothesis": "Synthetic nine-candidate EMA protocol; no observed market result or statistical guarantee.",
+  "predecessorDefinitionId": null,
+  "supersedesBatchId": null,
+  "searchSpaces": [
+    {
+      "strategyId": "ema-cross-v1",
+      "version": "1",
+      "parameterValues": {
+        "fast": [
+          5,
+          10,
+          15
+        ],
+        "slow": [
+          30,
+          40,
+          50
+        ]
+      }
+    }
+  ],
+  "protocol": {
+    "schemaVersion": "quant-lab-v1",
+    "protocolVersion": "quant-protocol-v1",
+    "folds": [
+      {
+        "fold": 0,
+        "training": {
+          "start": "2026-01-05T14:30:00Z",
+          "end": "2026-01-09T21:00:00Z"
+        },
+        "validation": {
+          "start": "2026-01-12T14:30:00Z",
+          "end": "2026-02-10T21:00:00Z"
+        },
+        "test": {
+          "start": "2026-02-11T14:30:00Z",
+          "end": "2026-02-17T21:00:00Z"
+        }
+      }
+    ],
+    "holdout": {
+      "start": "2026-02-18T14:30:00Z",
+      "end": "2026-02-24T21:00:00Z"
+    },
+    "fittingStatus": "NOT_TRAINABLE"
+  },
+  "strategySelectionPolicy": {
+    "policyId": "MAX_NET_RETURN_WITH_DRAWDOWN_CONSTRAINT_V1",
+    "maxDrawdown": "0.1",
+    "minValidationSessions": 20,
+    "minimumEntryCount": null,
+    "minimumInvestedBarRatio": null
+  },
+  "instrumentId": "11111111-1111-4111-8111-111111111111",
+  "symbol": "SPY",
+  "currency": "USD",
+  "feed": "IEX",
+  "interval": "15Min",
+  "adjustment": "raw",
+  "researchMode": "RETROSPECTIVE_EXPLORATORY",
+  "dataSelectionPolicyVersion": "retrospective-v1",
+  "startCash": "1000",
+  "feeUsd": "0",
+  "slippageBps": "0",
+  "quantityStep": "0.000001"
+}
