@@ -1,6 +1,6 @@
 # Tasks
 
-Planungsstand: fachliches Refinement auf HEAD bdb2ac7, kein Apply-Auftrag. Alle neun Implementierungspakete bleiben offen. Detailentscheidungen: design.md D1..D7, selection-policy.md, research-protocol.md, metrics-methodology.md; Verifikation: test-strategy.md, traceability.md. Jedes Paket besitzt genau ein Issue; keine Sammelabschlusscheckboxen.
+Apply am 30.10.2026 ausdrücklich freigegeben; Fortsetzung am 04.11.2026. Ausgangsbasis ist das auf main veröffentlichte Refinement 79931cf2f327. Die Checkboxen dokumentieren ausschließlich vollständig geprüfte Pakete; offene Pakete sind keine verfügbare Produktfähigkeit. Detailentscheidungen: design.md D1..D7, selection-policy.md, research-protocol.md, metrics-methodology.md; Verifikation: test-strategy.md, traceability.md. Jedes Paket besitzt genau ein Issue; keine Sammelabschlusscheckboxen.
 
 Gemeinsame DoD: eigene Tests/Dokumentation und docs/evidence/qsl-NN.md mit tatsächlichen Kommandos/Ergebnissen, betroffene Bestandsregression, unabhängiger Review, keine offenen kritischen Befunde, OpenSpec strict und gleicher Lauf mit github-issue-sync/Read-back. Verträge kanonisch, kein manuell generierter Code. Branch/Commit/Push/Integration nur nach Apply und gemäß AGENTS.md. Kein Paket erteilt Handelsrechte oder aktiviert Dispatch.
 

@@ -1,0 +1,7 @@
+{
+  "policyId": "CAPITAL_PRESERVATION_DRAWDOWN_FIRST_V1",
+  "maxDrawdown": "0.1",
+  "minValidationSessions": 20,
+  "minimumEntryCount": null,
+  "minimumInvestedBarRatio": null
+}

@@ -5,6 +5,8 @@ import re
 import pytest
 
 from scripts.contract_stages import (
+    QUANT_LAB_OPERATIONS,
+    QUANT_LAB_TASKS,
     RETROSPECTIVE_OPERATIONS,
     RETROSPECTIVE_TASKS,
     STAGED_OPERATIONS,
@@ -62,3 +64,24 @@ def test_ambiguous_retrospective_stage_cannot_bypass_route_checks(mutation):
     changed = text.replace(line, "") if mutation == "missing" else text + "\n" + line
     with pytest.raises(AssertionError, match="Eindeutige Abnahmestufe fehlt: RRB-06"):
         pending_contract_operations(retrospective_tasks_text=changed)
+
+
+def test_quant_runtime_completion_enforces_all_additive_routes():
+    text = QUANT_LAB_TASKS.read_text("utf-8")
+    pending = re.sub(r"^- \[[ x]\]( \d+\.\d+ QSL-07 )", r"- [ ]\1", text, flags=re.M)
+    assert set(QUANT_LAB_OPERATIONS) <= pending_contract_operations(
+        quant_lab_tasks_text=pending,
+    )
+    complete = re.sub(r"^- \[ \]( \d+\.\d+ QSL-07 )", r"- [x]\1", pending, flags=re.M)
+    assert not set(QUANT_LAB_OPERATIONS) & pending_contract_operations(
+        quant_lab_tasks_text=complete,
+    )
+
+
+@pytest.mark.parametrize("mutation", ["missing", "duplicate"])
+def test_ambiguous_quant_stage_cannot_bypass_route_checks(mutation):
+    text = QUANT_LAB_TASKS.read_text("utf-8")
+    line = next(x for x in text.splitlines() if re.match(r"^- \[[ x]\] \d+\.\d+ QSL-07 ", x))
+    changed = text.replace(line, "") if mutation == "missing" else text + "\n" + line
+    with pytest.raises(AssertionError, match="Eindeutige Abnahmestufe fehlt: QSL-07"):
+        pending_contract_operations(quant_lab_tasks_text=changed)

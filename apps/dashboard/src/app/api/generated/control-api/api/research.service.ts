@@ -25,6 +25,40 @@ import { CollectionPlanPage } from '../model/collectionPlanPage';
 // @ts-ignore
 import { CollectionPlanUpdate } from '../model/collectionPlanUpdate';
 // @ts-ignore
+import { QuantLabBatch } from '../model/quantLabBatch';
+// @ts-ignore
+import { QuantLabBatchPage } from '../model/quantLabBatchPage';
+// @ts-ignore
+import { QuantLabBatchStartRequest } from '../model/quantLabBatchStartRequest';
+// @ts-ignore
+import { QuantLabCandidatePage } from '../model/quantLabCandidatePage';
+// @ts-ignore
+import { QuantLabComparisonReport } from '../model/quantLabComparisonReport';
+// @ts-ignore
+import { QuantLabDrawdownPage } from '../model/quantLabDrawdownPage';
+// @ts-ignore
+import { QuantLabEquityPage } from '../model/quantLabEquityPage';
+// @ts-ignore
+import { QuantLabExperimentComparison } from '../model/quantLabExperimentComparison';
+// @ts-ignore
+import { QuantLabExperimentCreateRequest } from '../model/quantLabExperimentCreateRequest';
+// @ts-ignore
+import { QuantLabExperimentDefinition } from '../model/quantLabExperimentDefinition';
+// @ts-ignore
+import { QuantLabExperimentPage } from '../model/quantLabExperimentPage';
+// @ts-ignore
+import { QuantLabPhase } from '../model/quantLabPhase';
+// @ts-ignore
+import { QuantLabProblem } from '../model/quantLabProblem';
+// @ts-ignore
+import { QuantLabResultPage } from '../model/quantLabResultPage';
+// @ts-ignore
+import { QuantLabStrategyCatalog } from '../model/quantLabStrategyCatalog';
+// @ts-ignore
+import { QuantLabValidation } from '../model/quantLabValidation';
+// @ts-ignore
+import { QuantLabValidationRequest } from '../model/quantLabValidationRequest';
+// @ts-ignore
 import { ReadinessAccepted } from '../model/readinessAccepted';
 // @ts-ignore
 import { ReadinessAssessment } from '../model/readinessAssessment';
@@ -70,6 +104,155 @@ export class ResearchService extends BaseService implements ResearchServiceInter
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
+    }
+
+    /**
+     * Group max4 batches without cross-batch ranking
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiment-comparisons
+     * @param batchId 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public compareQuantLabExperiments(batchId: Array<string>, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabExperimentComparison>;
+    public compareQuantLabExperiments(batchId: Array<string>, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabExperimentComparison>>;
+    public compareQuantLabExperiments(batchId: Array<string>, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabExperimentComparison>>;
+    public compareQuantLabExperiments(batchId: Array<string>, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (batchId === null || batchId === undefined) {
+            throw new Error('Required parameter batchId was null or undefined when calling compareQuantLabExperiments.');
+        }
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'batchId',
+            <any>batchId,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiment-comparisons`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabExperimentComparison>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Create immutable experiment draft revision
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint post /api/v1/research/experiments
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param quantLabExperimentCreateRequest 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public createQuantLabExperiment(idempotencyKey: string, quantLabExperimentCreateRequest: QuantLabExperimentCreateRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabExperimentDefinition>;
+    public createQuantLabExperiment(idempotencyKey: string, quantLabExperimentCreateRequest: QuantLabExperimentCreateRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabExperimentDefinition>>;
+    public createQuantLabExperiment(idempotencyKey: string, quantLabExperimentCreateRequest: QuantLabExperimentCreateRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabExperimentDefinition>>;
+    public createQuantLabExperiment(idempotencyKey: string, quantLabExperimentCreateRequest: QuantLabExperimentCreateRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (idempotencyKey === null || idempotencyKey === undefined) {
+            throw new Error('Required parameter idempotencyKey was null or undefined when calling createQuantLabExperiment.');
+        }
+        if (quantLabExperimentCreateRequest === null || quantLabExperimentCreateRequest === undefined) {
+            throw new Error('Required parameter quantLabExperimentCreateRequest was null or undefined when calling createQuantLabExperiment.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (idempotencyKey !== undefined && idempotencyKey !== null) {
+            localVarHeaders = localVarHeaders.set('Idempotency-Key', String(idempotencyKey));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiments`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabExperimentDefinition>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: quantLabExperimentCreateRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
     }
 
     /**
@@ -216,6 +399,541 @@ export class ResearchService extends BaseService implements ResearchServiceInter
             {
                 context: localVarHttpContext,
                 body: researchJobAction,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Read immutable selection and descriptive report
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiment-batches/{id}/comparison
+     * @param id 
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getQuantLabComparison(id: string, cursor?: string, limit?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabComparisonReport>;
+    public getQuantLabComparison(id: string, cursor?: string, limit?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabComparisonReport>>;
+    public getQuantLabComparison(id: string, cursor?: string, limit?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabComparisonReport>>;
+    public getQuantLabComparison(id: string, cursor?: string, limit?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (id === null || id === undefined) {
+            throw new Error('Required parameter id was null or undefined when calling getQuantLabComparison.');
+        }
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'cursor',
+            <any>cursor,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'limit',
+            <any>limit,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiment-batches/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/comparison`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabComparisonReport>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Read exact bound drawdown points for independent phase
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiment-batches/{id}/results/{candidateId}/drawdown
+     * @param id 
+     * @param candidateId 
+     * @param phase Required; fold required for training/validation/test, forbidden for holdout.
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param fold 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getQuantLabDrawdown(id: string, candidateId: string, phase: QuantLabPhase, cursor?: string, limit?: number, fold?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabDrawdownPage>;
+    public getQuantLabDrawdown(id: string, candidateId: string, phase: QuantLabPhase, cursor?: string, limit?: number, fold?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabDrawdownPage>>;
+    public getQuantLabDrawdown(id: string, candidateId: string, phase: QuantLabPhase, cursor?: string, limit?: number, fold?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabDrawdownPage>>;
+    public getQuantLabDrawdown(id: string, candidateId: string, phase: QuantLabPhase, cursor?: string, limit?: number, fold?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (id === null || id === undefined) {
+            throw new Error('Required parameter id was null or undefined when calling getQuantLabDrawdown.');
+        }
+        if (candidateId === null || candidateId === undefined) {
+            throw new Error('Required parameter candidateId was null or undefined when calling getQuantLabDrawdown.');
+        }
+        if (phase === null || phase === undefined) {
+            throw new Error('Required parameter phase was null or undefined when calling getQuantLabDrawdown.');
+        }
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'cursor',
+            <any>cursor,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'limit',
+            <any>limit,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'phase',
+            <any>phase,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'fold',
+            <any>fold,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiment-batches/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/results/${this.configuration.encodeParam({name: "candidateId", value: candidateId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/drawdown`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabDrawdownPage>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Read exact bound equity points for independent phase
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiment-batches/{id}/results/{candidateId}/equity
+     * @param id 
+     * @param candidateId 
+     * @param phase Required; fold required for training/validation/test, forbidden for holdout.
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param fold 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getQuantLabEquity(id: string, candidateId: string, phase: QuantLabPhase, cursor?: string, limit?: number, fold?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabEquityPage>;
+    public getQuantLabEquity(id: string, candidateId: string, phase: QuantLabPhase, cursor?: string, limit?: number, fold?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabEquityPage>>;
+    public getQuantLabEquity(id: string, candidateId: string, phase: QuantLabPhase, cursor?: string, limit?: number, fold?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabEquityPage>>;
+    public getQuantLabEquity(id: string, candidateId: string, phase: QuantLabPhase, cursor?: string, limit?: number, fold?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (id === null || id === undefined) {
+            throw new Error('Required parameter id was null or undefined when calling getQuantLabEquity.');
+        }
+        if (candidateId === null || candidateId === undefined) {
+            throw new Error('Required parameter candidateId was null or undefined when calling getQuantLabEquity.');
+        }
+        if (phase === null || phase === undefined) {
+            throw new Error('Required parameter phase was null or undefined when calling getQuantLabEquity.');
+        }
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'cursor',
+            <any>cursor,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'limit',
+            <any>limit,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'phase',
+            <any>phase,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'fold',
+            <any>fold,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiment-batches/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/results/${this.configuration.encodeParam({name: "candidateId", value: candidateId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/equity`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabEquityPage>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Read exact experiment revision
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation. cursor/limit paginate researchHistory.overlaps in the bound registry snapshot, including before simulation/report publication. No overlaps are silently omitted; nextOverlapCursor continues the same immutable registryHash and resource binding.
+     * @endpoint get /api/v1/research/experiments/{id}
+     * @param id 
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param validationId Optional persisted validation ID for this exact definition revision. Returns its frozen researchHistory overlap projection, paginated with cursor/limit and bound to validationHash plus registryHash. Omitted reads the current stored definition view. Does not alter definition content/hash. Missing/foreign validation &#x3D;&gt;404.
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getQuantLabExperiment(id: string, cursor?: string, limit?: number, validationId?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabExperimentDefinition>;
+    public getQuantLabExperiment(id: string, cursor?: string, limit?: number, validationId?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabExperimentDefinition>>;
+    public getQuantLabExperiment(id: string, cursor?: string, limit?: number, validationId?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabExperimentDefinition>>;
+    public getQuantLabExperiment(id: string, cursor?: string, limit?: number, validationId?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (id === null || id === undefined) {
+            throw new Error('Required parameter id was null or undefined when calling getQuantLabExperiment.');
+        }
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'cursor',
+            <any>cursor,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'limit',
+            <any>limit,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'validationId',
+            <any>validationId,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiments/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabExperimentDefinition>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Read durable progress and manifest references
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation. cursor/limit paginate researchHistory.overlaps in the bound registry snapshot, including before simulation/report publication. No overlaps are silently omitted; nextOverlapCursor continues the same immutable registryHash and resource binding.
+     * @endpoint get /api/v1/research/experiment-batches/{id}
+     * @param id 
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getQuantLabExperimentBatch(id: string, cursor?: string, limit?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabBatch>;
+    public getQuantLabExperimentBatch(id: string, cursor?: string, limit?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabBatch>>;
+    public getQuantLabExperimentBatch(id: string, cursor?: string, limit?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabBatch>>;
+    public getQuantLabExperimentBatch(id: string, cursor?: string, limit?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (id === null || id === undefined) {
+            throw new Error('Required parameter id was null or undefined when calling getQuantLabExperimentBatch.');
+        }
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'cursor',
+            <any>cursor,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'limit',
+            <any>limit,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiment-batches/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabBatch>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Read enriched immutable QSL strategy catalog
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/strategies
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getQuantLabStrategies(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabStrategyCatalog>;
+    public getQuantLabStrategies(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabStrategyCatalog>>;
+    public getQuantLabStrategies(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabStrategyCatalog>>;
+    public getQuantLabStrategies(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/strategies`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabStrategyCatalog>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
@@ -637,6 +1355,364 @@ export class ResearchService extends BaseService implements ResearchServiceInter
     }
 
     /**
+     * List candidates and separate fixed references
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiment-batches/{id}/candidates
+     * @param id 
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public listQuantLabCandidates(id: string, cursor?: string, limit?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabCandidatePage>;
+    public listQuantLabCandidates(id: string, cursor?: string, limit?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabCandidatePage>>;
+    public listQuantLabCandidates(id: string, cursor?: string, limit?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabCandidatePage>>;
+    public listQuantLabCandidates(id: string, cursor?: string, limit?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (id === null || id === undefined) {
+            throw new Error('Required parameter id was null or undefined when calling listQuantLabCandidates.');
+        }
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'cursor',
+            <any>cursor,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'limit',
+            <any>limit,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiment-batches/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/candidates`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabCandidatePage>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * List batches for experiment revision
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiments/{id}/batches
+     * @param id 
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public listQuantLabExperimentBatches(id: string, cursor?: string, limit?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabBatchPage>;
+    public listQuantLabExperimentBatches(id: string, cursor?: string, limit?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabBatchPage>>;
+    public listQuantLabExperimentBatches(id: string, cursor?: string, limit?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabBatchPage>>;
+    public listQuantLabExperimentBatches(id: string, cursor?: string, limit?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (id === null || id === undefined) {
+            throw new Error('Required parameter id was null or undefined when calling listQuantLabExperimentBatches.');
+        }
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'cursor',
+            <any>cursor,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'limit',
+            <any>limit,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiments/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/batches`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabBatchPage>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * List immutable experiment revisions
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiments
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public listQuantLabExperiments(cursor?: string, limit?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabExperimentPage>;
+    public listQuantLabExperiments(cursor?: string, limit?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabExperimentPage>>;
+    public listQuantLabExperiments(cursor?: string, limit?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabExperimentPage>>;
+    public listQuantLabExperiments(cursor?: string, limit?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'cursor',
+            <any>cursor,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'limit',
+            <any>limit,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiments`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabExperimentPage>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Read phase-separated candidate/reference evidence
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiment-batches/{id}/results
+     * @param id 
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param phase 
+     * @param fold 
+     * @param candidateId 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public listQuantLabResults(id: string, cursor?: string, limit?: number, phase?: QuantLabPhase, fold?: number, candidateId?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabResultPage>;
+    public listQuantLabResults(id: string, cursor?: string, limit?: number, phase?: QuantLabPhase, fold?: number, candidateId?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabResultPage>>;
+    public listQuantLabResults(id: string, cursor?: string, limit?: number, phase?: QuantLabPhase, fold?: number, candidateId?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabResultPage>>;
+    public listQuantLabResults(id: string, cursor?: string, limit?: number, phase?: QuantLabPhase, fold?: number, candidateId?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (id === null || id === undefined) {
+            throw new Error('Required parameter id was null or undefined when calling listQuantLabResults.');
+        }
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'cursor',
+            <any>cursor,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'limit',
+            <any>limit,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'phase',
+            <any>phase,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'fold',
+            <any>fold,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'candidateId',
+            <any>candidateId,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiment-batches/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/results`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabResultPage>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
      * Stabile begrenzte berichtsgebundene Befundseiten lesen
      * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. Stabile Reihenfolge nach Fold, Bereich, Beginn, Kategorie und ID. Der Cursor-HMAC bindet Diagnose, unveränderlichen reportHash, Snapshot-/Vertrauensversionen, Kategorie und Ablaufzeit. Geänderte Filter, Manipulation oder Ablauf ergeben 400 CURSOR_INVALID. Unbekannte Diagnose ergibt 404; noch nicht atomar veröffentlichter Bericht 409 REPORT_NOT_READY. Seitenwiederholung bleibt auch bei späteren Writes und Widerrufen stabil.
      * @endpoint get /api/v1/research/data-readiness/assessments/{assessmentId}/findings
@@ -1036,6 +2112,87 @@ export class ResearchService extends BaseService implements ResearchServiceInter
     }
 
     /**
+     * Explicitly admit batch for exact definition version
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint post /api/v1/research/experiments/{id}/batches
+     * @param id 
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param quantLabBatchStartRequest 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public startQuantLabExperimentBatch(id: string, idempotencyKey: string, quantLabBatchStartRequest: QuantLabBatchStartRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabBatch>;
+    public startQuantLabExperimentBatch(id: string, idempotencyKey: string, quantLabBatchStartRequest: QuantLabBatchStartRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabBatch>>;
+    public startQuantLabExperimentBatch(id: string, idempotencyKey: string, quantLabBatchStartRequest: QuantLabBatchStartRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabBatch>>;
+    public startQuantLabExperimentBatch(id: string, idempotencyKey: string, quantLabBatchStartRequest: QuantLabBatchStartRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (id === null || id === undefined) {
+            throw new Error('Required parameter id was null or undefined when calling startQuantLabExperimentBatch.');
+        }
+        if (idempotencyKey === null || idempotencyKey === undefined) {
+            throw new Error('Required parameter idempotencyKey was null or undefined when calling startQuantLabExperimentBatch.');
+        }
+        if (quantLabBatchStartRequest === null || quantLabBatchStartRequest === undefined) {
+            throw new Error('Required parameter quantLabBatchStartRequest was null or undefined when calling startQuantLabExperimentBatch.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (idempotencyKey !== undefined && idempotencyKey !== null) {
+            localVarHeaders = localVarHeaders.set('Idempotency-Key', String(idempotencyKey));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiments/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/batches`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabBatch>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: quantLabBatchStartRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
      * Sammlungswunsch mit Versionsvergleich und idempotenter Wiederholung speichern
      * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. REQ-HMD-007/008; T-HMD-016/017/018. Fehlerhafte Instrument-UUID ergibt 400; gültige fremde UUID 404. Gleicher Akteur, Operation, Instrument, Schlüssel und Nutzlast liefern das ursprüngliche Ergebnis VOR dem Vergleich von expectedVersion. Andere Nutzlast zum selben Schlüssel oder veraltete expectedVersion ergeben 409 mit getrennten Codes IDEMPOTENCY_CONFLICT und VERSION_CONFLICT. PUT erhöht persistierte Version und Generation atomar. enabled&#x3D;true bewahrt den Wunsch bei fehlenden globalen oder Quellengates sichtbar als BLOCKED und aktiviert diese Gates niemals. enabled&#x3D;false committet vor Bestätigung dieselbe Planlock-Dispatchbarriere; outstandingStartedDispatches zählt bereits zugelassene Abrufe mit committetem STARTED-Receipt einschließlich erst danach beginnender Socketübertragung. Nach Pausencommit entsteht keine neue Zulassung der pausierten Generation. Bereits zugelassene Antworten dürfen mit tatsächlichen Zeiten persistieren. Kein Retry verwendet einen Receipt erneut; kein Datenbanklock während I/O.
      * @endpoint put /api/v1/research/collection/plans/{instrumentId}
@@ -1106,6 +2263,87 @@ export class ResearchService extends BaseService implements ResearchServiceInter
             {
                 context: localVarHttpContext,
                 body: collectionPlanUpdate,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Persist definition validation and resource estimate
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint post /api/v1/research/experiments/{id}/validations
+     * @param id 
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param quantLabValidationRequest 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public validateQuantLabExperiment(id: string, idempotencyKey: string, quantLabValidationRequest: QuantLabValidationRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabValidation>;
+    public validateQuantLabExperiment(id: string, idempotencyKey: string, quantLabValidationRequest: QuantLabValidationRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabValidation>>;
+    public validateQuantLabExperiment(id: string, idempotencyKey: string, quantLabValidationRequest: QuantLabValidationRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabValidation>>;
+    public validateQuantLabExperiment(id: string, idempotencyKey: string, quantLabValidationRequest: QuantLabValidationRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (id === null || id === undefined) {
+            throw new Error('Required parameter id was null or undefined when calling validateQuantLabExperiment.');
+        }
+        if (idempotencyKey === null || idempotencyKey === undefined) {
+            throw new Error('Required parameter idempotencyKey was null or undefined when calling validateQuantLabExperiment.');
+        }
+        if (quantLabValidationRequest === null || quantLabValidationRequest === undefined) {
+            throw new Error('Required parameter quantLabValidationRequest was null or undefined when calling validateQuantLabExperiment.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (idempotencyKey !== undefined && idempotencyKey !== null) {
+            localVarHeaders = localVarHeaders.set('Idempotency-Key', String(idempotencyKey));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiments/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/validations`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabValidation>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: quantLabValidationRequest,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

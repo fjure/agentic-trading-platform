@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "id": "22222222-2222-4222-8222-222222222222",
+  "definitionId": "11111111-1111-4111-8111-111111111111",
+  "definitionVersion": 1,
+  "definitionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "state": "SUCCEEDED",
+  "createdAt": "2026-10-30T12:00:00Z",
+  "updatedAt": "2026-10-30T12:00:00Z",
+  "supersedesBatchId": null,
+  "strategySelectionPolicy": {
+    "policyId": "MAX_NET_RETURN_WITH_DRAWDOWN_CONSTRAINT_V1",
+    "maxDrawdown": "0.1",
+    "minValidationSessions": 20,
+    "minimumEntryCount": null,
+    "minimumInvestedBarRatio": null
+  },
+  "strategySelectionPolicyHash": "26fb544f75883dd12949dbb1eb36aefa28ab9b319bc561c24ad2723cdf1ebb1f",
+  "manifest": {
+    "schemaVersion": "quant-lab-v1",
+    "manifestVersion": "quant-experiment-v1",
+    "manifestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "snapshotHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "comparisonFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "strategySelectionPolicyHash": "26fb544f75883dd12949dbb1eb36aefa28ab9b319bc561c24ad2723cdf1ebb1f",
+    "researchProtocolHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "buildSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "metricsVersion": "quant-metrics-v1",
+    "simulatorVersion": "backtest-simulator-v1",
+    "commonWarmupBars": 49,
+    "phaseBindings": [
+      {
+        "schemaVersion": "quant-lab-v1",
+        "phase": "training",
+        "researchRole": "IN_SAMPLE_ANALYSIS",
+        "fold": 0,
+        "interval": {
+          "start": "2026-01-05T14:30:00Z",
+          "end": "2026-01-09T21:00:00Z"
+        },
+        "seedInterval": {
+          "start": "2025-12-31T15:15:00Z",
+          "end": "2026-01-02T21:00:00Z"
+        },
+        "seedBarCount": 49,
+        "fittingStatus": "NOT_TRAINABLE"
+      },
+      {
+        "schemaVersion": "quant-lab-v1",
+        "phase": "validation",
+        "researchRole": "PARAMETER_SELECTION",
+        "fold": 0,
+        "interval": {
+          "start": "2026-01-12T14:30:00Z",
+          "end": "2026-02-10T21:00:00Z"
+        },
+        "seedInterval": {
+          "start": "2026-01-08T15:15:00Z",
+          "end": "2026-01-09T21:00:00Z"
+        },
+        "seedBarCount": 49,
+        "fittingStatus": "NOT_TRAINABLE"
+      },
+      {
+        "schemaVersion": "quant-lab-v1",
+        "phase": "test",
+        "researchRole": "WALK_FORWARD_OOS",
+        "fold": 0,
+        "interval": {
+          "start": "2026-02-11T14:30:00Z",
+          "end": "2026-02-17T21:00:00Z"
+        },
+        "seedInterval": {
+          "start": "2026-02-09T15:15:00Z",
+          "end": "2026-02-10T21:00:00Z"
+        },
+        "seedBarCount": 49,
+        "fittingStatus": "NOT_TRAINABLE"
+      },
+      {
+        "schemaVersion": "quant-lab-v1",
+        "phase": "holdout",
+        "researchRole": "FINAL_HOLDOUT",
+        "fold": null,
+        "interval": {
+          "start": "2026-02-18T14:30:00Z",
+          "end": "2026-02-24T21:00:00Z"
+        },
+        "seedInterval": {
+          "start": "2026-02-13T15:15:00Z",
+          "end": "2026-02-17T21:00:00Z"
+        },
+        "seedBarCount": 49,
+        "fittingStatus": "NOT_TRAINABLE"
+      }
+    ],
+    "snapshotReference": {
+      "snapshotVersion": 1,
+      "snapshotAt": "2026-10-30T12:00:00Z"
+    },
+    "selectorVersion": "quant-selection-v1",
+    "selectorFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "reportId": "44444444-4444-4444-8444-444444444444",
+  "reportHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "candidateCounts": {
+    "planned": 9,
+    "started": 9,
+    "complete": 9,
+    "failed": 0,
+    "blocked": 0,
+    "notEvaluated": 0
+  },
+  "referenceCounts": {
+    "planned": 2,
+    "started": 2,
+    "complete": 2,
+    "failed": 0,
+    "blocked": 0,
+    "notEvaluated": 0
+  },
+  "attemptCount": 1,
+  "researchHistory": {
+    "schemaVersion": "quant-lab-v1",
+    "registryVersion": "quant-exposure-v1",
+    "registryHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "boundAt": "2026-10-30T12:00:00Z",
+    "registeredRoundCount": 0,
+    "priorFailedRoundCount": 0,
+    "priorBlockedRoundCount": 0,
+    "supersededRoundCount": 0,
+    "overlapCount": 0,
+    "repeatedValidationCount": 0,
+    "reuseStatus": "NO_REGISTERED_PRIOR_USE",
+    "externalKnowledgeStatus": "EXTERNAL_KNOWLEDGE_UNKNOWN",
+    "candidateCounts": {
+      "planned": 9,
+      "started": 0,
+      "complete": 0,
+      "failed": 0,
+      "blocked": 0,
+      "notEvaluated": 0
+    },
+    "referenceCounts": {
+      "planned": 2,
+      "started": 0,
+      "complete": 0,
+      "failed": 0,
+      "blocked": 0,
+      "notEvaluated": 0
+    },
+    "overlaps": [],
+    "nextOverlapCursor": null,
+    "warmupOverlapCount": 0,
+    "limitations": [
+      "PRICE_ONLY",
+      "IEX_PARTIAL_MARKET",
+      "NO_STATISTICAL_GUARANTEE",
+      "NO_TRADING_AUTHORIZATION",
+      "EXTERNAL_KNOWLEDGE_UNKNOWN"
+    ]
+  },
+  "currentWarnings": [],
+  "reasons": [],
+  "limitations": [
+    "PRICE_ONLY",
+    "IEX_PARTIAL_MARKET",
+    "NO_STATISTICAL_GUARANTEE",
+    "NO_TRADING_AUTHORIZATION",
+    "EXTERNAL_KNOWLEDGE_UNKNOWN"
+  ]
+}

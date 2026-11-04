@@ -1,0 +1,501 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "items": [
+    {
+      "schemaVersion": "quant-lab-v1",
+      "batchId": "22222222-2222-4222-8222-222222222222",
+      "candidateId": "0ea600e27af842e8bfe0046f1c5858ed0c9e12b48613c2ed84cde76a368aaa5d",
+      "role": "SEARCH_CANDIDATE",
+      "phase": "training",
+      "researchRole": "IN_SAMPLE_ANALYSIS",
+      "fold": 0,
+      "fittingStatus": "NOT_TRAINABLE",
+      "evaluationStatus": "COMPLETE",
+      "metrics": {
+        "schemaVersion": "quant-lab-v1",
+        "netReturn": {
+          "schemaVersion": "quant-lab-v1",
+          "value": "0.050000000000",
+          "status": "VALID",
+          "reasonCode": null,
+          "observationCount": 5,
+          "frequency": "PHASE",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "maxDrawdown": {
+          "schemaVersion": "quant-lab-v1",
+          "value": "0.050000000000",
+          "status": "VALID",
+          "reasonCode": null,
+          "observationCount": 5,
+          "frequency": "PHASE",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "turnover": {
+          "schemaVersion": "quant-lab-v1",
+          "value": "1.050000000000",
+          "status": "VALID",
+          "reasonCode": null,
+          "observationCount": 2,
+          "frequency": "PHASE",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "costBurden": {
+          "schemaVersion": "quant-lab-v1",
+          "value": "0.000000000000",
+          "status": "VALID",
+          "reasonCode": null,
+          "observationCount": 2,
+          "frequency": "PHASE",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "annualizedVolatility": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "INSUFFICIENT_OBSERVATIONS",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "sharpe": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "INSUFFICIENT_OBSERVATIONS",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "oosDegradation": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_PAIRED_VALIDATION",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "netReturnDifferenceBuyHold": {
+          "schemaVersion": "quant-lab-v1",
+          "value": "-0.050000000000",
+          "status": "VALID",
+          "reasonCode": null,
+          "observationCount": 5,
+          "frequency": "PHASE",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "netReturnDifferenceFlat": {
+          "schemaVersion": "quant-lab-v1",
+          "value": "0.050000000000",
+          "status": "VALID",
+          "reasonCode": null,
+          "observationCount": 5,
+          "frequency": "PHASE",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "observationCoverage": {
+          "schemaVersion": "quant-lab-v1",
+          "value": "1.000000000000",
+          "status": "VALID",
+          "reasonCode": null,
+          "observationCount": 5,
+          "frequency": "PHASE",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "fees": {
+          "schemaVersion": "quant-lab-v1",
+          "value": "0.00000000",
+          "status": "VALID",
+          "reasonCode": null,
+          "observationCount": 2,
+          "frequency": "PHASE",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "slippage": {
+          "schemaVersion": "quant-lab-v1",
+          "value": "0.00000000",
+          "status": "VALID",
+          "reasonCode": null,
+          "observationCount": 2,
+          "frequency": "PHASE",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "totalCosts": {
+          "schemaVersion": "quant-lab-v1",
+          "value": "0.00000000",
+          "status": "VALID",
+          "reasonCode": null,
+          "observationCount": 2,
+          "frequency": "PHASE",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "expectedBarCount": 5,
+        "observedBarCount": 5,
+        "completeValidationSessions": 0,
+        "activity": {
+          "schemaVersion": "quant-lab-v1",
+          "decisionCount": {
+            "schemaVersion": "quant-lab-v1",
+            "value": 5,
+            "status": "VALID",
+            "reasonCode": null,
+            "observationCount": 5,
+            "frequency": "PHASE",
+            "methodVersion": "quant-metrics-v1",
+            "limitations": [
+              "PRICE_ONLY",
+              "IEX_PARTIAL_MARKET",
+              "NO_STATISTICAL_GUARANTEE",
+              "NO_TRADING_AUTHORIZATION",
+              "EXTERNAL_KNOWLEDGE_UNKNOWN"
+            ]
+          },
+          "fillCount": {
+            "schemaVersion": "quant-lab-v1",
+            "value": 2,
+            "status": "VALID",
+            "reasonCode": null,
+            "observationCount": 2,
+            "frequency": "PHASE",
+            "methodVersion": "quant-metrics-v1",
+            "limitations": [
+              "PRICE_ONLY",
+              "IEX_PARTIAL_MARKET",
+              "NO_STATISTICAL_GUARANTEE",
+              "NO_TRADING_AUTHORIZATION",
+              "EXTERNAL_KNOWLEDGE_UNKNOWN"
+            ]
+          },
+          "buyFillCount": {
+            "schemaVersion": "quant-lab-v1",
+            "value": 1,
+            "status": "VALID",
+            "reasonCode": null,
+            "observationCount": 2,
+            "frequency": "PHASE",
+            "methodVersion": "quant-metrics-v1",
+            "limitations": [
+              "PRICE_ONLY",
+              "IEX_PARTIAL_MARKET",
+              "NO_STATISTICAL_GUARANTEE",
+              "NO_TRADING_AUTHORIZATION",
+              "EXTERNAL_KNOWLEDGE_UNKNOWN"
+            ]
+          },
+          "sellFillCount": {
+            "schemaVersion": "quant-lab-v1",
+            "value": 1,
+            "status": "VALID",
+            "reasonCode": null,
+            "observationCount": 2,
+            "frequency": "PHASE",
+            "methodVersion": "quant-metrics-v1",
+            "limitations": [
+              "PRICE_ONLY",
+              "IEX_PARTIAL_MARKET",
+              "NO_STATISTICAL_GUARANTEE",
+              "NO_TRADING_AUTHORIZATION",
+              "EXTERNAL_KNOWLEDGE_UNKNOWN"
+            ]
+          },
+          "entryCount": {
+            "schemaVersion": "quant-lab-v1",
+            "value": 1,
+            "status": "VALID",
+            "reasonCode": null,
+            "observationCount": 5,
+            "frequency": "PHASE",
+            "methodVersion": "quant-metrics-v1",
+            "limitations": [
+              "PRICE_ONLY",
+              "IEX_PARTIAL_MARKET",
+              "NO_STATISTICAL_GUARANTEE",
+              "NO_TRADING_AUTHORIZATION",
+              "EXTERNAL_KNOWLEDGE_UNKNOWN"
+            ]
+          },
+          "exitCount": {
+            "schemaVersion": "quant-lab-v1",
+            "value": 1,
+            "status": "VALID",
+            "reasonCode": null,
+            "observationCount": 5,
+            "frequency": "PHASE",
+            "methodVersion": "quant-metrics-v1",
+            "limitations": [
+              "PRICE_ONLY",
+              "IEX_PARTIAL_MARKET",
+              "NO_STATISTICAL_GUARANTEE",
+              "NO_TRADING_AUTHORIZATION",
+              "EXTERNAL_KNOWLEDGE_UNKNOWN"
+            ]
+          },
+          "endOpenPositionCount": {
+            "schemaVersion": "quant-lab-v1",
+            "value": 0,
+            "status": "VALID",
+            "reasonCode": null,
+            "observationCount": 5,
+            "frequency": "PHASE",
+            "methodVersion": "quant-metrics-v1",
+            "limitations": [
+              "PRICE_ONLY",
+              "IEX_PARTIAL_MARKET",
+              "NO_STATISTICAL_GUARANTEE",
+              "NO_TRADING_AUTHORIZATION",
+              "EXTERNAL_KNOWLEDGE_UNKNOWN"
+            ]
+          }
+        },
+        "exposure": {
+          "schemaVersion": "quant-lab-v1",
+          "investedBarCount": {
+            "schemaVersion": "quant-lab-v1",
+            "value": 2,
+            "status": "VALID",
+            "reasonCode": null,
+            "observationCount": 5,
+            "frequency": "PHASE",
+            "methodVersion": "quant-metrics-v1",
+            "limitations": [
+              "PRICE_ONLY",
+              "IEX_PARTIAL_MARKET",
+              "NO_STATISTICAL_GUARANTEE",
+              "NO_TRADING_AUTHORIZATION",
+              "EXTERNAL_KNOWLEDGE_UNKNOWN"
+            ]
+          },
+          "equityBarCount": {
+            "schemaVersion": "quant-lab-v1",
+            "value": 5,
+            "status": "VALID",
+            "reasonCode": null,
+            "observationCount": 5,
+            "frequency": "PHASE",
+            "methodVersion": "quant-metrics-v1",
+            "limitations": [
+              "PRICE_ONLY",
+              "IEX_PARTIAL_MARKET",
+              "NO_STATISTICAL_GUARANTEE",
+              "NO_TRADING_AUTHORIZATION",
+              "EXTERNAL_KNOWLEDGE_UNKNOWN"
+            ]
+          },
+          "investedBarRatio": {
+            "schemaVersion": "quant-lab-v1",
+            "value": "0.400000000000",
+            "status": "VALID",
+            "reasonCode": null,
+            "observationCount": 5,
+            "frequency": "BAR_CLOSE_15MIN",
+            "methodVersion": "quant-metrics-v1",
+            "limitations": [
+              "PRICE_ONLY",
+              "IEX_PARTIAL_MARKET",
+              "NO_STATISTICAL_GUARANTEE",
+              "NO_TRADING_AUTHORIZATION",
+              "EXTERNAL_KNOWLEDGE_UNKNOWN"
+            ]
+          },
+          "meanGrossExposureRatio": {
+            "schemaVersion": "quant-lab-v1",
+            "value": "0.194736842105",
+            "status": "VALID",
+            "reasonCode": null,
+            "observationCount": 5,
+            "frequency": "BAR_CLOSE_15MIN",
+            "methodVersion": "quant-metrics-v1",
+            "limitations": [
+              "PRICE_ONLY",
+              "IEX_PARTIAL_MARKET",
+              "NO_STATISTICAL_GUARANTEE",
+              "NO_TRADING_AUTHORIZATION",
+              "EXTERNAL_KNOWLEDGE_UNKNOWN"
+            ]
+          },
+          "maxGrossExposureRatio": {
+            "schemaVersion": "quant-lab-v1",
+            "value": "0.500000000000",
+            "status": "VALID",
+            "reasonCode": null,
+            "observationCount": 5,
+            "frequency": "BAR_CLOSE_15MIN",
+            "methodVersion": "quant-metrics-v1",
+            "limitations": [
+              "PRICE_ONLY",
+              "IEX_PARTIAL_MARKET",
+              "NO_STATISTICAL_GUARANTEE",
+              "NO_TRADING_AUTHORIZATION",
+              "EXTERNAL_KNOWLEDGE_UNKNOWN"
+            ]
+          }
+        },
+        "activityWarnings": {
+          "schemaVersion": "quant-lab-v1",
+          "methodVersion": "quant-activity-warnings-v1",
+          "status": "AVAILABLE",
+          "codes": [
+            "FEW_POSITION_ENTRIES"
+          ]
+        }
+      },
+      "selectionValues": null,
+      "reliability": {
+        "runId": "11111111-1111-4111-8111-111111111111",
+        "reportId": "44444444-4444-4444-8444-444444444444",
+        "reportHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "eligibility": "EXPLORATORY_WITH_LIMITATIONS",
+        "rating": "LIMITED"
+      },
+      "reasonCodes": [],
+      "limitations": [
+        "PRICE_ONLY",
+        "IEX_PARTIAL_MARKET",
+        "NO_STATISTICAL_GUARANTEE",
+        "NO_TRADING_AUTHORIZATION",
+        "EXTERNAL_KNOWLEDGE_UNKNOWN"
+      ]
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "batchId": "22222222-2222-4222-8222-222222222222",
+      "candidateId": "0ea600e27af842e8bfe0046f1c5858ed0c9e12b48613c2ed84cde76a368aaa5d",
+      "role": "SEARCH_CANDIDATE",
+      "phase": "test",
+      "researchRole": "WALK_FORWARD_OOS",
+      "fold": 0,
+      "fittingStatus": "NOT_TRAINABLE",
+      "evaluationStatus": "NOT_EVALUATED_NO_SELECTION",
+      "metrics": null,
+      "selectionValues": null,
+      "reliability": null,
+      "reasonCodes": [
+        "NOT_EVALUATED_NO_SELECTION"
+      ],
+      "limitations": [
+        "PRICE_ONLY",
+        "IEX_PARTIAL_MARKET",
+        "NO_STATISTICAL_GUARANTEE",
+        "NO_TRADING_AUTHORIZATION",
+        "EXTERNAL_KNOWLEDGE_UNKNOWN"
+      ]
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "batchId": "22222222-2222-4222-8222-222222222222",
+      "candidateId": "0ea600e27af842e8bfe0046f1c5858ed0c9e12b48613c2ed84cde76a368aaa5d",
+      "role": "SEARCH_CANDIDATE",
+      "phase": "test",
+      "researchRole": "WALK_FORWARD_OOS",
+      "fold": 0,
+      "fittingStatus": "NOT_TRAINABLE",
+      "evaluationStatus": "NOT_EVALUATED_BY_PROTOCOL",
+      "metrics": null,
+      "selectionValues": null,
+      "reliability": null,
+      "reasonCodes": [
+        "NOT_EVALUATED_BY_PROTOCOL"
+      ],
+      "limitations": [
+        "PRICE_ONLY",
+        "IEX_PARTIAL_MARKET",
+        "NO_STATISTICAL_GUARANTEE",
+        "NO_TRADING_AUTHORIZATION",
+        "EXTERNAL_KNOWLEDGE_UNKNOWN"
+      ]
+    }
+  ],
+  "nextCursor": null
+}

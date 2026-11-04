@@ -1,0 +1,7 @@
+{
+  "policyId": "MAX_NET_RETURN_WITH_DRAWDOWN_CONSTRAINT_V1",
+  "maxDrawdown": "0.1",
+  "minValidationSessions": 20,
+  "minimumEntryCount": null,
+  "minimumInvestedBarRatio": null
+}

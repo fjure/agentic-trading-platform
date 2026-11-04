@@ -1,0 +1,187 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "items": [
+    {
+      "schemaVersion": "quant-lab-v1",
+      "candidateId": "0ea600e27af842e8bfe0046f1c5858ed0c9e12b48613c2ed84cde76a368aaa5d",
+      "role": "SEARCH_CANDIDATE",
+      "configuration": {
+        "strategyId": "ema-cross-v1",
+        "version": "1",
+        "parameters": {
+          "fast": 5,
+          "slow": 30
+        }
+      },
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "state": "PENDING",
+      "fittingStatus": "NOT_TRAINABLE",
+      "reasons": []
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "candidateId": "4b46b25c6163bf6a938b082b994700027a93f96f244ddcedce751d97c2076c5d",
+      "role": "SEARCH_CANDIDATE",
+      "configuration": {
+        "strategyId": "ema-cross-v1",
+        "version": "1",
+        "parameters": {
+          "fast": 5,
+          "slow": 40
+        }
+      },
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "state": "PENDING",
+      "fittingStatus": "NOT_TRAINABLE",
+      "reasons": []
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "candidateId": "2a2af706f1a4e4da7dd2cc2032f933f2c49c77f06db22cfe8802dda29c8f0411",
+      "role": "SEARCH_CANDIDATE",
+      "configuration": {
+        "strategyId": "ema-cross-v1",
+        "version": "1",
+        "parameters": {
+          "fast": 5,
+          "slow": 50
+        }
+      },
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "state": "PENDING",
+      "fittingStatus": "NOT_TRAINABLE",
+      "reasons": []
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "candidateId": "8bbc7b8aef7fb1b3a0d5ad30015dd9a1cdf063e4fdeedf3a85050b869909be9b",
+      "role": "SEARCH_CANDIDATE",
+      "configuration": {
+        "strategyId": "ema-cross-v1",
+        "version": "1",
+        "parameters": {
+          "fast": 10,
+          "slow": 30
+        }
+      },
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "state": "PENDING",
+      "fittingStatus": "NOT_TRAINABLE",
+      "reasons": []
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "candidateId": "c199e7835aef64be489554b64f3c8f3960167bcb1d4d40fbeaaf4c4c81c11076",
+      "role": "SEARCH_CANDIDATE",
+      "configuration": {
+        "strategyId": "ema-cross-v1",
+        "version": "1",
+        "parameters": {
+          "fast": 10,
+          "slow": 40
+        }
+      },
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "state": "PENDING",
+      "fittingStatus": "NOT_TRAINABLE",
+      "reasons": []
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "candidateId": "7e65d1504903368b5e93f984f3b9a328bf57801020a7c1a955229f965eac2fcb",
+      "role": "SEARCH_CANDIDATE",
+      "configuration": {
+        "strategyId": "ema-cross-v1",
+        "version": "1",
+        "parameters": {
+          "fast": 10,
+          "slow": 50
+        }
+      },
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "state": "PENDING",
+      "fittingStatus": "NOT_TRAINABLE",
+      "reasons": []
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "candidateId": "ecf261b237a8de201105ebc240187692d8b737339742531397bb371bc6639377",
+      "role": "SEARCH_CANDIDATE",
+      "configuration": {
+        "strategyId": "ema-cross-v1",
+        "version": "1",
+        "parameters": {
+          "fast": 15,
+          "slow": 30
+        }
+      },
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "state": "PENDING",
+      "fittingStatus": "NOT_TRAINABLE",
+      "reasons": []
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "candidateId": "937cc31a657cf9780136d190fb756f659cd2d6fd7b5b85ca2330339bf4663ffc",
+      "role": "SEARCH_CANDIDATE",
+      "configuration": {
+        "strategyId": "ema-cross-v1",
+        "version": "1",
+        "parameters": {
+          "fast": 15,
+          "slow": 40
+        }
+      },
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "state": "PENDING",
+      "fittingStatus": "NOT_TRAINABLE",
+      "reasons": []
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "candidateId": "475724825ffde7bab27f502299129de076b866661b108838ace50edb566de1c7",
+      "role": "SEARCH_CANDIDATE",
+      "configuration": {
+        "strategyId": "ema-cross-v1",
+        "version": "1",
+        "parameters": {
+          "fast": 15,
+          "slow": 50
+        }
+      },
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "state": "PENDING",
+      "fittingStatus": "NOT_TRAINABLE",
+      "reasons": []
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "candidateId": "4fb55bfa7ec2e8ce04677e05a35b1dd2dd2732fdece6b06c793c0472ea45caa0",
+      "role": "REFERENCE_FLAT",
+      "configuration": {
+        "strategyId": "flat-v1",
+        "version": "1",
+        "parameters": {}
+      },
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "state": "PENDING",
+      "fittingStatus": "NOT_TRAINABLE",
+      "reasons": []
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "candidateId": "8a6400cba0d5967d984ac2188a3256940c9ab15007965d5af774bfbd1774db7e",
+      "role": "REFERENCE_BUY_HOLD",
+      "configuration": {
+        "strategyId": "buy-hold-v1",
+        "version": "1",
+        "parameters": {}
+      },
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "state": "PENDING",
+      "fittingStatus": "NOT_TRAINABLE",
+      "reasons": []
+    }
+  ],
+  "nextCursor": null
+}

@@ -193,6 +193,32 @@ if (-not $SkipCompile) {
         $fixtureIndex++
     }
     [IO.File]::WriteAllLines((Join-Path $tooling 'client-contract-fixtures.generated.ts'), $fixtures)
+    $quantFixtures = Get-Content -LiteralPath (Join-Path $root 'contracts/examples/v1/quant-lab-fixtures.json') -Raw | ConvertFrom-Json -AsHashtable
+    foreach ($entry in $quantFixtures.GetEnumerator()) {
+        $model = $entry.Value
+        $modelFile = $model.Substring(0, 1).ToLowerInvariant() + $model.Substring(1)
+        $fixtures += "import type { $model as QuantFixtureType$fixtureIndex } from './generated-a/model/$modelFile';"
+        $literal = Get-Content -LiteralPath (Join-Path $root ('contracts/examples/v1/' + $entry.Key)) -Raw
+        $fixtures += "const quantFixture$fixtureIndex : QuantFixtureType$fixtureIndex = $literal;"
+        $fixtureIndex++
+    }
+    $fixtures += "import type { QuantLabStrategySelectionPolicy } from './generated-a/model/quantLabStrategySelectionPolicy';"
+    $fixtures += "import type { QuantLabStrategyId } from './generated-a/model/quantLabStrategyId';"
+    $fixtures += "import type { QuantLabMetric } from './generated-a/model/quantLabMetric';"
+    $fixtures += "import type { QuantLabCountMetric } from './generated-a/model/quantLabCountMetric';"
+    $fixtures += '// @ts-expect-error Metric values are nullable Decimal strings, never arbitrary objects.'
+    $fixtures += 'const objectQuantMetric: QuantLabMetric["value"] = { unexpected: true };'
+    $fixtures += '// @ts-expect-error Counts remain nullable JSON integers rather than Decimal strings.'
+    $fixtures += 'const stringQuantCount: QuantLabCountMetric["value"] = "1";'
+    $fixtures += '// @ts-expect-error Selection policy identifiers are closed and versioned.'
+    $fixtures += 'const invalidQuantPolicy: QuantLabStrategySelectionPolicy = { policyId: "SHARPE", maxDrawdown: "0.1", minValidationSessions: 20, minimumEntryCount: null, minimumInvestedBarRatio: null };'
+    $fixtures += '// @ts-expect-error Disabled activity minima must be explicitly null, never omitted.'
+    $fixtures += 'const missingQuantMinima: QuantLabStrategySelectionPolicy = { policyId: "MAX_NET_RETURN_WITH_DRAWDOWN_CONSTRAINT_V1", maxDrawdown: "0.1", minValidationSessions: 20 };'
+    $fixtures += '// @ts-expect-error Drawdown limits use Decimal strings on the wire.'
+    $fixtures += 'const numericQuantDrawdown: QuantLabStrategySelectionPolicy = { policyId: "MAX_NET_RETURN_WITH_DRAWDOWN_CONSTRAINT_V1", maxDrawdown: 0.1, minValidationSessions: 20, minimumEntryCount: null, minimumInvestedBarRatio: null };'
+    $fixtures += '// @ts-expect-error Uploaded or dynamic strategies are never accepted.'
+    $fixtures += 'const uploadedQuantStrategy: QuantLabStrategyId = "python-upload";'
+    [IO.File]::WriteAllLines((Join-Path $tooling 'client-contract-fixtures.generated.ts'), $fixtures)
     $tsc = Join-Path $tooling 'node_modules/.bin/tsc.cmd'
     if (-not (Test-Path -LiteralPath $tsc)) { throw 'Pinned TypeScript compiler is missing.' }
     & $tsc --project (Join-Path $tooling 'tsconfig.generated.json') --noEmit

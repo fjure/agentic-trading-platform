@@ -1,6 +1,5 @@
 """Ausdrücklich freigegebene Vertragsvorläufe; keine Runtime-Freigabe.
 
-RDR-01 und RRB-01 erhalten die ausdrücklich autorisierte zweistufige Abnahme.
 Der Abschluss des jeweiligen Runtimepakets erzwingt dessen exakte Routen.
 """
 
@@ -27,6 +26,17 @@ RETROSPECTIVE_OPERATIONS = {
     "getBacktestAssessment": "RRB-06",
     "getBacktestReliabilityReport": "RRB-06",
 }
+QUANT_LAB_TASKS = (
+    Path(__file__).resolve().parents[1]
+    / "openspec/changes/quant-strategy-lab-v1/tasks.md"
+)
+QUANT_LAB_OPERATIONS = dict.fromkeys((
+    "getQuantLabStrategies", "createQuantLabExperiment", "listQuantLabExperiments",
+    "getQuantLabExperiment", "validateQuantLabExperiment", "startQuantLabExperimentBatch",
+    "listQuantLabExperimentBatches", "getQuantLabExperimentBatch", "listQuantLabCandidates",
+    "listQuantLabResults", "getQuantLabComparison", "getQuantLabEquity",
+    "getQuantLabDrawdown", "compareQuantLabExperiments",
+), "QSL-07")
 
 
 def _pending(text: str, operations: dict[str, str]) -> set[str]:
@@ -43,10 +53,19 @@ def _pending(text: str, operations: dict[str, str]) -> set[str]:
 
 def pending_contract_operations(
     tasks_text: str | None = None, retrospective_tasks_text: str | None = None,
+    quant_lab_tasks_text: str | None = None,
 ) -> set[str]:
     text = TASKS.read_text("utf-8") if tasks_text is None else tasks_text
     retrospective = (
         RETROSPECTIVE_TASKS.read_text("utf-8")
         if retrospective_tasks_text is None else retrospective_tasks_text
     )
-    return _pending(text, STAGED_OPERATIONS) | _pending(retrospective, RETROSPECTIVE_OPERATIONS)
+    quant_lab = (
+        QUANT_LAB_TASKS.read_text("utf-8")
+        if quant_lab_tasks_text is None else quant_lab_tasks_text
+    )
+    return (
+        _pending(text, STAGED_OPERATIONS)
+        | _pending(retrospective, RETROSPECTIVE_OPERATIONS)
+        | _pending(quant_lab, QUANT_LAB_OPERATIONS)
+    )

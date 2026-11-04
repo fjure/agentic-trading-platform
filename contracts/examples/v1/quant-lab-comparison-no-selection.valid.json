@@ -1,0 +1,752 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "id": "44444444-4444-4444-8444-444444444444",
+  "batchId": "22222222-2222-4222-8222-222222222222",
+  "reportHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "createdAt": "2026-10-30T12:00:00Z",
+  "comparisonFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "status": "COMPLETE",
+  "strategySelectionPolicy": {
+    "policyId": "MAX_NET_RETURN_WITH_DRAWDOWN_CONSTRAINT_V1",
+    "maxDrawdown": "0.1",
+    "minValidationSessions": 20,
+    "minimumEntryCount": null,
+    "minimumInvestedBarRatio": null
+  },
+  "strategySelectionPolicyHash": "26fb544f75883dd12949dbb1eb36aefa28ab9b319bc561c24ad2723cdf1ebb1f",
+  "selections": [
+    {
+      "schemaVersion": "quant-lab-v1",
+      "selectionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "scope": "FOLD",
+      "fold": 0,
+      "status": "NO_ELIGIBLE_CANDIDATE",
+      "selectedCandidateId": null,
+      "strategySelectionPolicy": {
+        "policyId": "MAX_NET_RETURN_WITH_DRAWDOWN_CONSTRAINT_V1",
+        "maxDrawdown": "0.1",
+        "minValidationSessions": 20,
+        "minimumEntryCount": null,
+        "minimumInvestedBarRatio": null
+      },
+      "strategySelectionPolicyHash": "26fb544f75883dd12949dbb1eb36aefa28ab9b319bc561c24ad2723cdf1ebb1f",
+      "validationInputHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "candidateIds": [
+        "0ea600e27af842e8bfe0046f1c5858ed0c9e12b48613c2ed84cde76a368aaa5d",
+        "4b46b25c6163bf6a938b082b994700027a93f96f244ddcedce751d97c2076c5d"
+      ],
+      "candidateCount": 2,
+      "eligibleCount": 0,
+      "candidates": [
+        {
+          "schemaVersion": "quant-lab-v1",
+          "candidateId": "0ea600e27af842e8bfe0046f1c5858ed0c9e12b48613c2ed84cde76a368aaa5d",
+          "eligibility": "INELIGIBLE",
+          "validationValues": [
+            {
+              "fold": 0,
+              "selectionValues": {
+                "netReturn": "0.12",
+                "maxDrawdown": "0.1000000000004",
+                "turnover": "1.05",
+                "investedBarRatio": "0.4",
+                "entryCount": 1,
+                "completeValidationSessions": 21
+              },
+              "gates": [
+                {
+                  "gate": "COMPLETE_DATA",
+                  "status": "PASSED",
+                  "threshold": "1",
+                  "value": "1",
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "RELIABILITY",
+                  "status": "PASSED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "MINIMUM_VALIDATION_SESSIONS",
+                  "status": "PASSED",
+                  "threshold": 20,
+                  "value": 21,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "VALID_REQUIRED_METRICS",
+                  "status": "PASSED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "MAX_DRAWDOWN",
+                  "status": "FAILED",
+                  "threshold": "0.1",
+                  "value": "0.1000000000004",
+                  "reasonCodes": [
+                    "MAX_DRAWDOWN_EXCEEDED"
+                  ]
+                },
+                {
+                  "gate": "MINIMUM_ENTRY_COUNT",
+                  "status": "DISABLED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "MINIMUM_INVESTED_BAR_RATIO",
+                  "status": "DISABLED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                }
+              ]
+            }
+          ],
+          "medianSelectionValues": {
+            "netReturn": "0.12",
+            "maxDrawdown": "0.1000000000004",
+            "turnover": "1.05",
+            "investedBarRatio": "0.4"
+          },
+          "rankingKey": null,
+          "rank": null,
+          "reasons": [
+            "MAX_DRAWDOWN_EXCEEDED"
+          ]
+        },
+        {
+          "schemaVersion": "quant-lab-v1",
+          "candidateId": "4b46b25c6163bf6a938b082b994700027a93f96f244ddcedce751d97c2076c5d",
+          "eligibility": "INELIGIBLE",
+          "validationValues": [
+            {
+              "fold": 0,
+              "selectionValues": {
+                "netReturn": "0.005",
+                "maxDrawdown": "0.1000000000004",
+                "turnover": "1.05",
+                "investedBarRatio": "0.4",
+                "entryCount": 1,
+                "completeValidationSessions": 21
+              },
+              "gates": [
+                {
+                  "gate": "COMPLETE_DATA",
+                  "status": "PASSED",
+                  "threshold": "1",
+                  "value": "1",
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "RELIABILITY",
+                  "status": "PASSED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "MINIMUM_VALIDATION_SESSIONS",
+                  "status": "PASSED",
+                  "threshold": 20,
+                  "value": 21,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "VALID_REQUIRED_METRICS",
+                  "status": "PASSED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "MAX_DRAWDOWN",
+                  "status": "FAILED",
+                  "threshold": "0.1",
+                  "value": "0.1000000000004",
+                  "reasonCodes": [
+                    "MAX_DRAWDOWN_EXCEEDED"
+                  ]
+                },
+                {
+                  "gate": "MINIMUM_ENTRY_COUNT",
+                  "status": "DISABLED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "MINIMUM_INVESTED_BAR_RATIO",
+                  "status": "DISABLED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                }
+              ]
+            }
+          ],
+          "medianSelectionValues": {
+            "netReturn": "0.005",
+            "maxDrawdown": "0.1000000000004",
+            "turnover": "1.05",
+            "investedBarRatio": "0.4"
+          },
+          "rankingKey": null,
+          "rank": null,
+          "reasons": [
+            "MAX_DRAWDOWN_EXCEEDED"
+          ]
+        }
+      ],
+      "frozenAt": "2026-10-30T12:00:00Z",
+      "rankingReasons": [
+        "NO_ELIGIBLE_CANDIDATE"
+      ],
+      "selectorVersion": "quant-selection-v1",
+      "selectorFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "selectionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "scope": "FINAL",
+      "fold": null,
+      "status": "NO_ELIGIBLE_CANDIDATE",
+      "selectedCandidateId": null,
+      "strategySelectionPolicy": {
+        "policyId": "MAX_NET_RETURN_WITH_DRAWDOWN_CONSTRAINT_V1",
+        "maxDrawdown": "0.1",
+        "minValidationSessions": 20,
+        "minimumEntryCount": null,
+        "minimumInvestedBarRatio": null
+      },
+      "strategySelectionPolicyHash": "26fb544f75883dd12949dbb1eb36aefa28ab9b319bc561c24ad2723cdf1ebb1f",
+      "validationInputHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "candidateIds": [
+        "0ea600e27af842e8bfe0046f1c5858ed0c9e12b48613c2ed84cde76a368aaa5d",
+        "4b46b25c6163bf6a938b082b994700027a93f96f244ddcedce751d97c2076c5d"
+      ],
+      "candidateCount": 2,
+      "eligibleCount": 0,
+      "candidates": [
+        {
+          "schemaVersion": "quant-lab-v1",
+          "candidateId": "0ea600e27af842e8bfe0046f1c5858ed0c9e12b48613c2ed84cde76a368aaa5d",
+          "eligibility": "INELIGIBLE",
+          "validationValues": [
+            {
+              "fold": 0,
+              "selectionValues": {
+                "netReturn": "0.12",
+                "maxDrawdown": "0.1000000000004",
+                "turnover": "1.05",
+                "investedBarRatio": "0.4",
+                "entryCount": 1,
+                "completeValidationSessions": 21
+              },
+              "gates": [
+                {
+                  "gate": "COMPLETE_DATA",
+                  "status": "PASSED",
+                  "threshold": "1",
+                  "value": "1",
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "RELIABILITY",
+                  "status": "PASSED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "MINIMUM_VALIDATION_SESSIONS",
+                  "status": "PASSED",
+                  "threshold": 20,
+                  "value": 21,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "VALID_REQUIRED_METRICS",
+                  "status": "PASSED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "MAX_DRAWDOWN",
+                  "status": "FAILED",
+                  "threshold": "0.1",
+                  "value": "0.1000000000004",
+                  "reasonCodes": [
+                    "MAX_DRAWDOWN_EXCEEDED"
+                  ]
+                },
+                {
+                  "gate": "MINIMUM_ENTRY_COUNT",
+                  "status": "DISABLED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "MINIMUM_INVESTED_BAR_RATIO",
+                  "status": "DISABLED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                }
+              ]
+            }
+          ],
+          "medianSelectionValues": {
+            "netReturn": "0.12",
+            "maxDrawdown": "0.1000000000004",
+            "turnover": "1.05",
+            "investedBarRatio": "0.4"
+          },
+          "rankingKey": null,
+          "rank": null,
+          "reasons": [
+            "MAX_DRAWDOWN_EXCEEDED"
+          ]
+        },
+        {
+          "schemaVersion": "quant-lab-v1",
+          "candidateId": "4b46b25c6163bf6a938b082b994700027a93f96f244ddcedce751d97c2076c5d",
+          "eligibility": "INELIGIBLE",
+          "validationValues": [
+            {
+              "fold": 0,
+              "selectionValues": {
+                "netReturn": "0.005",
+                "maxDrawdown": "0.1000000000004",
+                "turnover": "1.05",
+                "investedBarRatio": "0.4",
+                "entryCount": 1,
+                "completeValidationSessions": 21
+              },
+              "gates": [
+                {
+                  "gate": "COMPLETE_DATA",
+                  "status": "PASSED",
+                  "threshold": "1",
+                  "value": "1",
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "RELIABILITY",
+                  "status": "PASSED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "MINIMUM_VALIDATION_SESSIONS",
+                  "status": "PASSED",
+                  "threshold": 20,
+                  "value": 21,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "VALID_REQUIRED_METRICS",
+                  "status": "PASSED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "MAX_DRAWDOWN",
+                  "status": "FAILED",
+                  "threshold": "0.1",
+                  "value": "0.1000000000004",
+                  "reasonCodes": [
+                    "MAX_DRAWDOWN_EXCEEDED"
+                  ]
+                },
+                {
+                  "gate": "MINIMUM_ENTRY_COUNT",
+                  "status": "DISABLED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                },
+                {
+                  "gate": "MINIMUM_INVESTED_BAR_RATIO",
+                  "status": "DISABLED",
+                  "threshold": null,
+                  "value": null,
+                  "reasonCodes": []
+                }
+              ]
+            }
+          ],
+          "medianSelectionValues": {
+            "netReturn": "0.005",
+            "maxDrawdown": "0.1000000000004",
+            "turnover": "1.05",
+            "investedBarRatio": "0.4"
+          },
+          "rankingKey": null,
+          "rank": null,
+          "reasons": [
+            "MAX_DRAWDOWN_EXCEEDED"
+          ]
+        }
+      ],
+      "frozenAt": "2026-10-30T12:00:00Z",
+      "rankingReasons": [
+        "NO_ELIGIBLE_CANDIDATE"
+      ],
+      "selectorVersion": "quant-selection-v1",
+      "selectorFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "foldOverview": {
+    "schemaVersion": "quant-lab-v1",
+    "plannedFoldCount": 1,
+    "selectedFoldCount": 0,
+    "completeOosFoldCount": 0,
+    "positiveOosFoldCount": 0,
+    "netReturn": {
+      "median": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "minimum": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "maximum": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "completeFoldCount": 0
+    },
+    "maxDrawdown": {
+      "median": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "minimum": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "maximum": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "completeFoldCount": 0
+    },
+    "investedBarRatio": {
+      "median": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "minimum": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "maximum": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "completeFoldCount": 0
+    },
+    "meanGrossExposureRatio": {
+      "median": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "minimum": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "maximum": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "completeFoldCount": 0
+    },
+    "maxGrossExposureRatio": {
+      "median": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "minimum": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "maximum": {
+        "schemaVersion": "quant-lab-v1",
+        "value": null,
+        "status": "N/A",
+        "reasonCode": "NO_SELECTED_CANDIDATE",
+        "observationCount": 0,
+        "frequency": "DAILY_252",
+        "methodVersion": "quant-metrics-v1",
+        "limitations": [
+          "PRICE_ONLY",
+          "IEX_PARTIAL_MARKET",
+          "NO_STATISTICAL_GUARANTEE",
+          "NO_TRADING_AUTHORIZATION",
+          "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        ]
+      },
+      "completeFoldCount": 0
+    },
+    "warnings": [
+      "SMALL_FOLD_SAMPLE",
+      "NO_SELECTED_CANDIDATE"
+    ]
+  },
+  "sensitivity": [],
+  "researchHistory": {
+    "schemaVersion": "quant-lab-v1",
+    "registryVersion": "quant-exposure-v1",
+    "registryHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "boundAt": "2026-10-30T12:00:00Z",
+    "registeredRoundCount": 3,
+    "priorFailedRoundCount": 1,
+    "priorBlockedRoundCount": 1,
+    "supersededRoundCount": 1,
+    "overlapCount": 1,
+    "repeatedValidationCount": 1,
+    "reuseStatus": "REGISTERED_REUSE",
+    "externalKnowledgeStatus": "EXTERNAL_KNOWLEDGE_UNKNOWN",
+    "candidateCounts": {
+      "planned": 9,
+      "started": 0,
+      "complete": 0,
+      "failed": 0,
+      "blocked": 0,
+      "notEvaluated": 0
+    },
+    "referenceCounts": {
+      "planned": 2,
+      "started": 0,
+      "complete": 0,
+      "failed": 0,
+      "blocked": 0,
+      "notEvaluated": 0
+    },
+    "overlaps": [
+      {
+        "schemaVersion": "quant-lab-v1",
+        "currentRole": "FINAL_HOLDOUT",
+        "priorRole": "PARAMETER_SELECTION",
+        "currentInterval": {
+          "start": "2026-02-18T14:30:00Z",
+          "end": "2026-02-24T21:00:00Z"
+        },
+        "priorInterval": {
+          "start": "2026-02-18T14:30:00Z",
+          "end": "2026-02-24T21:00:00Z"
+        },
+        "overlapInterval": {
+          "start": "2026-02-18T14:30:00Z",
+          "end": "2026-02-24T21:00:00Z"
+        },
+        "priorBatchId": "22222222-2222-4222-8222-222222222222",
+        "priorRunId": null,
+        "priorDefinitionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "priorStatus": "FAILED",
+        "knowledgeStatus": "REQUESTED",
+        "overlapBarCount": 130
+      }
+    ],
+    "nextOverlapCursor": null,
+    "warmupOverlapCount": 0,
+    "limitations": [
+      "PRICE_ONLY",
+      "IEX_PARTIAL_MARKET",
+      "NO_STATISTICAL_GUARANTEE",
+      "NO_TRADING_AUTHORIZATION",
+      "EXTERNAL_KNOWLEDGE_UNKNOWN"
+    ]
+  },
+  "currentWarnings": [],
+  "reasons": [],
+  "limitations": [
+    "PRICE_ONLY",
+    "IEX_PARTIAL_MARKET",
+    "NO_STATISTICAL_GUARANTEE",
+    "NO_TRADING_AUTHORIZATION",
+    "EXTERNAL_KNOWLEDGE_UNKNOWN",
+    "VALIDATION_IS_OPTIMIZATION",
+    "MULTIPLE_TESTING",
+    "PHASE_RESETS"
+  ]
+}

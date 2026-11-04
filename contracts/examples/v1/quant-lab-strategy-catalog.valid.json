@@ -1,0 +1,278 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "catalogVersion": "quant-strategy-catalog-v1",
+  "items": [
+    {
+      "schemaVersion": "quant-lab-v1",
+      "strategyId": "flat-v1",
+      "version": "1",
+      "displayName": "flat-v1",
+      "description": "Deterministic local long/flat reference; finite seed, no trained coefficients.",
+      "category": "REFERENCE",
+      "symbols": [
+        "SPY",
+        "QQQ"
+      ],
+      "currency": "USD",
+      "adjustment": "raw",
+      "feed": "IEX",
+      "interval": "15Min",
+      "inputType": "CLOSE",
+      "targetStates": [
+        "LONG",
+        "FLAT"
+      ],
+      "parameterDefinitions": [],
+      "warmupVersion": "finite-common-seed-v1",
+      "signalVersion": "flat-v1",
+      "warmupRule": "NONE",
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "researchModes": [
+        "STRICT_PIT",
+        "RETROSPECTIVE_EXPLORATORY"
+      ],
+      "fittingStatus": "NOT_TRAINABLE",
+      "limitations": [
+        "PRICE_ONLY",
+        "IEX_PARTIAL_MARKET",
+        "NO_STATISTICAL_GUARANTEE",
+        "NO_TRADING_AUTHORIZATION",
+        "EXTERNAL_KNOWLEDGE_UNKNOWN",
+        "FINITE_SEED",
+        "NOT_TRAINABLE"
+      ]
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "strategyId": "buy-hold-v1",
+      "version": "1",
+      "displayName": "buy-hold-v1",
+      "description": "Deterministic local long/flat reference; finite seed, no trained coefficients.",
+      "category": "REFERENCE",
+      "symbols": [
+        "SPY",
+        "QQQ"
+      ],
+      "currency": "USD",
+      "adjustment": "raw",
+      "feed": "IEX",
+      "interval": "15Min",
+      "inputType": "CLOSE",
+      "targetStates": [
+        "LONG",
+        "FLAT"
+      ],
+      "parameterDefinitions": [],
+      "warmupVersion": "finite-common-seed-v1",
+      "signalVersion": "buy-hold-v1",
+      "warmupRule": "NONE",
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "researchModes": [
+        "STRICT_PIT",
+        "RETROSPECTIVE_EXPLORATORY"
+      ],
+      "fittingStatus": "NOT_TRAINABLE",
+      "limitations": [
+        "PRICE_ONLY",
+        "IEX_PARTIAL_MARKET",
+        "NO_STATISTICAL_GUARANTEE",
+        "NO_TRADING_AUTHORIZATION",
+        "EXTERNAL_KNOWLEDGE_UNKNOWN",
+        "FINITE_SEED",
+        "NOT_TRAINABLE"
+      ]
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "strategyId": "sma-cross-v1",
+      "version": "1",
+      "displayName": "sma-cross-v1",
+      "description": "Deterministic local long/flat reference; finite seed, no trained coefficients.",
+      "category": "TREND",
+      "symbols": [
+        "SPY",
+        "QQQ"
+      ],
+      "currency": "USD",
+      "adjustment": "raw",
+      "feed": "IEX",
+      "interval": "15Min",
+      "inputType": "CLOSE",
+      "targetStates": [
+        "LONG",
+        "FLAT"
+      ],
+      "parameterDefinitions": [
+        {
+          "name": "fast",
+          "valueType": "INTEGER",
+          "minimum": "2",
+          "maximum": "99",
+          "maximumFractionalDigits": 0
+        },
+        {
+          "name": "slow",
+          "valueType": "INTEGER",
+          "minimum": "3",
+          "maximum": "100",
+          "maximumFractionalDigits": 0
+        }
+      ],
+      "warmupVersion": "finite-common-seed-v1",
+      "signalVersion": "sma-cross-v1",
+      "warmupRule": "MAX_SLOW_MINUS_ONE",
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "researchModes": [
+        "STRICT_PIT",
+        "RETROSPECTIVE_EXPLORATORY"
+      ],
+      "fittingStatus": "NOT_TRAINABLE",
+      "limitations": [
+        "PRICE_ONLY",
+        "IEX_PARTIAL_MARKET",
+        "NO_STATISTICAL_GUARANTEE",
+        "NO_TRADING_AUTHORIZATION",
+        "EXTERNAL_KNOWLEDGE_UNKNOWN",
+        "FINITE_SEED",
+        "NOT_TRAINABLE"
+      ]
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "strategyId": "ema-cross-v1",
+      "version": "1",
+      "displayName": "ema-cross-v1",
+      "description": "Deterministic local long/flat reference; finite seed, no trained coefficients.",
+      "category": "TREND",
+      "symbols": [
+        "SPY",
+        "QQQ"
+      ],
+      "currency": "USD",
+      "adjustment": "raw",
+      "feed": "IEX",
+      "interval": "15Min",
+      "inputType": "CLOSE",
+      "targetStates": [
+        "LONG",
+        "FLAT"
+      ],
+      "parameterDefinitions": [
+        {
+          "name": "fast",
+          "valueType": "INTEGER",
+          "minimum": "2",
+          "maximum": "99",
+          "maximumFractionalDigits": 0
+        },
+        {
+          "name": "slow",
+          "valueType": "INTEGER",
+          "minimum": "3",
+          "maximum": "100",
+          "maximumFractionalDigits": 0
+        }
+      ],
+      "warmupVersion": "finite-common-seed-v1",
+      "signalVersion": "ema-cross-v1",
+      "warmupRule": "MAX_SLOW_MINUS_ONE",
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "researchModes": [
+        "STRICT_PIT",
+        "RETROSPECTIVE_EXPLORATORY"
+      ],
+      "fittingStatus": "NOT_TRAINABLE",
+      "limitations": [
+        "PRICE_ONLY",
+        "IEX_PARTIAL_MARKET",
+        "NO_STATISTICAL_GUARANTEE",
+        "NO_TRADING_AUTHORIZATION",
+        "EXTERNAL_KNOWLEDGE_UNKNOWN",
+        "FINITE_SEED",
+        "NOT_TRAINABLE"
+      ]
+    },
+    {
+      "schemaVersion": "quant-lab-v1",
+      "strategyId": "rsi-mean-reversion-v1",
+      "version": "1",
+      "displayName": "rsi-mean-reversion-v1",
+      "description": "Deterministic local long/flat reference; finite seed, no trained coefficients.",
+      "category": "MEAN_REVERSION",
+      "symbols": [
+        "SPY",
+        "QQQ"
+      ],
+      "currency": "USD",
+      "adjustment": "raw",
+      "feed": "IEX",
+      "interval": "15Min",
+      "inputType": "CLOSE",
+      "targetStates": [
+        "LONG",
+        "FLAT"
+      ],
+      "parameterDefinitions": [
+        {
+          "name": "period",
+          "valueType": "INTEGER",
+          "minimum": "2",
+          "maximum": "50",
+          "maximumFractionalDigits": 0
+        },
+        {
+          "name": "entry",
+          "valueType": "DECIMAL_STRING",
+          "minimum": "0",
+          "maximum": "100",
+          "maximumFractionalDigits": 4
+        },
+        {
+          "name": "exit",
+          "valueType": "DECIMAL_STRING",
+          "minimum": "0",
+          "maximum": "100",
+          "maximumFractionalDigits": 4
+        }
+      ],
+      "warmupVersion": "finite-common-seed-v1",
+      "signalVersion": "rsi-mean-reversion-v1",
+      "warmupRule": "MAX_RSI_PERIOD",
+      "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "researchModes": [
+        "STRICT_PIT",
+        "RETROSPECTIVE_EXPLORATORY"
+      ],
+      "fittingStatus": "NOT_TRAINABLE",
+      "limitations": [
+        "PRICE_ONLY",
+        "IEX_PARTIAL_MARKET",
+        "NO_STATISTICAL_GUARANTEE",
+        "NO_TRADING_AUTHORIZATION",
+        "EXTERNAL_KNOWLEDGE_UNKNOWN",
+        "FINITE_SEED",
+        "NOT_TRAINABLE"
+      ]
+    }
+  ],
+  "limits": {
+    "maximumCandidates": 32,
+    "referenceCount": 2,
+    "maximumFolds": 4,
+    "maximumSpanDays": 366,
+    "maximumSimulationBarSteps": 100000,
+    "maximumSnapshotRows": 100000,
+    "maximumPublicationBytes": 12582912,
+    "attemptDeadlineSeconds": 295,
+    "maximumAttempts": 3,
+    "maximumActiveAttemptSeconds": 885,
+    "queueSlots": 100
+  },
+  "limitations": [
+    "PRICE_ONLY",
+    "IEX_PARTIAL_MARKET",
+    "NO_STATISTICAL_GUARANTEE",
+    "NO_TRADING_AUTHORIZATION",
+    "EXTERNAL_KNOWLEDGE_UNKNOWN"
+  ]
+}

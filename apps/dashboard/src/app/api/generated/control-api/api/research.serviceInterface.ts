@@ -15,6 +15,23 @@ import { BacktestRequest } from '../model/models';
 import { CollectionPlan } from '../model/models';
 import { CollectionPlanPage } from '../model/models';
 import { CollectionPlanUpdate } from '../model/models';
+import { QuantLabBatch } from '../model/models';
+import { QuantLabBatchPage } from '../model/models';
+import { QuantLabBatchStartRequest } from '../model/models';
+import { QuantLabCandidatePage } from '../model/models';
+import { QuantLabComparisonReport } from '../model/models';
+import { QuantLabDrawdownPage } from '../model/models';
+import { QuantLabEquityPage } from '../model/models';
+import { QuantLabExperimentComparison } from '../model/models';
+import { QuantLabExperimentCreateRequest } from '../model/models';
+import { QuantLabExperimentDefinition } from '../model/models';
+import { QuantLabExperimentPage } from '../model/models';
+import { QuantLabPhase } from '../model/models';
+import { QuantLabProblem } from '../model/models';
+import { QuantLabResultPage } from '../model/models';
+import { QuantLabStrategyCatalog } from '../model/models';
+import { QuantLabValidation } from '../model/models';
+import { QuantLabValidationRequest } from '../model/models';
 import { ReadinessAccepted } from '../model/models';
 import { ReadinessAssessment } from '../model/models';
 import { ReadinessCategory } from '../model/models';
@@ -40,6 +57,23 @@ export interface ResearchServiceInterface {
     configuration: Configuration;
 
     /**
+     * Group max4 batches without cross-batch ranking
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiment-comparisons
+     * @param batchId 
+     */
+    compareQuantLabExperiments(batchId: Array<string>, extraHttpRequestParams?: any): Observable<QuantLabExperimentComparison>;
+
+    /**
+     * Create immutable experiment draft revision
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint post /api/v1/research/experiments
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param quantLabExperimentCreateRequest 
+     */
+    createQuantLabExperiment(idempotencyKey: string, quantLabExperimentCreateRequest: QuantLabExperimentCreateRequest, extraHttpRequestParams?: any): Observable<QuantLabExperimentDefinition>;
+
+    /**
      * Begrenzte snapshotgebundene Datenzulässigkeitsprüfung annehmen
      * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. Die strikte bestehende BacktestRequest-Semantik einschließlich chronologischer disjunkter Folds, fast &lt; slow, maximal 12 Folds und 366 Tagen wird vor dem Einreihen geprüft. Gleicher Akteur, Operation, Schlüssel und kanonische Nutzlast liefern den ursprünglichen Receipt; andere Nutzlast ergibt 409. Höchstens 32 wartende Jobs und insgesamt ein aktiver Diagnose-/Backtestworker; erschöpfte Queue ergibt 429 ohne Jobanlage. Keine Seiteneffekte vor Prüfung von Authentifizierung, Origin, Körper und Protokoll.
      * @endpoint post /api/v1/research/data-readiness/assessments
@@ -56,6 +90,70 @@ export interface ResearchServiceInterface {
      * @param researchJobAction 
      */
     createResearchIngestionJob(idempotencyKey: string, researchJobAction: ResearchJobAction, extraHttpRequestParams?: any): Observable<ResearchJob>;
+
+    /**
+     * Read immutable selection and descriptive report
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiment-batches/{id}/comparison
+     * @param id 
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     */
+    getQuantLabComparison(id: string, cursor?: string, limit?: number, extraHttpRequestParams?: any): Observable<QuantLabComparisonReport>;
+
+    /**
+     * Read exact bound drawdown points for independent phase
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiment-batches/{id}/results/{candidateId}/drawdown
+     * @param id 
+     * @param candidateId 
+     * @param phase Required; fold required for training/validation/test, forbidden for holdout.
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param fold 
+     */
+    getQuantLabDrawdown(id: string, candidateId: string, phase: QuantLabPhase, cursor?: string, limit?: number, fold?: number, extraHttpRequestParams?: any): Observable<QuantLabDrawdownPage>;
+
+    /**
+     * Read exact bound equity points for independent phase
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiment-batches/{id}/results/{candidateId}/equity
+     * @param id 
+     * @param candidateId 
+     * @param phase Required; fold required for training/validation/test, forbidden for holdout.
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param fold 
+     */
+    getQuantLabEquity(id: string, candidateId: string, phase: QuantLabPhase, cursor?: string, limit?: number, fold?: number, extraHttpRequestParams?: any): Observable<QuantLabEquityPage>;
+
+    /**
+     * Read exact experiment revision
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation. cursor/limit paginate researchHistory.overlaps in the bound registry snapshot, including before simulation/report publication. No overlaps are silently omitted; nextOverlapCursor continues the same immutable registryHash and resource binding.
+     * @endpoint get /api/v1/research/experiments/{id}
+     * @param id 
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param validationId Optional persisted validation ID for this exact definition revision. Returns its frozen researchHistory overlap projection, paginated with cursor/limit and bound to validationHash plus registryHash. Omitted reads the current stored definition view. Does not alter definition content/hash. Missing/foreign validation &#x3D;&gt;404.
+     */
+    getQuantLabExperiment(id: string, cursor?: string, limit?: number, validationId?: string, extraHttpRequestParams?: any): Observable<QuantLabExperimentDefinition>;
+
+    /**
+     * Read durable progress and manifest references
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation. cursor/limit paginate researchHistory.overlaps in the bound registry snapshot, including before simulation/report publication. No overlaps are silently omitted; nextOverlapCursor continues the same immutable registryHash and resource binding.
+     * @endpoint get /api/v1/research/experiment-batches/{id}
+     * @param id 
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     */
+    getQuantLabExperimentBatch(id: string, cursor?: string, limit?: number, extraHttpRequestParams?: any): Observable<QuantLabBatch>;
+
+    /**
+     * Read enriched immutable QSL strategy catalog
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/strategies
+     */
+    getQuantLabStrategies(extraHttpRequestParams?: any): Observable<QuantLabStrategyCatalog>;
 
     /**
      * Dauerhafte Diagnose und unveränderlichen Bericht mit separaten aktuellen Warnungen lesen
@@ -106,6 +204,48 @@ export interface ResearchServiceInterface {
     listCollectionPlans(extraHttpRequestParams?: any): Observable<CollectionPlanPage>;
 
     /**
+     * List candidates and separate fixed references
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiment-batches/{id}/candidates
+     * @param id 
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     */
+    listQuantLabCandidates(id: string, cursor?: string, limit?: number, extraHttpRequestParams?: any): Observable<QuantLabCandidatePage>;
+
+    /**
+     * List batches for experiment revision
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiments/{id}/batches
+     * @param id 
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     */
+    listQuantLabExperimentBatches(id: string, cursor?: string, limit?: number, extraHttpRequestParams?: any): Observable<QuantLabBatchPage>;
+
+    /**
+     * List immutable experiment revisions
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiments
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     */
+    listQuantLabExperiments(cursor?: string, limit?: number, extraHttpRequestParams?: any): Observable<QuantLabExperimentPage>;
+
+    /**
+     * Read phase-separated candidate/reference evidence
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint get /api/v1/research/experiment-batches/{id}/results
+     * @param id 
+     * @param cursor Authenticated opaque cursor bound to operation/resource/hash/snapshot/filters/order/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param phase 
+     * @param fold 
+     * @param candidateId 
+     */
+    listQuantLabResults(id: string, cursor?: string, limit?: number, phase?: QuantLabPhase, fold?: number, candidateId?: string, extraHttpRequestParams?: any): Observable<QuantLabResultPage>;
+
+    /**
      * Stabile begrenzte berichtsgebundene Befundseiten lesen
      * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. Stabile Reihenfolge nach Fold, Bereich, Beginn, Kategorie und ID. Der Cursor-HMAC bindet Diagnose, unveränderlichen reportHash, Snapshot-/Vertrauensversionen, Kategorie und Ablaufzeit. Geänderte Filter, Manipulation oder Ablauf ergeben 400 CURSOR_INVALID. Unbekannte Diagnose ergibt 404; noch nicht atomar veröffentlichter Bericht 409 REPORT_NOT_READY. Seitenwiederholung bleibt auch bei späteren Writes und Widerrufen stabil.
      * @endpoint get /api/v1/research/data-readiness/assessments/{assessmentId}/findings
@@ -150,6 +290,16 @@ export interface ResearchServiceInterface {
     listResearchSources(extraHttpRequestParams?: any): Observable<ResearchSourceCatalog>;
 
     /**
+     * Explicitly admit batch for exact definition version
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint post /api/v1/research/experiments/{id}/batches
+     * @param id 
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param quantLabBatchStartRequest 
+     */
+    startQuantLabExperimentBatch(id: string, idempotencyKey: string, quantLabBatchStartRequest: QuantLabBatchStartRequest, extraHttpRequestParams?: any): Observable<QuantLabBatch>;
+
+    /**
      * Sammlungswunsch mit Versionsvergleich und idempotenter Wiederholung speichern
      * RDR-01-Vertrag; die Runtime folgt in späteren Tasks. REQ-RDR-001/002/005/007/008, REQ-HMD-009/010; T-RDR-004/009/010/013/016/017, T-HMD-019/020/021/022. LocalSession authentifiziert vor jedem Datenzugriff; bestehende Prüfungen von vertrauenswürdigem Origin und CSRF erfolgen vor Writes und Seiteneffekten. HTTPkörper und Antworten höchstens 16MiB; unbekannte Felder und nichtkanonische UTC-/Decimalwerte werden abgewiesen. Diagnose löst weder echten Providerabruf noch Simulation oder Handelsaktivierung aus. Der Offlineimport besitzt absichtlich keinen HTTPupload. REQ-HMD-007/008; T-HMD-016/017/018. Fehlerhafte Instrument-UUID ergibt 400; gültige fremde UUID 404. Gleicher Akteur, Operation, Instrument, Schlüssel und Nutzlast liefern das ursprüngliche Ergebnis VOR dem Vergleich von expectedVersion. Andere Nutzlast zum selben Schlüssel oder veraltete expectedVersion ergeben 409 mit getrennten Codes IDEMPOTENCY_CONFLICT und VERSION_CONFLICT. PUT erhöht persistierte Version und Generation atomar. enabled&#x3D;true bewahrt den Wunsch bei fehlenden globalen oder Quellengates sichtbar als BLOCKED und aktiviert diese Gates niemals. enabled&#x3D;false committet vor Bestätigung dieselbe Planlock-Dispatchbarriere; outstandingStartedDispatches zählt bereits zugelassene Abrufe mit committetem STARTED-Receipt einschließlich erst danach beginnender Socketübertragung. Nach Pausencommit entsteht keine neue Zulassung der pausierten Generation. Bereits zugelassene Antworten dürfen mit tatsächlichen Zeiten persistieren. Kein Retry verwendet einen Receipt erneut; kein Datenbanklock während I/O.
      * @endpoint put /api/v1/research/collection/plans/{instrumentId}
@@ -158,5 +308,15 @@ export interface ResearchServiceInterface {
      * @param collectionPlanUpdate 
      */
     updateCollectionPlan(instrumentId: string, idempotencyKey: string, collectionPlanUpdate: CollectionPlanUpdate, extraHttpRequestParams?: any): Observable<CollectionPlan>;
+
+    /**
+     * Persist definition validation and resource estimate
+     * QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON content type and existing CSRF protection before persistence. Unknown keys/malformed syntax&#x3D;&gt;400; invalid semantic protocol/parameters/policy&#x3D;&gt;422; exact version/state or operation/definition-scoped idempotency conflict&#x3D;&gt;409; admission limit&#x3D;&gt;429; unavailable dependency&#x3D;&gt;503. Data blockers persist BLOCKED/reasons. No trading permission, provider/broker access, model fitting or dispatch activation.
+     * @endpoint post /api/v1/research/experiments/{id}/validations
+     * @param id 
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param quantLabValidationRequest 
+     */
+    validateQuantLabExperiment(id: string, idempotencyKey: string, quantLabValidationRequest: QuantLabValidationRequest, extraHttpRequestParams?: any): Observable<QuantLabValidation>;
 
 }

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "investedBarCount": {
+    "schemaVersion": "quant-lab-v1",
+    "value": 2,
+    "status": "VALID",
+    "reasonCode": null,
+    "observationCount": 5,
+    "frequency": "PHASE",
+    "methodVersion": "quant-metrics-v1",
+    "limitations": [
+      "PRICE_ONLY",
+      "IEX_PARTIAL_MARKET",
+      "NO_STATISTICAL_GUARANTEE",
+      "NO_TRADING_AUTHORIZATION",
+      "EXTERNAL_KNOWLEDGE_UNKNOWN"
+    ]
+  },
+  "equityBarCount": {
+    "schemaVersion": "quant-lab-v1",
+    "value": 5,
+    "status": "VALID",
+    "reasonCode": null,
+    "observationCount": 5,
+    "frequency": "PHASE",
+    "methodVersion": "quant-metrics-v1",
+    "limitations": [
+      "PRICE_ONLY",
+      "IEX_PARTIAL_MARKET",
+      "NO_STATISTICAL_GUARANTEE",
+      "NO_TRADING_AUTHORIZATION",
+      "EXTERNAL_KNOWLEDGE_UNKNOWN"
+    ]
+  },
+  "investedBarRatio": {
+    "schemaVersion": "quant-lab-v1",
+    "value": "0.400000000000",
+    "status": "VALID",
+    "reasonCode": null,
+    "observationCount": 5,
+    "frequency": "BAR_CLOSE_15MIN",
+    "methodVersion": "quant-metrics-v1",
+    "limitations": [
+      "PRICE_ONLY",
+      "IEX_PARTIAL_MARKET",
+      "NO_STATISTICAL_GUARANTEE",
+      "NO_TRADING_AUTHORIZATION",
+      "EXTERNAL_KNOWLEDGE_UNKNOWN"
+    ]
+  },
+  "meanGrossExposureRatio": {
+    "schemaVersion": "quant-lab-v1",
+    "value": "0.194736842105",
+    "status": "VALID",
+    "reasonCode": null,
+    "observationCount": 5,
+    "frequency": "BAR_CLOSE_15MIN",
+    "methodVersion": "quant-metrics-v1",
+    "limitations": [
+      "PRICE_ONLY",
+      "IEX_PARTIAL_MARKET",
+      "NO_STATISTICAL_GUARANTEE",
+      "NO_TRADING_AUTHORIZATION",
+      "EXTERNAL_KNOWLEDGE_UNKNOWN"
+    ]
+  },
+  "maxGrossExposureRatio": {
+    "schemaVersion": "quant-lab-v1",
+    "value": "0.500000000000",
+    "status": "VALID",
+    "reasonCode": null,
+    "observationCount": 5,
+    "frequency": "BAR_CLOSE_15MIN",
+    "methodVersion": "quant-metrics-v1",
+    "limitations": [
+      "PRICE_ONLY",
+      "IEX_PARTIAL_MARKET",
+      "NO_STATISTICAL_GUARANTEE",
+      "NO_TRADING_AUTHORIZATION",
+      "EXTERNAL_KNOWLEDGE_UNKNOWN"
+    ]
+  }
+}
