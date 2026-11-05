@@ -82,3 +82,11 @@ Enumfix sowie frische Phasen aller fünf Strategien in beiden Modi: drei gezielt
 Tests bestanden, keine offenen P1/P2 im Paketumfang. Die Legacy-Ergebnishashes
 wurden zusätzlich unabhängig gegen den vorigen Simulator verglichen. Die
 Laufzeiten der Tests sind keine Worker-Budget- oder Lastabnahme.
+
+Implementierungscommit `9b9aba7d285aeb27e5854d3dbd8610e6556573aa` und
+main-Merge `cdfe42c71c22f35a716ac66650af2951068250fe` regulär gepusht,
+beide Remote-SHAs und identische Bäume verifiziert. Anschließend Taskcheckbox
+geschlossen und #80 mit dem autorisierten GH-Fallback synchronisiert:
+ein bestehendes Issue aktualisiert, acht unverändert, neun Read-backs und
+19 native Kanten exakt bestätigt. Separater MCP-Read-back bestätigte #80
+geschlossen und mit dieser Evidenz verknüpft.
