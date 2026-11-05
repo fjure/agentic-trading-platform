@@ -56,6 +56,34 @@ Entwürfe sind sofort persistente unveränderliche Versionen, Änderung POST neu
 
 DBrechte: Control darf enge Request-/Readfunktionen, Worker Research-SELECT und eigene fenced Researchwrites; keine breiten Grants. Alle neuen Inhalte/IDs werden durch DBbindung validiert, nicht bloß im HTTPadapter. Neue Manifest-/Jobvariante verlangt transaktionslokalen QSLversionsmarker in Claim/Publish und DBkompatibilitätsguard; exaktes altes Claim-SQL muss an neuer Variante ohne Sideeffect scheitern. Provisionierungs-/Privilege-Manifest in services/runtime/provision_paper.py erweitern, Altmanifest bleibt erhalten. Alle bereits veröffentlichten Migrationen bleiben bytegleich.
 
+#### Apply refinement 2026-11-05: vertrauenswürdige Registry und Reportbindung
+
+Die direkte SQL-Zulassung benötigt einen geschlossenen, durch Migration
+installierten Strategiekatalog mit ID, Version und tatsächlichem
+Implementierungsfingerprint. Gegenseitig konsistente, vom Aufrufer gelieferte
+JSON-Hashes allein beweisen keine registrierte Implementierung. Keine Control-
+oder Workerrolle darf diesen Katalog registrieren oder verändern.
+
+QSL-03 wird deshalb erst nach dem unabhängig geprüften QSL-04 integriert.
+Die noch unveröffentlichte Migration 0035 installiert genau einmal die finalen
+ausführbaren Fingerprints. QSL-02-Metadaten wurden nicht über die noch fehlende
+QSL-API veröffentlicht oder in produktiven QSL-Experimenten verwendet.
+Es wird weder eine bereits verwendete Version ersetzt noch später eine zweite
+Migration zum Austausch desselben v1-Fingerprints verwendet. Nach Veröffentlichung
+verlangt eine fachliche Implementierungsänderung eine neue Strategieversion;
+abweichende oder unbekannte Versionen bleiben fail-closed.
+
+Bestehende Reliabilityreports sind an retrospektive Einzelassessments gebunden.
+Der bestehende Reportstore wird additiv um eine klar getrennte QSL-FINAL-Variante
+mit Parentbatch-, Childrun-, Phase- und Snapshot-FKs erweitert. Die alte Variante
+und ihre Rechte bleiben erhalten. QSL schreibt ausschließlich unter der bereits
+gehaltenen Parentlease, ohne zusätzliche öffentliche Assessmentqueue. Alle
+Reportbytes und interne Arbeit zählen zum gemeinsamen Batchbudget. Reliability-
+Referenzen müssen echte, zum jeweiligen Batch/Run/Instrument/Modus/Snapshot und
+Phasenbereich gehörende publizierte Reports bezeichnen; freie UUIDs oder Kalender-
+IDs genügen nicht. D7 beschreibt die passende neue Projektion. Einzelheiten und
+Auswirkung auf den Dependencygraph stehen in apply-refinement.md.
+
 ### D5 / ADR-QSL-005 Bounded Grid und Ressourcen
 
 32 ist eine Produktobergrenze für Kandidaten, kein Versprechen für 32 maximale Jahresbacktests. Zwei feste, deduplizierte Referenzrollen flat und buy-hold kommen hinzu. Ein expliziter gleichartiger Suchkandidat bleibt Suchkandidat; seine Auswertung kann nur bei identischen Bindungen gecacht werden. Pro Parameter höchstens32 explizite Werte, höchstens3 Parameter, höchstens32 Strategiedefinitionen. Kein vom Nutzer ausführbarer Rangegenerator. Nach strikter Validierung werden Keys und kanonische Werte sortiert; Kandidaten-ID ist SHA256 aus ID/Version/Parametern. Doppelte kanonische Kandidaten werden abgewiesen. Produktgrößen zunächst per saturierender Multiplikation prüfen, nie riesige Grids materialisieren.
@@ -79,6 +107,56 @@ Bestehendes GET /api/backtests/strategies bleibt unverändert. Neuer angereicher
 Alle neuen DTOs geschlossen, schemaVersion=quant-lab-v1, Decimalstrings und UTC, maxZeichen/Listen, keine ausführbaren Inhalte/URLs; unknown keys abweisen. Additive Pflichtfelder für neue QSL-DTOs: strategySelectionPolicy samt Parametern/hash, fachliche Phasenrolle/fittingStatus, Auswahlstatus/nullbare Kandidaten-ID/Gate- und Rankingbegründungen, Forschungsrunden-/Wiederverwendungsstand, Aktivitäts-/Expositionsmetriken mit Status und limitations. NO_ELIGIBLE_CANDIDATE, NOT_EVALUATED_NO_SELECTION und NO_SELECTED_CANDIDATE explizit als verschiedene Fachzustände modellieren. Alte DTOs/Datenselektionsfelder unverändert. Kanonischer Vertrag wird erst QSL-01 in Apply geändert, Generator nie manuell. Authenticated LocalSession und bestehende Same-Origin/CSRFgrenzen für alle Writes; Idempotenz scoped nach Operation/Definitionversion, Konflikt409. Invalid syntax400, auth401/403, invalid semantics422, version/state409, admission429, unavailable503; Datenblocker sind gespeicherte BLOCKED-Fachzustände mit Reason Codes. Vertrag spezifiziert diese Fälle und echte Relay-/Routenimplementierung vollständig, keine Stubs.
 
 Materialkatalog, Builder und Experimentübersicht ergänzen bestehende Researchnavigation. Builder zeigt vor Start Modus (Strict voreingestellt), konkrete Kandidatenzahl, Zeitrollen, Gebühren, Ressourcenabschätzung und aktuelle Datenwarnungen. Validierung ist keine PIT-Freigabe. Start verlangt gültige unveränderte Definition; Formularänderung erzeugt neue Version/Validierung. Status nennt vollständige/fehlgeschlagene/blockierte/nicht ausgewertete Kandidaten und Phasefortschritt. Detail bietet Equity-/Drawdownkurven je Phase/Fold, Metriktabelle, Sensitivität aus Validation, Foldübersicht, Auswahlregel/Referenzen, Expositionswarnung und Reliability. Kein Profitfarbcode für Datenqualität, kein Promotionbutton. Alle mathematischen Ableitungen kommen aus API. Reload über IDs, kein LocalStorage sensibler Inhalte; Sessionverlust beendet Polling/Dialogrequests, leert Caches und ignoriert spätere Responses mittels Sessiongeneration.
+
+#### Apply refinement 2026-11-05: getrennte QSL-Reliabilityprojektion
+
+Die bisherige Verweisung auf unveränderte Legacy-GET-Run/Reportantworten reicht
+nicht: deren geschlossene Strategieunions beziehungsweise
+BacktestReliabilityReportV1 erlauben keine neuen QSL-Strategien oder Strict-PIT-
+Reliability. Diese alten Typen werden nicht erweitert oder umgedeutet.
+
+Additiv ist GET
+`/api/research/experiment-batches/{id}/reliability-reports/{reportId}` vorgesehen
+(kanonisch weiterhin mit `/api/v1`), Operation getQuantLabReliabilityReport.
+Er liefert eine geschlossene quant-lab-v1-Projektion desselben bestehenden
+Reportdatensatzes, keinen zweiten Reportstore oder duplizierten Resultatpayload.
+Die bestehende Quant-Ergebnisprojektion referenziert unverändert die tatsächliche
+Childrun-ID; neue QSL-Childruns werden nicht fälschlich als über enge alte Run-DTOs
+darstellbar ausgegeben. Der Legacy-Reportabruf liefert ausschließlich alte
+Reportvarianten.
+
+Die neue Projektion bindet Batch/Run/Kandidat und Referenzrolle, Phase/Fold und
+Forschungsrolle, Mode/Datenselektionspolicy, Snapshot/Protokoll/Policyhash,
+Report-ID/-hash und Methodenversion. Qualitative Dimensionen und Befunde bleiben
+vom Ergebnis und von Handelsberechtigung getrennt. Nur tatsächlich vollständige
+Strict-Evidenz darf STRICT_PIT_EVIDENCE_COMPLETE und für die gebundenen
+Entscheidungscutoffs verifizierte Verfügbarkeit ausweisen. Retrospektive Berichte
+bleiben EXPLORATORY_WITH_LIMITATIONS und NOT_PROVEN; BLOCKED/INCOMPLETE sind
+explizit. Kein Modewechsel, kein Qualitäts- oder Profitabilitätsscore.
+
+Die neue Achse heißt `evidenceStatus`. Die bestehende Quant-Referenz behält ihre
+Eligibilityunion unverändert: EXPLORATORY_WITH_LIMITATIONS bedeutet auswertbare,
+wissenschaftlich weiterhin begrenzte Forschung, BLOCKED fehlende Zulässigkeit.
+Der neue Report nutzt dieselbe Bedeutung für overallStatus. Bei vollständigem
+Strict-Nachweis gilt evidenceStatus=STRICT_PIT_EVIDENCE_COMPLETE,
+overallStatus=EXPLORATORY_WITH_LIMITATIONS und rating=PASS, weiterhin ausdrücklich
+researchMode=STRICT_PIT. INCOMPLETE und BLOCKED bleiben auf der Evidenzachse
+unterscheidbar und insgesamt gesperrt. Retrospective erhält niemals den Strict-
+Evidenzstatus. So wird kein Modus umgedeutet und keine bestehende Responseunion
+für bereits kontraktierte QSL-Operationen erweitert.
+
+Der fachliche reportHash bindet das kanonische Objekt aus report (ohne dessen
+reportHash und die operativen reportId/batchId/runId), findings und
+revisionReferences. Der bestehende physische Storefingerprint bindet weiterhin
+den vollständigen Publikationsenvelope einschließlich IDs. Beide Bindungen
+werden serverseitig geprüft; die öffentliche Referenz nutzt den fachlichen Hash.
+
+`section=FINDINGS|REVISION_REFERENCES`, limit (1..200, Standard20) und ein an
+Batch/Report/Sektion gebundener Cursor paginieren Befunde und Revisionsreferenzen.
+Alle bestehenden Auth-/Origin-, Fehler- und Budgetregeln gelten. Die Operation
+bleibt bis QSL-07 ausdrücklich nicht implementiert. Damit umfasst D7 fünfzehn
+additive QSL-Operationen. Die zusätzlichen Contract-/Client-/Beispielprüfungen
+gehören zu QSL-03; HTTP-/Workerwiring bleibt QSL-07, Darstellung QSL-08.
 
 ## Risks / Trade-offs
 

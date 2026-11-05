@@ -21,6 +21,7 @@ BASE = "/api/v1/research"
 EXPERIMENTS = BASE + "/experiments"
 BATCHES = BASE + "/experiment-batches/{id}"
 D7 = {
+    "getQuantLabReliabilityReport": (BATCHES + "/reliability-reports/{reportId}", "get", "200"),
     "getQuantLabStrategies": (BASE + "/strategies", "get", "200"),
     "createQuantLabExperiment": (EXPERIMENTS, "post", "201"),
     "listQuantLabExperiments": (EXPERIMENTS, "get", "200"),
@@ -39,6 +40,7 @@ D7 = {
 PAGED = {
     "listQuantLabExperiments", "listQuantLabExperimentBatches", "listQuantLabCandidates",
     "listQuantLabResults", "getQuantLabEquity", "getQuantLabDrawdown",
+    "getQuantLabReliabilityReport",
 }
 
 
@@ -79,7 +81,7 @@ def test_d7_has_exact_methods_paths_and_success_codes():
         assert (declared_path, declared_method) == (path, method), identifier
         assert {status for status in operation["responses"] if status.startswith("2")} == {success}
         assert "application/json" in operation["responses"][success]["content"]
-        for key in ("id", "candidateId"):
+        for key in ("id", "candidateId", "reportId"):
             if "{" + key + "}" in path:
                 param = parameters(operation)[key]
                 assert param["in"] == "path" and param["required"] is True
@@ -172,3 +174,18 @@ def test_existing_legacy_http_paths_are_unchanged():
         json.dumps(legacy, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
     ).hexdigest()
     assert digest == "5f5f89b5f94554904a8fed004d419c6722a16582475b4e1f5ebd3c6a96a70301"
+
+
+def test_quant_reliability_read_has_bound_section_and_report_parameters():
+    operation = operations()["getQuantLabReliabilityReport"][2]
+    params = parameters(operation)
+    assert params["reportId"]["in"] == "path"
+    assert params["reportId"]["required"] is True
+    section = params["section"]["schema"]
+    assert section["enum"] == ["FINDINGS", "REVISION_REFERENCES"]
+    assert section["default"] == "FINDINGS"
+    assert params["limit"]["schema"]["default"] == 20
+    assert "batch/report/hash/section/session" in params["cursor"]["description"]
+    assert operation["responses"]["200"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/QuantLabReliabilityReportPage"
+    }

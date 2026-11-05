@@ -28,6 +28,7 @@ import { QuantLabExperimentDefinition } from '../model/models';
 import { QuantLabExperimentPage } from '../model/models';
 import { QuantLabPhase } from '../model/models';
 import { QuantLabProblem } from '../model/models';
+import { QuantLabReliabilityReportPage } from '../model/models';
 import { QuantLabResultPage } from '../model/models';
 import { QuantLabStrategyCatalog } from '../model/models';
 import { QuantLabValidation } from '../model/models';
@@ -147,6 +148,18 @@ export interface ResearchServiceInterface {
      * @param limit 
      */
     getQuantLabExperimentBatch(id: string, cursor?: string, limit?: number, extraHttpRequestParams?: any): Observable<QuantLabBatch>;
+
+    /**
+     * Read a bound Quant Lab reliability report projection
+     * QSL-03 contract only; unavailable until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin read boundaries. The immutable report must belong to this batch, run, candidate and phase. Foreign report&#x3D;&gt;404; unavailable publication&#x3D;&gt;409 REPORT_NOT_READY. Cursor binds batch/report/hash/section/session; malformed, foreign or expired cursor&#x3D;&gt;400 CURSOR_INVALID. Qualitative evidence grants no trading permission.
+     * @endpoint get /api/v1/research/experiment-batches/{id}/reliability-reports/{reportId}
+     * @param id 
+     * @param reportId 
+     * @param cursor Authenticated opaque cursor bound to batch/report/hash/section/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param section 
+     */
+    getQuantLabReliabilityReport(id: string, reportId: string, cursor?: string, limit?: number, section?: 'FINDINGS' | 'REVISION_REFERENCES', extraHttpRequestParams?: any): Observable<QuantLabReliabilityReportPage>;
 
     /**
      * Read enriched immutable QSL strategy catalog

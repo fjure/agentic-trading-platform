@@ -1,5 +1,12 @@
 # Definition of Ready
 
+Apply-Refinement 05.11.2026: D4/D7 und apply-refinement.md schließen zwei im
+Apply belegte Integrationslücken. QSL-03 integriert erst nach QSL-04 finale
+SQL-Registrypins und ergänzt eine QSL-eigene Reliabilityprojektion im bestehenden
+Store. Neun Issues, 19 azyklische Kanten, unveränderte 16 Requirements und 21
+Szenarien. Prüfung/Issue-Read-back des Refinements werden gesondert protokolliert;
+die folgende ursprüngliche Planungsprüfung bleibt historischer Nachweis.
+
 Planungscheck30.10.2026 nach fachlichem Refinement. Erfüllung erlaubt einen gesonderten Applyauftrag, erteilt ihn jedoch nicht.
 
 | Kriterium | Nachweis |

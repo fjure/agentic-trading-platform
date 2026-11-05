@@ -437,7 +437,8 @@
         "reportId": "44444444-4444-4444-8444-444444444444",
         "reportHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "eligibility": "EXPLORATORY_WITH_LIMITATIONS",
-        "rating": "LIMITED"
+        "rating": "LIMITED",
+        "evidenceStatus": "EXPLORATORY_WITH_LIMITATIONS"
       },
       "reasonCodes": [],
       "limitations": [

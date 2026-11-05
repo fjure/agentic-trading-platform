@@ -8206,6 +8206,189 @@ paths:
               uniqueItems: true
         style: form
         explode: true
+  /api/v1/research/experiment-batches/{id}/reliability-reports/{reportId}:
+    get:
+      tags:
+      - Research
+      operationId: getQuantLabReliabilityReport
+      summary: Read a bound Quant Lab reliability report projection
+      security:
+      - LocalSession: []
+      x-runtime-available: false
+      x-runtime-implementation-task: QSL-07
+      x-requirements:
+      - REQ-QCO-003
+      - REQ-QEX-002
+      - REQ-QEX-006
+      x-tests:
+      - T-QCO-003
+      description: QSL-03 contract only; unavailable until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin
+        read boundaries. The immutable report must belong to this batch, run, candidate and phase. Foreign report=>404;
+        unavailable publication=>409 REPORT_NOT_READY. Cursor binds batch/report/hash/section/session; malformed,
+        foreign or expired cursor=>400 CURSOR_INVALID. Qualitative evidence grants no trading permission.
+      responses:
+        '200':
+          description: Read a bound Quant Lab reliability report projection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuantLabReliabilityReportPage'
+        '400':
+          description: INVALID_REQUEST, CURSOR_INVALID
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/QuantLabProblem'
+              examples:
+                invalid_request:
+                  value:
+                    schemaVersion: quant-lab-v1
+                    type: urn:agentic-trading-lab:quant-lab-problem
+                    title: Research request failed
+                    status: 400
+                    code: INVALID_REQUEST
+                    traceId: cccccccccccccccccccccccccccccccc
+                cursor_invalid:
+                  value:
+                    schemaVersion: quant-lab-v1
+                    type: urn:agentic-trading-lab:quant-lab-problem
+                    title: Research request failed
+                    status: 400
+                    code: CURSOR_INVALID
+                    traceId: cccccccccccccccccccccccccccccccc
+        '401':
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/QuantLabProblem'
+              examples:
+                unauthorized:
+                  value:
+                    schemaVersion: quant-lab-v1
+                    type: urn:agentic-trading-lab:quant-lab-problem
+                    title: Research request failed
+                    status: 401
+                    code: UNAUTHORIZED
+                    traceId: cccccccccccccccccccccccccccccccc
+        '403':
+          description: FORBIDDEN
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/QuantLabProblem'
+              examples:
+                forbidden:
+                  value:
+                    schemaVersion: quant-lab-v1
+                    type: urn:agentic-trading-lab:quant-lab-problem
+                    title: Research request failed
+                    status: 403
+                    code: FORBIDDEN
+                    traceId: cccccccccccccccccccccccccccccccc
+        '404':
+          description: NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/QuantLabProblem'
+              examples:
+                not_found:
+                  value:
+                    schemaVersion: quant-lab-v1
+                    type: urn:agentic-trading-lab:quant-lab-problem
+                    title: Research request failed
+                    status: 404
+                    code: NOT_FOUND
+                    traceId: cccccccccccccccccccccccccccccccc
+        '409':
+          description: STATE_CONFLICT, REPORT_NOT_READY, VERSION_UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/QuantLabProblem'
+              examples:
+                state_conflict:
+                  value:
+                    schemaVersion: quant-lab-v1
+                    type: urn:agentic-trading-lab:quant-lab-problem
+                    title: Research request failed
+                    status: 409
+                    code: STATE_CONFLICT
+                    traceId: cccccccccccccccccccccccccccccccc
+                report_not_ready:
+                  value:
+                    schemaVersion: quant-lab-v1
+                    type: urn:agentic-trading-lab:quant-lab-problem
+                    title: Research request failed
+                    status: 409
+                    code: REPORT_NOT_READY
+                    traceId: cccccccccccccccccccccccccccccccc
+                version_unavailable:
+                  value:
+                    schemaVersion: quant-lab-v1
+                    type: urn:agentic-trading-lab:quant-lab-problem
+                    title: Research request failed
+                    status: 409
+                    code: VERSION_UNAVAILABLE
+                    traceId: cccccccccccccccccccccccccccccccc
+        '503':
+          description: UNAVAILABLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/QuantLabProblem'
+              examples:
+                unavailable:
+                  value:
+                    schemaVersion: quant-lab-v1
+                    type: urn:agentic-trading-lab:quant-lab-problem
+                    title: Research request failed
+                    status: 503
+                    code: UNAVAILABLE
+                    traceId: cccccccccccccccccccccccccccccccc
+          headers:
+            Retry-After:
+              description: Conservative seconds; no trading permission.
+              schema:
+                type: integer
+                minimum: 1
+                maximum: 300
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/BacktestId'
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/QuantLabCursor'
+        description: Authenticated opaque cursor bound to batch/report/hash/section/session. Foreign/expired/tampered=>400
+          CURSOR_INVALID.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 20
+      - name: reportId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/BacktestId'
+      - name: section
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - FINDINGS
+          - REVISION_REFERENCES
+          default: FINDINGS
 components:
   securitySchemes:
     LocalSession:
@@ -21591,6 +21774,7 @@ components:
       - reportHash
       - eligibility
       - rating
+      - evidenceStatus
       properties:
         runId:
           $ref: '#/components/schemas/BacktestId'
@@ -21602,8 +21786,61 @@ components:
           $ref: '#/components/schemas/BacktestReliabilityEligibility'
         rating:
           $ref: '#/components/schemas/BacktestReliabilityRating'
-      description: Reuse existing GET research/backtests/runs/{runId} and reliability-reports/{reportId}, no duplicate
-        result payload.
+        evidenceStatus:
+          $ref: '#/components/schemas/QuantLabReliabilityEvidenceStatus'
+      description: References getQuantLabReliabilityReport under its owning experiment batch and the Quant Lab result
+        resource. Childrun ID is an immutable execution reference; new QSL strategies/modes are not representable by
+        legacy run/report DTOs. No duplicated result payload. Eligibility describes computability under exploratory
+        research limitations, never PIT evidence or trading permission; evidenceStatus independently describes PIT/data
+        evidence.
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                evidenceStatus:
+                  type: string
+                  enum:
+                  - STRICT_PIT_EVIDENCE_COMPLETE
+                  - EXPLORATORY_WITH_LIMITATIONS
+              additionalProperties: true
+            then:
+              properties:
+                eligibility:
+                  type: string
+                  const: EXPLORATORY_WITH_LIMITATIONS
+              additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                evidenceStatus:
+                  type: string
+                  enum:
+                  - BLOCKED
+                  - INCOMPLETE
+              additionalProperties: true
+            then:
+              properties:
+                eligibility:
+                  type: string
+                  const: BLOCKED
+              additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                evidenceStatus:
+                  type: string
+                  enum:
+                  - STRICT_PIT_EVIDENCE_COMPLETE
+              additionalProperties: true
+            then:
+              properties:
+                rating:
+                  type: string
+                  const: PASS
+              additionalProperties: true
     QuantLabCandidateResult:
       type: object
       additionalProperties: false
@@ -22670,3 +22907,440 @@ components:
       description: 'Componentwise Decimal38 validation medians, without output quantization. Even fold counts use (lower+upper)/2.
         No invented median entry/session counts: activity/session eligibility is checked as exact integers in every
         validation fold.'
+    QuantLabReliabilityEvidenceStatus:
+      type: string
+      enum:
+      - STRICT_PIT_EVIDENCE_COMPLETE
+      - EXPLORATORY_WITH_LIMITATIONS
+      - BLOCKED
+      - INCOMPLETE
+    QuantLabReliabilityMethods:
+      type: object
+      additionalProperties: false
+      required:
+      - manifestHash
+      - protocol
+      - experimentVersion
+      - simulatorVersion
+      - metricsVersion
+      - codeVersion
+      - qualityPolicyVersion
+      properties:
+        manifestHash:
+          $ref: '#/components/schemas/BacktestHash'
+        protocol:
+          $ref: '#/components/schemas/QuantLabProtocol'
+        experimentVersion:
+          type: string
+          const: quant-experiment-v1
+        simulatorVersion:
+          type: string
+          minLength: 1
+          maxLength: 64
+        metricsVersion:
+          type: string
+          const: quant-metrics-v1
+        codeVersion:
+          type: string
+          pattern: ^[0-9a-f]{40}$(?![\s\S])
+        qualityPolicyVersion:
+          type: string
+          const: quant-reliability-v1
+    QuantLabReliabilityReport:
+      type: object
+      additionalProperties: false
+      required:
+      - schemaVersion
+      - version
+      - reportId
+      - reportHash
+      - batchId
+      - runId
+      - candidateId
+      - instrumentId
+      - role
+      - phase
+      - fold
+      - phaseRole
+      - researchMode
+      - dataSelectionPolicyVersion
+      - snapshotReference
+      - protocolHash
+      - strategySelectionPolicyHash
+      - overallStatus
+      - rating
+      - dimensions
+      - historicalAvailabilityStatus
+      - methods
+      - resultLimitations
+      - findingsCount
+      - revisionReferenceCount
+      - evidenceStatus
+      properties:
+        schemaVersion:
+          type: string
+          const: quant-lab-v1
+        version:
+          type: string
+          const: quant-reliability-report-v1
+        reportId:
+          $ref: '#/components/schemas/BacktestId'
+        reportHash:
+          $ref: '#/components/schemas/BacktestHash'
+        batchId:
+          $ref: '#/components/schemas/BacktestId'
+        runId:
+          $ref: '#/components/schemas/BacktestId'
+        candidateId:
+          $ref: '#/components/schemas/BacktestHash'
+        instrumentId:
+          $ref: '#/components/schemas/BacktestId'
+        role:
+          type: string
+          enum:
+          - SEARCH_CANDIDATE
+          - REFERENCE_FLAT
+          - REFERENCE_BUY_HOLD
+        phase:
+          $ref: '#/components/schemas/QuantLabPhase'
+        fold:
+          oneOf:
+          - type: integer
+            minimum: 0
+            maximum: 3
+          - type: 'null'
+        phaseRole:
+          $ref: '#/components/schemas/QuantLabResearchRole'
+        researchMode:
+          $ref: '#/components/schemas/BacktestResearchMode'
+        dataSelectionPolicyVersion:
+          type: string
+          enum:
+          - strict-pit-v1
+          - retrospective-v1
+        snapshotReference:
+          $ref: '#/components/schemas/BacktestSnapshotReference'
+        protocolHash:
+          $ref: '#/components/schemas/BacktestHash'
+        strategySelectionPolicyHash:
+          $ref: '#/components/schemas/BacktestHash'
+        overallStatus:
+          $ref: '#/components/schemas/BacktestReliabilityEligibility'
+        rating:
+          $ref: '#/components/schemas/BacktestReliabilityRating'
+        dimensions:
+          $ref: '#/components/schemas/BacktestReliabilityDimensions'
+        historicalAvailabilityStatus:
+          type: string
+          enum:
+          - NOT_PROVEN
+          - VERIFIED_FOR_DECISION_CUTOFFS
+        methods:
+          $ref: '#/components/schemas/QuantLabReliabilityMethods'
+        resultLimitations:
+          type: array
+          minItems: 1
+          maxItems: 7
+          items:
+            $ref: '#/components/schemas/BacktestResultLimitation'
+          not:
+            not:
+              uniqueItems: true
+              contains:
+                const: NO_TRADING_AUTHORIZATION
+        findingsCount:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        revisionReferenceCount:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        evidenceStatus:
+          $ref: '#/components/schemas/QuantLabReliabilityEvidenceStatus'
+      description: 'QSL-FINAL projection of the existing immutable report store, never an execution permission or quality/profit
+        score. SQL validates exact published batch/run/candidate/role/instrument/mode/snapshot/protocol/phase bindings.
+        Canonical reportHash is SHA256 of {report: metadata excluding reportHash/reportId/batchId/runId, findings: complete
+        ordered findings, revisionReferences: complete ordered references}; the physical store fingerprint separately
+        binds IDs. The hash is injected on read. Strict completeness requires verified availability at every bound decision
+        cutoff and PASS historical-availability evidence. Current warnings are excluded from historical report bytes.
+        overallStatus retains exploratory computability semantics independently of evidenceStatus: complete Strict PIT
+        evidence remains EXPLORATORY_WITH_LIMITATIONS, while BLOCKED or INCOMPLETE evidence is BLOCKED. Strict evidence
+        is not scientific validation or trading authorization.'
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                researchMode:
+                  type: string
+                  const: STRICT_PIT
+              additionalProperties: true
+            then:
+              properties:
+                dataSelectionPolicyVersion:
+                  type: string
+                  const: strict-pit-v1
+                evidenceStatus:
+                  enum:
+                  - STRICT_PIT_EVIDENCE_COMPLETE
+                  - BLOCKED
+                  - INCOMPLETE
+              additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                researchMode:
+                  type: string
+                  const: RETROSPECTIVE_EXPLORATORY
+              additionalProperties: true
+            then:
+              properties:
+                dataSelectionPolicyVersion:
+                  type: string
+                  const: retrospective-v1
+                historicalAvailabilityStatus:
+                  type: string
+                  const: NOT_PROVEN
+                resultLimitations:
+                  allOf:
+                  - contains:
+                      const: NOT_STRICT_PIT
+                  - contains:
+                      const: EX_POST_REVISIONS
+                evidenceStatus:
+                  enum:
+                  - EXPLORATORY_WITH_LIMITATIONS
+                  - BLOCKED
+                  - INCOMPLETE
+              additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                evidenceStatus:
+                  type: string
+                  const: STRICT_PIT_EVIDENCE_COMPLETE
+              additionalProperties: true
+            then:
+              properties:
+                researchMode:
+                  type: string
+                  const: STRICT_PIT
+                historicalAvailabilityStatus:
+                  type: string
+                  const: VERIFIED_FOR_DECISION_CUTOFFS
+                dimensions:
+                  properties:
+                    HISTORICAL_AVAILABILITY:
+                      properties:
+                        rating:
+                          type: string
+                          const: PASS
+                      additionalProperties: true
+                  additionalProperties: true
+                resultLimitations:
+                  items:
+                    not:
+                      enum:
+                      - NOT_STRICT_PIT
+                      - EX_POST_REVISIONS
+              additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                historicalAvailabilityStatus:
+                  type: string
+                  const: VERIFIED_FOR_DECISION_CUTOFFS
+              additionalProperties: true
+            then:
+              properties:
+                evidenceStatus:
+                  type: string
+                  const: STRICT_PIT_EVIDENCE_COMPLETE
+              additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                phase:
+                  type: string
+                  const: training
+              additionalProperties: true
+            then:
+              properties:
+                phaseRole:
+                  type: string
+                  const: IN_SAMPLE_ANALYSIS
+                fold:
+                  type: integer
+                  minimum: 0
+                  maximum: 3
+              additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                phase:
+                  type: string
+                  const: validation
+              additionalProperties: true
+            then:
+              properties:
+                phaseRole:
+                  type: string
+                  const: PARAMETER_SELECTION
+                fold:
+                  type: integer
+                  minimum: 0
+                  maximum: 3
+              additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                phase:
+                  type: string
+                  const: test
+              additionalProperties: true
+            then:
+              properties:
+                phaseRole:
+                  type: string
+                  const: WALK_FORWARD_OOS
+                fold:
+                  type: integer
+                  minimum: 0
+                  maximum: 3
+              additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                phase:
+                  type: string
+                  const: holdout
+              additionalProperties: true
+            then:
+              properties:
+                phaseRole:
+                  type: string
+                  const: FINAL_HOLDOUT
+                fold:
+                  type: 'null'
+              additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                evidenceStatus:
+                  enum:
+                  - STRICT_PIT_EVIDENCE_COMPLETE
+                  - EXPLORATORY_WITH_LIMITATIONS
+              additionalProperties: true
+            then:
+              properties:
+                overallStatus:
+                  type: string
+                  const: EXPLORATORY_WITH_LIMITATIONS
+              additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                evidenceStatus:
+                  enum:
+                  - BLOCKED
+                  - INCOMPLETE
+              additionalProperties: true
+            then:
+              properties:
+                overallStatus:
+                  type: string
+                  const: BLOCKED
+              additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                evidenceStatus:
+                  type: string
+                  const: STRICT_PIT_EVIDENCE_COMPLETE
+              additionalProperties: true
+            then:
+              properties:
+                rating:
+                  type: string
+                  const: PASS
+              additionalProperties: true
+    QuantLabReliabilityReportPage:
+      type: object
+      additionalProperties: false
+      required:
+      - report
+      - section
+      - findings
+      - revisionReferences
+      - nextCursor
+      - currentWarnings
+      properties:
+        report:
+          $ref: '#/components/schemas/QuantLabReliabilityReport'
+        section:
+          type: string
+          enum:
+          - FINDINGS
+          - REVISION_REFERENCES
+        findings:
+          type: array
+          minItems: 0
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/BacktestReliabilityFinding'
+        revisionReferences:
+          type: array
+          minItems: 0
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/BacktestReliabilityReference'
+        nextCursor:
+          oneOf:
+          - $ref: '#/components/schemas/QuantLabCursor'
+          - type: 'null'
+        currentWarnings:
+          type: array
+          minItems: 0
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/BacktestCurrentReliabilityWarning'
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                section:
+                  type: string
+                  const: FINDINGS
+              additionalProperties: true
+            then:
+              properties:
+                revisionReferences:
+                  maxItems: 0
+              additionalProperties: true
+      - not:
+          not:
+            if:
+              properties:
+                section:
+                  type: string
+                  const: REVISION_REFERENCES
+              additionalProperties: true
+            then:
+              properties:
+                findings:
+                  maxItems: 0
+              additionalProperties: true
+      description: Bounded projection of the same report record; cursor binds batch/report/hash/section/session. Only
+        the selected section is populated. No duplicate result payload or report store.

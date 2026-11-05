@@ -8,6 +8,8 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+from issue_graph import validated_task_order
+
 ROOT = Path(__file__).resolve().parents[1]
 REPO = "fjure/agentic-trading-platform"
 CHANGE = "quant-strategy-lab-v1"
@@ -50,10 +52,7 @@ for m in re.finditer(r"^- \[([ x])\] (\d+\.\d+ (QSL-\d{2}) ([^:]+):[^\n]+)$", so
         assert field in line
     tasks.append(dict(id=task, title=f"[{task}] {title}", line=line, deps=deps, done=done == "x"))
 assert [t["id"] for t in tasks] == [f"QSL-{i:02d}" for i in range(1, 10)]
-seen = set()
-for t in tasks:
-    assert set(t["deps"]) <= seen
-    seen.add(t["id"])
+validated_task_order({t["id"]: t["deps"] for t in tasks})
 previous = json.loads(MAPPING.read_text(encoding="utf-8")) if MAPPING.exists() else None
 for task in tasks:
     if task["done"]:
