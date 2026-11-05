@@ -282,10 +282,11 @@ def _create_identities(connection, directory, existing):
 
 def _dormant_privilege_manifest(revisions):
     """Exact reviewed ACLs only; unknown or multiple migration heads fail closed."""
+    quant_revision = revisions == [("0035_quant_lab",)]
     retrospective_revision = (
         revisions[0][0]
         if revisions in ([("0033_retrospective_storage",)], [("0034_retrospective_gate",)])
-        else None
+        else "0034_retrospective_gate" if quant_revision else None
     )
     readiness_revision = (
         revisions[0][0] if revisions in (
@@ -720,6 +721,26 @@ def _dormant_privilege_manifest(revisions):
         expected.update(
             ("function", "backtest." + name, "atl_paper_control_api", "EXECUTE", False)
             for name in ("current_retrospective_gate(uuid)", "has_retrospective_correction(uuid)")
+        )
+    if quant_revision:
+        expected.update(
+            ("relation", "backtest." + name, "atl_paper_control_api", "SELECT", False)
+            for name in (
+                "experiment_definitions", "experiment_validations", "experiment_candidates",
+                "experiment_batches", "experiment_snapshots", "experiment_revision_bindings",
+                "experiment_phase_bindings", "experiment_selections", "experiment_result_links",
+                "experiment_reports", "experiment_events", "test_exposures",
+                "quant_strategy_revisions",
+                "experiment_source_receipts", "experiment_trust_bindings",
+            )
+        )
+        expected.update(
+            ("function", "backtest." + name, "atl_paper_control_api", "EXECUTE", False)
+            for name in (
+                "request_experiment_definition(uuid,text,jsonb,text,text,text,text,jsonb)",
+                "validate_experiment(uuid,jsonb,text,text)",
+                "request_experiment_batch(uuid,uuid,integer,text,uuid,text,text,text,text,text)",
+            )
         )
     return expected
 

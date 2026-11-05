@@ -46,6 +46,7 @@ class BacktestJobs:
         try:
             with self.engine.begin() as connection:
                 connection.execute(text("SET LOCAL statement_timeout='2s'"))
+                connection.execute(text("SET LOCAL backtest.exposure_version='quant-exposure-v1'"))
                 connection.execute(text("SET LOCAL lock_timeout='1s'"))
                 yield connection
         except SQLAlchemyError as error:
@@ -106,7 +107,7 @@ class BacktestJobs:
               UPDATE backtest.runs SET status='FAILED',error_code='BUDGET_EXHAUSTED',
                 owner=NULL,lease_until=NULL,updated_at=clock_timestamp()
               WHERE status='RUNNING' AND lease_until<=clock_timestamp() AND attempts>=3
-                AND research_mode IS NULL
+                AND research_mode IS NULL AND quant_batch_id IS NULL
               RETURNING run_id,fence,trace_id
             """)
                 )
@@ -121,6 +122,8 @@ class BacktestJobs:
               OR EXISTS(SELECT FROM backtest.readiness_jobs WHERE status='RUNNING'
                 AND lease_until>clock_timestamp())
               OR EXISTS(SELECT FROM backtest.retrospective_assessments WHERE status='RUNNING'
+                AND lease_until>clock_timestamp())
+              OR EXISTS(SELECT FROM backtest.experiment_batches WHERE status='RUNNING'
                 AND lease_until>clock_timestamp())""")
             ).scalar_one():
                 return None
@@ -143,7 +146,7 @@ class BacktestJobs:
                 connection.execute(
                     text("""
               WITH candidate AS (SELECT run_id FROM backtest.runs
-                WHERE research_mode IS NULL AND (status='ACCEPTED' OR
+                WHERE research_mode IS NULL AND quant_batch_id IS NULL AND (status='ACCEPTED' OR
                   (status='RUNNING' AND lease_until<=clock_timestamp() AND attempts<3))
                 ORDER BY accepted_at,run_id FOR UPDATE SKIP LOCKED LIMIT 1)
               UPDATE backtest.runs r SET status='RUNNING',owner=:owner,fence=fence+1,

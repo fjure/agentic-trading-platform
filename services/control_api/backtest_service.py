@@ -132,7 +132,8 @@ class BacktestService:
     def _row(connection, run_id):
         row = (
             connection.execute(
-                text("SELECT * FROM backtest.runs WHERE run_id=:id"), {"id": identity(run_id)}
+                text("SELECT * FROM backtest.runs WHERE run_id=:id AND quant_batch_id IS NULL"),
+                {"id": identity(run_id)}
             )
             .mappings()
             .one_or_none()
@@ -335,7 +336,7 @@ class BacktestService:
                 else connection.execute(text("SELECT clock_timestamp()")).scalar_one()
             )
             params = {"snapshot": snapshot, "limit": limit + 1}
-            clauses = ["accepted_at<=:snapshot"]
+            clauses = ["accepted_at<=:snapshot", "quant_batch_id IS NULL"]
             if "status" in filters:
                 clauses.append("status=:status")
                 params["status"] = filters["status"]

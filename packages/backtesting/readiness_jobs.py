@@ -41,6 +41,7 @@ class ReadinessJobs:
                 if repeatable:
                     connection.execute(text("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ"))
                 connection.execute(text("SET LOCAL statement_timeout='2s'"))
+                connection.execute(text("SET LOCAL backtest.exposure_version='quant-exposure-v1'"))
                 connection.execute(text("SET LOCAL lock_timeout='1s'"))
                 yield connection
         except SQLAlchemyError as error:
@@ -131,6 +132,8 @@ class ReadinessJobs:
                   OR EXISTS(SELECT FROM backtest.readiness_jobs WHERE status='RUNNING'
                   AND lease_until>clock_timestamp())
                   OR EXISTS(SELECT FROM backtest.retrospective_assessments WHERE status='RUNNING'
+                  AND lease_until>clock_timestamp())
+                  OR EXISTS(SELECT FROM backtest.experiment_batches WHERE status='RUNNING'
                   AND lease_until>clock_timestamp())
             """)
             ).scalar_one():

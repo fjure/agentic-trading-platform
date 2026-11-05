@@ -77,6 +77,7 @@ class RetrospectiveService:
     @staticmethod
     def _report(connection, assessment_id, run_id=None, *, complete=True):
         clause = "r.run_id=:run" if run_id else "r.assessment_id=:id AND r.phase='PREVIEW'"
+        clause += " AND r.quant_batch_id IS NULL"
         columns = "r.report_id"
         if complete:
             columns += """,r.body,COALESCE((
@@ -263,7 +264,8 @@ class RetrospectiveService:
             report = (
                 connection.execute(
                     text("""SELECT report_id,assessment_id,fingerprint,body
-                      FROM backtest.retrospective_reports WHERE report_id=:id"""),
+                      FROM backtest.retrospective_reports
+                      WHERE report_id=:id AND quant_batch_id IS NULL"""),
                     {"id": identity(report_id)},
                 )
                 .mappings()
@@ -296,7 +298,7 @@ class RetrospectiveService:
                       FROM backtest.retrospective_reports source
                       CROSS JOIN LATERAL jsonb_array_elements(source.findings) f(finding)
                       CROSS JOIN LATERAL jsonb_array_elements(finding->'references') refs(ref)
-                      WHERE source.report_id=:id AND
+                      WHERE source.report_id=:id AND source.quant_batch_id IS NULL AND
                         (CAST(:category AS text) IS NULL OR
                           finding->>'category'=CAST(:category AS text)) AND
                         (CAST(:fold AS integer) IS NULL OR
@@ -309,7 +311,7 @@ class RetrospectiveService:
                     text(f"""{prefix}SELECT item FROM backtest.retrospective_reports r
                 CROSS JOIN LATERAL jsonb_array_elements(r.{column})
                   WITH ORDINALITY page(item,ordinal) {join}
-                WHERE r.report_id=:id AND ({predicate})
+                WHERE r.report_id=:id AND r.quant_batch_id IS NULL AND ({predicate})
                 ORDER BY ordinal LIMIT :limit OFFSET :offset"""),
                     {
                         "id": identity(report_id),

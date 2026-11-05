@@ -631,11 +631,14 @@ class QuantExperimentManifest:
 
     @property
     def manifest_hash(self):
-        return fingerprint((
+        return fingerprint(self.binding())
+
+    def binding(self):
+        return (
             EXPERIMENT_VERSION, self, self.definition.definition_hash,
             self.definition.strategy_selection_policy.binding(), PROTOCOL_VERSION,
             QUANT_WARMUP_VERSION,
-        ))
+        )
 
     @property
     def snapshot_union(self):
@@ -661,3 +664,12 @@ def selection_identity(policy, *, scope, validation_input_hashes, result):
     return fingerprint((
         SELECTION_VERSION, policy.binding(), scope, validation_input_hashes, result
     ))
+
+
+def canonical_manifest_preimage(manifest):
+    """The existing manifest identity preimage for the fenced SQL binding port."""
+    from packages.research.models import _canonical
+
+    if type(manifest) is not QuantExperimentManifest:
+        raise ValueError("typed Quant manifest required")
+    return _canonical(manifest.binding())
