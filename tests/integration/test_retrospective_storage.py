@@ -112,12 +112,17 @@ def guest():
         after = connection.execute(
             text(
                 "SELECT "
-                "to_jsonb(r)-ARRAY['research_mode','selection_policy_version','experiment_version','assessment_id']"
+                "to_jsonb(r)-ARRAY['research_mode','selection_policy_version','experiment_version',"
+                "'assessment_id','quant_batch_id']"
                 " FROM backtest.runs r WHERE run_id=:id"
             ),
             {"id": strict["run_id"]},
         ).scalar_one()
         assert before == after
+        assert connection.execute(
+            text("SELECT quant_batch_id IS NULL FROM backtest.runs WHERE run_id=:id"),
+            {"id": strict["run_id"]},
+        ).scalar_one()
         assert (
             connection.execute(
                 text("SELECT fingerprint FROM backtest.manifests WHERE run_id=:id"),

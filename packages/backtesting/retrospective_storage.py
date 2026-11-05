@@ -97,6 +97,7 @@ class RetrospectiveStorage:
                     connection.execute(text("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ"))
                 connection.execute(text("SET LOCAL TIME ZONE 'UTC'"))
                 connection.execute(text("SET LOCAL statement_timeout='2s'"))
+                connection.execute(text("SET LOCAL backtest.exposure_version='quant-exposure-v1'"))
                 connection.execute(text("SET LOCAL lock_timeout='1s'"))
                 connection.execute(
                     text("SELECT set_config('backtest.policy_version',:policy,true)"),
@@ -366,6 +367,8 @@ class RetrospectiveStorage:
                 OR EXISTS(SELECT FROM backtest.readiness_jobs WHERE status='RUNNING' AND
                   lease_until>clock_timestamp())
                 OR EXISTS(SELECT FROM backtest.retrospective_assessments WHERE status='RUNNING'
+                  AND lease_until>clock_timestamp())
+                OR EXISTS(SELECT FROM backtest.experiment_batches WHERE status='RUNNING'
                   AND lease_until>clock_timestamp())""")
             ).scalar_one():
                 return None
