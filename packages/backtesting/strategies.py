@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from decimal import Decimal, localcontext
 from enum import StrEnum
+from pathlib import Path
 
 from packages.domain.models import decimal_value
 
@@ -102,20 +103,31 @@ class QuantStrategyDefinition:
     research_modes: tuple[str, ...] = RESEARCH_MODES
     fitting_status: str = FITTING_STATUS
     limitations: tuple[str, ...] = (
-        "PRICE_ONLY", "DIVIDENDS_EXCLUDED", "IEX_PARTIAL_MARKET", "SURVIVORSHIP_BIAS",
+        "PRICE_ONLY",
+        "DIVIDENDS_EXCLUDED",
+        "IEX_PARTIAL_MARKET",
+        "SURVIVORSHIP_BIAS",
         "NO_TRADING_AUTHORIZATION",
     )
 
     @property
     def execution_available(self):
-        """QSL02 registers recursive metadata; QSL04 supplies their machines."""
-        return self.strategy_id in ("flat-v1", "buy-hold-v1", "sma-cross-v1")
+        """All five closed QSL machines are available in this reviewed build."""
+        return self.strategy_id in (
+            "flat-v1",
+            "buy-hold-v1",
+            "sma-cross-v1",
+            "ema-cross-v1",
+            "rsi-mean-reversion-v1",
+        )
 
 
 def canonical_decimal(value, *, places, maximum):
     """A bounded wire decimal, normalized without ambient Decimal rounding."""
-    if type(value) is not str or len(value) > 64 or not re.fullmatch(
-        rf"(?:0|[1-9][0-9]*)(?:\.[0-9]{{1,{places}}})?", value
+    if (
+        type(value) is not str
+        or len(value) > 64
+        or not re.fullmatch(rf"(?:0|[1-9][0-9]*)(?:\.[0-9]{{1,{places}}})?", value)
     ):
         raise ValueError("finite bounded decimal string required")
     parsed = Decimal(value)
@@ -168,27 +180,38 @@ def _validate_rsi(values):
 
 
 def _implementation_fingerprint(strategy_id, signal_version, definition):
-    # Normalized reviewed source artifacts plus dependent method versions. QSL04
-    # adds the recursive signal artifact before the first executable QSL release.
-    functions = (canonical_decimal, canonical_parameters, warmup_count)
+    # Fixed local source artifacts avoid an import cycle during registration;
+    # the literal reviewed pins below freeze the first executable QSL release.
+    functions = (Target, canonical_decimal, canonical_parameters, warmup_count)
     if definition.category == "TREND":
         functions += (_validate_cross,)
     elif definition.category == "MEAN_REVERSION":
         functions += (_validate_rsi,)
-    if definition.execution_available:
+    if strategy_id in ("flat-v1", "buy-hold-v1", "sma-cross-v1"):
         functions += (decide, validate_parameters)
     artifacts = tuple(
-        inspect.getsource(fn).replace("\r\n", "\n").strip()
-        for fn in functions
+        inspect.getsource(fn).replace("\r\n", "\n").strip() for fn in functions
+    ) + tuple(
+        Path(__file__).with_name(name).read_text(encoding="utf-8").replace("\r\n", "\n").strip()
+        for name in ("indicators.py", "simulator.py")
     )
     metadata = tuple(
-        (name, getattr(definition, name)) for name in definition.__dataclass_fields__
+        (name, getattr(definition, name))
+        for name in definition.__dataclass_fields__
         if name != "implementation_fingerprint"
     )
-    return fingerprint((
-        strategy_id, "1", signal_version, QUANT_WARMUP_VERSION,
-        SIMULATOR_VERSION, METRICS_VERSION, metadata, artifacts,
-    ))
+    return fingerprint(
+        (
+            strategy_id,
+            "1",
+            signal_version,
+            QUANT_WARMUP_VERSION,
+            SIMULATOR_VERSION,
+            METRICS_VERSION,
+            metadata,
+            artifacts,
+        )
+    )
 
 
 def _quant_register():
@@ -199,46 +222,72 @@ def _quant_register():
     rows = (
         ("flat-v1", "Flat", "Cash reference; always FLAT.", "REFERENCE", (), "NONE"),
         ("buy-hold-v1", "Buy and hold", "Long reference.", "REFERENCE", (), "NONE"),
-        ("sma-cross-v1", "SMA crossover", "Close-only SMA crossover.", "TREND", cross,
-         "MAX_SLOW_MINUS_ONE"),
-        ("ema-cross-v1", "EMA crossover", "Finite common-seed EMA crossover.", "TREND", cross,
-         "MAX_SLOW_MINUS_ONE"),
-        ("rsi-mean-reversion-v1", "RSI mean reversion", "Wilder RSI with target hysteresis.",
-         "MEAN_REVERSION", (
-             ParameterDefinition("entry", "DECIMAL_STRING", "0", "100", 4),
-             ParameterDefinition("exit", "DECIMAL_STRING", "0", "100", 4),
-             ParameterDefinition("period", "INTEGER", "2", "50"),
-         ), "MAX_RSI_PERIOD"),
+        (
+            "sma-cross-v1",
+            "SMA crossover",
+            "Close-only SMA crossover.",
+            "TREND",
+            cross,
+            "MAX_SLOW_MINUS_ONE",
+        ),
+        (
+            "ema-cross-v1",
+            "EMA crossover",
+            "Finite common-seed EMA crossover.",
+            "TREND",
+            cross,
+            "MAX_SLOW_MINUS_ONE",
+        ),
+        (
+            "rsi-mean-reversion-v1",
+            "RSI mean reversion",
+            "Wilder RSI with target hysteresis.",
+            "MEAN_REVERSION",
+            (
+                ParameterDefinition("entry", "DECIMAL_STRING", "0", "100", 4),
+                ParameterDefinition("exit", "DECIMAL_STRING", "0", "100", 4),
+                ParameterDefinition("period", "INTEGER", "2", "50"),
+            ),
+            "MAX_RSI_PERIOD",
+        ),
     )
     result = []
     for strategy_id, name, description, category, params, rule in rows:
         signal_version = strategy_id + "-signal-v1"
         definition = QuantStrategyDefinition(
-            strategy_id, name, description, category, params, rule, signal_version,
+            strategy_id,
+            name,
+            description,
+            category,
+            params,
+            rule,
+            signal_version,
             "",
         )
         if strategy_id in ("ema-cross-v1", "rsi-mean-reversion-v1"):
             definition = replace(
                 definition, limitations=definition.limitations + ("FINITE_COMMON_SEED",)
             )
-        definition = replace(definition, implementation_fingerprint=_implementation_fingerprint(
-            strategy_id, signal_version, definition
-        ))
+        definition = replace(
+            definition,
+            implementation_fingerprint=_implementation_fingerprint(
+                strategy_id, signal_version, definition
+            ),
+        )
         result.append(definition)
     return tuple(result)
 
 
 QUANT_REGISTRY = _quant_register()
 
-# Reviewed QSL02 source identities. Recursive entries bind their definition/seed
-# primitives only and cannot execute yet. QSL04 must replace those two source
-# bindings with the completed machines before any QSL execution is published.
+# Reviewed QSL04 executable source identities. The separate legacy request and
+# manifest identities retain their original preimages; these pins bind QSL only.
 _SOURCE_PINS = (
-    ("flat-v1", "5dbe03072ae6f2dcb17f15ec4a3381dd9dcb1870500ce0c7fc20a0f4f3a6758b"),
-    ("buy-hold-v1", "fd43e95c4a589d7c83a1abe80bdcfc15d6efcb0569cd5b815320a3a5b1953628"),
-    ("sma-cross-v1", "59d73195ce055f9aa0885b5f4b234b4f6dec8bc6648d0c8a0a50858d194f6b94"),
-    ("ema-cross-v1", "5846427c3bf3edc315180ab425834a73f5a4f62c859abe56894a27a63f6e3cf0"),
-    ("rsi-mean-reversion-v1", "aa80a5f3df41012ab971ca02ee9b55e4b7486568cda8a4f4cc088bb0f3ab4d6b"),
+    ("flat-v1", "4896249c4ce4c42ef9e1c5fc74831967c3f25cb5714e7f2bfbc25c5170273b8c"),
+    ("buy-hold-v1", "f5481d0c87c874bb575e0d75e397368b743d8849de6bfe761de8637059e1c6a4"),
+    ("sma-cross-v1", "9b6b255650ea354af41f75d8c155abfd322f52aba3c0fa14c030fa70f08b48cf"),
+    ("ema-cross-v1", "562222b1e3378f07ba32b4f5fb163d79c55617d4747a8e38bb8d44e57f616040"),
+    ("rsi-mean-reversion-v1", "24434d1bb99ebc451c2521f01320a6e83ff13587c14bbb1ce3ee4b871c3741c2"),
 )
 
 
@@ -255,10 +304,10 @@ def resolve_strategy(
                 )
             except (TypeError, OSError) as error:
                 raise ValueError("strategy implementation fingerprint unavailable") from error
-            if actual != dict(_SOURCE_PINS)[strategy_id] or (
-                actual != definition.implementation_fingerprint
-            ) or (
-                expected_fingerprint is not None and expected_fingerprint != actual
+            if (
+                actual != dict(_SOURCE_PINS)[strategy_id]
+                or (actual != definition.implementation_fingerprint)
+                or (expected_fingerprint is not None and expected_fingerprint != actual)
             ):
                 raise ValueError("strategy implementation fingerprint mismatch")
             return definition

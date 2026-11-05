@@ -138,7 +138,7 @@ def _outcome_cutoff(bar, validation_context):
 
 
 def _simulate(
-    config, dataset, strategy, parameters, checkpoint, validation_context
+    config, dataset, strategy, parameters, checkpoint, validation_context, signal_machine=None
 ) -> SimulationResult:
     outcomes = {bar.identity.bar_start: bar for bar in dataset.outcome_bars}
     expected = dataset.expected_bar_starts
@@ -152,6 +152,7 @@ def _simulate(
     cash, quantity = money(config.start_cash), Decimal("0")
     pending: dict[datetime, Target] = {}
     fills, equity, decisions = [], [], []
+    signal_input_hash = None
     for start in expected:
         checkpoint()
         if not dataset.fold.test_start <= start < dataset.fold.test_end:
@@ -245,7 +246,13 @@ def _simulate(
         ):
             raise SimulationBlocked("BLOCKED_POINT_IN_TIME_INPUT", str(step.signal_bar.revision_id))
         try:
-            target = decide(strategy, parameters, tuple(b.close for b in inputs))
+            target = (
+                decide(strategy, parameters, tuple(b.close for b in inputs))
+                if signal_machine is None
+                else signal_machine.update(
+                    step.signal_bar.identity.bar_start, step.signal_bar.close
+                )
+            )
         except ValueError as exc:
             raise SimulationBlocked("BLOCKED_WARMUP_MISSING") from exc
         fill_target = step.fill_target
@@ -269,11 +276,19 @@ def _simulate(
             # At a session boundary several signals can share the same next open.
             # The most recent chronological target supersedes the previous target.
             pending[fill_target] = target
+        input_hash = fingerprint(tuple((b.revision_id, b.fingerprint) for b in inputs))
+        if signal_machine is not None:
+            # A recursive target depends on every consumed prefix, not just the
+            # current close. Bind that immutable history without retaining bars.
+            signal_input_hash = fingerprint(
+                ("quant-signal-prefix-v1", signal_input_hash, input_hash)
+            )
+            input_hash = signal_input_hash
         decisions.append(
             Decision(
                 signal_at,
                 target,
-                fingerprint(tuple((b.revision_id, b.fingerprint) for b in inputs)),
+                input_hash,
                 fill_target,
             )
         )
@@ -290,3 +305,94 @@ def _simulate(
             RETROSPECTIVE_VALUATION_METHOD,
         )
     return result
+
+
+@dataclass(frozen=True)
+class QuantValidationContext:
+    """Exact complete phase/snapshot binding; no legacy policy-context coercion."""
+
+    manifest: object
+    phases: tuple
+
+    def __post_init__(self):
+        from .dataset import Snapshot
+        from .experiment import QuantExperimentManifest
+
+        if type(self.manifest) is not QuantExperimentManifest or type(self.phases) is not tuple:
+            raise ValueError("closed Quant manifest and phase tuple required")
+        self.manifest.__post_init__()
+        rebound = QuantExperimentManifest.from_phase_datasets(
+            self.manifest.definition,
+            self.phases,
+            Snapshot(self.manifest.snapshot_version, self.manifest.snapshot_at),
+            code_version=self.manifest.code_version,
+            trust_fingerprint=self.manifest.trust_fingerprint,
+            license_receipt_fingerprint=self.manifest.license_receipt_fingerprint,
+            quality_revisions=(
+                self.manifest.quality_revisions
+                if self.manifest.definition.research_mode == "RETROSPECTIVE_EXPLORATORY"
+                else ()
+            ),
+            coverage_revisions=(
+                self.manifest.coverage_revisions
+                if self.manifest.definition.research_mode == "RETROSPECTIVE_EXPLORATORY"
+                else ()
+            ),
+        )
+        if rebound != self.manifest:
+            raise ValueError("Quant manifest phase/snapshot references differ")
+
+    @property
+    def manifest_hash(self):
+        return self.manifest.manifest_hash
+
+    def validate(self, definition, phase):
+        from .dataset import QuantPhaseDataset
+        from .experiment import ExperimentDefinition
+
+        self.__post_init__()
+        if type(definition) is not ExperimentDefinition or type(phase) is not QuantPhaseDataset:
+            raise ValueError("typed Quant definition and phase required")
+        definition.__post_init__()
+        if definition != self.manifest.definition or phase not in self.phases:
+            raise ValueError("Quant definition/phase binding mismatch")
+
+
+def simulate_quant(
+    definition, phase, candidate, *, checkpoint=lambda: None, validation_context=None
+) -> SimulationResult:
+    """Fresh phase replay through the existing fill, cost and equity kernel."""
+    from .experiment import REFERENCE_CONFIGURATIONS, CandidateConfiguration
+    from .indicators import QuantSignalMachine
+    from .strategies import resolve_strategy
+
+    if type(validation_context) is not QuantValidationContext:
+        raise ValueError("closed Quant validation context required")
+    validation_context.validate(definition, phase)
+    if type(candidate) is not CandidateConfiguration:
+        raise ValueError("typed candidate required")
+    candidate.__post_init__()
+    if candidate not in definition.candidates + REFERENCE_CONFIGURATIONS:
+        raise ValueError("candidate outside bound search set and references")
+    resolve_strategy(
+        candidate.strategy_id,
+        candidate.strategy_version,
+        candidate.implementation_fingerprint,
+        require_execution=True,
+    )
+    machine = QuantSignalMachine(candidate.strategy_id, candidate.parameters)
+    data = phase.dataset
+    machine.seed(tuple((b.identity.bar_start, b.close) for b in data.warmup))
+    # The closed definition supplies only the same cash/cost/instrument fields
+    # consumed by the shared kernel; no legacy ExperimentConfig is widened.
+    with localcontext() as ctx:
+        ctx.prec, ctx.rounding = 38, ROUND_HALF_EVEN
+        return _simulate(
+            definition,
+            data,
+            candidate.strategy_id,
+            candidate.parameters,
+            checkpoint,
+            validation_context if definition.research_mode == "RETROSPECTIVE_EXPLORATORY" else None,
+            machine,
+        )
