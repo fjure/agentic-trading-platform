@@ -35,7 +35,7 @@ QUANT_LAB_OPERATIONS = dict.fromkeys((
     "getQuantLabExperiment", "validateQuantLabExperiment", "startQuantLabExperimentBatch",
     "listQuantLabExperimentBatches", "getQuantLabExperimentBatch", "listQuantLabCandidates",
     "listQuantLabResults", "getQuantLabComparison", "getQuantLabEquity",
-    "getQuantLabDrawdown", "compareQuantLabExperiments",
+    "getQuantLabDrawdown", "compareQuantLabExperiments", "getQuantLabReliabilityReport",
 ), "QSL-07")
 
 

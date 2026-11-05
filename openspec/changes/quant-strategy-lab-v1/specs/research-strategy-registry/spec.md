@@ -13,6 +13,12 @@ Das Register SHALL ID, Version, Name, Beschreibung, Kategorie, Instrumente/Timef
 WHEN fachliche Implementierung oder Initialisierung geändert wird THEN benötigt sie eine neue Version; ein abweichender Fingerprint unter bestehender Version wird vor Ausführung abgewiesen. Ein altes Manifest löst seine ursprüngliche registrierte Komponente auf oder endet explizit VERSION_UNAVAILABLE, niemals auf latest.
 
 #### Scenario: T-QSR-002 Geschlossene Eingabe
+
+Zusätzliche verbindliche Prüfdetails aus D4: Direkte SQL-Zulassung MUST ID,
+Version und Implementierungsfingerprint gegen den vertrauenswürdig installierten
+ausführbaren Katalog prüfen. Keine Runtime-Rolle darf eigene Einträge
+registrieren. Migration 0035 wird erst nach QSL-04 mit dessen finalen Pins
+veröffentlicht; unbekannte oder abweichende Implementierungen bleiben gesperrt.
 WHEN freie Programme, Uploads, unbekannte Parameter/Versionen, boolesche Perioden, nicht endliche Decimalwerte, fremde Märkte oder SHORT angefragt werden THEN scheitert die Validierung ohne Jobanlage und externe Aktion. Bestehende flat/buy-hold/SMA-Aufträge behalten ihr Verhalten.
 
 ### Requirement: REQ-QSR-002 Deterministische rekursive Indikatoren

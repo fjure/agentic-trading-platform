@@ -7,19 +7,18 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { QuantLabReliabilityEvidenceStatus } from './quantLabReliabilityEvidenceStatus';
 import { BacktestReliabilityRating } from './backtestReliabilityRating';
 import { BacktestReliabilityEligibility } from './backtestReliabilityEligibility';
 
 
-/**
- * Reuse existing GET research/backtests/runs/{runId} and reliability-reports/{reportId}, no duplicate result payload.
- */
 export interface QuantLabReliabilityReference { 
     runId: string;
     reportId: string;
     reportHash: string;
     eligibility: BacktestReliabilityEligibility;
     rating: BacktestReliabilityRating;
+    evidenceStatus: QuantLabReliabilityEvidenceStatus;
 }
 export namespace QuantLabReliabilityReference {
 }

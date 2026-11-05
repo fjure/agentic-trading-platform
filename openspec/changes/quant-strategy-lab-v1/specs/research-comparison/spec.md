@@ -26,6 +26,14 @@ Verbindliche Prüfdetails: Berichte SHALL Bestandsmetriken und die exakt definie
 Die additiven versionierten Researchverträge SHALL sämtliche Ressourcen und Fachzustände aus D7 einschließlich Policy, Nichtwahl, Aktivität und Forschungsrollen abbilden. Authentifizierung, Origin/CSRF, Idempotenz und gebundene Pagination MUST vor Seiteneffekten gelten. Bestehende API/Altmanifeste MUST kompatibel bleiben; der Client wird ausschließlich generiert. Vertragsimplementierung benötigt einen gesonderten Apply-Auftrag.
 
 #### Scenario: T-QCO-003 Vertrag und Angriff
+
+Zusätzliche verbindliche Prüfdetails aus D7: Die Batch-gebundene QSL-
+Reliabilityprojektion MUST Strict und Retrospective ehrlich getrennt darstellen
+und echte Reports desselben bestehenden Reportstores referenzieren. Alte
+Run-/Reliabilityunions bleiben unverändert. Fehlender oder fremder
+Batch-/Run-/Snapshot-/Phasenbezug MUST abgewiesen werden; keine freien UUIDs
+oder nur vorgetäuschten alten Assessmentbezüge. Befunde/Revisionsreferenzen
+MUST an Batch, Report und Sektion gebunden paginierbar bleiben.
 WHEN Sitzung fehlt, Origin fremd, Draftversion veraltet, Cursor fremd oder Idempotenznutzlast abweichend ist THEN entsteht kein neuer Auftrag; stabile 400/401/403/409/422/429/503-Fehler entsprechen dem kanonischen Vertrag. Zwei Clientgenerierungen sind bytegleich und Breakingchecks zeigen keine Bestandsbrüche.
 
 Verbindliche Prüfdetails: Katalog, Entwurfsversion, Validierung, expliziter Start, Status, Kandidatenergebnisse und Vergleich SHALL über additive versionierte Verträge gemäß design.md D7 nutzbar sein. Geplante Entwurfs-/Validierungsverträge MUST die geschlossene Auswahlpolicy und deren vorab gebundene Gates enthalten; Ergebnisverträge MUST Exposure/Aktivität, vollständige Bar-/Sitzungszahlen, Warnungen, Zulässigkeitsgründe und NO_ELIGIBLE_CANDIDATE ohne fingierten Sieger darstellen können. Authentifizierung, Origin/CSRF, Idempotenz und gebundene Pagination MUST vor Seiteneffekten gelten. Bestehende API/Altmanifeste MUST kompatibel bleiben; der Angularclient wird ausschließlich generiert. Die Vertragsimplementierung erfolgt erst nach gesondertem Apply-Auftrag.

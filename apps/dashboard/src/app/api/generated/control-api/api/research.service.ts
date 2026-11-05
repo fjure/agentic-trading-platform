@@ -51,6 +51,8 @@ import { QuantLabPhase } from '../model/quantLabPhase';
 // @ts-ignore
 import { QuantLabProblem } from '../model/quantLabProblem';
 // @ts-ignore
+import { QuantLabReliabilityReportPage } from '../model/quantLabReliabilityReportPage';
+// @ts-ignore
 import { QuantLabResultPage } from '../model/quantLabResultPage';
 // @ts-ignore
 import { QuantLabStrategyCatalog } from '../model/quantLabStrategyCatalog';
@@ -875,6 +877,103 @@ export class ResearchService extends BaseService implements ResearchServiceInter
         let localVarPath = `/api/v1/research/experiment-batches/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<QuantLabBatch>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Read a bound Quant Lab reliability report projection
+     * QSL-03 contract only; unavailable until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin read boundaries. The immutable report must belong to this batch, run, candidate and phase. Foreign report&#x3D;&gt;404; unavailable publication&#x3D;&gt;409 REPORT_NOT_READY. Cursor binds batch/report/hash/section/session; malformed, foreign or expired cursor&#x3D;&gt;400 CURSOR_INVALID. Qualitative evidence grants no trading permission.
+     * @endpoint get /api/v1/research/experiment-batches/{id}/reliability-reports/{reportId}
+     * @param id 
+     * @param reportId 
+     * @param cursor Authenticated opaque cursor bound to batch/report/hash/section/session. Foreign/expired/tampered&#x3D;&gt;400 CURSOR_INVALID.
+     * @param limit 
+     * @param section 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getQuantLabReliabilityReport(id: string, reportId: string, cursor?: string, limit?: number, section?: 'FINDINGS' | 'REVISION_REFERENCES', observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<QuantLabReliabilityReportPage>;
+    public getQuantLabReliabilityReport(id: string, reportId: string, cursor?: string, limit?: number, section?: 'FINDINGS' | 'REVISION_REFERENCES', observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<QuantLabReliabilityReportPage>>;
+    public getQuantLabReliabilityReport(id: string, reportId: string, cursor?: string, limit?: number, section?: 'FINDINGS' | 'REVISION_REFERENCES', observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<QuantLabReliabilityReportPage>>;
+    public getQuantLabReliabilityReport(id: string, reportId: string, cursor?: string, limit?: number, section?: 'FINDINGS' | 'REVISION_REFERENCES', observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (id === null || id === undefined) {
+            throw new Error('Required parameter id was null or undefined when calling getQuantLabReliabilityReport.');
+        }
+        if (reportId === null || reportId === undefined) {
+            throw new Error('Required parameter reportId was null or undefined when calling getQuantLabReliabilityReport.');
+        }
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'cursor',
+            <any>cursor,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'limit',
+            <any>limit,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'section',
+            <any>section,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/experiment-batches/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/reliability-reports/${this.configuration.encodeParam({name: "reportId", value: reportId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<QuantLabReliabilityReportPage>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters.toHttpParams(),

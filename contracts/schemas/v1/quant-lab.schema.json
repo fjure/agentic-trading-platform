@@ -4015,7 +4015,8 @@
         "reportId",
         "reportHash",
         "eligibility",
-        "rating"
+        "rating",
+        "evidenceStatus"
       ],
       "properties": {
         "runId": {
@@ -4032,9 +4033,94 @@
         },
         "rating": {
           "$ref": "#/$defs/BacktestReliabilityRating"
+        },
+        "evidenceStatus": {
+          "$ref": "#/$defs/QuantLabReliabilityEvidenceStatus"
         }
       },
-      "description": "Reuse existing GET research/backtests/runs/{runId} and reliability-reports/{reportId}, no duplicate result payload."
+      "description": "References getQuantLabReliabilityReport under its owning experiment batch and the Quant Lab result resource. Childrun ID is an immutable execution reference; new QSL strategies/modes are not representable by legacy run/report DTOs. No duplicated result payload. Eligibility describes computability under exploratory research limitations, never PIT evidence or trading permission; evidenceStatus independently describes PIT/data evidence.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "evidenceStatus": {
+                    "type": "string",
+                    "enum": [
+                      "STRICT_PIT_EVIDENCE_COMPLETE",
+                      "EXPLORATORY_WITH_LIMITATIONS"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "eligibility": {
+                    "type": "string",
+                    "const": "EXPLORATORY_WITH_LIMITATIONS"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "evidenceStatus": {
+                    "type": "string",
+                    "enum": [
+                      "BLOCKED",
+                      "INCOMPLETE"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "eligibility": {
+                    "type": "string",
+                    "const": "BLOCKED"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "evidenceStatus": {
+                    "type": "string",
+                    "enum": [
+                      "STRICT_PIT_EVIDENCE_COMPLETE"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "rating": {
+                    "type": "string",
+                    "const": "PASS"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
     },
     "QuantLabCandidateResult": {
       "type": "object",
@@ -5698,6 +5784,951 @@
     "BacktestNonnegativeDecimal": {
       "type": "string",
       "pattern": "^(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+    },
+    "BacktestResultLimitation": {
+      "type": "string",
+      "enum": [
+        "NOT_STRICT_PIT",
+        "PRICE_ONLY",
+        "DIVIDENDS_EXCLUDED",
+        "IEX_PARTIAL_MARKET",
+        "SURVIVORSHIP_BIAS",
+        "EX_POST_REVISIONS",
+        "NO_TRADING_AUTHORIZATION"
+      ]
+    },
+    "BacktestResultLimitations": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "$ref": "#/$defs/BacktestResultLimitation"
+      },
+      "not": {
+        "not": {
+          "uniqueItems": true
+        }
+      }
+    },
+    "BacktestReliabilityDimensionName": {
+      "type": "string",
+      "enum": [
+        "INTEGRITY",
+        "CALENDAR",
+        "CORPORATE_ACTIONS",
+        "HISTORICAL_AVAILABILITY",
+        "FEED",
+        "LICENSE"
+      ]
+    },
+    "BacktestReliabilityFindingCode": {
+      "type": "string",
+      "enum": [
+        "MISSING_BARS",
+        "UNEXPECTED_BARS",
+        "INVALID_OHLCV",
+        "REVISION_CONFLICT",
+        "REFERENCE_MISSING",
+        "SNAPSHOT_BOUNDARY",
+        "CALENDAR_UNKNOWN",
+        "SESSION_CONFLICT",
+        "MIXED_FEED",
+        "MIXED_ADJUSTMENT",
+        "INSTRUMENT_UNRESOLVED",
+        "STRUCTURAL_CORPORATE_ACTION",
+        "CORPORATE_ACTION_CONFLICT",
+        "CORPORATE_ACTIONS_UNKNOWN",
+        "DIVIDENDS_EXCLUDED",
+        "RAW_DISCONTINUITY",
+        "HISTORICAL_AVAILABILITY_NOT_PROVEN",
+        "EX_POST_CALENDAR",
+        "EX_POST_REVISIONS",
+        "IEX_PARTIAL_MARKET",
+        "SURVIVORSHIP_BIAS",
+        "LICENSE_UNKNOWN",
+        "LICENSE_DENIED",
+        "TRUST_REVOKED",
+        "TRUST_UNAVAILABLE",
+        "BUDGET_EXHAUSTED",
+        "NOT_EVALUATED"
+      ]
+    },
+    "BacktestReliabilityDimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rating",
+        "reasonCodes"
+      ],
+      "properties": {
+        "rating": {
+          "$ref": "#/$defs/BacktestReliabilityRating"
+        },
+        "reasonCodes": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 30,
+          "items": {
+            "$ref": "#/$defs/BacktestReliabilityFindingCode"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "BacktestReliabilityDimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "INTEGRITY",
+        "CALENDAR",
+        "CORPORATE_ACTIONS",
+        "HISTORICAL_AVAILABILITY",
+        "FEED",
+        "LICENSE"
+      ],
+      "properties": {
+        "INTEGRITY": {
+          "$ref": "#/$defs/BacktestReliabilityDimension"
+        },
+        "CALENDAR": {
+          "$ref": "#/$defs/BacktestReliabilityDimension"
+        },
+        "CORPORATE_ACTIONS": {
+          "$ref": "#/$defs/BacktestReliabilityDimension"
+        },
+        "HISTORICAL_AVAILABILITY": {
+          "$ref": "#/$defs/BacktestReliabilityDimension"
+        },
+        "FEED": {
+          "$ref": "#/$defs/BacktestReliabilityDimension"
+        },
+        "LICENSE": {
+          "$ref": "#/$defs/BacktestReliabilityDimension"
+        }
+      }
+    },
+    "BacktestReliabilityPeriod": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "end": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      }
+    },
+    "BacktestReliabilityReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "referenceId",
+        "fingerprint",
+        "localRevision",
+        "recordedAt",
+        "period"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "BAR",
+            "CALENDAR",
+            "QUALITY",
+            "CORPORATE_ACTION",
+            "LICENSE",
+            "TRUST"
+          ]
+        },
+        "referenceId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "localRevision": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "recordedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestReliabilityPeriod"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BacktestReliabilityFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "findingId",
+        "category",
+        "code",
+        "severity",
+        "foldIndex",
+        "period",
+        "references"
+      ],
+      "properties": {
+        "findingId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "category": {
+          "$ref": "#/$defs/BacktestReliabilityDimensionName"
+        },
+        "code": {
+          "$ref": "#/$defs/BacktestReliabilityFindingCode"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "INFO",
+            "LIMITATION",
+            "BLOCKER"
+          ]
+        },
+        "foldIndex": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BacktestReliabilityPeriod"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "references": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/BacktestReliabilityReference"
+          }
+        }
+      },
+      "description": "Whitelist-only finding, without provider payload/free-text diagnostics. Current revocations/corrections are reported separately from this immutable finding."
+    },
+    "BacktestCurrentReliabilityWarning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "category",
+        "checkedAt",
+        "blocksNewExecution"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/BacktestReliabilityFindingCode"
+        },
+        "category": {
+          "$ref": "#/$defs/BacktestReliabilityDimensionName"
+        },
+        "checkedAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "blocksNewExecution": {
+          "type": "boolean"
+        }
+      }
+    },
+    "QuantLabReliabilityMethods": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifestHash",
+        "protocol",
+        "experimentVersion",
+        "simulatorVersion",
+        "metricsVersion",
+        "codeVersion",
+        "qualityPolicyVersion"
+      ],
+      "properties": {
+        "manifestHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "protocol": {
+          "$ref": "#/$defs/QuantLabProtocol"
+        },
+        "experimentVersion": {
+          "type": "string",
+          "const": "quant-experiment-v1"
+        },
+        "simulatorVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "metricsVersion": {
+          "type": "string",
+          "const": "quant-metrics-v1"
+        },
+        "codeVersion": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$(?![\\s\\S])"
+        },
+        "qualityPolicyVersion": {
+          "type": "string",
+          "const": "quant-reliability-v1"
+        }
+      }
+    },
+    "QuantLabReliabilityReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "version",
+        "reportId",
+        "reportHash",
+        "batchId",
+        "runId",
+        "candidateId",
+        "instrumentId",
+        "role",
+        "phase",
+        "fold",
+        "phaseRole",
+        "researchMode",
+        "dataSelectionPolicyVersion",
+        "snapshotReference",
+        "protocolHash",
+        "strategySelectionPolicyHash",
+        "overallStatus",
+        "rating",
+        "dimensions",
+        "historicalAvailabilityStatus",
+        "methods",
+        "resultLimitations",
+        "findingsCount",
+        "revisionReferenceCount",
+        "evidenceStatus"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "quant-lab-v1"
+        },
+        "version": {
+          "type": "string",
+          "const": "quant-reliability-report-v1"
+        },
+        "reportId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "reportHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "batchId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "runId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "candidateId": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "instrumentId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "SEARCH_CANDIDATE",
+            "REFERENCE_FLAT",
+            "REFERENCE_BUY_HOLD"
+          ]
+        },
+        "phase": {
+          "$ref": "#/$defs/QuantLabPhase"
+        },
+        "fold": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "phaseRole": {
+          "$ref": "#/$defs/QuantLabResearchRole"
+        },
+        "researchMode": {
+          "$ref": "#/$defs/BacktestResearchMode"
+        },
+        "dataSelectionPolicyVersion": {
+          "type": "string",
+          "enum": [
+            "strict-pit-v1",
+            "retrospective-v1"
+          ]
+        },
+        "snapshotReference": {
+          "$ref": "#/$defs/BacktestSnapshotReference"
+        },
+        "protocolHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "strategySelectionPolicyHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "overallStatus": {
+          "$ref": "#/$defs/BacktestReliabilityEligibility"
+        },
+        "rating": {
+          "$ref": "#/$defs/BacktestReliabilityRating"
+        },
+        "dimensions": {
+          "$ref": "#/$defs/BacktestReliabilityDimensions"
+        },
+        "historicalAvailabilityStatus": {
+          "type": "string",
+          "enum": [
+            "NOT_PROVEN",
+            "VERIFIED_FOR_DECISION_CUTOFFS"
+          ]
+        },
+        "methods": {
+          "$ref": "#/$defs/QuantLabReliabilityMethods"
+        },
+        "resultLimitations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 7,
+          "items": {
+            "$ref": "#/$defs/BacktestResultLimitation"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true,
+              "contains": {
+                "const": "NO_TRADING_AUTHORIZATION"
+              }
+            }
+          }
+        },
+        "findingsCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "revisionReferenceCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "evidenceStatus": {
+          "$ref": "#/$defs/QuantLabReliabilityEvidenceStatus"
+        }
+      },
+      "description": "QSL-FINAL projection of the existing immutable report store, never an execution permission or quality/profit score. SQL validates exact published batch/run/candidate/role/instrument/mode/snapshot/protocol/phase bindings. Canonical reportHash is SHA256 of {report: metadata excluding reportHash/reportId/batchId/runId, findings: complete ordered findings, revisionReferences: complete ordered references}; the physical store fingerprint separately binds IDs. The hash is injected on read. Strict completeness requires verified availability at every bound decision cutoff and PASS historical-availability evidence. Current warnings are excluded from historical report bytes. overallStatus retains exploratory computability semantics independently of evidenceStatus: complete Strict PIT evidence remains EXPLORATORY_WITH_LIMITATIONS, while BLOCKED or INCOMPLETE evidence is BLOCKED. Strict evidence is not scientific validation or trading authorization.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "STRICT_PIT"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "dataSelectionPolicyVersion": {
+                    "type": "string",
+                    "const": "strict-pit-v1"
+                  },
+                  "evidenceStatus": {
+                    "enum": [
+                      "STRICT_PIT_EVIDENCE_COMPLETE",
+                      "BLOCKED",
+                      "INCOMPLETE"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "RETROSPECTIVE_EXPLORATORY"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "dataSelectionPolicyVersion": {
+                    "type": "string",
+                    "const": "retrospective-v1"
+                  },
+                  "historicalAvailabilityStatus": {
+                    "type": "string",
+                    "const": "NOT_PROVEN"
+                  },
+                  "resultLimitations": {
+                    "allOf": [
+                      {
+                        "contains": {
+                          "const": "NOT_STRICT_PIT"
+                        }
+                      },
+                      {
+                        "contains": {
+                          "const": "EX_POST_REVISIONS"
+                        }
+                      }
+                    ]
+                  },
+                  "evidenceStatus": {
+                    "enum": [
+                      "EXPLORATORY_WITH_LIMITATIONS",
+                      "BLOCKED",
+                      "INCOMPLETE"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "evidenceStatus": {
+                    "type": "string",
+                    "const": "STRICT_PIT_EVIDENCE_COMPLETE"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "researchMode": {
+                    "type": "string",
+                    "const": "STRICT_PIT"
+                  },
+                  "historicalAvailabilityStatus": {
+                    "type": "string",
+                    "const": "VERIFIED_FOR_DECISION_CUTOFFS"
+                  },
+                  "dimensions": {
+                    "properties": {
+                      "HISTORICAL_AVAILABILITY": {
+                        "properties": {
+                          "rating": {
+                            "type": "string",
+                            "const": "PASS"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    },
+                    "additionalProperties": true
+                  },
+                  "resultLimitations": {
+                    "items": {
+                      "not": {
+                        "enum": [
+                          "NOT_STRICT_PIT",
+                          "EX_POST_REVISIONS"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "historicalAvailabilityStatus": {
+                    "type": "string",
+                    "const": "VERIFIED_FOR_DECISION_CUTOFFS"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "evidenceStatus": {
+                    "type": "string",
+                    "const": "STRICT_PIT_EVIDENCE_COMPLETE"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "phase": {
+                    "type": "string",
+                    "const": "training"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "phaseRole": {
+                    "type": "string",
+                    "const": "IN_SAMPLE_ANALYSIS"
+                  },
+                  "fold": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "phase": {
+                    "type": "string",
+                    "const": "validation"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "phaseRole": {
+                    "type": "string",
+                    "const": "PARAMETER_SELECTION"
+                  },
+                  "fold": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "phase": {
+                    "type": "string",
+                    "const": "test"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "phaseRole": {
+                    "type": "string",
+                    "const": "WALK_FORWARD_OOS"
+                  },
+                  "fold": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "phase": {
+                    "type": "string",
+                    "const": "holdout"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "phaseRole": {
+                    "type": "string",
+                    "const": "FINAL_HOLDOUT"
+                  },
+                  "fold": {
+                    "type": "null"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "evidenceStatus": {
+                    "enum": [
+                      "STRICT_PIT_EVIDENCE_COMPLETE",
+                      "EXPLORATORY_WITH_LIMITATIONS"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "overallStatus": {
+                    "type": "string",
+                    "const": "EXPLORATORY_WITH_LIMITATIONS"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "evidenceStatus": {
+                    "enum": [
+                      "BLOCKED",
+                      "INCOMPLETE"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "overallStatus": {
+                    "type": "string",
+                    "const": "BLOCKED"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "evidenceStatus": {
+                    "type": "string",
+                    "const": "STRICT_PIT_EVIDENCE_COMPLETE"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "rating": {
+                    "type": "string",
+                    "const": "PASS"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "QuantLabReliabilityReportPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "report",
+        "section",
+        "findings",
+        "revisionReferences",
+        "nextCursor",
+        "currentWarnings"
+      ],
+      "properties": {
+        "report": {
+          "$ref": "#/$defs/QuantLabReliabilityReport"
+        },
+        "section": {
+          "type": "string",
+          "enum": [
+            "FINDINGS",
+            "REVISION_REFERENCES"
+          ]
+        },
+        "findings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/BacktestReliabilityFinding"
+          }
+        },
+        "revisionReferences": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/BacktestReliabilityReference"
+          }
+        },
+        "nextCursor": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/QuantLabCursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "currentWarnings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/BacktestCurrentReliabilityWarning"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "section": {
+                    "type": "string",
+                    "const": "FINDINGS"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "revisionReferences": {
+                    "maxItems": 0
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "section": {
+                    "type": "string",
+                    "const": "REVISION_REFERENCES"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "findings": {
+                    "maxItems": 0
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ],
+      "description": "Bounded projection of the same report record; cursor binds batch/report/hash/section/session. Only the selected section is populated. No duplicate result payload or report store."
+    },
+    "QuantLabReliabilityEvidenceStatus": {
+      "type": "string",
+      "enum": [
+        "STRICT_PIT_EVIDENCE_COMPLETE",
+        "EXPLORATORY_WITH_LIMITATIONS",
+        "BLOCKED",
+        "INCOMPLETE"
+      ]
     }
   }
 }

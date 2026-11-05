@@ -51,5 +51,12 @@
   "quant-lab-activity-open-position.valid.json": "QuantLabActivityMetrics",
   "quant-lab-activity-cash.valid.json": "QuantLabActivityMetrics",
   "quant-lab-exposure-open-position.valid.json": "QuantLabExposureMetrics",
-  "quant-lab-exposure-cash.valid.json": "QuantLabExposureMetrics"
+  "quant-lab-exposure-cash.valid.json": "QuantLabExposureMetrics",
+  "quant-lab-reliability-strict.valid.json": "QuantLabReliabilityReport",
+  "quant-lab-reliability-page.valid.json": "QuantLabReliabilityReportPage",
+  "quant-lab-reliability-retro.valid.json": "QuantLabReliabilityReport",
+  "quant-lab-reliability-blocked.valid.json": "QuantLabReliabilityReport",
+  "quant-lab-reliability-incomplete.valid.json": "QuantLabReliabilityReport",
+  "quant-lab-reliability-findings-page.valid.json": "QuantLabReliabilityReportPage",
+  "quant-lab-reliability-revisions-page.valid.json": "QuantLabReliabilityReportPage"
 }

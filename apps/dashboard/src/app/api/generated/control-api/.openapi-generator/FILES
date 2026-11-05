@@ -246,7 +246,11 @@ model/quantLabProtocol.ts
 model/quantLabRankingKey.ts
 model/quantLabReasonCode.ts
 model/quantLabReferenceCounts.ts
+model/quantLabReliabilityEvidenceStatus.ts
+model/quantLabReliabilityMethods.ts
 model/quantLabReliabilityReference.ts
+model/quantLabReliabilityReport.ts
+model/quantLabReliabilityReportPage.ts
 model/quantLabResearchHistory.ts
 model/quantLabResearchRole.ts
 model/quantLabResultPage.ts

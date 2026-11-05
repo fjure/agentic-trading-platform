@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "quant-lab-v1",
+  "version": "quant-reliability-report-v1",
+  "reportId": "33333333-3333-4333-8333-333333333333",
+  "reportHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "batchId": "11111111-1111-4111-8111-111111111111",
+  "runId": "11111111-1111-4111-8111-111111111111",
+  "candidateId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "instrumentId": "11111111-1111-4111-8111-111111111111",
+  "role": "SEARCH_CANDIDATE",
+  "phase": "validation",
+  "fold": 0,
+  "phaseRole": "PARAMETER_SELECTION",
+  "researchMode": "STRICT_PIT",
+  "dataSelectionPolicyVersion": "strict-pit-v1",
+  "snapshotReference": {
+    "snapshotVersion": 7,
+    "snapshotAt": "2026-10-27T00:00:00Z"
+  },
+  "protocolHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "strategySelectionPolicyHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "overallStatus": "EXPLORATORY_WITH_LIMITATIONS",
+  "rating": "PASS",
+  "dimensions": {
+    "INTEGRITY": {
+      "rating": "PASS",
+      "reasonCodes": []
+    },
+    "CALENDAR": {
+      "rating": "PASS",
+      "reasonCodes": []
+    },
+    "CORPORATE_ACTIONS": {
+      "rating": "UNKNOWN",
+      "reasonCodes": [
+        "CORPORATE_ACTIONS_UNKNOWN"
+      ]
+    },
+    "HISTORICAL_AVAILABILITY": {
+      "rating": "PASS",
+      "reasonCodes": []
+    },
+    "FEED": {
+      "rating": "LIMITED",
+      "reasonCodes": [
+        "IEX_PARTIAL_MARKET"
+      ]
+    },
+    "LICENSE": {
+      "rating": "UNKNOWN",
+      "reasonCodes": [
+        "LICENSE_UNKNOWN"
+      ]
+    }
+  },
+  "historicalAvailabilityStatus": "VERIFIED_FOR_DECISION_CUTOFFS",
+  "methods": {
+    "manifestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "protocol": {
+      "schemaVersion": "quant-lab-v1",
+      "protocolVersion": "quant-protocol-v1",
+      "folds": [
+        {
+          "fold": 0,
+          "training": {
+            "start": "2026-01-05T14:30:00Z",
+            "end": "2026-01-09T21:00:00Z"
+          },
+          "validation": {
+            "start": "2026-01-12T14:30:00Z",
+            "end": "2026-02-10T21:00:00Z"
+          },
+          "test": {
+            "start": "2026-02-11T14:30:00Z",
+            "end": "2026-02-17T21:00:00Z"
+          }
+        }
+      ],
+      "holdout": {
+        "start": "2026-02-18T14:30:00Z",
+        "end": "2026-02-24T21:00:00Z"
+      },
+      "fittingStatus": "NOT_TRAINABLE"
+    },
+    "experimentVersion": "quant-experiment-v1",
+    "simulatorVersion": "backtest-simulator-v1",
+    "metricsVersion": "quant-metrics-v1",
+    "codeVersion": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "qualityPolicyVersion": "quant-reliability-v1"
+  },
+  "resultLimitations": [
+    "PRICE_ONLY",
+    "DIVIDENDS_EXCLUDED",
+    "IEX_PARTIAL_MARKET",
+    "SURVIVORSHIP_BIAS",
+    "NO_TRADING_AUTHORIZATION"
+  ],
+  "findingsCount": 0,
+  "revisionReferenceCount": 0,
+  "evidenceStatus": "STRICT_PIT_EVIDENCE_COMPLETE"
+}

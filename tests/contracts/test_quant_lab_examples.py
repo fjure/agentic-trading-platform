@@ -416,3 +416,90 @@ def test_problem_status_codes_are_consistent_and_details_never_echoed(standalone
     assert not check.is_valid({**value, "code": "UNAVAILABLE"})
     assert not check.is_valid({**value, "status": 200})
     assert not check.is_valid({**value, "detail": "synthetic private provider response"})
+
+@pytest.mark.parametrize("standalone", [False, True])
+def test_qsl_reliability_requires_complete_bound_strict_evidence(standalone):
+    check = validator("QuantLabReliabilityReport", standalone)
+    strict = fixture("reliability-strict")
+    check.validate(strict)
+    for field, value in [
+        ("researchMode", "RETROSPECTIVE_EXPLORATORY"),
+        ("dataSelectionPolicyVersion", "retrospective-v1"),
+        ("historicalAvailabilityStatus", "NOT_PROVEN"),
+        ("reportId", None), ("runId", None), ("candidateId", "unbound"),
+        ("instrumentId", "SPY"), ("phaseRole", "FINAL_HOLDOUT"),
+        ("fold", None), ("protocolHash", None),
+    ]:
+        assert not check.is_valid({**strict, field: value}), field
+    for key in strict:
+        assert not check.is_valid({k: v for k, v in strict.items() if k != key}), key
+    bad = copy.deepcopy(strict)
+    bad["dimensions"]["HISTORICAL_AVAILABILITY"]["rating"] = "UNKNOWN"
+    assert not check.is_valid(bad)
+    for limitation in ("NOT_STRICT_PIT", "EX_POST_REVISIONS"):
+        assert not check.is_valid({
+            **strict, "resultLimitations": strict["resultLimitations"] + [limitation],
+        })
+    retro = fixture("reliability-retro")
+    check.validate(retro)
+    for key, value in [("evidenceStatus", "STRICT_PIT_EVIDENCE_COMPLETE"),
+                       ("historicalAvailabilityStatus", "VERIFIED_FOR_DECISION_CUTOFFS"),
+                       ("dataSelectionPolicyVersion", "strict-pit-v1")]:
+        assert not check.is_valid({**retro, key: value})
+    for name in ("blocked", "incomplete"):
+        check.validate(fixture("reliability-" + name))
+
+
+@pytest.mark.parametrize("standalone", [False, True])
+def test_qsl_reliability_pages_keep_section_bound_and_no_self_hash_input(standalone):
+    page = fixture("reliability-page")
+    check = validator("QuantLabReliabilityReportPage", standalone)
+    check.validate(page)
+    check.validate({**page, "section": "REVISION_REFERENCES"})
+    for value in (None, "revisions", "ALL"):
+        assert not check.is_valid({**page, "section": value})
+    assert not check.is_valid({**page, "nextCursor": "offset=20"})
+    assert not validator("QuantLabReliabilityReport", standalone).is_valid(
+        {**page["report"], "qualityScore": "1"}
+    )
+    # Report hash semantics are independently visible to producers and consumers.
+    description = OAS["components"]["schemas"]["QuantLabReliabilityReport"]["description"]
+    assert "excluding reportHash/reportId/batchId/runId" in description
+    assert "complete ordered findings" in description
+    assert "complete ordered references" in description
+
+@pytest.mark.parametrize("standalone", [False, True])
+def test_qsl_reliability_sections_reject_foreign_shape_and_unselected_content(standalone):
+    check = validator("QuantLabReliabilityReportPage", standalone)
+    findings = fixture("reliability-findings-page")
+    revisions = fixture("reliability-revisions-page")
+    check.validate(findings)
+    check.validate(revisions)
+    assert not check.is_valid({**findings, "section": "REVISION_REFERENCES"})
+    assert not check.is_valid({**revisions, "section": "FINDINGS"})
+    for key in ("referenceId", "fingerprint"):
+        bad = copy.deepcopy(revisions)
+        bad["revisionReferences"][0][key] = None
+        assert not check.is_valid(bad)
+
+@pytest.mark.parametrize("standalone", [False, True])
+def test_pit_evidence_and_exploratory_eligibility_are_independent_axes(standalone):
+    check = validator("QuantLabReliabilityReport", standalone)
+    strict = fixture("reliability-strict")
+    assert strict["overallStatus"] == "EXPLORATORY_WITH_LIMITATIONS"
+    assert strict["evidenceStatus"] == "STRICT_PIT_EVIDENCE_COMPLETE"
+    assert strict["rating"] == "PASS"
+    for key, value in [("overallStatus", "STRICT_PIT_EVIDENCE_COMPLETE"),
+                       ("overallStatus", "BLOCKED"), ("rating", "LIMITED"),
+                       ("evidenceStatus", None)]:
+        assert not check.is_valid({**strict, key: value})
+    for name in ("blocked", "incomplete"):
+        value = fixture("reliability-" + name)
+        assert value["overallStatus"] == "BLOCKED"
+        assert not check.is_valid({**value, "overallStatus": "EXPLORATORY_WITH_LIMITATIONS"})
+    reference = fixture("result-five-bar-validation")["reliability"]
+    ref_check = validator("QuantLabReliabilityReference", standalone)
+    ref_check.validate(reference)
+    for invalid in ("STRICT_PIT_EVIDENCE_COMPLETE", "INCOMPLETE"):
+        assert not ref_check.is_valid({**reference, "eligibility": invalid})
+    assert not ref_check.is_valid({k: v for k, v in reference.items() if k != "evidenceStatus"})
