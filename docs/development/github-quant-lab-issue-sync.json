@@ -6,7 +6,7 @@
   "transport": "authorized-gh-cli-fallback-mcp-write-403",
   "nativeDependencies": "verified-forward-and-reverse",
   "nativeDependencyVerification": {
-    "verifiedAt": "2026-11-06T16:18:19.154571+00:00",
+    "verifiedAt": "2026-11-06T22:51:00.704888+00:00",
     "edges": 19,
     "added": 0,
     "forwardReadBack": 9,
@@ -19,7 +19,7 @@
       "issueNumber": 77,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/77",
       "contentHash": "e638c02ed416e9194b0146e185a1c8ff4ae48a1240dfefb4c779fffc7a1772ce",
-      "syncedAt": "2026-11-06T16:18:19.154571+00:00",
+      "syncedAt": "2026-11-06T22:51:00.704888+00:00",
       "dependsOn": [],
       "state": "closed",
       "nativeDependsOn": []
@@ -29,7 +29,7 @@
       "issueNumber": 78,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/78",
       "contentHash": "03ab2d30330fadd1743d830bd019d7594c45752c0bfae68813a769440eeed8c8",
-      "syncedAt": "2026-11-06T16:18:19.154571+00:00",
+      "syncedAt": "2026-11-06T22:51:00.704888+00:00",
       "dependsOn": [
         "QSL-01"
       ],
@@ -43,7 +43,7 @@
       "issueNumber": 79,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/79",
       "contentHash": "82f0e3f11169a9445a3ec2f0360ded4ca24afcfa223adb6c472a4ca1448db9ae",
-      "syncedAt": "2026-11-06T16:18:19.154571+00:00",
+      "syncedAt": "2026-11-06T22:51:00.704888+00:00",
       "dependsOn": [
         "QSL-01",
         "QSL-04"
@@ -59,7 +59,7 @@
       "issueNumber": 80,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/80",
       "contentHash": "27fdae28baefdf0d85dbc11aaae993ff2720b1be98644d16eff8a5d2c7e01d4a",
-      "syncedAt": "2026-11-06T16:18:19.154571+00:00",
+      "syncedAt": "2026-11-06T22:51:00.704888+00:00",
       "dependsOn": [
         "QSL-02"
       ],
@@ -73,7 +73,7 @@
       "issueNumber": 81,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/81",
       "contentHash": "01674e503cad71d58810a9758c9058fcfe0ef2229c0ef431a11b88d7aa1088f6",
-      "syncedAt": "2026-11-06T16:18:19.154571+00:00",
+      "syncedAt": "2026-11-06T22:51:00.704888+00:00",
       "dependsOn": [
         "QSL-02"
       ],
@@ -87,7 +87,7 @@
       "issueNumber": 82,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/82",
       "contentHash": "800df441daa7bc630b26c14ebdeb99748efaec05ce8ed680d52606bdb52db95a",
-      "syncedAt": "2026-11-06T16:18:19.154571+00:00",
+      "syncedAt": "2026-11-06T22:51:00.704888+00:00",
       "dependsOn": [
         "QSL-02"
       ],
@@ -101,7 +101,7 @@
       "issueNumber": 83,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/83",
       "contentHash": "8150ee6fa60142a687d753e0871454594d3462434c032a5363cee65032b06c96",
-      "syncedAt": "2026-11-06T16:18:19.154571+00:00",
+      "syncedAt": "2026-11-06T22:51:00.704888+00:00",
       "dependsOn": [
         "QSL-03",
         "QSL-04",
@@ -120,12 +120,12 @@
       "taskId": "QSL-08",
       "issueNumber": 84,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/84",
-      "contentHash": "8e8975467d141c6b544a9e2ae7ac31d3674dab3c22fd4dc3b89b4693a1c4cb01",
-      "syncedAt": "2026-11-06T16:18:19.154571+00:00",
+      "contentHash": "a344febcc431336ac2fe0795038c66737e362033061e210874028d82b142bdd0",
+      "syncedAt": "2026-11-06T22:51:00.704888+00:00",
       "dependsOn": [
         "QSL-07"
       ],
-      "state": "open",
+      "state": "closed",
       "nativeDependsOn": [
         83
       ]
@@ -135,7 +135,7 @@
       "issueNumber": 85,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/85",
       "contentHash": "3ab99ae673e55615dc735f6dfc458a5433e5f4083ae313b7a305718f563ccc6d",
-      "syncedAt": "2026-11-06T16:18:19.154571+00:00",
+      "syncedAt": "2026-11-06T22:51:00.704888+00:00",
       "dependsOn": [
         "QSL-01",
         "QSL-02",
@@ -160,7 +160,7 @@
     }
   ],
   "lastSyncRun": {
-    "syncedAt": "2026-11-06T16:18:19.154571+00:00",
+    "syncedAt": "2026-11-06T22:51:00.704888+00:00",
     "created": 0,
     "updated": 1,
     "unchanged": 8,
