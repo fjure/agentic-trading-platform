@@ -237,6 +237,7 @@ def run_api(config, ledger, telemetry=None):
             "checks": {"DATABASE": "HEALTHY" if ready else "UNAVAILABLE"},
         }
 
+    backtesting = BacktestClient()
     canonical = create_app(
         auth=auth,
         backend=ControlBackend(ledger, config.account_id),
@@ -249,9 +250,10 @@ def run_api(config, ledger, telemetry=None):
         trading_profile=TradingProfileBackend(ledger, config.account_id),
         paper=PaperClient(),
         research=ResearchClient(),
-        backtesting=BacktestClient(),
+        backtesting=backtesting,
         readiness=ReadinessClient(),
         collection=CollectionClient(),
+        quant_lab=backtesting.quant_lab,
     )
 
     def status_loop():

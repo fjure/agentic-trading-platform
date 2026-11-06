@@ -14,6 +14,8 @@ def test_version_changes_with_copied_code_or_dependency_lock(tmp_path):
     schema = tmp_path / "contracts/schemas/v1/backtesting.schema.json"
     schema.parent.mkdir(parents=True)
     schema.write_text("{}\n")
+    quant_schema = schema.with_name("quant-lab.schema.json")
+    quant_schema.write_text("{}\n")
     source = tmp_path / "packages/simulator.py"
     source.write_text("MODEL=1\n")
     original = source_fingerprint(tmp_path)
@@ -26,8 +28,11 @@ def test_version_changes_with_copied_code_or_dependency_lock(tmp_path):
     locked = source_fingerprint(tmp_path)
     assert locked not in {original, changed}
     schema.write_text('{"revision": 2}\n')
-    assert source_fingerprint(tmp_path) not in {original, changed, locked}
-    schema.unlink()
+    backtest_contract = source_fingerprint(tmp_path)
+    assert backtest_contract not in {original, changed, locked}
+    quant_schema.write_text('{"revision": 2}\n')
+    assert source_fingerprint(tmp_path) not in {original, changed, locked, backtest_contract}
+    quant_schema.unlink()
     with pytest.raises(ValueError, match="BACKTEST_SOURCE_UNAVAILABLE"):
         source_fingerprint(tmp_path)
 

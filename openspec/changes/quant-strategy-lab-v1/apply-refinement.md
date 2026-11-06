@@ -90,3 +90,24 @@ verweigerte die Änderung mit 403; der autorisierte GH-Fallback änderte zwei
 bestehende Managedblocks, legte kein Issue an und bestätigte alle 19 Kanten.
 Die Wiederholung bestätigte null Änderungen und neun vollständige Read-backs.
 Dieser Nachweis umfasst keine SQL-/Workerabnahme; QSL-03 bleibt offen.
+
+## QSL-07 Runtime-Verfeinerung
+
+Die Validierungsressource persistiert `INVALID` und `VALIDATED` mit einer
+operation- und definitionsgebundenen Idempotenz. Migration 0036 speichert
+den ersten Beleg je Schlüssel. Nur `VALIDATED` verweist auf die bestehende
+0035-Freigabe, an die der Start gebunden ist. Migration 0035 bleibt unverändert.
+Der aktuelle negative Datengate-Status ist eine separate Leseprojektion.
+
+Ein Suchkandidat und eine Referenz können dieselbe Konfigurations-ID haben.
+Die gestuften Equity- und Drawdown-Routen akzeptieren deshalb `role` und
+liefern die gebundene Rolle in jeder Seite zurück. Ohne Parameter gilt die
+Suchrolle, falls die Konfiguration im Grid liegt, sonst ihre eindeutige
+Referenzrolle. Nichtausgewertete Suchresultate bleiben getrennt. Cursor binden
+Rolle, Phase, Fold, Batch, Ergebnishash und Session.
+
+Die gestufte Foldübersicht enthält die getrennten Aktivitätsverteilungen aus
+D6. Diese Verteilungen verwenden ausschließlich vollständige, ausgewählte
+OOS-Folds. Die 15 Operationen und die bisherigen Bestandsverträge bleiben
+identisch. Die beiden neuen Projektionen werden mit OAS, Schema, Beispielen
+und generiertem Client gemeinsam freigeschaltet.

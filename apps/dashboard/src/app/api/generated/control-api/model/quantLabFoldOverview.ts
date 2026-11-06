@@ -7,6 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { QuantLabFoldActivityRanges } from './quantLabFoldActivityRanges';
 import { QuantLabDescriptiveRange } from './quantLabDescriptiveRange';
 
 
@@ -24,6 +25,7 @@ export interface QuantLabFoldOverview {
     investedBarRatio: QuantLabDescriptiveRange;
     meanGrossExposureRatio: QuantLabDescriptiveRange;
     maxGrossExposureRatio: QuantLabDescriptiveRange;
+    activity: QuantLabFoldActivityRanges;
     warnings: Array<QuantLabFoldOverview.WarningsEnum>;
 }
 export namespace QuantLabFoldOverview {

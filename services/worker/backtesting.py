@@ -50,8 +50,12 @@ class BacktestWorker:
             raise ValueError("actual code version required")
         self.code_version = code_version
         self.owner = uuid4()
+        from services.worker.quant_lab import QuantLabWorker
         from services.worker.retrospective_backtesting import RetrospectiveWorker
 
+        self.quant_lab_worker = QuantLabWorker(
+            engine, owner=self.owner, code_version=self.code_version, timer=timer
+        )
         self.retrospective_worker = RetrospectiveWorker(
             engine, owner=self.owner, code_version=self.code_version, timer=timer
         )
@@ -66,6 +70,9 @@ class BacktestWorker:
             retrospective = self.retrospective_worker.tick()
             if retrospective is not None:
                 return retrospective
+            quant = self.quant_lab_worker.tick()
+            if quant is not None:
+                return quant
             lease = self.jobs.claim(self.owner)
         except BacktestError:
             return False

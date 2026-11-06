@@ -667,6 +667,467 @@
       },
       "completeFoldCount": 0
     },
+    "activity": {
+      "decisionCount": {
+        "median": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "minimum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "maximum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "completeFoldCount": 0
+      },
+      "fillCount": {
+        "median": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "minimum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "maximum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "completeFoldCount": 0
+      },
+      "buyFillCount": {
+        "median": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "minimum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "maximum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "completeFoldCount": 0
+      },
+      "sellFillCount": {
+        "median": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "minimum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "maximum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "completeFoldCount": 0
+      },
+      "entryCount": {
+        "median": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "minimum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "maximum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "completeFoldCount": 0
+      },
+      "exitCount": {
+        "median": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "minimum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "maximum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "completeFoldCount": 0
+      },
+      "endOpenPositionCount": {
+        "median": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "minimum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "maximum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "completeFoldCount": 0
+      },
+      "investedBarCount": {
+        "median": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "minimum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "maximum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "completeFoldCount": 0
+      },
+      "equityBarCount": {
+        "median": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "minimum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "maximum": {
+          "schemaVersion": "quant-lab-v1",
+          "value": null,
+          "status": "N/A",
+          "reasonCode": "NO_SELECTED_CANDIDATE",
+          "observationCount": 0,
+          "frequency": "DAILY_252",
+          "methodVersion": "quant-metrics-v1",
+          "limitations": [
+            "PRICE_ONLY",
+            "IEX_PARTIAL_MARKET",
+            "NO_STATISTICAL_GUARANTEE",
+            "NO_TRADING_AUTHORIZATION",
+            "EXTERNAL_KNOWLEDGE_UNKNOWN"
+          ]
+        },
+        "completeFoldCount": 0
+      }
+    },
     "warnings": [
       "SMALL_FOLD_SAMPLE",
       "NO_SELECTED_CANDIDATE"

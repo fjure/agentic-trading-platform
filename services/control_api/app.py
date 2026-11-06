@@ -6,6 +6,7 @@ injiziert Auth und den persistenten Backendport; ohne Backend bleibt alles gespe
 
 from __future__ import annotations
 
+import hmac
 import json
 import re
 import secrets
@@ -204,14 +205,31 @@ def create_app(
     backtesting=None,
     readiness=None,
     collection=None,
+    quant_lab=None,
 ) -> FastAPI:
     from services.control_api.paper_commands import PaperCommandError
     from services.control_api.paper_routes import paper_problem, register_paper_routes
+    from services.control_api.quant_lab_routes import (
+        quant_lab_path,
+        quant_lab_problem,
+        register_quant_lab_routes,
+    )
 
     auth = auth if auth is not None else LocalAuth()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
+    quant_scope_key = secrets.token_bytes(32)
 
     def public_problem(request, status, code):
+        if quant_lab_path(request.url.path):
+            if status == 400 and request.headers.getlist("origin") not in ([], [auth.origin]):
+                status = 403
+            code = {
+                400: "INVALID_REQUEST",
+                401: "UNAUTHORIZED",
+                403: "FORBIDDEN",
+                503: "UNAVAILABLE",
+            }.get(status, code)
+            return quant_lab_problem(status, code, request.state.trace_id)
         if request.url.path.startswith(("/api/v1/research/data-readiness/",
                                         "/api/v1/research/collection/")):
             from services.control_api.readiness_routes import readiness_problem
@@ -265,7 +283,12 @@ def create_app(
             if not operational_probe and (
                 request.url.path != "/api/v1/session" or request.method != "POST"
             ):
-                request.state.actor_id = auth.authenticate(request.cookies.get("atl_session", ""))
+                token = request.cookies.get("atl_session", "")
+                request.state.actor_id = auth.authenticate(token)
+                if quant_lab_path(request.url.path):
+                    request.state.quant_scope = hmac.digest(
+                        quant_scope_key, token.encode("ascii"), "sha256"
+                    ).hex()
             response = await call_next(request)
         except AuthDenied as exc:
             response = public_problem(request, exc.status, exc.code)
@@ -481,6 +504,10 @@ def create_app(
     register_research_routes(app, research=research, body_reader=_body, key_reader=key)
     from services.control_api.backtest_routes import register_backtest_routes
     register_backtest_routes(app, backtesting=backtesting, body_reader=_body, key_reader=key)
+    register_quant_lab_routes(
+        app, handler=quant_lab, body_reader=_body, key_reader=key,
+        scope_reader=lambda request: request.state.quant_scope,
+    )
     from services.control_api.readiness_routes import register_readiness_routes
     register_readiness_routes(app, readiness=readiness, body_reader=_body, key_reader=key)
     from services.control_api.collection_routes import register_collection_routes
