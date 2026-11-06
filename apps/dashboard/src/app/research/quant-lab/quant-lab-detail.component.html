@@ -1,0 +1,289 @@
+@if (batch(); as batch) {
+  <mat-card class="detail-card">
+    <mat-card-header>
+      <mat-card-title>Batch-Ergebnisse</mat-card-title>
+      <mat-card-subtitle>Batch {{ batch.id }} · {{ batch.state }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="summary">
+        <div><strong>Suchkandidaten</strong><br>{{ batch.candidateCounts.complete }} vollständig / {{ batch.candidateCounts.planned }} geplant · {{ batch.candidateCounts.started }} begonnen · {{ batch.candidateCounts.failed }} fehlgeschlagen · {{ batch.candidateCounts.blocked }} blockiert · {{ batch.candidateCounts.notEvaluated }} nicht ausgewertet</div>
+        <div><strong>Feste Referenzen</strong><br>{{ batch.referenceCounts.complete }} vollständig / {{ batch.referenceCounts.planned }} geplant · {{ batch.referenceCounts.started }} begonnen · {{ batch.referenceCounts.failed }} fehlgeschlagen · {{ batch.referenceCounts.blocked }} blockiert · {{ batch.referenceCounts.notEvaluated }} nicht ausgewertet</div>
+        <div><strong>Stand</strong><br>{{ batch.updatedAt }} · Versuche {{ batch.attemptCount }}</div>
+      </div>
+      @if (batch.reasons.length) { <p role="status">{{ batch.reasons.join(' · ') }}</p> }
+      @if (batch.manifest; as manifest) {
+        <details>
+          <summary>Gebundener Snapshot und Phasen</summary>
+          <p class="fingerprint">Snapshot {{ manifest.snapshotReference.snapshotVersion }} · {{ manifest.snapshotReference.snapshotAt }} · Manifest {{ manifest.manifestHash }}</p>
+          <ul>
+            @for (phase of manifest.phaseBindings; track phase.phase + ':' + phase.fold) {
+              <li>{{ phases[phase.phase] }} @if (phase.fold !== null) { · Fold {{ phase.fold + 1 }} }
+                · {{ phase.researchRole }} · {{ phase.interval.start }} bis {{ phase.interval.end }}
+                · {{ phase.seedBarCount }} Seed-Bars · {{ phase.fittingStatus }}</li>
+            }
+          </ul>
+        </details>
+      }
+      @if (reportHref(); as href) { <a mat-button [href]="href">Bericht dauerhaft verlinken</a> }
+      @if (batch.currentWarnings.length) {
+        <h4>Aktuelle Warnungen</h4>
+        <ul>@for (warning of batch.currentWarnings; track $index) {
+          <li>{{ warning.code }} · {{ warning.observedAt }} {{ warning.relatedBatchId ?? '' }}</li>
+        }</ul>
+      }
+      <p class="qualifier">{{ batch.limitations.join(' · ') }}</p>
+      <details>
+        <summary>Kandidaten und Referenzen ({{ candidates().length }})</summary>
+        <ul>
+          @for (candidate of candidates(); track candidate.candidateId + candidate.role) {
+            <li>{{ candidateNames().get(candidate.candidateId) ?? candidate.candidateId }} · {{ roles[candidate.role] }} · {{ candidate.state }} · {{ candidate.fittingStatus }} {{ candidate.reasons.join(' · ') }}</li>
+          } @empty { <li>Keine Kandidaten geladen.</li> }
+        </ul>
+        @if (candidatesMore()) { <button mat-button type="button" [disabled]="busy()" (click)="moreCandidates.emit()">Weitere Kandidaten</button> }
+      </details>
+
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Phasenergebnisse">
+        <table aria-label="Phasenergebnisse">
+          <thead><tr><th scope="col">Kandidat und Rolle</th><th scope="col">Phase</th><th scope="col">Auswertung</th><th scope="col">Nettorendite / Drawdown</th><th scope="col">Details</th></tr></thead>
+          <tbody>
+          @for (row of results(); track row.candidateId + ':' + row.role + ':' + row.phase + ':' + row.fold) {
+            <tr>
+              <td><strong>{{ candidateNames().get(row.candidateId) ?? row.candidateId }}</strong><br>{{ roles[row.role] }} · {{ row.fittingStatus }}</td>
+              <td>{{ phases[row.phase] }} @if (row.fold !== null) { · Fold {{ row.fold + 1 }} }<br>{{ row.researchRole }}</td>
+              <td>{{ outcomes[row.evaluationStatus] }}<br><small>{{ row.evaluationStatus }}</small>
+                @if (row.reasonCodes.length) { <br>{{ row.reasonCodes.join(' · ') }} }
+                @if (row.metrics; as metrics) {
+                  @if (metrics.activityWarnings.codes.length) { <br>{{ metrics.activityWarnings.codes.join(' · ') }} }
+                }
+              </td>
+              <td>@if (row.metrics; as m) { {{ metric(m.netReturn) }} / {{ metric(m.maxDrawdown) }} } @else { N/A }</td>
+              <td>
+                @if (row.evaluationStatus === 'COMPLETE') {
+                  <button mat-button type="button" [disabled]="busy()" (click)="selectResult.emit(row)">{{ batch.reportId ? 'Kurven ansehen' : 'Kennzahlen ansehen' }}</button>
+                }
+                @if (row.reliability) {
+                  <button mat-button type="button" [disabled]="busy()" (click)="showReliability.emit(row)">Reliability ansehen</button>
+                }
+              </td>
+            </tr>
+          } @empty { <tr><td colspan="5">Keine Phasenergebnisse geladen.</td></tr> }
+          </tbody>
+        </table>
+      </div>
+      @if (resultsMore()) { <button mat-button type="button" [disabled]="busy()" (click)="moreResults.emit()">Weitere Ergebnisse</button> }
+    </mat-card-content>
+  </mat-card>
+
+  @if (selectedResult(); as row) {
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>{{ batch.reportId ? 'Equity und Drawdown' : 'Kennzahlen der Phase' }}</mat-card-title>
+        <mat-card-subtitle>{{ candidateNames().get(row.candidateId) ?? row.candidateId }} · {{ roles[row.role] }} · {{ phases[row.phase] }} @if (row.fold !== null) { · Fold {{ row.fold + 1 }} }</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (row.metrics; as m) {
+          <div class="summary">
+            <div><strong>Beobachtete / erwartete Bars</strong><br>{{ m.observedBarCount }} / {{ m.expectedBarCount }}</div>
+            <div><strong>Vollständige Validation-Sitzungen</strong><br>{{ m.completeValidationSessions }}</div>
+            <div><strong>Aktivitätswarnungen</strong><br>{{ m.activityWarnings.status }} {{ m.activityWarnings.codes.join(' · ') }}</div>
+          </div>
+          @if (row.selectionValues; as exactValues) { <p><strong>Exakte Auswahlwerte</strong> · {{ exact(exactValues) }}</p> }
+          <div class="table-scroll">
+            <table aria-label="Kennzahlen der Phase"><tbody>
+              @for (entry of metricLabels; track entry[0]) { <tr><th scope="row">{{ entry[1] }}</th><td>{{ metric(m[entry[0]]) }}</td></tr> }
+              @for (entry of exposureLabels; track entry[0]) { <tr><th scope="row">{{ entry[1] }}</th><td>{{ metric(m.exposure[entry[0]]) }}</td></tr> }
+              @for (entry of activityLabels; track entry[0]) {
+                <tr><th scope="row">{{ entry[1] }}</th><td>
+                  @if (entry[0] === 'investedBarCount' || entry[0] === 'equityBarCount') {
+                    {{ metric(m.exposure[entry[0]]) }}
+                  } @else { {{ metric(m.activity[entry[0]]) }} }
+                </td></tr>
+              }
+            </tbody></table>
+          </div>
+        }
+        @if (!batch.reportId) { <p>Kurven sind mit dem veröffentlichten Batchbericht verfügbar.</p> }
+        <div class="curves">
+          @if (equity(); as page) {
+            <figure>
+              <figcaption>Equity (USD) · {{ page.items.length }} / {{ page.totalPointCount }} Punkte</figcaption>
+              @if (equityPoints(); as points) {
+                <svg viewBox="0 0 640 180" role="img" aria-label="Equity an den gelieferten Bar-Schlüssen">
+                  @if (page.items.length === 1) { <circle cx="320" cy="90" r="4" /> }
+                  @else { <polyline [attr.points]="points" /> }
+                </svg>
+                <p class="curve-scale"><span>{{ page.items[0].at }} · {{ page.items[0].equity }}</span><span>{{ page.items[page.items.length - 1].at }} · {{ page.items[page.items.length - 1].equity }}</span></p>
+                <details><summary>Exakte Equity-Punkte</summary><ol>@for (point of page.items; track point.at) { <li>{{ point.at }} · {{ point.equity }} USD</li> }</ol></details>
+              } @else { <p>Keine Equity-Punkte geladen.</p> }
+              @if (page.nextCursor) { <button mat-button type="button" [disabled]="busy()" (click)="moreEquity.emit()">Weitere Equity-Punkte</button> }
+            </figure>
+          }
+          @if (drawdown(); as page) {
+            <figure>
+              <figcaption>Drawdown · {{ page.items.length }} / {{ page.totalPointCount }} Punkte</figcaption>
+              @if (drawdownPoints(); as points) {
+                <svg viewBox="0 0 640 180" role="img" aria-label="Drawdown an den gelieferten Bar-Schlüssen">
+                  @if (page.items.length === 1) { <circle cx="320" cy="90" r="4" /> }
+                  @else { <polyline [attr.points]="points" /> }
+                </svg>
+                <p class="curve-scale"><span>{{ page.items[0].at }} · {{ page.items[0].drawdown }}</span><span>{{ page.items[page.items.length - 1].at }} · {{ page.items[page.items.length - 1].drawdown }}</span></p>
+                <details><summary>Exakte Drawdown-Punkte</summary><ol>@for (point of page.items; track point.at) { <li>{{ point.at }} · {{ point.drawdown }}</li> }</ol></details>
+              } @else { <p>Keine Drawdown-Punkte geladen.</p> }
+              @if (page.nextCursor) { <button mat-button type="button" [disabled]="busy()" (click)="moreDrawdown.emit()">Weitere Drawdown-Punkte</button> }
+            </figure>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (reliability(); as page) {
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>Reliability-Bericht</mat-card-title>
+        <mat-card-subtitle>{{ roles[page.report.role] }} · {{ phases[page.report.phase] }} · {{ page.report.researchMode }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p><strong>{{ page.report.evidenceStatus }}</strong> · {{ page.report.rating }} · {{ page.report.overallStatus }} · {{ page.report.historicalAvailabilityStatus }}</p>
+        <p>Snapshot {{ page.report.snapshotReference.snapshotVersion }} · {{ page.report.snapshotReference.snapshotAt }} · {{ page.report.dataSelectionPolicyVersion }}</p>
+        <p class="fingerprint">{{ page.report.reportId }} · {{ page.report.reportHash }}</p>
+        <p class="qualifier">{{ page.report.resultLimitations.join(' · ') }}</p>
+        <ul>
+          @for (dimension of reliabilityDimensions(); track dimension[0]) { <li>{{ dimension[0] }} · {{ dimension[1].rating }} {{ dimension[1].reasonCodes.join(' · ') }}</li> }
+        </ul>
+        @if (page.currentWarnings.length) {
+          <h4>Aktuelle Reliability-Warnungen</h4>
+          <ul>@for (warning of page.currentWarnings; track $index) {
+            <li>{{ warning.code }} · {{ warning.category }} · {{ warning.checkedAt }} @if (warning.blocksNewExecution) { · Neue Ausführung blockiert }</li>
+          }</ul>
+        }
+        <button mat-button type="button" [disabled]="busy() || page.section === 'FINDINGS'" (click)="reliabilitySection.emit('FINDINGS')">Befunde ({{ page.report.findingsCount }})</button>
+        <button mat-button type="button" [disabled]="busy() || page.section === 'REVISION_REFERENCES'" (click)="reliabilitySection.emit('REVISION_REFERENCES')">Revisionsreferenzen ({{ page.report.revisionReferenceCount }})</button>
+        @if (page.section === 'FINDINGS') {
+          <ul>@for (finding of page.findings; track finding.findingId) {
+            <li>{{ finding.severity }} · {{ finding.category }} · {{ finding.code }}</li>
+          } @empty { <li>Keine Befunde.</li> }</ul>
+        } @else {
+          <ul>@for (reference of page.revisionReferences; track reference.kind + reference.referenceId) {
+            <li class="fingerprint">{{ reference.kind }} · {{ reference.referenceId }} · {{ reference.recordedAt }} · {{ reference.fingerprint }}</li>
+          } @empty { <li>Keine Revisionsreferenzen.</li> }</ul>
+        }
+        @if (page.nextCursor) { <button mat-button type="button" [disabled]="busy()" (click)="moreReliability.emit()">Weitere Reliability-Einträge</button> }
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (comparison(); as report) {
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>Auswahlprotokoll</mat-card-title>
+        <mat-card-subtitle>{{ outcomes[report.status] ?? report.status }} · {{ report.createdAt }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="fingerprint">Vergleichsbericht {{ report.id }} · {{ report.reportHash }}</p>
+        <p><strong>{{ report.strategySelectionPolicy.policyId }}</strong> · Drawdown-Grenze {{ report.strategySelectionPolicy.maxDrawdown }} · Mindestzahl Sitzungen {{ report.strategySelectionPolicy.minValidationSessions }} · Einstiege {{ report.strategySelectionPolicy.minimumEntryCount ?? 'ohne Mindestwert' }} · investierter Baranteil {{ report.strategySelectionPolicy.minimumInvestedBarRatio ?? 'ohne Mindestwert' }}</p>
+        @if (report.reasons.length) { <p>{{ report.reasons.join(' · ') }}</p> }
+        <p class="qualifier">{{ report.limitations.join(' · ') }}</p>
+        @if (report.currentWarnings.length) {
+          <h4>Aktuelle Warnungen zum Vergleich</h4>
+          <ul>@for (warning of report.currentWarnings; track $index) {
+            <li>{{ warning.code }} · {{ warning.observedAt }} {{ warning.relatedBatchId ?? '' }}</li>
+          }</ul>
+        }
+        @for (selection of report.selections; track selection.selectionHash) {
+          <details open>
+            <summary>{{ selection.scope === 'FINAL' ? 'Finale Auswahl' : 'Fold ' + ((selection.fold ?? 0) + 1) }} · {{ outcomes[selection.status] }} · {{ selection.eligibleCount }}/{{ selection.candidateCount }} zulässig</summary>
+            <p>{{ selection.status }} · {{ selection.rankingReasons.join(' · ') }}</p>
+            @if (selection.selectedCandidateId; as id) { <p><strong>Ausgewählt</strong> · {{ candidateNames().get(id) ?? id }}</p> }
+            <p class="fingerprint">Eingefroren {{ selection.frozenAt }} · {{ selection.selectionHash }}</p>
+            <ul class="selection-list">
+              @for (candidate of selection.candidates; track candidate.candidateId) {
+                <li><details>
+                  <summary>{{ candidateNames().get(candidate.candidateId) ?? candidate.candidateId }} · {{ candidate.eligibility }} @if (candidate.rank !== null) { · Rang {{ candidate.rank }} }</summary>
+                  @if (candidate.reasons.length) { <p>{{ candidate.reasons.join(' · ') }}</p> }
+                  @if (candidate.medianSelectionValues; as values) {
+                    <p><strong>Exakte Validation-Mediane</strong> · Nettorendite {{ values.netReturn }} · Drawdown {{ values.maxDrawdown }} · Umschlag {{ values.turnover }} · investierter Baranteil {{ values.investedBarRatio }}</p>
+                  }
+                  @for (validation of candidate.validationValues; track validation.fold) {
+                    <p><strong>Exakte Auswahlwerte · Fold {{ validation.fold + 1 }}</strong><br>
+                      {{ validation.selectionValues ? exact(validation.selectionValues) : 'N/A' }}</p>
+                    <ul>
+                      @for (gate of validation.gates; track gate.gate) {
+                        <li>{{ gate.gate }} · {{ gate.status }}
+                          @if (gate.value !== null) { · Wert {{ gate.value }} }
+                          @if (gate.threshold !== null) { · Grenze {{ gate.threshold }} }
+                          {{ gate.reasonCodes.join(' · ') }}</li>
+                      }
+                    </ul>
+                  }
+                </details></li>
+              }
+            </ul>
+          </details>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="detail-card">
+      <mat-card-header><mat-card-title>Fold-Übersicht</mat-card-title></mat-card-header>
+      <mat-card-content>
+        @let folds = report.foldOverview;
+        <p>{{ folds.plannedFoldCount }} geplant · {{ folds.selectedFoldCount }} ausgewählt · {{ folds.completeOosFoldCount }} vollständige OOS-Folds · {{ folds.positiveOosFoldCount }} positiv</p>
+        @if (folds.warnings.length) { <p>{{ folds.warnings.join(' · ') }}</p> }
+        <div class="table-scroll"><table aria-label="Fold-Übersicht">
+          <thead><tr><th scope="col">Kennzahl</th><th scope="col">Median</th><th scope="col">Minimum</th><th scope="col">Maximum</th><th scope="col">Folds</th></tr></thead>
+          <tbody>
+            @for (entry of foldLabels; track entry[0]) {
+              <ng-container *ngTemplateOutlet="rangeRow; context: { name: entry[1], value: folds[entry[0]] }" />
+            }
+            @for (entry of activityLabels; track entry[0]) {
+              <ng-container *ngTemplateOutlet="rangeRow; context: { name: entry[1], value: folds.activity[entry[0]] }" />
+            }
+          </tbody>
+        </table></div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="detail-card">
+      <mat-card-header><mat-card-title>Validation-Sensitivität</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Validation-Sensitivität">
+          <table aria-label="Validation-Sensitivität">
+            <thead><tr><th scope="col">Konfiguration</th><th scope="col">Fold</th><th scope="col">Status</th><th scope="col">Nettorendite</th><th scope="col">Drawdown</th><th scope="col">Rang</th></tr></thead>
+            <tbody>@for (cell of report.sensitivity; track cell.candidateId + ':' + cell.fold) {
+              <tr><td>{{ candidateNames().get(cell.candidateId) ?? cell.candidateId }}</td><td>{{ cell.fold + 1 }}</td>
+                <td>{{ cell.status }}</td><td>{{ cell.selectionValues?.netReturn ?? metric(cell.netReturn) }}</td>
+                <td>{{ cell.selectionValues?.maxDrawdown ?? metric(cell.maxDrawdown) }}</td><td>{{ cell.rank ?? 'N/A' }}</td></tr>
+            } @empty { <tr><td colspan="6">Keine Sensitivitätsdaten geladen.</td></tr> }</tbody>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (history(); as history) {
+    <mat-card class="detail-card">
+      <mat-card-header><mat-card-title>Forschungshistorie</mat-card-title><mat-card-subtitle>Stand {{ history.boundAt }}</mat-card-subtitle></mat-card-header>
+      <mat-card-content>
+        <p><strong>{{ history.reuseStatus }}</strong> · {{ history.externalKnowledgeStatus }} · Externe Vorkenntnis ist unbekannt.</p>
+        <p>{{ history.registeredRoundCount }} registrierte Runden · {{ history.priorFailedRoundCount }} fehlgeschlagen · {{ history.priorBlockedRoundCount }} blockiert · {{ history.supersededRoundCount }} abgelöst · {{ history.overlapCount }} Überschneidungen · {{ history.repeatedValidationCount }} wiederholte Validierungen · {{ history.warmupOverlapCount }} Warm-up-Überschneidungen</p>
+        <p class="fingerprint">Register {{ history.registryHash }}</p>
+        <p class="qualifier">{{ history.limitations.join(' · ') }}</p>
+        <div class="table-scroll"><table aria-label="Historische Überschneidungen">
+          <thead><tr><th scope="col">Rolle aktuell / vorher</th><th scope="col">Überschneidung</th><th scope="col">Frühere Runde</th><th scope="col">Status</th></tr></thead>
+          <tbody>@for (overlap of history.overlaps; track $index) {
+            <tr><td>{{ overlap.currentRole }} / {{ overlap.priorRole }}</td>
+              <td>{{ overlap.overlapInterval.start }} bis {{ overlap.overlapInterval.end }} · {{ overlap.overlapBarCount }} Bars</td>
+              <td>{{ overlap.priorBatchId ?? overlap.priorRunId ?? 'Unbekannt' }}</td><td>{{ overlap.priorStatus }} · {{ overlap.knowledgeStatus }}</td></tr>
+          } @empty { <tr><td colspan="4">Keine registrierten Überschneidungen angezeigt.</td></tr> }</tbody>
+        </table></div>
+        @if (historyMore() || history.nextOverlapCursor) { <button mat-button type="button" [disabled]="busy()" (click)="moreHistory.emit()">Weitere Überschneidungen</button> }
+      </mat-card-content>
+    </mat-card>
+  }
+}
+
+<ng-template #rangeRow let-name="name" let-value="value">
+  <tr><th scope="row">{{ name }}</th><td>{{ metric(value.median) }}</td><td>{{ metric(value.minimum) }}</td>
+    <td>{{ metric(value.maximum) }}</td><td>{{ value.completeFoldCount }}</td></tr>
+</ng-template>

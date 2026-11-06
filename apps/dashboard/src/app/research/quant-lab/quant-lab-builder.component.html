@@ -1,0 +1,159 @@
+<mat-card aria-labelledby="quant-builder-title">
+  <mat-card-header>
+    <mat-card-title id="quant-builder-title">Experiment entwerfen</mat-card-title>
+    <mat-card-subtitle>Strict PIT · unabhängige Phasen · lokales Research</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field class="hypothesis">
+        <mat-label>Forschungshypothese</mat-label>
+        <textarea matInput formControlName="hypothesis" rows="3" maxlength="2000" required></textarea>
+        <mat-hint>Redigierte fachliche Annahme, bis zu 2.000 Zeichen</mat-hint>
+      </mat-form-field>
+
+      <div class="fields">
+        <mat-form-field>
+          <mat-label>Instrument</mat-label>
+          <mat-select formControlName="instrumentId" required>
+            @for (item of allowedInstruments(); track item.instrumentId) {
+              <mat-option [value]="item.instrumentId">{{ item.baseUnit }} · {{ item.currency }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Forschungsmodus</mat-label>
+          <mat-select formControlName="researchMode">
+            <mat-option value="STRICT_PIT">Strict PIT</mat-option>
+            <mat-option value="RETROSPECTIVE_EXPLORATORY">Retrospective Exploratory</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <p>IEX · raw · 15 Minuten · USD · Long/Flat</p>
+
+      <h3>Kandidatenraster</h3>
+      <p>Kommagetrennte Werte bilden das vollständige Raster. Die API prüft Kandidaten und Gesamtbudget.</p>
+      <div formArrayName="grids">
+        @for (grid of grids.controls; track grid; let i = $index) {
+          <fieldset class="group" [formGroupName]="i">
+            <legend>Raster {{ i + 1 }}</legend>
+            <div class="fields">
+              <mat-form-field>
+                <mat-label>Strategie für Raster {{ i + 1 }}</mat-label>
+                <mat-select formControlName="strategyId">
+                  @for (item of catalog()?.items ?? []; track item.strategyId) {
+                    <mat-option [value]="item.strategyId">{{ item.displayName }} · {{ item.strategyId }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              @if (grid.controls.strategyId.value === 'ema-cross-v1' || grid.controls.strategyId.value === 'sma-cross-v1') {
+                <mat-form-field><mat-label>Fast-Werte (Raster {{ i + 1 }})</mat-label><input matInput formControlName="fast"></mat-form-field>
+                <mat-form-field><mat-label>Slow-Werte (Raster {{ i + 1 }})</mat-label><input matInput formControlName="slow"></mat-form-field>
+              } @else if (grid.controls.strategyId.value === 'rsi-mean-reversion-v1') {
+                <mat-form-field><mat-label>RSI-Perioden (Raster {{ i + 1 }})</mat-label><input matInput formControlName="period"></mat-form-field>
+                <mat-form-field><mat-label>RSI-Einstiegsschwellen (Raster {{ i + 1 }})</mat-label><input matInput formControlName="entry"></mat-form-field>
+                <mat-form-field><mat-label>RSI-Ausstiegsschwellen (Raster {{ i + 1 }})</mat-label><input matInput formControlName="exit"></mat-form-field>
+              }
+            </div>
+            @if (grids.length > 1) {
+              <button mat-button type="button" (click)="removeGrid(i)" [disabled]="busy()">Raster {{ i + 1 }} entfernen</button>
+            }
+          </fieldset>
+        }
+      </div>
+      <button mat-button type="button" (click)="addGrid()" [disabled]="busy() || grids.length >= (catalog()?.items?.length ?? 0)">Strategie zum Raster hinzufügen</button>
+      <div class="preview" aria-live="polite">
+        @let count = preview().count;
+        @let references = catalog()?.limits.referenceCount ?? 2;
+        @if (count !== null) {
+          <strong>{{ count }} Suchkandidaten</strong> · {{ references }} feste Referenzen · {{ count + references }} gewichtete Queueplätze
+          <span>Flat und Buy-and-Hold werden separat ausgewiesen.</span>
+        } @else {
+          <span>{{ preview().reason }}</span>
+        }
+      </div>
+
+      <h3>Zeitprotokoll</h3>
+      <p>UTC mit Z, z. B. 2026-01-05T14:30:00Z. Fensterenden sind exklusiv. Jede Phase startet mit eigener Position und eigenem Startkapital.</p>
+      <div formArrayName="folds">
+        @for (item of folds.controls; track item; let i = $index) {
+          <fieldset class="group" [formGroupName]="i">
+            <legend>Fold {{ i + 1 }}</legend>
+            @for (phase of phases; track phase.key) {
+              <div [formGroupName]="phase.key">
+                <p class="role"><strong>{{ phase.label }}</strong> · {{ phase.role }}</p>
+                <div class="fields">
+                  <mat-form-field>
+                    <mat-label>{{ phase.label }} Start UTC (Fold {{ i + 1 }})</mat-label><input matInput formControlName="start" required>
+                  </mat-form-field>
+                  <mat-form-field>
+                    <mat-label>{{ phase.label }} Ende UTC (Fold {{ i + 1 }})</mat-label><input matInput formControlName="end" required>
+                  </mat-form-field>
+                </div>
+              </div>
+            }
+            @if (folds.length > 1) {
+              <button mat-button type="button" (click)="removeFold(i)" [disabled]="busy()">Fold {{ i + 1 }} entfernen</button>
+            }
+          </fieldset>
+        }
+      </div>
+      <button mat-button type="button" (click)="addFold()" [disabled]="busy() || folds.length >= (catalog()?.limits.maximumFolds ?? 4)">Fold hinzufügen</button>
+      <fieldset class="group" formGroupName="holdout">
+        <legend>Finaler Holdout · FINAL_HOLDOUT</legend>
+        <div class="fields">
+          <mat-form-field><mat-label>Holdout Start UTC</mat-label><input matInput formControlName="start" required></mat-form-field>
+          <mat-form-field><mat-label>Holdout Ende UTC</mat-label><input matInput formControlName="end" required></mat-form-field>
+        </div>
+      </fieldset>
+      <p>NOT_TRAINABLE · Warm-up initialisiert den Indikator. Die Validation dient der Auswahl.</p>
+
+      <h3>Auswahl und Kosten</h3>
+      <div class="fields">
+        <mat-form-field>
+          <mat-label>Auswahlregel</mat-label>
+          <mat-select formControlName="policyId">
+            <mat-option value="MAX_NET_RETURN_WITH_DRAWDOWN_CONSTRAINT_V1">Nettorendite unter Drawdown-Grenze</mat-option>
+            <mat-option value="CAPITAL_PRESERVATION_DRAWDOWN_FIRST_V1">Kapitalerhalt · geringster Drawdown zuerst</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field><mat-label>Maximaler Drawdown</mat-label><input matInput formControlName="maxDrawdown" inputmode="decimal" required><mat-hint>Quote von 0 bis 1, inklusive Grenze</mat-hint></mat-form-field>
+        <mat-form-field><mat-label>Minimale Validation-Sitzungen</mat-label><input matInput formControlName="minValidationSessions" inputmode="numeric" required></mat-form-field>
+        <mat-form-field><mat-label>Minimale Entries</mat-label><input matInput formControlName="minimumEntryCount" inputmode="numeric"><mat-hint>Leer deaktiviert die Untergrenze</mat-hint></mat-form-field>
+        <mat-form-field><mat-label>Minimale Investiertheitsquote</mat-label><input matInput formControlName="minimumInvestedBarRatio" inputmode="decimal"><mat-hint>Leer deaktiviert die Untergrenze</mat-hint></mat-form-field>
+        <mat-form-field><mat-label>Startkapital (USD)</mat-label><input matInput formControlName="startCash" inputmode="decimal" required></mat-form-field>
+        <mat-form-field><mat-label>Gebühr (USD)</mat-label><input matInput formControlName="feeUsd" inputmode="decimal" required></mat-form-field>
+        <mat-form-field><mat-label>Slippage (Basispunkte)</mat-label><input matInput formControlName="slippageBps" inputmode="decimal" required></mat-form-field>
+      </div>
+      @if (error()) { <p role="alert" class="error">{{ error() }}</p> }
+      <button mat-flat-button type="submit" [disabled]="busy() || !catalog()">Entwurf speichern</button>
+    </form>
+  </mat-card-content>
+</mat-card>
+
+<mat-card aria-labelledby="quant-catalog-title">
+  <mat-card-header><mat-card-title id="quant-catalog-title">Strategiekatalog</mat-card-title></mat-card-header>
+  <mat-card-content>
+    @if (catalog(); as available) {
+      <p>{{ available.catalogVersion }} · bis {{ available.limits.maximumCandidates }} Suchkandidaten und {{ available.limits.maximumFolds }} Folds</p>
+      <div class="catalog">
+        @for (item of available.items; track item.strategyId) {
+          <article>
+            <h3>{{ item.displayName }}</h3>
+            <p>{{ item.strategyId }} · v{{ item.version }} · {{ item.fittingStatus }}</p>
+            <p>{{ item.description }}</p>
+            <p>{{ item.researchModes.join(' · ') }} · {{ item.warmupRule }}</p>
+            @if (item.parameterDefinitions.length) {
+              <ul>
+                @for (parameter of item.parameterDefinitions; track parameter.name) {
+                  <li>{{ parameter.name }} · {{ parameter.minimum }} bis {{ parameter.maximum }}</li>
+                }
+              </ul>
+            }
+          </article>
+        }
+      </div>
+    } @else {
+      <p>Strategiekatalog wird geladen.</p>
+    }
+  </mat-card-content>
+</mat-card>

@@ -1,4 +1,9 @@
 <section aria-labelledby="research-title">
+  @defer (when quantOpen()) {
+    <atl-quant-lab [instruments]="instruments()" (sessionLost)="sessionLost.emit()" />
+  } @placeholder {
+    <button mat-stroked-button type="button" (click)="quantOpen.set(true)">Quant Strategy Lab öffnen</button>
+  }
   <atl-backtesting (sessionLost)="sessionLost.emit()" />
   <h2 id="research-title">Research</h2>
   <p>Gespeicherte Marktdaten · IEX · raw · observed-as-of. Historische Publikationszeiten sind nicht nachgewiesen. IEX bildet nicht den Gesamtmarkt ab.</p>
