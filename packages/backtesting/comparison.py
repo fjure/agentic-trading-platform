@@ -388,6 +388,7 @@ def build_fold_overview(manifest, selections, rows):
             )
             for name in fields
         },
+        "activity": _fold_activity_ranges(complete),
         "warnings": warnings,
     }
 
@@ -395,6 +396,10 @@ def build_fold_overview(manifest, selections, rows):
 def build_fold_activity_ranges(manifest, selections, rows):
     """Separate activity distributions for consumers of the phase ledger."""
     _, complete = _selected_test_metrics(manifest, selections, rows)
+    return _fold_activity_ranges(complete)
+
+
+def _fold_activity_ranges(complete):
     names = (
         "decisionCount",
         "fillCount",

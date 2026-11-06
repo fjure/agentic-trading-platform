@@ -4444,6 +4444,51 @@
         }
       }
     },
+    "QuantLabFoldActivityRanges": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decisionCount",
+        "fillCount",
+        "buyFillCount",
+        "sellFillCount",
+        "entryCount",
+        "exitCount",
+        "endOpenPositionCount",
+        "investedBarCount",
+        "equityBarCount"
+      ],
+      "properties": {
+        "decisionCount": {
+          "$ref": "#/$defs/QuantLabDescriptiveRange"
+        },
+        "fillCount": {
+          "$ref": "#/$defs/QuantLabDescriptiveRange"
+        },
+        "buyFillCount": {
+          "$ref": "#/$defs/QuantLabDescriptiveRange"
+        },
+        "sellFillCount": {
+          "$ref": "#/$defs/QuantLabDescriptiveRange"
+        },
+        "entryCount": {
+          "$ref": "#/$defs/QuantLabDescriptiveRange"
+        },
+        "exitCount": {
+          "$ref": "#/$defs/QuantLabDescriptiveRange"
+        },
+        "endOpenPositionCount": {
+          "$ref": "#/$defs/QuantLabDescriptiveRange"
+        },
+        "investedBarCount": {
+          "$ref": "#/$defs/QuantLabDescriptiveRange"
+        },
+        "equityBarCount": {
+          "$ref": "#/$defs/QuantLabDescriptiveRange"
+        }
+      },
+      "description": "Separate descriptive activity counts over completed selected candidate OOS folds."
+    },
     "QuantLabFoldOverview": {
       "type": "object",
       "additionalProperties": false,
@@ -4458,6 +4503,7 @@
         "investedBarRatio",
         "meanGrossExposureRatio",
         "maxGrossExposureRatio",
+        "activity",
         "warnings"
       ],
       "properties": {
@@ -4499,6 +4545,9 @@
         },
         "maxGrossExposureRatio": {
           "$ref": "#/$defs/QuantLabDescriptiveRange"
+        },
+        "activity": {
+          "$ref": "#/$defs/QuantLabFoldActivityRanges"
         },
         "warnings": {
           "type": "array",
@@ -5014,6 +5063,14 @@
         }
       }
     },
+    "QuantLabCurveRole": {
+      "type": "string",
+      "enum": [
+        "SEARCH_CANDIDATE",
+        "REFERENCE_FLAT",
+        "REFERENCE_BUY_HOLD"
+      ]
+    },
     "QuantLabEquityPage": {
       "type": "object",
       "additionalProperties": false,
@@ -5023,6 +5080,7 @@
         "candidateId",
         "reportHash",
         "phase",
+        "role",
         "researchRole",
         "fold",
         "items",
@@ -5047,6 +5105,9 @@
         },
         "phase": {
           "$ref": "#/$defs/QuantLabPhase"
+        },
+        "role": {
+          "$ref": "#/$defs/QuantLabCurveRole"
         },
         "researchRole": {
           "$ref": "#/$defs/QuantLabResearchRole"
@@ -5221,6 +5282,7 @@
         "candidateId",
         "reportHash",
         "phase",
+        "role",
         "researchRole",
         "fold",
         "items",
@@ -5245,6 +5307,9 @@
         },
         "phase": {
           "$ref": "#/$defs/QuantLabPhase"
+        },
+        "role": {
+          "$ref": "#/$defs/QuantLabCurveRole"
         },
         "researchRole": {
           "$ref": "#/$defs/QuantLabResearchRole"

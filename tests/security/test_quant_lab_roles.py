@@ -15,7 +15,10 @@ def verify_roles(engine):
                     assert c.execute(
                         text("SELECT has_table_privilege(current_user,:table,'SELECT')"),
                         {"table": table},
-                    ).scalar_one()
+                    ).scalar_one() is (
+                        role == "atl_control_api"
+                        or table != "backtest.experiment_validation_requests"
+                    )
                     assert not c.execute(
                         text(
                             "SELECT has_table_privilege(current_user,:table,'DELETE') "
@@ -63,9 +66,10 @@ def verify_roles(engine):
 
     old = _dormant_privilege_manifest([("0034_retrospective_gate",)])
     new = _dormant_privilege_manifest([("0035_quant_lab",)])
-    assert old < new
+    with_validation = _dormant_privilege_manifest([("0036_quant_validation_attempts",)])
+    assert old < new < with_validation
     with engine.connect() as c:
-        for kind, name, role, privilege, grantable in new - old:
+        for kind, name, role, privilege, grantable in with_validation - old:
             assert role == "atl_paper_control_api" and not grantable
             if kind == "relation":
                 assert privilege == "SELECT"

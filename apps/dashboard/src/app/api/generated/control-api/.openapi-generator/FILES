@@ -214,6 +214,7 @@ model/quantLabCountMetric.ts
 model/quantLabCrossGrid.ts
 model/quantLabCrossParameters.ts
 model/quantLabCurrentWarning.ts
+model/quantLabCurveRole.ts
 model/quantLabDescriptiveRange.ts
 model/quantLabDrawdownPage.ts
 model/quantLabDrawdownPoint.ts
@@ -229,6 +230,7 @@ model/quantLabExposureOverlapAnyOf.ts
 model/quantLabExposureOverlapAnyOf1.ts
 model/quantLabFittingStatus.ts
 model/quantLabFold.ts
+model/quantLabFoldActivityRanges.ts
 model/quantLabFoldOverview.ts
 model/quantLabIncomparability.ts
 model/quantLabInterval.ts

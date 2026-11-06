@@ -10,6 +10,46 @@ from packages.backtesting.jobs import BacktestError
 from services.control_api.backtest_dto import RESPONSE_MODELS, BacktestProblem
 from services.control_api.backtest_routes import CURRENT_TRACE
 from services.control_api.backtest_service import identity, pairs
+from services.control_api.quant_lab_dto import (
+    BASE as QUANT_BASE,
+)
+from services.control_api.quant_lab_dto import (
+    HEX,
+    SCOPE_HEADER,
+    TRACE,
+    UUID,
+)
+from services.control_api.quant_lab_dto import (
+    OPERATIONS as QUANT_OPERATIONS,
+)
+from services.control_api.quant_lab_dto import (
+    validator as quant_validator,
+)
+
+_PRIVATE = "http://paper-api:8012"
+
+
+def _response_json(response):
+    if response.headers.get("content-encoding", "identity").lower() != "identity":
+        raise ValueError()
+    length = response.headers.get("content-length")
+    if length and (
+        not length.isascii()
+        or not length.isdigit()
+        or len(length) > 12
+        or int(length) > 16 * 1024 * 1024
+    ):
+        raise ValueError()
+    raw, deadline = bytearray(), monotonic() + 8
+    for chunk in response.iter_raw():
+        if len(raw) + len(chunk) > 16 * 1024 * 1024 or monotonic() >= deadline:
+            raise ValueError()
+        raw.extend(chunk)
+    return json.loads(
+        raw,
+        object_pairs_hook=pairs,
+        parse_constant=lambda _: (_ for _ in ()).throw(ValueError()),
+    )
 
 
 class BacktestClient:
@@ -33,36 +73,61 @@ class BacktestClient:
                     headers["traceparent"] = "00-" + trace + "-" + secrets.token_hex(8) + "-00"
                 with client.stream(
                     "POST" if creation else "GET",
-                    "http://paper-api:8012/api/v1/research/backtests/" + path,
+                    _PRIVATE + "/api/v1/research/backtests/" + path,
                     params=params,
                     json=body,
                     headers=headers,
                 ) as response:
-                    if response.headers.get("content-encoding", "identity").lower() != "identity":
-                        raise ValueError()
-                    length = response.headers.get("content-length")
-                    if length and (
-                        not length.isascii()
-                        or not length.isdigit()
-                        or len(length) > 12
-                        or int(length) > 16 * 1024 * 1024
-                    ):
-                        raise ValueError()
-                    raw, deadline = bytearray(), monotonic() + 8
-                    for chunk in response.iter_raw():
-                        if len(raw) + len(chunk) > 16 * 1024 * 1024 or monotonic() >= deadline:
-                            raise ValueError()
-                        raw.extend(chunk)
-                    value = json.loads(
-                        raw,
-                        object_pairs_hook=pairs,
-                        parse_constant=lambda _: (_ for _ in ()).throw(ValueError()),
-                    )
+                    value = _response_json(response)
                     if response.status_code == (202 if creation else 200):
                         return RESPONSE_MODELS[operation].model_validate(value).model_dump()
                     error = BacktestProblem.model_validate(value)
                     if error.status == response.status_code:
                         failure = error.status, error.code
+        except Exception:
+            failure = 503, "UNAVAILABLE"
+        raise BacktestError(*failure)
+
+    def quant_lab(self, operation, params, query, payload, *, actor, key, trace, scope):
+        """Relay an authenticated Quant request without cookies or browser headers."""
+        if actor != "local-operator" or not isinstance(scope, str) or not HEX.fullmatch(scope):
+            raise BacktestError(403, "FORBIDDEN")
+        failure = (503, "UNAVAILABLE")
+        try:
+            if operation not in QUANT_OPERATIONS.values() or any(
+                not (HEX if name == "candidateId" else UUID).fullmatch(value)
+                for name, value in params.items()
+            ):
+                raise ValueError()
+            path = operation.path.format(**params)
+            headers = {"Accept-Encoding": "identity", SCOPE_HEADER: scope}
+            if key:
+                headers["Idempotency-Key"] = key
+            if TRACE.fullmatch(trace):
+                headers["traceparent"] = "00-" + trace + "-" + secrets.token_hex(8) + "-00"
+            with httpx.Client(
+                transport=self._transport, timeout=5, trust_env=False, follow_redirects=False
+            ) as client:
+                with client.stream(
+                    operation.method,
+                    _PRIVATE + QUANT_BASE + path,
+                    params=query,
+                    json=payload,
+                    headers=headers,
+                ) as response:
+                    success = response.status_code == operation.status
+                    content_type = response.headers.get("content-type", "").split(";", 1)[0]
+                    if content_type.lower() != (
+                        "application/json" if success else "application/problem+json"
+                    ):
+                        raise ValueError()
+                    value = _response_json(response)
+                    if success:
+                        quant_validator(operation.response).validate(value)
+                        return value
+                    quant_validator("Problem").validate(value)
+                    if value["status"] == response.status_code:
+                        failure = value["status"], value["code"]
         except Exception:
             failure = 503, "UNAVAILABLE"
         raise BacktestError(*failure)

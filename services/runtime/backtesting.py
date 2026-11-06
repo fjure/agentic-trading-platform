@@ -10,7 +10,12 @@ def source_fingerprint(root):
     """Version exactly the copied implementation, public config and pinned dependencies."""
     paths = [
         root / name
-        for name in ("pyproject.toml", "uv.lock", "contracts/schemas/v1/backtesting.schema.json")
+        for name in (
+            "pyproject.toml",
+            "uv.lock",
+            "contracts/schemas/v1/backtesting.schema.json",
+            "contracts/schemas/v1/quant-lab.schema.json",
+        )
     ]
     for name in ("packages", "services", "config"):
         paths.extend(
@@ -35,7 +40,7 @@ def source_version():
     try:
         value = (root / "source-revision").read_text("ascii").strip()
         actual = source_fingerprint(root)
-    except OSError:
+    except (OSError, ValueError):
         return None
     return value if re.fullmatch(r"[0-9a-f]{40}", value) and value == actual else None
 
@@ -52,6 +57,13 @@ def configured_readiness_service(engine):
 
     version = source_version()
     return ReadinessService(engine, code_version=version) if version else None
+
+
+def configured_quant_lab_service(engine):
+    from services.control_api.quant_lab_service import QuantLabService
+
+    version = source_version()
+    return QuantLabService(engine, code_version=version) if version else None
 
 
 def engine():

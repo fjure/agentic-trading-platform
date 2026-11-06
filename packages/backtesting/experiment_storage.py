@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from functools import lru_cache
+from hashlib import sha256
 from pathlib import Path
 from uuid import UUID, uuid4, uuid5
 
@@ -64,10 +65,11 @@ def result_identity(body, *, candidate_id, role, phase_key, status):
         if key not in {"resultHash", "runId", "reportId", "batchId"}
     }
     if isinstance(projection.get("reliability"), dict):
+        excluded = {"runId", "reportId"}
+        if role == "SEARCH" and status == "COMPLETE" and phase_key.endswith(":validation"):
+            excluded.add("reportHash")
         projection["reliability"] = {
-            key: value
-            for key, value in projection["reliability"].items()
-            if key not in {"runId", "reportId"}
+            key: value for key, value in projection["reliability"].items() if key not in excluded
         }
     return ("quant-candidate-result-v1", candidate_id, role, phase_key, status, projection)
 
@@ -285,6 +287,28 @@ class ExperimentStorage:
                 c.candidate_id for c in domain.candidates
             }:
                 raise ValueError("search configurations must equal the complete registered grid")
+            # API replay identifiers are deterministic. Serialize the read/insert
+            # for one identifier without locking unrelated draft creation.
+            connection.execute(
+                text("SELECT pg_advisory_xact_lock(hashtextextended(:key,0))"),
+                {"key": f"quant-definition:{identifier}"},
+            )
+            existing = (
+                connection.execute(
+                    text("SELECT * FROM backtest.experiment_definitions WHERE definition_id=:id"),
+                    {"id": identifier},
+                )
+                .mappings()
+                .one_or_none()
+            )
+            if existing is not None:
+                if (
+                    existing["actor"] != actor
+                    or existing["fingerprint"] != domain.definition_hash
+                    or existing["body"] != definition
+                ):
+                    raise BacktestError(409, "IDEMPOTENCY_CONFLICT")
+                return dict(existing)
             connection.execute(
                 text(
                     "SELECT backtest.request_experiment_definition(:id,:actor,"
@@ -357,6 +381,48 @@ class ExperimentStorage:
                 .mappings()
                 .one()
             )
+
+    def record_validation_request(self, identifier, key, validation, *, valid):
+        key_hash = sha256(key.encode("ascii")).hexdigest()
+        with self.transaction() as connection:
+            connection.execute(
+                text(
+                    "SELECT backtest.record_experiment_validation_request("
+                    ":id,:key,CAST(:body AS jsonb),:valid)"
+                ),
+                {"id": identifier, "key": key_hash, "body": encoded(validation), "valid": valid},
+            )
+            return self._validation_request(connection, identifier, key_hash=key_hash)
+
+    @staticmethod
+    def _validation_request(connection, identifier, *, key_hash=None, invalid_id=None):
+        row = (
+            connection.execute(
+                text("""SELECT r.validation_id,r.definition_id,r.validated_at,r.valid,
+                coalesce(r.fingerprint,v.fingerprint) AS fingerprint,
+                r.body
+              FROM backtest.experiment_validation_requests r
+              LEFT JOIN backtest.experiment_validations v ON r.approval_id=v.validation_id
+              WHERE r.definition_id=:definition AND
+                CASE WHEN CAST(:key AS text) IS NOT NULL THEN r.key_hash=:key
+                ELSE NOT r.valid AND (CAST(:id AS uuid) IS NULL OR r.validation_id=:id) END
+              ORDER BY r.validated_at DESC,r.validation_id DESC LIMIT 1"""),
+                {"definition": identifier, "id": invalid_id, "key": key_hash},
+            )
+            .mappings()
+            .one_or_none()
+        )
+        return dict(row) if row is not None else None
+
+    def validation_request(self, identifier, key):
+        with self.transaction() as connection:
+            return self._validation_request(
+                connection, identifier, key_hash=sha256(key.encode("ascii")).hexdigest()
+            )
+
+    def read_invalid_validation(self, identifier, *, validation_id=None):
+        with self.transaction() as connection:
+            return self._validation_request(connection, identifier, invalid_id=validation_id)
 
     def enqueue(
         self,
@@ -782,6 +848,11 @@ class ExperimentStorage:
                 reliability=published["reliability"],
                 reliabilityStatus=published["reliability"]["evidenceStatus"],
             )
+            if request["role"] == "SEARCH" and request["phaseKey"].endswith(":validation"):
+                link["selectionEvidenceHash"] = connection.execute(
+                    text("SELECT backtest.quant_selection_evidence(:batch,:phase)"),
+                    {"batch": lease.batch_id, "phase": request["phaseKey"]},
+                ).scalar_one()
             link_hash = self._insert(
                 connection,
                 "experiment_result_links",

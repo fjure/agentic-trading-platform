@@ -352,6 +352,7 @@ def test_fold_overview_keeps_selection_and_missing_oos_separate():
     assert complete["netReturn"]["median"]["value"] == "0.000000000000"
     assert complete["warnings"] == ["SMALL_FOLD_SAMPLE"]
     activity = build_fold_activity_ranges(manifest, (chosen,), (test,))
+    assert complete["activity"] == activity
     assert activity["entryCount"]["median"]["value"] == "0.000000000000"
     assert activity["decisionCount"]["median"]["value"] == "534.000000000000"
     validator("QuantLabFoldOverview").validate(complete)
@@ -385,6 +386,9 @@ def test_complete_nonselection_report_and_later_warnings_leave_report_hash_fixed
     assert report["status"] == "COMPLETE"
     assert report["sensitivity"][0]["rank"] is None
     assert report["foldOverview"]["selectedFoldCount"] == 0
+    assert report["foldOverview"]["activity"]["fillCount"]["median"]["reasonCode"] == (
+        "NO_SELECTED_CANDIDATE"
+    )
     updated = build_comparison_report(
         manifest,
         **args,

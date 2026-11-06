@@ -141,6 +141,11 @@ def test_cross_batch_compare_is_bounded_read_and_curves_bind_phase_and_fold():
         assert {"phase", "fold"} <= curve.keys()
         assert curve["phase"]["required"] is True
         assert curve["phase"]["in"] == curve["fold"]["in"] == "query"
+        assert curve["role"]["in"] == "query" and not curve["role"]["required"]
+        role = schema_validator(curve["role"]["schema"])
+        for value in ("SEARCH_CANDIDATE", "REFERENCE_FLAT", "REFERENCE_BUY_HOLD"):
+            assert role.is_valid(value)
+        assert not role.is_valid("ALL")
         phase = schema_validator(curve["phase"]["schema"])
         for name in ("training", "validation", "test", "holdout"):
             assert phase.is_valid(name)

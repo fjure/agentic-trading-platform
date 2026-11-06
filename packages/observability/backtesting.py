@@ -15,6 +15,21 @@ OPERATIONS = frozenset(
         "create_assessment",
         "read_assessment",
         "read_reliability_report",
+        "quant_get_strategies",
+        "quant_create_experiment",
+        "quant_list_experiments",
+        "quant_get_experiment",
+        "quant_validate_experiment",
+        "quant_start_experiment_batch",
+        "quant_list_experiment_batches",
+        "quant_get_experiment_batch",
+        "quant_list_candidates",
+        "quant_list_results",
+        "quant_get_comparison",
+        "quant_get_equity",
+        "quant_get_drawdown",
+        "quant_compare_experiments",
+        "quant_get_reliability_report",
     }
 )
 CODES = frozenset(
@@ -26,6 +41,14 @@ CODES = frozenset(
         "CURSOR_INVALID",
         "SNAPSHOT_CONFLICT",
         "IDEMPOTENCY_CONFLICT",
+        "DEFINITION_CONFLICT",
+        "STATE_CONFLICT",
+        "VERSION_UNAVAILABLE",
+        "REPORT_NOT_READY",
+        "INVALID_PARAMETERS",
+        "INVALID_PROTOCOL",
+        "INVALID_POLICY",
+        "ADMISSION_LIMIT",
         "UNAVAILABLE",
     }
 )

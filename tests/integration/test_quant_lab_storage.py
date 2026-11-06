@@ -13,6 +13,7 @@ TABLES = tuple(
         "experiment_definitions",
         "experiment_candidates",
         "experiment_validations",
+        "experiment_validation_requests",
         "experiment_batches",
         "experiment_snapshots",
         "experiment_revision_bindings",
@@ -697,6 +698,47 @@ def verify_publication(engine, store, jobs, denied):
     for phase in phases[:2]:
         for row in candidate_rows:
             result(row, phase)
+
+    from packages.backtesting.experiment_storage import result_identity
+    from packages.backtesting.jobs import BacktestError, encoded
+
+    try:
+        with jobs.transaction(lease) as connection:
+            stored = (
+                connection.execute(
+                    text(
+                        "SELECT * FROM backtest.experiment_result_links WHERE batch_id=:batch "
+                        "AND phase_key=:phase AND role='SEARCH'"
+                    ),
+                    {"batch": lease.batch_id, "phase": "0:validation"},
+                )
+                .mappings()
+                .one()
+            )
+            body = dict(stored["body"], selectionEvidenceHash="0" * 64)
+            preimage = result_identity(
+                body,
+                candidate_id=stored["candidate_id"],
+                role=stored["role"],
+                phase_key=stored["phase_key"],
+                status=stored["status"],
+            )
+            connection.execute(
+                text("""INSERT INTO backtest.experiment_result_links
+                  VALUES(:batch_id,:candidate_id,:role,:phase_key,:run_id,
+                    :reliability_report_id,:status,:fingerprint,
+                    CAST(:body AS jsonb),:canonical)"""),
+                dict(
+                    stored,
+                    body=encoded(body),
+                    canonical=encoded(preimage),
+                    fingerprint=content_fingerprint(preimage),
+                ),
+            )
+    except BacktestError:
+        assert SQL_DIAGNOSTICS[-1][0] == "quant selection evidence conflict"
+    else:
+        raise AssertionError("unbound selection evidence accepted")
     # No OOS publication can precede the atomic all-selections commit.
     reference_candidate = next(row for row in candidate_rows if row["role"] == "FLAT_REFERENCE")
     denied(lambda: result(reference_candidate, phases[2]))
@@ -1095,7 +1137,29 @@ def guest():
 
     denied(old_writer)
     definition, candidates = fixture()
-    d = store.create_definition(definition, candidates)
+    draft_id = uuid4()
+
+    def create_draft():
+        return store.create_definition(definition, candidates, identifier=draft_id)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        submissions = [pool.submit(create_draft) for _ in range(2)]
+    successes = []
+    for submission in submissions:
+        try:
+            successes.append(submission.result())
+        except BacktestError as error:
+            assert error.status == 503 and error.code == "UNAVAILABLE"
+    assert successes
+    d = successes[0]
+    assert all(row == d for row in successes) and create_draft() == d
+    denied(
+        lambda: store.create_definition(
+            dict(definition, hypothesis="Different replay"),
+            candidates,
+            identifier=draft_id,
+        )
+    )
     assert d["candidate_count"] == 9
     verify_definition_guards(engine, store, d, denied)
     with engine.connect() as c:
@@ -1107,17 +1171,106 @@ def guest():
             ),
             {"id": d["definition_id"]},
         ).scalar_one() == ("ecbfe4ef9aef57abe3e36209544e8f9d0beff5008322ec2d0a20b38dcac3deb3")
-    validation = store.validate(
-        d["definition_id"],
-        dict(
-            definitionHash=d["fingerprint"],
-            calendarVerified=True,
-            simulationBarSteps=9510,
-            snapshotRows=1000,
-            publicationBytes=100000,
-            seedBars=49,
+    validated_body = dict(
+        definitionHash=d["fingerprint"],
+        calendarVerified=True,
+        simulationBarSteps=9510,
+        snapshotRows=1000,
+        publicationBytes=100000,
+        seedBars=49,
+        validatedAt="2026-01-12T15:00:00Z",
+        registryWatermark=0,
+        researchHistory=json.loads(
+            Path(
+                "contracts/examples/v1/quant-lab-history-no-registered-prior-use.valid.json"
+            ).read_text()
         ),
+        reasons=[],
     )
+    invalid_body = validated_body | {"calendarVerified": False, "reasons": ["MISSING_CALENDAR"]}
+    definition_id = d["definition_id"]
+    invalid_key = "qsl-invalid-estimate-0001"
+    valid_key = "qsl-positive-estimate-001"
+    invalid = store.record_validation_request(definition_id, invalid_key, invalid_body, valid=False)
+    assert not invalid["valid"] and invalid["body"] == invalid_body
+    assert (
+        store.read_invalid_validation(definition_id, validation_id=invalid["validation_id"])
+        == invalid
+    )
+    denied(
+        lambda: store.enqueue(
+            definition_id,
+            d["fingerprint"],
+            "local-operator",
+            "qsl-invalid-batch-0001",
+            "a" * 32,
+            "b" * 40,
+            **start_binding(d, invalid),
+        )
+    )
+    assert (
+        store.record_validation_request(definition_id, invalid_key, validated_body, valid=True)
+        == invalid
+    )
+    denied(
+        lambda: store.record_validation_request(
+            definition_id,
+            "qsl-invalid-malformed-001",
+            dict(invalid_body, reasons=[None]),
+            valid=False,
+        )
+    )
+    for bad in (dict(researchHistory={}), dict(snapshotRows=-1)):
+        denied(
+            lambda bad=bad: store.record_validation_request(
+                definition_id,
+                "qsl-invalid-malformed-002",
+                invalid_body | bad,
+                valid=False,
+            )
+        )
+    old_keys = (
+        "definitionHash",
+        "calendarVerified",
+        "simulationBarSteps",
+        "snapshotRows",
+        "publicationBytes",
+        "seedBars",
+    )
+    legacy_approval = store.validate(definition_id, {key: validated_body[key] for key in old_keys})
+    validation = store.record_validation_request(
+        definition_id, valid_key, validated_body, valid=True
+    )
+    assert validation["valid"] and validation["body"] == validated_body
+    assert validation["validation_id"] == legacy_approval["validation_id"]
+    assert validation["fingerprint"] == legacy_approval["fingerprint"]
+    assert store.validation_request(definition_id, valid_key) == validation
+    assert (
+        store.record_validation_request(definition_id, valid_key, invalid_body, valid=False)
+        == validation
+    )
+    assert (
+        store.record_validation_request(
+            definition_id,
+            "qsl-positive-estimate-002",
+            validated_body,
+            valid=True,
+        )
+        == validation
+    )
+    denied(lambda: ExperimentStorage(worker).validation_request(definition_id, valid_key))
+
+    def race(outcome):
+        return store.record_validation_request(
+            definition_id,
+            "qsl-concurrent-estimate-001",
+            validated_body if outcome else invalid_body,
+            valid=outcome,
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first, second = pool.map(race, (True, False))
+    assert first == second
     batch = store.enqueue(
         d["definition_id"],
         d["fingerprint"],

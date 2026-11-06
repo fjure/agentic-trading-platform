@@ -11,6 +11,7 @@ import { QuantLabLimitation } from './quantLabLimitation';
 import { QuantLabDrawdownPoint } from './quantLabDrawdownPoint';
 import { QuantLabPhase } from './quantLabPhase';
 import { QuantLabResearchRole } from './quantLabResearchRole';
+import { QuantLabCurveRole } from './quantLabCurveRole';
 
 
 export interface QuantLabDrawdownPage { 
@@ -19,6 +20,7 @@ export interface QuantLabDrawdownPage {
     candidateId: string;
     reportHash: string;
     phase: QuantLabPhase;
+    role: QuantLabCurveRole;
     researchRole: QuantLabResearchRole;
     fold: number | null;
     items: Array<QuantLabDrawdownPoint>;

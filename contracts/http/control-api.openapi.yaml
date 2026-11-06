@@ -5427,7 +5427,7 @@ paths:
       summary: Read enriched immutable QSL strategy catalog
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -5451,7 +5451,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -5585,7 +5585,7 @@ paths:
       summary: Create immutable experiment draft revision
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -5609,7 +5609,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -5819,7 +5819,7 @@ paths:
       summary: List immutable experiment revisions
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -5843,7 +5843,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -6001,7 +6001,7 @@ paths:
       summary: Read exact experiment revision
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -6025,7 +6025,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -6198,7 +6198,7 @@ paths:
       summary: Persist definition validation and resource estimate
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -6222,7 +6222,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -6438,7 +6438,7 @@ paths:
       summary: Explicitly admit batch for exact definition version
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -6462,7 +6462,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -6677,7 +6677,7 @@ paths:
       summary: List batches for experiment revision
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -6701,7 +6701,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -6864,7 +6864,7 @@ paths:
       summary: Read durable progress and manifest references
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -6888,7 +6888,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -7053,7 +7053,7 @@ paths:
       summary: List candidates and separate fixed references
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -7077,7 +7077,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -7240,7 +7240,7 @@ paths:
       summary: Read phase-separated candidate/reference evidence
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -7264,7 +7264,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -7444,7 +7444,7 @@ paths:
       summary: Read immutable selection and descriptive report
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -7468,7 +7468,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -7631,7 +7631,7 @@ paths:
       summary: Read exact bound equity points for independent phase
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -7655,7 +7655,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -7828,6 +7828,13 @@ paths:
           type: integer
           minimum: 0
           maximum: 3
+      - name: role
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/QuantLabCurveRole'
+        description: Bind the requested candidate role. Defaults to search when the configuration is in the search
+          grid, otherwise to its unique reference role. An unevaluated role never resolves to another role.
   /api/v1/research/experiment-batches/{id}/results/{candidateId}/drawdown:
     get:
       tags:
@@ -7836,7 +7843,7 @@ paths:
       summary: Read exact bound drawdown points for independent phase
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -7860,7 +7867,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -8033,6 +8040,13 @@ paths:
           type: integer
           minimum: 0
           maximum: 3
+      - name: role
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/QuantLabCurveRole'
+        description: Bind the requested candidate role. Defaults to search when the configuration is in the search
+          grid, otherwise to its unique reference role. An unevaluated role never resolves to another role.
   /api/v1/research/experiment-comparisons:
     get:
       tags:
@@ -8041,7 +8055,7 @@ paths:
       summary: Group max4 batches without cross-batch ranking
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QSR-001
@@ -8065,7 +8079,7 @@ paths:
       - T-QEX-011
       - T-QCO-003
       - T-QCO-005
-      description: QSL-01 contract only; unavailable in runtime until QSL-07. Authenticated LocalSession and strict
+      description: Authenticated LocalSession and strict
         loopback/Host/Origin boundaries before reads/effects. Writes require exact same Origin (Same-Origin), JSON
         content type and existing CSRF protection before persistence. Unknown keys/malformed syntax=>400; invalid
         semantic protocol/parameters/policy=>422; exact version/state or operation/definition-scoped idempotency conflict=>409;
@@ -8214,7 +8228,7 @@ paths:
       summary: Read a bound Quant Lab reliability report projection
       security:
       - LocalSession: []
-      x-runtime-available: false
+      x-runtime-available: true
       x-runtime-implementation-task: QSL-07
       x-requirements:
       - REQ-QCO-003
@@ -8222,7 +8236,7 @@ paths:
       - REQ-QEX-006
       x-tests:
       - T-QCO-003
-      description: QSL-03 contract only; unavailable until QSL-07. Authenticated LocalSession and strict loopback/Host/Origin
+      description: Authenticated LocalSession and strict loopback/Host/Origin
         read boundaries. The immutable report must belong to this batch, run, candidate and phase. Foreign report=>404;
         unavailable publication=>409 REPORT_NOT_READY. Cursor binds batch/report/hash/section/session; malformed,
         foreign or expired cursor=>400 CURSOR_INVALID. Qualitative evidence grants no trading permission.
@@ -22046,6 +22060,39 @@ components:
           type: integer
           minimum: 0
           maximum: 4
+    QuantLabFoldActivityRanges:
+      type: object
+      additionalProperties: false
+      required:
+      - decisionCount
+      - fillCount
+      - buyFillCount
+      - sellFillCount
+      - entryCount
+      - exitCount
+      - endOpenPositionCount
+      - investedBarCount
+      - equityBarCount
+      properties:
+        decisionCount:
+          $ref: '#/components/schemas/QuantLabDescriptiveRange'
+        fillCount:
+          $ref: '#/components/schemas/QuantLabDescriptiveRange'
+        buyFillCount:
+          $ref: '#/components/schemas/QuantLabDescriptiveRange'
+        sellFillCount:
+          $ref: '#/components/schemas/QuantLabDescriptiveRange'
+        entryCount:
+          $ref: '#/components/schemas/QuantLabDescriptiveRange'
+        exitCount:
+          $ref: '#/components/schemas/QuantLabDescriptiveRange'
+        endOpenPositionCount:
+          $ref: '#/components/schemas/QuantLabDescriptiveRange'
+        investedBarCount:
+          $ref: '#/components/schemas/QuantLabDescriptiveRange'
+        equityBarCount:
+          $ref: '#/components/schemas/QuantLabDescriptiveRange'
+      description: Separate descriptive activity counts over completed selected candidate OOS folds.
     QuantLabFoldOverview:
       type: object
       additionalProperties: false
@@ -22060,6 +22107,7 @@ components:
       - investedBarRatio
       - meanGrossExposureRatio
       - maxGrossExposureRatio
+      - activity
       - warnings
       properties:
         schemaVersion:
@@ -22091,6 +22139,8 @@ components:
           $ref: '#/components/schemas/QuantLabDescriptiveRange'
         maxGrossExposureRatio:
           $ref: '#/components/schemas/QuantLabDescriptiveRange'
+        activity:
+          $ref: '#/components/schemas/QuantLabFoldActivityRanges'
         warnings:
           type: array
           minItems: 0
@@ -22456,6 +22506,12 @@ components:
           oneOf:
           - $ref: '#/components/schemas/QuantLabCursor'
           - type: 'null'
+    QuantLabCurveRole:
+      type: string
+      enum:
+      - SEARCH_CANDIDATE
+      - REFERENCE_FLAT
+      - REFERENCE_BUY_HOLD
     QuantLabEquityPage:
       type: object
       additionalProperties: false
@@ -22465,6 +22521,7 @@ components:
       - candidateId
       - reportHash
       - phase
+      - role
       - researchRole
       - fold
       - items
@@ -22484,6 +22541,8 @@ components:
           $ref: '#/components/schemas/BacktestHash'
         phase:
           $ref: '#/components/schemas/QuantLabPhase'
+        role:
+          $ref: '#/components/schemas/QuantLabCurveRole'
         researchRole:
           $ref: '#/components/schemas/QuantLabResearchRole'
         fold:
@@ -22593,6 +22652,7 @@ components:
       - candidateId
       - reportHash
       - phase
+      - role
       - researchRole
       - fold
       - items
@@ -22612,6 +22672,8 @@ components:
           $ref: '#/components/schemas/BacktestHash'
         phase:
           $ref: '#/components/schemas/QuantLabPhase'
+        role:
+          $ref: '#/components/schemas/QuantLabCurveRole'
         researchRole:
           $ref: '#/components/schemas/QuantLabResearchRole'
         fold:

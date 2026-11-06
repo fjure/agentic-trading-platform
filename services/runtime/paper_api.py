@@ -18,6 +18,13 @@ from services.control_api.app import _body, _trace
 from services.control_api.auth import AuthDenied
 from services.control_api.paper_commands import PaperCommandError, PaperCommands
 from services.control_api.paper_dto import DTO, Trace, Version, identity
+from services.control_api.quant_lab_dto import SCOPE_HEADER
+from services.control_api.quant_lab_routes import (
+    quant_lab_path,
+    quant_lab_problem,
+    register_quant_lab_routes,
+    service_handler,
+)
 
 from .common import write_status
 from .paper import check_identity
@@ -53,7 +60,7 @@ class ProfileContext(Context):
 
 
 def create_private_paper_app(commands, *, research=None, backtesting=None, readiness=None,
-                             collection=None):
+                             collection=None, quant_lab=None):
     app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None, redirect_slashes=False)
 
     @app.middleware("http")
@@ -64,13 +71,18 @@ def create_private_paper_app(commands, *, research=None, backtesting=None, readi
             key.lower() in {b"origin", b"forwarded"} or key.lower().startswith(b"x-forwarded-")
             for key, _ in headers
         ):
+            if quant_lab_path(request.url.path):
+                return quant_lab_problem(403, "FORBIDDEN", _trace(request))
             return JSONResponse({"code": "INVALID_REQUEST"}, status_code=400)
         try:
             request.state.trace_id = _trace(request)
             request.state.actor_id = "local-operator"
             response = await call_next(request)
         except Exception:
-            response = JSONResponse({"code": "TEMPORARILY_UNAVAILABLE"}, status_code=503)
+            if quant_lab_path(request.url.path):
+                response = quant_lab_problem(503, "UNAVAILABLE", request.state.trace_id)
+            else:
+                response = JSONResponse({"code": "TEMPORARILY_UNAVAILABLE"}, status_code=503)
         response.headers["Cache-Control"] = "no-store"
         return response
 
@@ -184,6 +196,17 @@ def create_private_paper_app(commands, *, research=None, backtesting=None, readi
     from services.control_api.backtest_routes import register_backtest_routes
     register_backtest_routes(app, backtesting=backtesting, body_reader=_body,
                              key_reader=research_key)
+
+    def quant_scope(request):
+        if "cookie" in request.headers or "authorization" in request.headers:
+            return None
+        values = request.headers.getlist(SCOPE_HEADER)
+        return values[0] if len(values) == 1 else None
+
+    register_quant_lab_routes(
+        app, handler=service_handler(quant_lab), body_reader=_body, key_reader=research_key,
+        scope_reader=quant_scope,
+    )
     from services.control_api.readiness_routes import register_readiness_routes
     register_readiness_routes(app, readiness=readiness, body_reader=_body, key_reader=research_key)
     from services.control_api.collection_routes import register_collection_routes
@@ -201,13 +224,18 @@ def run_private_paper_api(engine):
 
     research_engine = database_engine("api", deployment="paper", isolated_research=True)
     from services.control_api.collection_service import CollectionPlanService
-    from services.runtime.backtesting import configured_readiness_service, configured_service
+    from services.runtime.backtesting import (
+        configured_quant_lab_service,
+        configured_readiness_service,
+        configured_service,
+    )
 
     application = create_private_paper_app(
         commands, research=ResearchService(research_engine),
         backtesting=configured_service(research_engine),
         readiness=configured_readiness_service(research_engine),
         collection=CollectionPlanService(research_engine),
+        quant_lab=configured_quant_lab_service(research_engine),
     )
 
     def health_loop():

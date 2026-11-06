@@ -4,6 +4,7 @@
   "candidateId": "0ea600e27af842e8bfe0046f1c5858ed0c9e12b48613c2ed84cde76a368aaa5d",
   "reportHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "phase": "training",
+  "role": "SEARCH_CANDIDATE",
   "researchRole": "IN_SAMPLE_ANALYSIS",
   "fold": 0,
   "items": [

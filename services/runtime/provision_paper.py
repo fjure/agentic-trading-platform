@@ -282,7 +282,8 @@ def _create_identities(connection, directory, existing):
 
 def _dormant_privilege_manifest(revisions):
     """Exact reviewed ACLs only; unknown or multiple migration heads fail closed."""
-    quant_revision = revisions == [("0035_quant_lab",)]
+    quant_validation_revision = revisions == [("0036_quant_validation_attempts",)]
+    quant_revision = quant_validation_revision or revisions == [("0035_quant_lab",)]
     retrospective_revision = (
         revisions[0][0]
         if revisions in ([("0033_retrospective_storage",)], [("0034_retrospective_gate",)])
@@ -742,6 +743,15 @@ def _dormant_privilege_manifest(revisions):
                 "request_experiment_batch(uuid,uuid,integer,text,uuid,text,text,text,text,text)",
             )
         )
+    if quant_validation_revision:
+        expected.update((
+            ("relation", "backtest.experiment_validation_requests", "atl_paper_control_api",
+             "SELECT", False),
+            ("function", "backtest.record_experiment_validation_request(uuid,text,jsonb,boolean)",
+             "atl_paper_control_api", "EXECUTE", False),
+            ("function", "backtest.current_quant_gate(uuid)", "atl_paper_control_api",
+             "EXECUTE", False),
+        ))
     return expected
 
 
