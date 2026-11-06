@@ -1,0 +1,52 @@
+:host {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+h3 {
+  margin: 1rem 0 .35rem;
+}
+
+.fields, .catalog {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: .75rem;
+}
+
+.hypothesis {
+  width: 100%;
+  margin: .85rem 0 .5rem;
+}
+
+.group {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: .5rem;
+  padding: .5rem .75rem .75rem;
+  margin: .55rem 0;
+  min-width: 0;
+}
+
+.role, .preview {
+  margin: .35rem 0 .5rem;
+}
+
+.preview {
+  background: var(--mat-sys-surface-container-low);
+  border-radius: .5rem;
+  padding: .7rem .85rem;
+}
+
+.preview span {
+  display: block;
+}
+
+.catalog article {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: .5rem;
+  padding: 0 .8rem .5rem;
+}
+
+.error {
+  color: var(--mat-sys-error);
+}

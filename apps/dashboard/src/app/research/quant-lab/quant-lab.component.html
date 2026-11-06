@@ -1,0 +1,116 @@
+<section class="lab" aria-labelledby="quant-lab-title">
+  <header class="intro">
+    <span class="eyebrow">LOKALE QUANTITATIVE FORSCHUNG</span>
+    <h2 id="quant-lab-title">Quant Strategy Lab</h2>
+    <p>Strategieraster, chronologische Validation und getrennte Tests auf gespeicherten 15-Minuten-Bars.</p>
+  </header>
+  @if (error()) { <p class="feedback" role="alert">{{ error() }}</p> }
+  @if (active()) {
+    <atl-quant-lab-builder [catalog]="catalog()" [instruments]="instruments()" [busy]="busy()"
+      [definition]="experiment()?.definition ?? null"
+      (saveDraft)="saveDraft($event)" (edited)="edited()" />
+
+    <div class="workspace">
+      <mat-card appearance="outlined">
+        <mat-card-header><mat-card-title>Experimente</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div class="actions">
+            <button mat-button type="button" (click)="loadExperiments()">Experimente neu laden</button>
+            @if (experimentCursor()) {
+              <button mat-button type="button" (click)="loadExperiments(true)">Weitere Experimente</button>
+            }
+          </div>
+          <ul class="records">
+            @for (item of experiments(); track item.id) {
+              <li [class.selected]="experiment()?.id === item.id">
+                <button mat-button type="button" (click)="openExperiment(item.id)" [disabled]="busy()"
+                  [attr.aria-current]="experiment()?.id === item.id ? 'true' : null">
+                  {{ item.definition.hypothesis }}
+                </button>
+                <small>Version {{ item.definitionVersion }} · {{ item.state }} · {{ item.candidateCount }} Suchkandidaten</small>
+              </li>
+            } @empty { <li>Keine gespeicherten Experimente.</li> }
+          </ul>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined">
+        <mat-card-header><mat-card-title>Validierung und Start</mat-card-title></mat-card-header>
+        <mat-card-content [attr.aria-busy]="busy()">
+          @if (experiment(); as item) {
+            <h3>{{ item.definition.hypothesis }}</h3>
+            <p>{{ item.definition.researchMode }} · Version {{ item.definitionVersion }} · {{ item.fittingStatus }}</p>
+            <p>{{ item.candidateCount }} Suchkandidaten · 2 feste Referenzrollen</p>
+            <p class="fingerprint">Definitionshash {{ item.definitionHash }}</p>
+            @if (dirty()) { <p role="status">Das Formular wurde geändert. Zuerst eine neue Entwurfsversion speichern.</p> }
+            <div class="actions">
+              <button mat-stroked-button type="button" (click)="validateDraft()" [disabled]="busy() || dirty()">Entwurf validieren</button>
+              <button mat-flat-button type="button" (click)="startBatch()"
+                [disabled]="busy() || dirty() || validation()?.status !== 'VALIDATED'">Batch starten</button>
+            </div>
+            @if (validation(); as receipt) {
+              <h4>Vorabprüfung · {{ receipt.status }}</h4>
+              <dl class="facts">
+                <div><dt>Queue-Slots</dt><dd>{{ receipt.budgetEstimate.reservedQueueSlots }}</dd></div>
+                <div><dt>Snapshotzeilen</dt><dd>{{ receipt.budgetEstimate.snapshotRows ?? 'N/A' }}</dd></div>
+                <div><dt>Barschritte</dt><dd>{{ receipt.budgetEstimate.simulationBarSteps ?? 'N/A' }}</dd></div>
+                <div><dt>Publikationsbytes</dt><dd>{{ receipt.budgetEstimate.publicationBytes ?? 'N/A' }}</dd></div>
+              </dl>
+              <p>Kalender {{ receipt.budgetEstimate.calendarConfirmed ? 'belegt' : 'offen' }} · Policy {{ receipt.strategySelectionPolicy.policyId }}</p>
+              <p>Maximaler Drawdown {{ receipt.strategySelectionPolicy.maxDrawdown }} · mindestens {{ receipt.strategySelectionPolicy.minValidationSessions }} Validation-Sitzungen</p>
+              <p>Mindesteinstiege {{ receipt.strategySelectionPolicy.minimumEntryCount ?? 'deaktiviert' }} · Mindestanteil investierter Bars {{ receipt.strategySelectionPolicy.minimumInvestedBarRatio ?? 'deaktiviert' }}</p>
+              @if (receipt.reasons.length) { <p role="status">{{ receipt.reasons.join(' · ') }}</p> }
+              <p>{{ receipt.researchHistory.reuseStatus }} · {{ receipt.researchHistory.externalKnowledgeStatus }}</p>
+            }
+          } @else { <p>Experiment auswählen oder einen Entwurf speichern.</p> }
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    @if (experiment()) {
+      <mat-card appearance="outlined">
+        <mat-card-header><mat-card-title>Batches</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <ul class="records">
+            @for (item of batches(); track item.id) {
+              <li [class.selected]="batch()?.id === item.id">
+                <button mat-button type="button" (click)="openBatch(item.id)" [attr.aria-label]="'Batch ' + item.id + ' öffnen'">
+                  {{ item.state }} · {{ item.id }}
+                </button>
+                <mat-checkbox [checked]="compareIds().includes(item.id)" (change)="toggleCompare(item.id, $event.checked)"
+                  [disabled]="compareIds().length >= 4 && !compareIds().includes(item.id)"
+                  [aria-label]="'Batch ' + item.id + ' in Vergleich aufnehmen'">Vergleichen</mat-checkbox>
+              </li>
+            } @empty { <li>Für diese Version ist noch kein Batch gespeichert.</li> }
+          </ul>
+          <div class="actions">
+            @if (batchCursor()) { <button mat-button type="button" (click)="loadBatches(true)">Weitere Batches</button> }
+            @if (batch()) { <button mat-button type="button" (click)="refreshBatch()">Batchstatus aktualisieren</button> }
+            <button mat-stroked-button type="button" (click)="compareBatches()" [disabled]="compareIds().length < 2">
+              Ausgewählte Batches vergleichen ({{ compareIds().length }}/4)
+            </button>
+          </div>
+          @if (crossBatch(); as cross) {
+            <h3>Vergleichsgruppen</h3>
+            @for (group of cross.groups; track group.comparisonFingerprint) {
+              <p class="fingerprint">{{ group.comparisonFingerprint }} · {{ group.batchIds.join(' · ') }}</p>
+            }
+            @for (item of cross.incomparabilities; track item.leftBatchId + item.rightBatchId) {
+              <p class="fingerprint">{{ item.leftBatchId }} / {{ item.rightBatchId }} · {{ item.reasons.join(' · ') }}</p>
+            }
+            <p>{{ cross.limitations.join(' · ') }}</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <atl-quant-lab-detail [batch]="batch()" [comparison]="comparison()" [results]="results()" [candidates]="candidates()"
+      [equity]="equity()" [drawdown]="drawdown()" [reliability]="reliability()" [reportHref]="reportHref()"
+      [selectedResult]="selectedResult()" [resultsMore]="!!resultCursor()" [candidatesMore]="!!candidateCursor()"
+      [historyMore]="!!(comparison()?.researchHistory ?? batch()?.researchHistory)?.nextOverlapCursor"
+      [busy]="busy()" (selectResult)="selectResult($event)" (showReliability)="showReliability($event)"
+      (moreResults)="loadResults(true)" (moreCandidates)="loadCandidates(true)" (moreHistory)="loadHistory()"
+      (moreEquity)="loadEquity(true)" (moreDrawdown)="loadDrawdown(true)"
+      (moreReliability)="moreReliability()" (reliabilitySection)="loadReliability($event)" />
+  }
+</section>
