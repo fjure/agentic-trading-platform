@@ -21,7 +21,7 @@ from tests.integration.backtest_browser_support import ORIGIN, ROOT, relay
 PAUSE = Path("/tmp/qsl-browser-worker-paused")
 
 
-def host():
+def host(*, full=False):
     prefix = "atl-backtest-browser-" + uuid4().hex[:20]
     network, postgres, app = (prefix + suffix for suffix in ("-net", "-pg", "-app"))
     created = []
@@ -136,7 +136,7 @@ def host():
                 "-u",
                 "-m",
                 "tests.integration.quant_lab_browser_support",
-                "guest",
+                "guest-full" if full else "guest",
             ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -183,6 +183,7 @@ def host():
         env.update(
             QSL_BROWSER_ACTIVATION=activation,
             QSL_BROWSER_PERIODS=json.dumps(ready),
+            QSL_BROWSER_FULL="1" if full else "0",
             QSL_BROWSER_RELAY=f'"{python}" -m tests.integration.quant_lab_browser_support relay',
             BACKTEST_BROWSER_CONTAINER=app,
             PLAYWRIGHT_NO_COPY_PROMPT="1",
@@ -330,7 +331,7 @@ def seed_quant_market(engine):
     }
 
 
-def guest():
+def guest(*, full=False):
     import logging
 
     import uvicorn
@@ -360,7 +361,13 @@ def guest():
         config.attributes["connection"] = connection
         command.upgrade(config, "head")
     seed(PostgresLedger(engine=admin), Decimal("10000"))
-    periods = seed_quant_market(admin)
+    if full:
+        from tests.integration.test_quant_lab_acceptance import PERIODS, seed_market
+
+        seed_market(admin)
+        periods = PERIODS
+    else:
+        periods = seed_quant_market(admin)
     control = role_engine(admin, "atl_control_api")
     dispatch = role_engine(admin, "atl_backtest_worker")
     worker = BacktestWorker(dispatch, enabled=True, code_version="b" * 40)
@@ -430,6 +437,11 @@ def guest():
                     ).scalar_one()
                     == 1
                 )
+                if full:
+                    assert connection.execute(
+                        text("""SELECT bar_steps FROM backtest.experiment_batches
+                        WHERE status='SUCCEEDED'""")
+                    ).scalar_one() == 9178
                 assert (
                     connection.execute(
                         text("""SELECT count(*) FROM backtest.experiment_selections
@@ -457,7 +469,11 @@ def guest():
 
 if __name__ == "__main__":
     try:
-        {"host": host, "guest": guest, "relay": relay}[sys.argv[1]]()
+        entry, _, variant = sys.argv[1].partition("-")
+        if entry == "relay":
+            relay()
+        else:
+            {"host": host, "guest": guest}[entry](full=variant == "full")
     except Exception as error:
         import traceback
 

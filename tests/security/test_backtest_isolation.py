@@ -11,19 +11,22 @@ from uuid import uuid4
 MARKER = "PASS backtest actual container/CPU/memory/mounts/internal-network/SQL-role/no-provider"
 
 
-def isolated_worker_host(module="tests.security.test_backtest_isolation", marker=MARKER):
+def isolated_worker_host(
+    module="tests.security.test_backtest_isolation", marker=MARKER, *, worker_timeout=120,
+    verify=False, safety=False, oom=False,
+):
     from tests.integration.test_paper_provision import POSTGRES
 
     root = Path(__file__).resolve().parents[2]
     tag = "atl-backtest-isolation-" + uuid4().hex[:16]
-    admin_net, worker_net, postgres, worker = (
-        tag + s for s in ("-admin", "-worker", "-pg", "-app")
+    admin_net, worker_net, postgres, worker, paper = (
+        tag + s for s in ("-admin", "-worker", "-pg", "-app", "-paper")
     )
     created = []
 
-    def docker(*args, input_text=None):
+    def docker(*args, input_text=None, timeout=120):
         result = subprocess.run(
-            ["docker", *args], input=input_text, capture_output=True, text=True, timeout=120
+            ["docker", *args], input=input_text, capture_output=True, text=True, timeout=timeout
         )
         if result.returncode:
             marker = next(
@@ -49,10 +52,16 @@ def isolated_worker_host(module="tests.security.test_backtest_isolation", marker
             assert all(n["Internal"] for n in networks)
             admin_cidr, worker_cidr = (n["IPAM"]["Config"][0]["Subnet"] for n in networks)
             hba = Path(directory) / "pg_hba.conf"
+            paper_hba = "".join(
+                f"host lab_paper_runtime atl_paper_{role}_login {admin_cidr} trust\n"
+                for role in ("control_api", "execution", "worker", "watchdog")
+            ) if safety else ""
+            worker_database = "lab_paper_runtime" if safety else "lab"
             hba.write_text(
                 "local all all trust\n"
                 f"host all lab_migration {admin_cidr} trust\n"
-                f"host lab atl_backtest_worker_login {worker_cidr} trust\n"
+                f"{paper_hba}"
+                f"host {worker_database} atl_backtest_worker_login {worker_cidr} trust\n"
                 "host all all 0.0.0.0/0 reject\n"
                 "host all all ::0/0 reject\n",
                 encoding="ascii",
@@ -132,10 +141,28 @@ def isolated_worker_host(module="tests.security.test_backtest_isolation", marker
                 "python",
             ]
             image = "agentic-trading-lab-research-test:local"
-            assert (
-                docker("run", "--rm", "--network", admin_net, *common, image, "-m", module, "seed")
-                == "SEEDED"
-            )
+            if safety:
+                # Only the separate test provisioner owns its synthetic key files.
+                docker(
+                    "run", "--detach", "--name", paper, "--network", admin_net,
+                    "--user", "0:0", "--cap-add", "CHOWN", "--cap-add", "FOWNER",
+                    *common, image, "-m", module, "safety",
+                )
+                created.append(("container", paper))
+                deadline = time.monotonic() + 120
+                while True:
+                    output = docker("logs", paper)
+                    if "READY" in output.splitlines():
+                        break
+                    if (time.monotonic() >= deadline
+                            or output.startswith("FAIL backtest isolation ")):
+                        raise RuntimeError(output or "isolated Paper safety fixture not ready")
+                    time.sleep(0.2)
+            else:
+                assert (
+                    docker("run", "--rm", "--network", admin_net, *common, image,
+                           "-m", module, "seed") == "SEEDED"
+                )
             created.append(("container", worker))
             result = docker(
                 "run",
@@ -154,8 +181,9 @@ def isolated_worker_host(module="tests.security.test_backtest_isolation", marker
                 "-m",
                 module,
                 "probe",
+                timeout=worker_timeout,
             )
-            assert result == marker
+            assert result == marker or (verify and result.splitlines()[0] == marker)
             actual = json.loads(docker("inspect", worker))[0]
             assert list(actual["NetworkSettings"]["Networks"]) == [worker_net]
             assert actual["HostConfig"]["ReadonlyRootfs"] is True
@@ -169,6 +197,42 @@ def isolated_worker_host(module="tests.security.test_backtest_isolation", marker
                 "/opt/lab/" + name
                 for name in ("packages", "services", "tests", "contracts", "alembic.ini")
             }
+            if verify:
+                assert (
+                    docker("run", "--rm", "--network", admin_net, *common, image,
+                           "-m", module, "verify") == "VERIFIED"
+                )
+            if safety:
+                assert docker("wait", paper) == "0", docker("logs", paper)
+                lines = docker("logs", paper).splitlines()
+                assert len(lines) == 2 and lines[1].startswith("PASS Paper safety "), lines
+                result += "\n" + lines[1]
+            if oom:
+                for attempt in range(1, 4):
+                    victim = worker + "-oom-" + str(attempt)
+                    docker(
+                        "run", "--detach", "--name", victim, "--network", worker_net,
+                        "--user", "10001:10001", "--cpus", "0.5", "--memory", "256m",
+                        "--memory-swap", "256m", *common, image, "-m", module, "oom",
+                    )
+                    created.append(("container", victim))
+                    assert docker("wait", victim) == "137", docker("logs", victim)
+                    state = json.loads(docker("inspect", victim))[0]["State"]
+                    assert state["OOMKilled"] is True
+                    assert docker("logs", victim) == "ACTIVE_QUANT_OOM"
+                    assert docker(
+                        "run", "--rm", "--network", admin_net, *common, image,
+                        "-m", module, "expire", str(attempt),
+                    ) == "EXPIRED"
+                assert docker(
+                    "run", "--rm", "--network", worker_net, *common, image,
+                    "-m", module, "settle",
+                ) == "RESTARTED"
+                assert docker(
+                    "run", "--rm", "--network", admin_net, *common, image,
+                    "-m", module, "verify_oom",
+                ) == "VERIFIED_OOM"
+                result += "\nPASS three kernel OOM kills, fenced restarts, exhausted batch"
             return result
         finally:
             for kind, name in reversed(created):

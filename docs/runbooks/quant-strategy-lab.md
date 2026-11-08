@@ -45,3 +45,16 @@ Head werden vor der Dispatcher-Aktivierung eingespielt.
   standardisierten Fehlerantwort verwenden. API-Zähler erfassen feste
   Operations- und Fehlercodes, Laufzeit und begrenzte Zeilenzahlen. Historische
   Berichte und die SQL-Ereignisse bleiben beim Stoppen des Dispatchers erhalten.
+
+## Synthetische Abnahme wiederholen
+
+- Die vollständigen Handelssitzungen mit neun EMA-Konfigurationen und zwei
+  Referenzen liegen in `tests/integration/test_quant_lab_acceptance.py`.
+  Der PostgreSQL-Harness startet Auswahl und Nichtwahl über die authentifizierte
+  API und vergleicht nach dem Restore die Tabellenfingerprints und Rechte.
+- `python -m tests.integration.quant_lab_browser_support host-full` führt
+  dieselben Zeitfenster in Chromium über das gebaute Dashboard aus.
+  Der Test benötigt die lokalen Chromium- und Docker-Testimages.
+- `tests/security/test_quant_lab_isolation.py` prüft den begrenzten Worker,
+  die gemischte Queue und die Paper-Sicherheitskontrollen in isolierten
+  Docker-Netzen. Der Harness verwendet synthetische Daten und lokale Rollen.

@@ -363,6 +363,78 @@ def verify_definition_guards(engine, store, d, denied):
         )
 
 
+def verify_publication_byte_boundary(engine, jobs, lease, report):
+    """Exercise the actual report trigger at one byte below, at and above the cap."""
+    from sqlalchemy import text
+    from sqlalchemy.exc import IntegrityError
+
+    from packages.backtesting.experiment import MAX_PUBLICATION_BYTES
+    from packages.backtesting.experiment_storage import ExperimentStorage
+    from packages.backtesting.jobs import encoded
+
+    class RollbackProbe(Exception):
+        pass
+
+    size = len(encoded(report).encode("utf-8"))
+    charge = text(
+        "UPDATE backtest.experiment_batches SET publication_bytes=:spent WHERE batch_id=:id"
+    )
+    total = text("SELECT publication_bytes FROM backtest.experiment_batches WHERE batch_id=:id")
+    params = {"id": lease.batch_id}
+    owner = ExperimentStorage(engine)
+    with owner.transaction(lease) as connection:
+        original = connection.execute(total, params).scalar_one()
+    assert original < MAX_PUBLICATION_BYTES - size - 1
+    for offset in (-1, 1):
+        try:
+            with owner.transaction(lease) as connection:
+                connection.execute(
+                    charge, dict(params, spent=MAX_PUBLICATION_BYTES - size + offset)
+                )
+                connection.execute(text("SET LOCAL ROLE atl_backtest_worker"))
+                try:
+                    with connection.begin_nested():
+                        jobs._insert(connection, "experiment_reports", lease, report)
+                except IntegrityError as error:
+                    assert offset == 1
+                    assert error.orig.sqlstate == "23514"
+                    assert error.orig.diag.constraint_name == (
+                        "experiment_batches_publication_bytes_check"
+                    )
+                else:
+                    assert offset == -1
+                    assert (
+                        connection.execute(total, params).scalar_one() == MAX_PUBLICATION_BYTES - 1
+                    )
+                raise RollbackProbe
+        except RollbackProbe:
+            pass
+    with owner.transaction(lease) as connection:
+        assert connection.execute(total, params).scalar_one() == original
+        connection.execute(charge, dict(params, spent=MAX_PUBLICATION_BYTES - size))
+    jobs.publish(lease, report)
+    with jobs.transaction() as connection:
+        assert connection.execute(total, params).scalar_one() == MAX_PUBLICATION_BYTES
+
+
+def verify_snapshot_read_boundary(jobs):
+    """Use the worker's bounded reader against a real PostgreSQL result stream."""
+    from packages.backtesting.models import BacktestBudgetExceeded
+    from services.worker.quant_lab_data import MAX_ROWS, _read_rows
+
+    query = "SELECT n FROM generate_series(1,:rows) AS rows(n) ORDER BY n"
+    with jobs.transaction() as connection:
+        for count in (MAX_ROWS - 1, MAX_ROWS):
+            rows = _read_rows(connection, query, {"rows": count}, MAX_ROWS)
+            assert len(rows) == count and rows[-1]["n"] == count
+        try:
+            _read_rows(connection, query, {"rows": MAX_ROWS + 1}, MAX_ROWS)
+        except BacktestBudgetExceeded:
+            pass
+        else:
+            raise AssertionError("snapshot reader accepted more than 100000 rows")
+
+
 def verify_publication(engine, store, jobs, denied):
     """Synthetic storage inputs exercise DB bindings; no simulator result claimed."""
     from copy import deepcopy
@@ -895,7 +967,7 @@ def verify_publication(engine, store, jobs, denied):
                 text("UPDATE research.source_status SET license_status=:value WHERE singleton"),
                 {"value": old_license},
             )
-    jobs.publish(lease, report)
+    verify_publication_byte_boundary(engine, jobs, lease, report)
     denied(lambda: jobs.freeze_selections(lease, selections))
     with engine.connect() as c:
         assert (
@@ -1109,6 +1181,7 @@ def guest():
         )
 
     store, jobs = ExperimentStorage(control), ExperimentStorage(worker)
+    verify_snapshot_read_boundary(jobs)
 
     def denied(call):
         try:
