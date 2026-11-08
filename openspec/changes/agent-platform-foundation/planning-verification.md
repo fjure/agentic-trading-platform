@@ -20,3 +20,16 @@ Die kritischen Reviewbefunde sind in den Planungsartefakten adressiert. Betriebs
 - Lokaler HEAD und Remote-Ausgangsstand mit `git rev-parse HEAD` und `git ls-remote origin HEAD refs/heads/main` geprüft.
 - `validate agent-platform-foundation --strict --json` erfolgreich, keine Befunde. `status --change agent-platform-foundation --json` meldet vollständige Planungsartefakte. 5 Deltas mit 26 Requirements und 69 Szenarien. Alle zehn Implementierungstasks bleiben offen.
 - GitHub-Read-back siehe [Issue-Graph](issue-graph.md).
+
+## NLP-Refinement am veröffentlichten Stand 9ee5134ca7a0
+
+Lokaler HEAD, Remote-HEAD und Remote-main stimmten vor dem Refinement überein. Die bestehende LocalAuth-Sitzung und Same-Origin-Grenze, der Write-only-Setup-Pfad sowie die getrennten Execution-/Jev-Egressnetze wurden im Code geprüft. Sie sind Bestandsschutz und liefern keine Providerautorisierung.
+
+| Unabhängige Perspektive | Befund und überprüfte Auflösung |
+| --- | --- |
+| Product und Conversational UX | Verkürzte Folgeantworten brauchen einen Bezug ohne Rohhistorie. Der Dialog bestätigt einzelne Bezugspunkte sichtbar; NLP-04 prüft Ellipse und Rückfrage ohne bestätigten Bezug. |
+| LLM-Architektur und Runtime | Ein allgemeiner Idempotenzcache würde die flüchtige Vorschau unterlaufen. Replay ist sitzungsgebunden und flüchtig, Entscheidung liefert nur Receipt. SEND, DECLINE und REVOKE haben getrennte Bindungen. |
+| Privacy und Security | Auch formal gültige Modellantworten können sensible Werte enthalten. APF-P05/Q07 sperren Anzeige und Persistenz; NLP-06 prüft einen syntaktisch gültigen Secret-Köder. |
+| Quant-Integrität | „Schlechte Quartalszahlen“ dürfen nicht still als Gewinnüberraschung gelten. NLP-01 behandelt dies als unbestätigte Auslegung. Deterministische Testbarkeit und separate Approval bleiben maßgeblich. |
+
+Drei unabhängige Reviewer deckten die vier Perspektiven ab und prüften die jeweiligen Korrekturen erneut. Die Schlussreviews meldeten keine kritischen Planungsbefunde. OpenSpec Strict Validation meldete keine Befunde bei 30 Requirements und 85 Szenarien. NLP-01–12 sind geplante Abnahme; produktive Modellqualität und Safety unter Last sind weiterhin Laufzeitnachweise. Siehe [NLP-Entscheidung](nlp-refinement.md) und [Abnahme](test-strategy.md).

@@ -17,6 +17,8 @@ Ein deterministischer Supervisor koordiniert genau eine ausführbare Rolle `quan
 5. **Getrennte Anzeige und Fachbindung.** Guided und Advanced sind Projektionen derselben Version. Der Bericht hält typisierte Fakten und belegte Metriken getrennt von Interpretation. Quellen-, Ergebnis- und Testfensterbezüge bleiben unveränderlich, aktuelle Widerrufe erscheinen in einer separaten Projektion. Siehe [Quant-Integrität](quant-integrity.md).
 6. **Browserunabhängiger Researchlauf.** Supervisor und PostgreSQL stellen Tageszeitplan, Checkpoint und Deduplikation bereit. Der LLM-Aufruf folgt dem Evidenztrigger. Proaktive Vorschläge können kein Experiment starten. Siehe [Pipeline](proactive-design.md).
 
+7. **Semantischer Dialog mit expliziter Verarbeitung.** Control/Research klassifiziert und versiegelt die exakt sichtbare minimierte Projektion. Der Betreiber entscheidet pro Turn zwischen lokaler Klärung und externer Interpretation mit zugelassenem Profil. Der Supervisor verbraucht die Bindung einmalig, das Gateway sendet ausschließlich die geprüfte Projektion und die gebundene technische Hülle. Modellvorschlag, fachliche Bestätigung und Quant-Freigabe sind getrennte Zustände. Das geschlossene Interpretenformat lässt einen späteren lokal isolierten Modelladapter zu. Siehe [NLP-Refinement](nlp-refinement.md).
+
 ## Risks / Trade-offs
 
 - Unklarer Providerzustand → maximale Reservierung konservativ halten, kein automatischer Wiederholungsversand und kein stiller Providerwechsel.

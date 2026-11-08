@@ -22,3 +22,7 @@ Der Connector erlaubte Suche, wies aber die Issue-Erstellung mit HTTP 403 ab und
 Die Prüfung erfasst Planungsissues. Alle Implementierungscheckboxen bleiben offen.
 
 Der zweite repositoryweite, rein lesende Abgleich fand dieselben zehn Issues und 17 Kanten ohne Drift. Er erforderte keine Schreiboperationen.
+
+## NLP-Refinement
+
+APF-01, APF-02, APF-03, APF-04, APF-08, APF-09 und APF-10 wurden in ihren verwalteten Blöcken aktualisiert. Der Connector wies die Update-Operation mit HTTP 403 ab. Die autorisierte GH CLI änderte ausschließlich die verwalteten Inhalte. Alle zehn Issues blieben offen. Zwei Read-backs verifizierten die Inhalte und alle 17 nativen Kanten vorwärts und rückwärts. Der zweite Abgleich benötigte keine Schreiboperation. Die Mapping-Datei enthält die aktualisierten UTC-Nachweise.

@@ -43,3 +43,19 @@ Das Dashboard SHALL ausschließlich validierte API-Projektionen darstellen und F
 #### Scenario: Eingeschleuster Link
 - **WHEN** Modelltext Skript, HTML oder eine externe URL enthält
 - **THEN** führt der Browser den Inhalt weder aus noch lädt er externe Ressourcen
+
+### Requirement: APF-C05 Transparente Wahl und getrennte Entscheidungen
+
+Das Dashboard SHALL freie Researchfragen, eine ehrliche lokale Klärung und bei zulässigem Profil die exakte Sendekontextvorschau anbieten. API und UI SHALL Sendefreigabe, fachliche Hypothesenbestätigung und Experimentstart als getrennte versionierte Betreiberaktionen behandeln. Sie MUST Ablauf, Ablehnung und Widerruf verständlich anzeigen.
+
+#### Scenario: APF-C-T01 Bewusste Wahl je Turn
+- **WHEN** ein Betreiber eine komplexe Frage eingibt und die externe Verarbeitung erwägt
+- **THEN** zeigt die UI alle dynamischen Felder, den Empfänger, Zweck und Datenklassen vor der separaten Sendefreigabe und bietet jederzeit die lokale Klärung
+
+#### Scenario: APF-C-T02 Widerruf und Reload
+- **WHEN** der Betreiber die Verarbeitung ablehnt oder widerruft oder den Dialog nach Reload öffnet
+- **THEN** zeigt die UI den tatsächlichen Versandstatus und gültige lokale nächste Schritte; sie erzeugt weder einen automatischen Versand noch eine fachliche Bestätigung
+
+#### Scenario: APF-C-T03 Vorschlag bindend übernehmen
+- **WHEN** der Betreiber einen Modellvorschlag mit geänderter fachlicher Bedeutung bestätigt
+- **THEN** zeigt die UI die betroffenen Felder und Konflikte, prüft die aktuelle Version und speichert eine eigenständige fachliche Entscheidung ohne Quant-Start
