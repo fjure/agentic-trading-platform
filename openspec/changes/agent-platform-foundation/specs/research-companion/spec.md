@@ -36,26 +36,39 @@ Das System SHALL Forschungsideen unabhängig von Strategien mit stabiler ID, unv
 
 ### Requirement: APF-Q02 Mehrstufiger Dialog mit bestätigten Annahmen
 
-Der Companion SHALL einen begrenzten, wiederaufnehmbaren Dialog führen und bestätigte Annahmen separat und versionsgebunden schützen. Freitext MUST vor Persistenz lokal auf Secrets und Personenbezug geprüft werden und MUST den Rechner nie als Rohtext verlassen. Nur lokal validierte und zur Weitergabe freigegebene typisierte Felder SHALL ins Gateway gelangen.
+Der Companion SHALL komplexe freie Forschungsfragen in einem begrenzten, wiederaufnehmbaren Dialog verarbeiten. Externe semantische Verarbeitung MUST APF-P04 und APF-P07 erfüllen. Ohne wirksame Sendefreigabe SHALL eine lokale strukturierte Klärung verfügbar sein. Fachlich bindende Annahmen MUST aus expliziten Betreiberentscheidungen hervorgehen.
 
-#### Scenario: APF-Q-T03 Idee in Alltagssprache
+#### Scenario: APF-Q-T03 Freie komplexe Alltagshypothese
 
-- **WHEN** der Betreiber nach einer Gegenbewegung nach „mehreren schlechten Tagen“ fragt
-- **THEN** zeigt der Companion eine verständliche Interpretation, fragt gezielt nach Instrument, Signal, Messfenster oder Vergleich und setzt keinen Wert ohne sichtbare Annahme und Entscheidung voraus
+- **WHEN** ein Betreiber ohne Strategievokabular einen Text zu schlechten Quartalszahlen, einer vermuteten Überreaktion bei Technologieaktien und einer späteren Erholung ausdrücklich zur semantischen Auswertung freigibt
+- **THEN** erkennt der Companion Ereignis, Überreaktion und Erholung als unterschiedliche Elemente, schlägt eine verständliche und strukturierte Lesart vor und fragt gezielt nach fehlenden Definitionen für Ereignis, Zielgröße, Messfenster oder Vergleich
+- **AND** der erforderliche Datentyp für Quartalsereignisse bleibt sichtbar und fehlende Quellen werden lokal erklärt; die Antwort schlägt keine beliebige technische Regel als exakten Test vor
 
-#### Scenario: APF-Q-T04 Wiederaufnahme mit widersprüchlicher Zusammenfassung
+#### Scenario: APF-Q-T04 Wiederaufnahme mit widersprüchlichem Folgebeitrag
 
-- **WHEN** eine Sitzung endet und nach erneuter Anmeldung dieselbe Idee mit einer widersprüchlichen Modellzusammenfassung geöffnet wird
-- **THEN** bleiben Dialog und bestätigte Annahmen erhalten; ein Replay desselben Turns erzeugt weder zweite Entscheidung noch neues Experiment
+- **WHEN** der Betreiber nach einem Neustart oder erneuter Anmeldung eine bestätigte Hypothese öffnet und ein neuer Beitrag der bisherigen Annahme widerspricht
+- **THEN** bleiben bestätigte Annahmen und Hypothesenversion abrufbar; der Companion zeigt die Abweichung und fragt nur die betroffenen Punkte erneut ab
+- **AND** ein Replay desselben Turns erzeugt weder eine zweite Entscheidung noch ein neues Experiment
 
-#### Scenario: APF-Q-T14 Sicherer Dialogkontext
+#### Scenario: APF-Q-T14 Getrennte lokale Persistenz und Modellverarbeitung
 
 - **WHEN** der Betreiber einen neuen Turn einreicht
-- **THEN** prüft der Server lokal vor jeder Persistenz auf Secrets und Personenbezug, einschließlich Nebenpfaden wie Audit, Fehler- oder Outboxdaten; bei erkanntem oder nicht sicher beurteilbarem Inhalt verwirft er die Eingabe und bietet die begrenzte strukturierte Eingabe an
-- **AND** zulässige Turns werden pro Betreiber dauerhaft geordnet, idempotent und an Run und Ideenfassung gebunden; Folgefragen bleiben am gleichen Forschungsgegenstand und technische Run-Grenzen erzeugen keinen neuen fachlichen Auftrag
-- **AND** der Server begrenzt Eingabe- und Kontextgröße, bindet jede lokale Zusammenfassung an Quellturns und Version, behandelt sie als untrusted und hält explizite Entscheidungen und Expertenvorgaben getrennt und unveränderbar durch Modelltext
-- **AND** der Server extrahiert lokal nur Werte für geschlossene typisierte Felder wie Instrumentkennung, Datum oder Regelparameter und prüft vor der Weitergabe Typ, Grenzen und Providerfreigabe; bei Mehrdeutigkeit oder fehlender Freigabe fordert er eine lokale strukturierte Präzisierung an
-- **AND** weder Dialogrohtext noch freitextliche Zusammenfassungen gelangen ins Gateway
+- **THEN** erfolgt vor jeder Persistenz eine konservative lokale Prüfung; unzulässige oder unklare Eingaben werden verworfen, ohne Inhalt in Antwort, Audit, Fehlerprotokoll oder Outbox zu übernehmen
+- **AND** nur zur lokalen Speicherung klassifizierter Originaltext bleibt geschützt beim Betreiber. Dauerhaft gebunden werden Turn, Versionsreferenzen, sichere strukturierte Vorschläge, Bestätigung und redigierte Freigabenachweise
+- **AND** die freigegebene Sendefassung bleibt eine befristete, gesonderte Projektion. Providerprompt, Sendetext und Rohantwort gehören weder in dauerhafte Dialog- noch in Auditdaten
+- **AND** der Kontext ist begrenzt und jede fortgeführte Annahme an ihre Bestätigung gebunden. Alte Dialogtexte und freie Zusammenfassungen werden nie automatisch an den Provider übertragen
+
+#### Scenario: APF-Q-T19 Lokale Klärung ohne Provider
+
+- **WHEN** ein Betreiber die Übertragung ablehnt oder der Dispatch vor Versand an Klassifikation, Berechtigungen, Budget oder Providerstatus scheitert
+- **THEN** erfolgt kein externer Versand und die Oberfläche bietet einen lokalen Weg mit gezielten Fragen zu Ereignis, Instrument, Signal, Zielgröße, Zeitraum und Vergleich
+- **AND** der Companion kennzeichnet die strukturierte Klärung als solche, zeigt ungeklärte Elemente und erlaubt die Bestätigung eines vollständigen lokalen Entwurfs. Nach einem Providerfehler mit unklarem Versandstatus bleibt der lokale Weg verfügbar und der Status wird gemäß APF-R04 angezeigt
+
+#### Scenario: APF-Q-T20 Semantische Änderung und gezielte Bestätigung
+
+- **WHEN** der Betreiber das auslösende Ereignis oder den Messhorizont nach einer Bestätigung ändert
+- **THEN** zeigt der Companion den Unterschied vor einer neuen Bestätigung und erzeugt nach expliziter Annahme eine verknüpfte Nachfolgeversion mit eigener Entscheidung
+- **AND** geänderte Bedeutungen übernehmen keine früheren Bestätigungen. Unveränderte Annahmen bleiben mit ihren Quellen nachvollziehbar. Alte Ideenfassungen und Quant-Entwürfe behalten ihre historische Bindung
 
 ### Requirement: APF-Q03 Geschlossene Testbarkeitsbewertung
 
@@ -140,3 +153,25 @@ Das System SHALL einen unveränderlichen, versionierten und evidenzgebundenen Be
 - **AND** der Server rendert quantitative Aussagen nur über autorisierte persistierte Referenzen mit Feldpfad, Phase, Kandidat oder Referenz, Einheit und Manifestbindung und prüft Richtungsbehauptungen und Vergleiche anhand der gebundenen Werte
 - **AND** bei ungültiger Interpretation bleibt der Faktenbericht mit erklärter Lücke verfügbar, aktuelle Warnungen erscheinen getrennt und historische Resultate bleiben unverändert
 - **AND** der Bericht enthält keine zukünftige Profitabilitätszusage, Handelsaktion oder Strategiepromotion
+
+### Requirement: APF-Q07 Validierte semantische Interpretation
+
+Der Companion SHALL eine geschlossene, versionierte ResearchHypothesisInterpretationV1 als unbestätigten Vorschlag lokal validieren. Die autoritative Testbarkeit MUST erst aus einer bestätigten Hypothese deterministisch nach APF-Q03 folgen. Der Vorschlag SHALL weder Betreiberentscheidungen ersetzen noch Tool-, Daten-, Strategie- oder Startrechte erteilen.
+
+#### Scenario: APF-Q-T21 Begrenzter Vorschlag und ungebundene Werte
+
+- **WHEN** ein Modell eine Antwort zum ausgewählten Turn liefert
+- **THEN** bindet der Server die Originalreferenz und aktuelle Dialogversion, prüft Schema, Werte, Herkunft, erlaubte Referenzen und Feldgrenzen. Vor Persistenz oder Anzeige prüft er die Datenpolicy auf sensible oder nicht klassifizierbare Inhalte gemäß APF-P05 und speichert nur einen zulässigen strukturierten Vorschlag
+- **AND** der Vorschlag enthält eine verständliche Hypothese, Instrument oder Markt, Triggerereignis, Signaldefinition, Beobachtungsfenster, erwartetes Ergebnis, Messhorizont, Benchmark, erforderliche Datentypen, offene Fragen, ausdrückliche Annahmen, nicht unterstützte Aspekte, Interpretationssicherheit und vorgeschlagene Testbarkeit
+- **AND** unbekannte oder nicht unterstützte Elemente bleiben sichtbar und blockieren jede exakte Abbildung. Interpretationssicherheit beschreibt nur die Selbsteinschätzung des Modells und entscheidet weder fachliche Korrektheit noch Testbarkeit
+
+#### Scenario: APF-Q-T22 Gültige Interpretation und unzulässige Aktion
+
+- **WHEN** die gültige Interpretation zusammen mit einem Toolvorschlag oder Startwunsch eintrifft
+- **THEN** weist die Plattform die unzulässige Aktion gemäß Toolpolicy ab. Die Interpretation kann als separater Vorschlag übernommen werden, wenn sie ihre eigenen Validierungsregeln erfüllt
+- **AND** eine eingeschleuste Aktion innerhalb des Hypothesenobjekts oder ein fremder Bindungsbezug führt zur Ablehnung des Objekts
+
+#### Scenario: APF-Q-T23 Explizite Expertenwerte haben Vorrang
+
+- **WHEN** die Ausgabe einer gültigen vorgegebenen Strategieversion, einem Parameter, Markt, Research Mode oder Zeitprotokoll widerspricht
+- **THEN** bleiben die strukturiert gebundenen Expertenvorgaben unverändert. Der Companion kennzeichnet den Konflikt und verarbeitet keine implizite Änderung

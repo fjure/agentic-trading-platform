@@ -4,7 +4,7 @@ Das Quant Strategy Lab kann Hypothesen reproduzierbar untersuchen. Für Einsteig
 
 ## What Changes
 
-- Einen Research Companion mit persistentem Dialog, versionierten Ideen, begründeter Testbarkeit, geführtem und technischem Zugang sowie evidenzgebundenen Berichten spezifizieren.
+- Einen Research Companion mit freier Alltagssprache, lokaler Klärung, optionaler zweck- und kontextgebundener Sendefreigabe, persistentem Dialog, versionierten Ideen, begründeter Testbarkeit, geführtem und technischem Zugang sowie evidenzgebundenen Berichten spezifizieren.
 - Historische Revisionen und persistierte Researchbefunde browserunabhängig prüfen. Nur relevante neue zulässige Evidenz löst begrenzte Modellinterpretation aus.
 - Geschlossenes Agenten- und Toolregister, persistente Läufe, deterministischen Supervisor, Budgets und betreibergebundenen Quant-Start ergänzen.
 - Provideradapter für OpenAI und Anthropic mit isoliertem Gateway und separat zu genehmigender BYOK-/Egress-Grenze planen.

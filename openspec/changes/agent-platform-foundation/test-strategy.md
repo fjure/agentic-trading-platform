@@ -4,7 +4,7 @@ APF-Abnahme nutzt echte FastAPI-/Relay-/PostgreSQL-/Angular-Wege und lokale LLM-
 
 | ID | Testweg | Prüforakel |
 | --- | --- | --- |
-| E2E A | Angular → Control → Dialog → HTTP-Double → IdeaVersion → Quant Draft | Original getrennt, höchstens ein Run je Turn-Retry, Rückfrage, keine stille Strategieersetzung. |
+| E2E A | Angular → Control → Dialog → Vorschau und Sendefreigabe → HTTP-Double → fachliche Bestätigung → IdeaVersion → Quant Draft | Original getrennt, höchstens ein Run je Turn-Retry, Rückfrage, keine stille Strategieersetzung. |
 | E2E B | Discovery oder Nutzeridee → Tool Policy → Draft → Validation → Betreiber → Admission → Worker → Report → Browserreload | Batch einmal, nur exakter Hash, Rollen getrennt, Ziffern aus realem persistiertem Toolresultat, Guided und Advanced identische Bindung. |
 | E2E C | Neue synthetische Revision → Zeitplan → Quality/Trigger → HTTP-Double → Publikation → Dashboard | Genau ein Request und höchstens konfiguriertes Publikationslimit. Identische Wiederholung 0 neue Requests, 0 neue Ideen und 0 Experimente. DST, Neustart, Pause, Seitengrenzen und Retraktion zwischen Modellversand und Publikation separat. |
 | E2E D | Experteninput mit Strategie, Parametern, Policy, Zeiten und Limits | Feldgleichheit bis Validierung, unsupported sichtbar, Approximation gesondert bestätigt. Wiederverwendung alter Fenster als abhängig markiert. |
@@ -13,3 +13,22 @@ APF-Abnahme nutzt echte FastAPI-/Relay-/PostgreSQL-/Angular-Wege und lokale LLM-
 | E2E G | Crash vor/nach Claim, Providerdispatch, Toolcommit, Quant-Admission, Checkpoint und Publikation | Stale Worker verworfen. Bereits gespeicherte Resultate wiederverwendet. Unbekannter Providerzustand konservativ verrechnet. Kein doppelter Batch, keine doppelte Publikation und kein verlorener Quellenfortschritt. |
 
 Weitere Orakel: Isolation-Checkliste im Threat Model, Crash- und Budgetmatrix im Runtime-Design sowie Exposure-/Vergleichsregeln in Quant-Integrität. Vertragsprüfungen und Dashboardsichtbarkeit werden je Paket geprüft. Der letzte Abnahmeschritt prüft das Zusammenspiel. Diese Matrix ist geplant und weist keine bestandenen APF-Laufzeittests aus.
+
+## Natürlichsprachliche Abnahme
+
+| ID | Fall | Prüforakel |
+| --- | --- | --- |
+| NLP-01 | Komplexe Alltagshypothese | Quartalsereignis, Überreaktion und Erholung werden als getrennte semantische Elemente erkannt. Bei „schlechten Quartalszahlen“ ist eine negative Überraschung eine mögliche Auslegung, bis der Betreiber „unter den Erwartungen“ bestätigt. Der HTTP-Double prüft den sichtbaren Wortlaut und liefert für einen veränderten Ereignis-/Horizont-Kontrast einen anderen Vorschlag. Unbestimmte Werte bleiben offen. Variierte deutsche Paraphrasen und ein Gegenbeispiel ohne Quartalsbezug prüfen Bedeutungsunterschiede. Modelloutput passiert die lokale Validierung. |
+| NLP-02 | Keine externe Freigabe | Ablehnung oder fehlendes Profil erzeugt null Providerrequests. Der lokale Weg zeigt explizit offene Bedeutung und lässt eine strukturierte, verständliche Klärung abschließen. |
+| NLP-03 | Exakt oder angenähert | Ereignisbasierte Hypothese bleibt mit fehlenden Daten-/Strategiefähigkeiten sichtbar. Kein EMA-/RSI-Ersatz als exakter Test. Eine fachlich zulässige andere Hypothese erfordert ihre eigene Bestätigung. |
+| NLP-04 | Mehrstufige Konkretisierung | Drei negative Handelstage → nächste Woche → bestätigte fünf Handelstage. Eine verkürzte Folgeantwort erhält ihren Bezug aus sichtbaren, bestätigten Slots. Ohne bestätigten Bezug folgt eine Rückfrage. Bestehende Bestätigungen bleiben unverändert, Widerspruch zeigt konkreten Konflikt, bestätigte Fragen erscheinen nicht erneut ohne Grund. |
+| NLP-05 | Geänderte Nutzerabsicht | Geändertes Ereignis oder Horizont ergibt neue Revision. Alte fachliche Bestätigung und alte Vorschau sind für die neue Bedeutung ungültig. Parallelbestätigung und stale Revision werden abgewiesen. |
+| NLP-06 | Credential-Injection | Synthetischer Secret-Köder in Nutzertext, Tooloutput und formal gültigem Modell-DTO, simulierte Aufforderung zum Credential-Export. Null Leak in Vorschau, Providerbody, persistiertem Kontext, Fehler, Log, Audit und Telemetrie. |
+| NLP-07 | Datenklassen-Isolation | Freigegebene eigene Idee darf im Providerbody erscheinen. Lizenzierte oder abgeleitete Kursdaten, historische Evidenz, fremde Rohtexte und gespeicherte Ergebnisse fehlen auch bei separater Erlaubnis für einen anderen Zweck. |
+| NLP-08 | Unklare Klassifikation | Unklare Herkunft oder PII-Verdacht erzeugt keine sendbare Vorschau und null Requests. Bedienbare sichere Neuformulierung und lokale Klärung bleiben verfügbar. |
+| NLP-09 | Reload und Wiederaufnahme | Browserreload und Runtime-Neustart bewahren bereits bestätigte Felder und Vorschläge. Fehlender flüchtiger Payload erfordert eine neue Vorschau. Bestätigungsreplay liefert ein Receipt und löst keinen zweiten Request aus. |
+| NLP-10 | Kein Autoritätsgewinn | Gültige Hypothese plus separat zurückgegebener Tool-/Startversuch. Aktion serverseitig ablehnen, unabhängigen schemafähigen Vorschlag weiter validieren. Eingeschmuggelte Felder innerhalb des DTO scheitern am geschlossenen Schema. |
+| NLP-11 | Expertenvorgaben | Strategieversion, Parameter, Research Mode und Zeitrollen bleiben feldgleich. Widersprüchliche Modellausgabe wird als Konflikt angezeigt und ändert keine Vorgabe. |
+| NLP-12 | Nachvollziehbarer Versand | HTTP-Double dekodiert den Request und vergleicht alle dynamischen Felder mit der Vorschau und die technische Hülle mit der gebundenen Version. Null zusätzliche Historie, IDs oder Toolresultate. Mutierte Bindungen, Doppelklick, Ablauf, Anbieterwechsel und Widerruf vor Dispatch blockieren. Nach In-flight-Widerruf keine Vorschlagsübernahme. |
+
+Die lokale HTTP-Kette prüft Protokoll, tatsächlichen Payload, Trust-Gates und UI mit reproduzierbaren Doubles. Sie misst keine Modellqualität. Für die spätere Profilzulassung gilt zusätzlich ein vorab festgelegter deutscher Replay-Satz mit vorformulierten Sollbeziehungen und offenen Feldern. Vor Aktivierung muss ein gebundenes Modell sämtliche kritischen NLP-01-/03-/04-/11-Semantikorakel erfüllen. Eine Modelländerung benötigt Wiederabnahme. Externe Replay-Ausführung benötigt die gesonderte Freigabe für synthetische Testdaten und Egress. Ungeprüfte Profile bleiben gesperrt.

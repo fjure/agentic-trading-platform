@@ -2,10 +2,11 @@
 
 Change: [agent-platform-foundation](../proposal.md)
 
-- **Requirements** · APF-Q01, APF-Q02, APF-Q03, APF-Q05, APF-P04, APF-P05.
+- **Requirements** · APF-Q01, APF-Q02, APF-Q03, APF-Q05, APF-P04, APF-P05, APF-Q07, APF-P07, APF-R07.
 - **Abhängigkeiten** · APF-01, APF-02, APF-03.
 - **Dateiverantwortung** · `packages/agent_research/companion/`, `tests/unit/`, `tests/integration/`. Geteilte Dateien nur nach Vorgängerintegration anfassen.
 - **Ziel und Akzeptanz** · Original und Interpretation trennen, bestätigte Annahmen binden, Testbarkeit und Exposition prüfen. E2E A/E-Backendkette und Injection-Negative.
+- **NLP-Refinement** · Freie komplexe Sprache semantisch interpretieren, lokal ohne Versand klären und Vorschlag, fachliche Bestätigung sowie Quant-Draft trennen. Modelloutput lokal validieren. NLP-01–06 und NLP-08–12 mit Konflikten, unsupported und Expertenwerten prüfen.
 - **Sicherheit** · Geringste Rechte, redigiertes Audit, keine realen Providerzugriffe im Harness, keine neuen Broker-, Execution- oder Risk-Rechte.
 - **Definition of Done** · Zugeordnete Szenarien und Pakettests bestanden, Befunde behoben, Nachweise versioniert, Checkbox und Issuezustand identisch, Issue und Abhängigkeiten zurückgelesen. Branch und main nach bestehendem Workflow geprüft integriert.
 

@@ -38,7 +38,7 @@ GIVEN ein Tooloutput enthält einen Credentialbefehl, eine fremde Run-ID oder ei
 GIVEN ein erfolgreich gespeichertes Toolresultat WHEN der Aufruf mit derselben Identität und demselben Eingabehash wiederkehrt THEN erhält er genau dieses Resultat; bei anderem Hash wird er abgelehnt.
 
 ### Requirement: APF-R04 Sichere Wiederaufnahme und Abbruch
-Jeder Modellversuch MUST vor externem I/O mit Versuchsschlüssel, Request-Hash, UTC-Frist und Dispatchstatus Budget reservieren. Dispatchautorisierung und Ergebnisannahme SHALL aktuelle Fence und gültigen Laufzustand prüfen. Nur nach verifiziertem Nichtversand MAY ein begrenzter Retry stattfinden.
+Jeder Modellversuch MUST vor externem I/O mit Versuchsschlüssel, Request-Hash, UTC-Frist und Dispatchstatus Budget reservieren. Dispatchautorisierung und Ergebnisannahme SHALL aktuelle Fence und gültigen Laufzustand prüfen. Nur nach verifiziertem Nichtversand MAY ein begrenzter Retry stattfinden. Für externe Dialoginterpretation gilt zusätzlich APF-R07.
 
 #### Scenario: Alte Dispatcheinladung und Sessionverlust
 GIVEN die Einladung zum Dispatch wurde vor einem Abbruch, einer Pause oder einer Leaseübernahme erstellt WHEN sie erst danach am Gateway eintrifft THEN scheitert die private Zulassungsprüfung gegen die aktuelle Fence oder Epoche. Eine verlorene Sitzung sperrt neue authentifizierungspflichtige Nutzeraktionen; bereits angenommene begrenzte Hintergrundarbeit bleibt an die Run-Policy und ein angenommener Quant-Batch an seine eigene Laufzeit gebunden.
@@ -78,3 +78,18 @@ GIVEN das globale Budget reicht für genau einen der konkurrierenden Requests WH
 
 #### Scenario: APF-T-R12 Aggregierte Quant-Grenze
 GIVEN ein Agent hat seine Experimentgrenze erreicht WHEN er weitere Runs oder Drafts erzeugt THEN wird kein zusätzlicher agentengebundener Start angenommen und die regulären Quant-Limits bleiben wirksam.
+
+### Requirement: APF-R07 Einmalige Verarbeitungsfreigabe für externen Dialogkontext
+Der Supervisor MUST eine frische, zweck- und inhaltsgebundene Betreiberfreigabe vor genau einem externen Interpretationsversuch atomar verbrauchen. Der Gateway MUST die aktuelle Zulassung und die unveränderte Projektion prüfen. Widerruf, abgelaufene oder verlorene Bindung MUST einen weiteren Versand sperren. Freigaben erteilen keine fachliche Bestätigung, Toolrechte oder Quant-Admission.
+
+#### Scenario: APF-T-R14 Replay und konkurrierende Sendefreigaben
+GIVEN eine serverseitig erzeugte Vorschau zu einer bestimmten Dialogversion WHEN der authentifizierte Betreiber zwei gleichzeitige Freigabeanfragen stellt THEN wird höchstens eine bindungsgleiche Freigabe angenommen und genau ein Versuch kann sie verbrauchen. Der identische Request liefert denselben Beleg. Andere Schlüssel für dieselbe Vorschau, Änderungen an Dialog, Zweck, Datenklassen, Policy, Provider, Modell, Credentialgeneration oder Kontext sowie eine veraltete Fence sperren Dispatch.
+
+#### Scenario: APF-T-R15 Widerruf und Ergebnisannahme
+GIVEN ein externes Interpretationsgesuch mit ausstehender Antwort WHEN der Betreiber widerruft THEN verhindert ein Widerruf vor Dispatchautorisierung den Versand. Nach Dispatchautorisierung darf die Anfrage bereits in flight sein. Das System stoppt weitere Verarbeitung soweit möglich und unterbindet nach dem Widerrufscommit jede neue Übernahme des Ergebnisses. Eine mögliche Providerwirkung und unbekannte Kosten bleiben sichtbar.
+
+#### Scenario: APF-T-R16 Wiederaufnahme ohne Versandprojektion
+GIVEN ein Restart hat den flüchtigen Freigabekontext verloren WHEN der Dialog oder der identische Freigaberequest erneut geöffnet wird THEN zeigt das System den dauerhaft gespeicherten, inhaltsfreien Status und bestätigte Hypothesenstände. Es rekonstruiert keinen versendbaren Prompt aus Historie oder Modelloutput. Ein neuer externer Versuch erfordert eine neue Vorschau und ausdrückliche Freigabe, ein lokaler Klärungsschritt bleibt möglich.
+
+#### Scenario: APF-T-R17 Timeout nach verbrauchter Freigabe
+GIVEN der Supervisor hat eine Sendefreigabe verbraucht WHEN Antwort oder Usage fehlen oder der Gateway den Nichtversand später bestätigt THEN führt der Lauf keinen automatischen Wiederholungsversand aus. Dauerhaft bestätigter Nichtversand erlaubt die Auflösung der Reserve. Unbekannter Versand behält die konservative Bindung. Bereits dauerhaft validierte Ergebnisse bleiben für normale Wiederaufnahme referenzierbar.
