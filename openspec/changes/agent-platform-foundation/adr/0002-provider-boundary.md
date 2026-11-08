@@ -1,0 +1,9 @@
+# ADR 02 · Provider-Gateway
+
+Status: vorgeschlagen. Produktive Nutzung hängt von gesonderter Autorisierung ab.
+
+Die bestehende credentialtragende Worker-Runtime verarbeitet Jev-Shadow und ist mit Handelsplanung verknüpft. Eine Erweiterung bräuchte dort neue Secrets, Datenklassen und Egressziele. Das getrennte Gateway kostet einen kleinen zusätzlichen Dienst und eine interne Authentifizierungsgrenze. Es hält Providerzugang und externen Versand von Jev, Alpaca, Setup, Forschungspersistenz und Brokerpfaden getrennt.
+
+OpenAI Responses und Anthropic Messages werden als separate Adapter mit einem gemeinsamen strengen Domänenschema geplant. OpenAI-Refusal und unvollständige Ergebnisse sowie Anthropic-Stopgründe sind getrennte Adapterzustände. Beide binden verifizierte Modell-ID, unterstützten Schemaausschnitt, Input-/Outputgrenzen, Toolformat, Usage, Timeout, Abbruch und Rate Limits als Capability-Snapshot. V1 nutzt begrenzte nicht gestreamte Aufrufe, lokale Nachvalidierung, deaktivierte SDK-Retries und keine Provider-hosted Tools. Lokaler Abbruch garantiert keine serverseitige Stornierung. Nutzungsspezifische Einstellungen, Retention und Preisversion werden vor Aktivierung geprüft. Die Adapter teilen keine Keys. Probe-Requests für autorisierte synthetische Verbindungstests unterliegen einem eigenen Unterbudget und denselben Provider-/Globalbudgets und Dispatchregeln. Späteres Ollama kann denselben Capabilityvertrag erfüllen, benötigt aber eigene Zulassung und Nachweise für Modell-, Kontext- und Netzwerkgrenze.
+
+Quellen: [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs), [Anthropic Structured Outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs), [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python), [Ollama API](https://github.com/ollama/ollama/blob/main/docs/api.md). Context7 und offizielle Dokumentation. Keine echten Provideraufrufe.
