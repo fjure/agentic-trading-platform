@@ -1,0 +1,9 @@
+# Contracts-Preflight für Agent Platform Foundation
+
+Ausgangsstand auf `origin/main` am 8. November 2026 war `29716a51afd8f52267d88285dd887a317ba0e106`. Die [beiden fehlgeschlagenen Contracts-Runs](https://github.com/fjure/agentic-trading-platform/actions/workflows/contracts.yml) `42468181653` und `42469604704` installierten die eingefrorenen Python-Abhängigkeiten erfolgreich. Anschließend scheiterte `Invoke-WebRequest` in `scripts/bootstrap-contract-tools.ps1` mit HTTP 504. Alle nachgelagerten Gates wurden übersprungen. Zwischen dem letzten grünen Run `42430726085` und dem Ausgangsstand blieben Workflow, Bootstrap und `uv.lock` unverändert.
+
+Ein Aufruf des gepinnten Temurin-Downloads über die Release-Seite lieferte ebenfalls HTTP 504. Der offizielle GitHub-API-Endpunkt für Asset `527352161` lieferte die vollständige Datei mit dem bestehenden SHA-256. Ein anschließender Bootstrap bestätigte die Hashes von Temurin, Node und OpenAPI Generator und reproduzierte HTTP 504 beim verbleibenden Release-Download für oasdiff. Beide GitHub-Downloads verwenden deshalb die offiziellen Endpunkte für dieselben Release-Assets, mit `Accept: application/octet-stream`. Downloads werden erst nach erfolgreicher Hashprüfung in den Cache übernommen. Alle Versionen, Prüfsummen und CI-Gates bleiben bestehen.
+
+`./scripts/openspec.ps1 validate agent-platform-foundation --strict` war erfolgreich. GitHub bestätigte zehn offene Issues #86 bis #95 und die 17 nativen Abhängigkeiten. APF-01 setzt den erfolgreichen Remote-Contracts-Lauf voraus.
+
+Lokal liefen `bootstrap-contract-tools.ps1 -SkipPython`, kanonische Schema- und Beispielvalidierung, Redocly-Lint und der semantische Diff gegen `29716a51afd8` erfolgreich. oasdiff meldete bei unverändertem Vertrag eine `allOf`-Warnung und keinen Fehler. Zwei Generierungen und der eingecheckte Angular-Client stimmten für alle 370 Dateien bytegenau überein.
