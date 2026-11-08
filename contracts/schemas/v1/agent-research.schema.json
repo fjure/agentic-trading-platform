@@ -1,0 +1,6440 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/contracts/schemas/v1/agent-research.schema.json",
+  "$ref": "#/$defs/AgentIdeaListV1",
+  "$defs": {
+    "AgentHypothesisSlotText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240
+    },
+    "AgentHypothesisField": {
+      "type": "string",
+      "enum": [
+        "MARKET",
+        "TRIGGER",
+        "SIGNAL",
+        "OBSERVATION_WINDOW",
+        "TARGET",
+        "MEASUREMENT_HORIZON",
+        "BENCHMARK",
+        "EVALUATION_CRITERION"
+      ]
+    },
+    "AgentHypothesisAssumption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "statement"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        }
+      }
+    },
+    "AgentConfirmedHypothesisField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "value"
+      ],
+      "properties": {
+        "field": {
+          "$ref": "#/$defs/AgentHypothesisField"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        }
+      }
+    },
+    "AgentHypothesisQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "question"
+      ],
+      "properties": {
+        "field": {
+          "$ref": "#/$defs/AgentHypothesisField"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 320
+        }
+      }
+    },
+    "AgentResearchHypothesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "statement",
+        "market",
+        "trigger",
+        "signal",
+        "observationWindow",
+        "target",
+        "measurementHorizon",
+        "benchmark",
+        "evaluationCriterion"
+      ],
+      "properties": {
+        "statement": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "market": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentHypothesisSlotText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "trigger": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentHypothesisSlotText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "signal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentHypothesisSlotText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observationWindow": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentHypothesisSlotText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentHypothesisSlotText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "measurementHorizon": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentHypothesisSlotText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "benchmark": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentHypothesisSlotText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evaluationCriterion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentHypothesisSlotText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "AgentTestabilityClass": {
+      "type": "string",
+      "enum": [
+        "EXACTLY_TESTABLE",
+        "TESTABLE_WITH_DECLARED_APPROXIMATION",
+        "REQUIRES_NEW_STRATEGY",
+        "INSUFFICIENT_DATA",
+        "UNSUPPORTED"
+      ]
+    },
+    "AgentTestabilityAssessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "catalogVersion",
+        "mappingVersion",
+        "reasons",
+        "limitations",
+        "options"
+      ],
+      "properties": {
+        "classification": {
+          "$ref": "#/$defs/AgentTestabilityClass"
+        },
+        "catalogVersion": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "mappingVersion": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "maxItems": 20,
+          "minItems": 1
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "maxItems": 20
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "maxItems": 20
+        }
+      }
+    },
+    "AgentHypothesisDataType": {
+      "type": "string",
+      "enum": [
+        "PRICE_BARS",
+        "CORPORATE_ACTIONS",
+        "EARNINGS_RELEASES",
+        "EARNINGS_EXPECTATIONS",
+        "UNIVERSE_MEMBERSHIP",
+        "OTHER_UNSUPPORTED"
+      ]
+    },
+    "ResearchHypothesisInterpretationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "hypothesis",
+        "requiredDataTypes",
+        "openQuestions",
+        "assumptions",
+        "unsupportedAspects",
+        "confidence",
+        "proposedTestability"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "enum": [
+            "V1"
+          ]
+        },
+        "hypothesis": {
+          "$ref": "#/$defs/AgentResearchHypothesis"
+        },
+        "requiredDataTypes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentHypothesisDataType"
+          },
+          "maxItems": 20
+        },
+        "openQuestions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentHypothesisQuestion"
+          },
+          "maxItems": 20
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentHypothesisAssumption"
+          },
+          "maxItems": 20
+        },
+        "unsupportedAspects": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "maxItems": 20
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "UNKNOWN"
+          ]
+        },
+        "proposedTestability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentTestabilityClass"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "AgentHypothesisProposalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proposalId",
+        "proposalHash",
+        "originalId",
+        "turnId",
+        "ideaVersion",
+        "dialogueVersion",
+        "origin",
+        "interpretation",
+        "conflicts"
+      ],
+      "properties": {
+        "proposalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "proposalHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "originalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "turnId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "ideaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "dialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "origin": {
+          "type": "string",
+          "enum": [
+            "LOCAL_CLARIFICATION",
+            "MODEL_INTERPRETATION"
+          ]
+        },
+        "interpretation": {
+          "$ref": "#/$defs/ResearchHypothesisInterpretationV1"
+        },
+        "conflicts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentHypothesisQuestion"
+          },
+          "maxItems": 20
+        },
+        "approximation": {
+          "$ref": "#/$defs/AgentHypothesisApproximationV1"
+        }
+      }
+    },
+    "AgentIdeaStatus": {
+      "type": "string",
+      "enum": [
+        "DISCOVERED",
+        "PROPOSED",
+        "REVIEWED",
+        "EXPERIMENT_DRAFTED",
+        "TESTED",
+        "BLOCKED",
+        "UNSUPPORTED",
+        "REJECTED"
+      ]
+    },
+    "AgentIdeaOrigin": {
+      "type": "string",
+      "enum": [
+        "USER",
+        "AGENT"
+      ]
+    },
+    "AgentIdeaEvidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "evidenceId",
+        "revision",
+        "observedAt",
+        "qualityFindings"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "MARKET_REVISION",
+            "RESEARCH_FINDING",
+            "QUANT_RESULT",
+            "DATA_QUALITY"
+          ]
+        },
+        "evidenceId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "revision": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "observedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "qualityFindings": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "maxItems": 20
+        }
+      }
+    },
+    "AgentIdeaVersionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "previousVersion",
+        "status",
+        "origin",
+        "initiatorId",
+        "title",
+        "description",
+        "createdAt",
+        "hypothesis",
+        "openQuestions",
+        "assumptions",
+        "uncertainties",
+        "instrumentIds",
+        "evidence",
+        "testability",
+        "experimentDraftIds",
+        "experimentIds",
+        "relatedIdeaIds"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "version": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "previousVersion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentRevision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/AgentIdeaStatus"
+        },
+        "origin": {
+          "$ref": "#/$defs/AgentIdeaOrigin"
+        },
+        "initiatorId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "originalText": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "sourceId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "hypothesis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentResearchHypothesis"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "interpretation": {
+          "$ref": "#/$defs/AgentHypothesisProposalV1"
+        },
+        "openQuestions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentHypothesisQuestion"
+          },
+          "maxItems": 20
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentHypothesisAssumption"
+          },
+          "maxItems": 20
+        },
+        "uncertainties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "maxItems": 20
+        },
+        "observationStart": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "observationEnd": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "instrumentIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentOpaqueId"
+          },
+          "maxItems": 50
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentIdeaEvidenceReference"
+          },
+          "maxItems": 50
+        },
+        "testability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentTestabilityAssessment"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "experimentDraftIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentOpaqueId"
+          },
+          "maxItems": 50
+        },
+        "experimentIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentOpaqueId"
+          },
+          "maxItems": 50
+        },
+        "relatedIdeaIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentOpaqueId"
+          },
+          "maxItems": 50
+        },
+        "runId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "dialogueId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "decisionId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "discovery": {
+          "$ref": "#/$defs/AgentIdeaDiscoveryV1"
+        }
+      },
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "origin": {
+                    "const": "AGENT"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "required": [
+                  "discovery",
+                  "sourceId"
+                ],
+                "additionalProperties": true,
+                "properties": {
+                  "discovery": {
+                    "$ref": "#/$defs/AgentIdeaDiscoveryV1"
+                  },
+                  "sourceId": {
+                    "$ref": "#/$defs/AgentOpaqueId"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AgentIdeaListV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "nextCursor"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentIdeaVersionV1"
+          },
+          "maxItems": 200
+        },
+        "nextCursor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "AgentCreateIdeaV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "originalText"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "originalText": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "hypothesis": {
+          "$ref": "#/$defs/AgentResearchHypothesis"
+        }
+      }
+    },
+    "AgentReviewIdeaV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedVersion"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "REVIEW"
+          ]
+        },
+        "expectedVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        }
+      }
+    },
+    "AgentReviseIdeaV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedVersion",
+        "title",
+        "description"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "REVISE"
+          ]
+        },
+        "expectedVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "hypothesis": {
+          "$ref": "#/$defs/AgentResearchHypothesis"
+        }
+      }
+    },
+    "AgentCreateDialogueV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ideaId",
+        "expectedIdeaVersion"
+      ],
+      "properties": {
+        "ideaId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "expectedIdeaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "expertExperiment": {
+          "$ref": "#/$defs/AgentExpertExperimentBindingV1"
+        }
+      }
+    },
+    "AgentCreateDialogueTurnV1": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AgentDialogueFreeTextTurnV1"
+        },
+        {
+          "$ref": "#/$defs/AgentDialogueLocalAnswerTurnV1"
+        }
+      ],
+      "discriminator": {
+        "propertyName": "kind",
+        "mapping": {
+          "FREE_TEXT_RESEARCH": "#/$defs/AgentDialogueFreeTextTurnV1",
+          "LOCAL_STRUCTURED_ANSWER": "#/$defs/AgentDialogueLocalAnswerTurnV1"
+        }
+      }
+    },
+    "AgentDialogueTurnV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "turnId",
+        "turnVersion",
+        "dialogueId",
+        "dialogueVersion",
+        "ideaVersion",
+        "createdAt",
+        "originalId",
+        "processing",
+        "localQuestions"
+      ],
+      "properties": {
+        "turnId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "turnVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "dialogueId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "dialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "ideaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "runId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "originalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "processing": {
+          "$ref": "#/$defs/ProcessingStatusV1"
+        },
+        "proposal": {
+          "$ref": "#/$defs/AgentHypothesisProposalV1"
+        },
+        "localQuestions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentLocalHypothesisQuestion"
+          },
+          "maxItems": 20
+        }
+      }
+    },
+    "AgentDialogueV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "ideaId",
+        "ideaVersion",
+        "createdAt",
+        "turns",
+        "nextCursor",
+        "confirmedHypothesis",
+        "confirmedAssumptions",
+        "confirmedFields"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "version": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "ideaId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "ideaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "turns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentDialogueTurnV1"
+          },
+          "maxItems": 200
+        },
+        "nextCursor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confirmedHypothesis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentResearchHypothesis"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confirmedFields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentConfirmedHypothesisField"
+          },
+          "maxItems": 8
+        },
+        "confirmedAssumptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentHypothesisAssumption"
+          },
+          "maxItems": 20
+        },
+        "expertExperiment": {
+          "$ref": "#/$defs/AgentExpertExperimentBindingV1"
+        }
+      }
+    },
+    "AgentConfirmHypothesisV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedIdeaVersion",
+        "expectedDialogueVersion",
+        "proposalId",
+        "proposalHash",
+        "confirmedFields",
+        "confirmedAssumptionIds"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "CONFIRM_HYPOTHESIS"
+          ]
+        },
+        "expectedIdeaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "expectedDialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "proposalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "proposalHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "confirmedFields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentConfirmedHypothesisField"
+          },
+          "maxItems": 8,
+          "minItems": 1
+        },
+        "confirmedAssumptionIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentOpaqueId"
+          },
+          "maxItems": 20
+        }
+      }
+    },
+    "AgentRequestHypothesisChangesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedIdeaVersion",
+        "expectedDialogueVersion",
+        "proposalId",
+        "proposalHash",
+        "requestedFields",
+        "clarification"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "REQUEST_CHANGES"
+          ]
+        },
+        "expectedIdeaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "expectedDialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "proposalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "proposalHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "requestedFields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentHypothesisField"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "clarification": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 320
+        }
+      }
+    },
+    "AgentAcceptApproximationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedIdeaVersion",
+        "expectedDialogueVersion",
+        "proposalId",
+        "proposalHash",
+        "approximationId",
+        "approximationHash"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "ACCEPT_APPROXIMATION"
+          ]
+        },
+        "expectedIdeaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "expectedDialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "proposalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "proposalHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "approximationId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "approximationHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "AgentDialogueDecisionReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decisionId",
+        "action",
+        "ideaId",
+        "ideaVersion",
+        "dialogueId",
+        "dialogueVersion",
+        "proposalId",
+        "recordedAt"
+      ],
+      "properties": {
+        "decisionId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "CONFIRM_HYPOTHESIS",
+            "REQUEST_CHANGES",
+            "ACCEPT_APPROXIMATION"
+          ]
+        },
+        "ideaId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "ideaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "dialogueId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "dialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "proposalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "recordedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      }
+    },
+    "AgentIdeaRevisionV1": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AgentReviseIdeaV1"
+        },
+        {
+          "$ref": "#/$defs/AgentReviewIdeaV1"
+        },
+        {
+          "$ref": "#/$defs/AgentRejectIdeaV1"
+        }
+      ],
+      "discriminator": {
+        "propertyName": "action",
+        "mapping": {
+          "REVISE": "#/$defs/AgentReviseIdeaV1",
+          "REVIEW": "#/$defs/AgentReviewIdeaV1",
+          "REJECT": "#/$defs/AgentRejectIdeaV1"
+        }
+      }
+    },
+    "AgentDialogueDecisionV1": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AgentConfirmHypothesisV1"
+        },
+        {
+          "$ref": "#/$defs/AgentRequestHypothesisChangesV1"
+        },
+        {
+          "$ref": "#/$defs/AgentAcceptApproximationV1"
+        }
+      ],
+      "discriminator": {
+        "propertyName": "action",
+        "mapping": {
+          "CONFIRM_HYPOTHESIS": "#/$defs/AgentConfirmHypothesisV1",
+          "REQUEST_CHANGES": "#/$defs/AgentRequestHypothesisChangesV1",
+          "ACCEPT_APPROXIMATION": "#/$defs/AgentAcceptApproximationV1"
+        }
+      }
+    },
+    "AgentRejectIdeaV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedVersion"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "REJECT"
+          ]
+        },
+        "expectedVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        }
+      }
+    },
+    "AgentDialogueFreeTextTurnV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "expectedDialogueVersion",
+        "expectedIdeaVersion",
+        "text"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "FREE_TEXT_RESEARCH"
+          ]
+        },
+        "expectedDialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "expectedIdeaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        }
+      }
+    },
+    "AgentDialogueLocalAnswerTurnV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "expectedDialogueVersion",
+        "expectedIdeaVersion",
+        "questionId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "LOCAL_STRUCTURED_ANSWER"
+          ]
+        },
+        "expectedDialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "expectedIdeaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "questionId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "field": {
+          "$ref": "#/$defs/AgentHypothesisField"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        }
+      }
+    },
+    "AgentExpertExperimentBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "definitionId",
+        "definitionVersion",
+        "definitionHash"
+      ],
+      "properties": {
+        "definitionId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "definitionVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "definitionHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "description": "Immutable binding to an existing Quant Lab experiment definition. The server resolves the original strategy version, parameters, research mode, selection policy and time protocol from that exact definition."
+    },
+    "AgentIdeaDiscoveryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "priorityRuleVersion",
+        "priorityReason",
+        "latestEvidenceAt",
+        "freshnessEvaluatedAt",
+        "freshness",
+        "estimatedEffort",
+        "effortReason",
+        "limitations"
+      ],
+      "properties": {
+        "priorityRuleVersion": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "priorityReason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 320
+        },
+        "latestEvidenceAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "freshnessEvaluatedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "CURRENT",
+            "STALE",
+            "UNKNOWN"
+          ]
+        },
+        "estimatedEffort": {
+          "type": "string",
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "UNKNOWN"
+          ]
+        },
+        "effortReason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 320
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "maxItems": 20
+        }
+      },
+      "description": "Deterministic evidence freshness and prioritization. Priority does not estimate profitability."
+    },
+    "AgentLocalHypothesisQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "question",
+        "id"
+      ],
+      "properties": {
+        "field": {
+          "$ref": "#/$defs/AgentHypothesisField"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 320
+        },
+        "id": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        }
+      }
+    },
+    "AgentHypothesisApproximationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approximationId",
+        "approximationHash",
+        "ideaVersion",
+        "proposalId",
+        "dialogueVersion",
+        "original",
+        "substitute",
+        "difference",
+        "limitations"
+      ],
+      "properties": {
+        "approximationId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "approximationHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "ideaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "proposalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "dialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "original": {
+          "$ref": "#/$defs/AgentResearchHypothesis"
+        },
+        "substitute": {
+          "$ref": "#/$defs/AgentResearchHypothesis"
+        },
+        "difference": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 320
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        }
+      },
+      "description": "Deterministically supported alternative evaluated against the exact idea and proposal revisions. Availability does not authorize experiment admission."
+    },
+    "AgentRunLimitsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxInputTokens",
+        "maxOutputTokens",
+        "maxCost",
+        "currency",
+        "maxModelCalls",
+        "maxSteps",
+        "maxToolCalls",
+        "maxExperiments",
+        "maxParallelism",
+        "maxActiveSeconds",
+        "maxWallSeconds"
+      ],
+      "properties": {
+        "maxInputTokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "maxOutputTokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "maxCost": {
+          "$ref": "#/$defs/Decimal",
+          "description": "Nonnegative decimal string. Currency is carried separately."
+        },
+        "currency": {
+          "type": "string",
+          "enum": [
+            "USD"
+          ]
+        },
+        "maxModelCalls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "maxSteps": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "maxToolCalls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "maxExperiments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "maxParallelism": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "maxActiveSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "maxWallSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 604800
+        }
+      }
+    },
+    "AgentRegisteredToolV1": {
+      "type": "string",
+      "enum": [
+        "RESEARCH_READ",
+        "QUANT_READ",
+        "IDEA_MANAGE",
+        "QUANT_PREPARE"
+      ]
+    },
+    "AgentToolBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "toolId",
+        "toolVersion"
+      ],
+      "properties": {
+        "toolId": {
+          "$ref": "#/$defs/AgentRegisteredToolV1"
+        },
+        "toolVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        }
+      }
+    },
+    "AgentModelBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "profileId",
+        "profileGeneration",
+        "modelId",
+        "modelGeneration"
+      ],
+      "properties": {
+        "provider": {
+          "$ref": "#/$defs/AgentProviderId"
+        },
+        "profileId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "profileGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "modelId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "modelGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        }
+      }
+    },
+    "AgentRegistryEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agentId",
+        "version",
+        "policyVersion",
+        "role",
+        "description",
+        "promptVersion",
+        "tools",
+        "outputSchemaVersion",
+        "limits",
+        "autonomyLevel",
+        "abstentionRules",
+        "implementationFingerprint",
+        "availability"
+      ],
+      "properties": {
+        "agentId": {
+          "type": "string",
+          "enum": [
+            "quant-research-agent-v1"
+          ]
+        },
+        "version": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "policyVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "QUANT_RESEARCH"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        },
+        "promptVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "modelBinding": {
+          "$ref": "#/$defs/AgentModelBindingV1"
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentToolBindingV1"
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "outputSchemaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "limits": {
+          "$ref": "#/$defs/AgentRunLimitsV1"
+        },
+        "autonomyLevel": {
+          "type": "integer",
+          "enum": [
+            0
+          ]
+        },
+        "abstentionRules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "MISSING_EVIDENCE",
+              "UNSUPPORTED_RESEARCH",
+              "INSUFFICIENT_BUDGET",
+              "POLICY_DENIED"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 8
+        },
+        "implementationFingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "availability": {
+          "type": "string",
+          "enum": [
+            "AVAILABLE",
+            "REVOKED",
+            "BLOCKED"
+          ]
+        }
+      }
+    },
+    "AgentRunStateV1": {
+      "type": "string",
+      "enum": [
+        "CREATED",
+        "QUEUED",
+        "RUNNING",
+        "WAITING_FOR_INPUT",
+        "WAITING_FOR_PROCESSING_DECISION",
+        "WAITING_FOR_APPROVAL",
+        "WAITING_FOR_BATCH",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED",
+        "CANCELLED",
+        "TIMED_OUT",
+        "BUDGET_EXHAUSTED"
+      ]
+    },
+    "AgentRunReasonV1": {
+      "type": "string",
+      "enum": [
+        "AGENT_POLICY_DENIED",
+        "LEASE_LOST",
+        "BUDGET_EXHAUSTED",
+        "IDEMPOTENCY_CONFLICT",
+        "TOOL_OUTCOME_UNKNOWN",
+        "PROVIDER_RESULT_UNAVAILABLE",
+        "PROVIDER_OUTCOME_UNKNOWN",
+        "PROVIDER_UNAVAILABLE",
+        "CAPABILITY_MISMATCH",
+        "RATE_LIMITED",
+        "APPROVAL_REQUIRED",
+        "EVIDENCE_NOT_ELIGIBLE",
+        "BACKPRESSURE",
+        "DEADLINE_EXCEEDED",
+        "CANCELLED_BY_OPERATOR",
+        "PROCESSING_GRANT_REQUIRED",
+        "PROCESSING_GRANT_INVALID",
+        "PROCESSING_GRANT_REVOKED"
+      ]
+    },
+    "AgentRunUsageV1": {
+      "type": "object",
+      "description": "Unknown usage or costs are explicit and omitted amounts are never interpreted as zero.",
+      "additionalProperties": false,
+      "required": [
+        "tokenUsageState",
+        "costState",
+        "reservedCost",
+        "currency",
+        "modelCalls",
+        "steps",
+        "toolCalls",
+        "experiments"
+      ],
+      "properties": {
+        "tokenUsageState": {
+          "type": "string",
+          "enum": [
+            "KNOWN",
+            "UNKNOWN",
+            "NOT_INCURRED"
+          ]
+        },
+        "costState": {
+          "type": "string",
+          "enum": [
+            "KNOWN",
+            "UNKNOWN",
+            "NOT_INCURRED"
+          ]
+        },
+        "reportedInputTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "reportedOutputTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "estimatedCost": {
+          "$ref": "#/$defs/Decimal",
+          "description": "Nonnegative decimal string. Currency is carried separately."
+        },
+        "confirmedCost": {
+          "$ref": "#/$defs/Decimal",
+          "description": "Nonnegative decimal string. Currency is carried separately."
+        },
+        "reservedCost": {
+          "$ref": "#/$defs/Decimal",
+          "description": "Nonnegative decimal string. Currency is carried separately."
+        },
+        "currency": {
+          "type": "string",
+          "enum": [
+            "USD"
+          ]
+        },
+        "pricingVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "modelCalls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "toolCalls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "experiments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        }
+      }
+    },
+    "AgentRunV1": {
+      "type": "object",
+      "description": "Redacted projection. Internal claims, prompts, tool arguments and provider payloads are never returned.",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "version",
+        "kind",
+        "state",
+        "agentId",
+        "agentVersion",
+        "policyVersion",
+        "requestHash",
+        "traceId",
+        "createdAt",
+        "deadlineAt",
+        "updatedAt",
+        "limits",
+        "usage",
+        "providerOutcome"
+      ],
+      "properties": {
+        "runId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "version": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "DIALOGUE",
+            "SCHEDULED",
+            "REEVALUATION"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/AgentRunStateV1"
+        },
+        "reasonCode": {
+          "$ref": "#/$defs/AgentRunReasonV1"
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "RESEARCH_IDEAS_PUBLISHED",
+            "NO_NEW_RESEARCH_IDEAS",
+            "ABSTAINED",
+            "REPORT_AVAILABLE"
+          ]
+        },
+        "agentId": {
+          "type": "string",
+          "enum": [
+            "quant-research-agent-v1"
+          ]
+        },
+        "agentVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "policyVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "modelBinding": {
+          "$ref": "#/$defs/AgentModelBindingV1"
+        },
+        "requestHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "deadlineAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "checkpointVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "dialogueId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "ideaId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "scheduleId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "priorRunId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "approvalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "batchId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "reportId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "limits": {
+          "$ref": "#/$defs/AgentRunLimitsV1"
+        },
+        "usage": {
+          "$ref": "#/$defs/AgentRunUsageV1"
+        },
+        "providerOutcome": {
+          "type": "string",
+          "enum": [
+            "NOT_DISPATCHED",
+            "IN_FLIGHT",
+            "REJECTED_BEFORE_EXECUTION",
+            "ACCEPTED",
+            "OUTCOME_UNKNOWN",
+            "RESULT_UNAVAILABLE"
+          ]
+        },
+        "cancellationRequestedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      }
+    },
+    "AgentRunEventV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "eventId",
+        "runId",
+        "runVersion",
+        "occurredAt",
+        "traceId",
+        "kind"
+      ],
+      "properties": {
+        "eventId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "runId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "runVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "occurredAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "STATE_CHANGED",
+            "TOOL_ACCEPTED",
+            "TOOL_REJECTED",
+            "TOOL_COMPLETED",
+            "PROVIDER_STATUS_CHANGED",
+            "BUDGET_RESERVED",
+            "BUDGET_RECONCILED",
+            "APPROVAL_CHANGED",
+            "CANCELLATION_RECORDED"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/AgentRunStateV1"
+        },
+        "tool": {
+          "$ref": "#/$defs/AgentToolBindingV1"
+        },
+        "reasonCode": {
+          "$ref": "#/$defs/AgentRunReasonV1"
+        },
+        "resultRef": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        }
+      }
+    },
+    "AgentRunCancelRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedVersion"
+      ],
+      "properties": {
+        "expectedVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        }
+      }
+    },
+    "AgentRunCancellationV1": {
+      "type": "object",
+      "description": "A cancellation fences further agent work. An admitted Quant batch has its own lifecycle.",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "runVersion",
+        "state",
+        "recordedAt",
+        "receiptId"
+      ],
+      "properties": {
+        "runId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "runVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "state": {
+          "$ref": "#/$defs/AgentRunStateV1"
+        },
+        "recordedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "receiptId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        }
+      }
+    },
+    "AgentScheduleStateV1": {
+      "type": "string",
+      "enum": [
+        "DISABLED",
+        "ACTIVE",
+        "PAUSED"
+      ]
+    },
+    "AgentScheduleScopeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instrumentIds",
+        "sourceKinds"
+      ],
+      "properties": {
+        "instrumentIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentOpaqueId"
+          },
+          "minItems": 1,
+          "maxItems": 200,
+          "uniqueItems": true
+        },
+        "sourceKinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "HISTORICAL_REVISION",
+              "PERSISTED_RESEARCH_RESULT"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true
+        }
+      }
+    },
+    "AgentScheduleLimitsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxInputTokens",
+        "maxOutputTokens",
+        "maxCost",
+        "currency",
+        "maxModelCalls",
+        "maxIdeas",
+        "maxSourceItems",
+        "maxPendingItems"
+      ],
+      "properties": {
+        "maxInputTokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "maxOutputTokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "maxCost": {
+          "$ref": "#/$defs/Decimal",
+          "description": "Nonnegative decimal string. Currency is carried separately."
+        },
+        "currency": {
+          "type": "string",
+          "enum": [
+            "USD"
+          ]
+        },
+        "maxModelCalls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "maxIdeas": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "maxSourceItems": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "maxPendingItems": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        }
+      }
+    },
+    "AgentScheduleV1": {
+      "type": "object",
+      "description": "At most one scheduled run per local date. Skipped times resolve to the next valid instant, duplicated times to the first instant. Only the newest missed execution can be recovered.",
+      "additionalProperties": false,
+      "required": [
+        "scheduleId",
+        "version",
+        "state",
+        "timeZone",
+        "localTime",
+        "scope",
+        "limits",
+        "triggerPolicyVersion",
+        "tzdataVersion"
+      ],
+      "properties": {
+        "scheduleId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "version": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "state": {
+          "$ref": "#/$defs/AgentScheduleStateV1"
+        },
+        "timeZone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "IANA time zone. The service validates the identifier against its pinned time-zone database."
+        },
+        "localTime": {
+          "type": "string",
+          "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+        },
+        "scope": {
+          "$ref": "#/$defs/AgentScheduleScopeV1"
+        },
+        "limits": {
+          "$ref": "#/$defs/AgentScheduleLimitsV1"
+        },
+        "nextExecutionAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "lastExecutionAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "checkpointId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "triggerPolicyVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "tzdataVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        }
+      }
+    },
+    "AgentScheduleUpdateV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedVersion",
+        "timeZone",
+        "localTime",
+        "scope",
+        "limits"
+      ],
+      "properties": {
+        "expectedVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "timeZone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "IANA time zone. The service validates the identifier against its pinned time-zone database."
+        },
+        "localTime": {
+          "type": "string",
+          "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+        },
+        "scope": {
+          "$ref": "#/$defs/AgentScheduleScopeV1"
+        },
+        "limits": {
+          "$ref": "#/$defs/AgentScheduleLimitsV1"
+        }
+      }
+    },
+    "AgentSchedulePauseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedVersion"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "PAUSE"
+          ]
+        },
+        "expectedVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        }
+      }
+    },
+    "AgentScheduleResumeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedVersion"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "RESUME"
+          ]
+        },
+        "expectedVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        }
+      }
+    },
+    "AgentScheduleReevaluateV1": {
+      "type": "object",
+      "description": "Explicitly authorize an audit-bound reevaluation of previously handled evidence with a changed model or prompt binding. Existing publication controls apply.",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedVersion",
+        "evidenceSetId",
+        "agentVersion",
+        "reason"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "REEVALUATE"
+          ]
+        },
+        "expectedVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "evidenceSetId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "agentVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        }
+      }
+    },
+    "AgentScheduleCommandV1": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AgentSchedulePauseV1"
+        },
+        {
+          "$ref": "#/$defs/AgentScheduleResumeV1"
+        },
+        {
+          "$ref": "#/$defs/AgentScheduleReevaluateV1"
+        }
+      ],
+      "discriminator": {
+        "propertyName": "action",
+        "mapping": {
+          "PAUSE": "#/$defs/AgentSchedulePauseV1",
+          "RESUME": "#/$defs/AgentScheduleResumeV1",
+          "REEVALUATE": "#/$defs/AgentScheduleReevaluateV1"
+        }
+      }
+    },
+    "AgentScheduleCommandResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commandId",
+        "scheduleId",
+        "scheduleVersion",
+        "state"
+      ],
+      "properties": {
+        "commandId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "scheduleId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "scheduleVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "state": {
+          "$ref": "#/$defs/AgentScheduleStateV1"
+        },
+        "runId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        }
+      }
+    },
+    "AgentProviderProbeStateV1": {
+      "type": "string",
+      "enum": [
+        "NOT_TESTED",
+        "QUEUED",
+        "IN_FLIGHT",
+        "VERIFIED",
+        "REJECTED_BEFORE_EXECUTION",
+        "RATE_LIMITED",
+        "OUTCOME_UNKNOWN",
+        "FAILED"
+      ]
+    },
+    "AgentCredentialStatusV1": {
+      "type": "object",
+      "description": "Only redacted generation and state are returned. Local revocation does not imply provider revocation.",
+      "additionalProperties": false,
+      "required": [
+        "credentialVersion",
+        "state",
+        "providerRevocationState",
+        "updatedAt"
+      ],
+      "properties": {
+        "credentialVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "NOT_CONFIGURED",
+            "STORED",
+            "VERIFIED",
+            "ACTIVE",
+            "REVOKED"
+          ]
+        },
+        "credentialGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "locallyRevokedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "providerRevocationState": {
+          "type": "string",
+          "enum": [
+            "NOT_CONFIRMED",
+            "CONFIRMED"
+          ]
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      }
+    },
+    "AgentProviderCapabilityV1": {
+      "type": "object",
+      "description": "Versioned redacted capability view. No endpoint URLs, credential values, raw provider response or hosted tools.",
+      "additionalProperties": false,
+      "required": [
+        "binding",
+        "credential",
+        "availability",
+        "adapter",
+        "outputSchemaVersion",
+        "schemaSubsetVersion",
+        "structuredOutputSupported",
+        "maxInputTokens",
+        "maxOutputTokens",
+        "timeoutSeconds",
+        "cancelSupport",
+        "rateLimitSupport",
+        "dataHandlingPolicyId",
+        "dataHandlingPolicyVersion",
+        "probeState"
+      ],
+      "properties": {
+        "binding": {
+          "$ref": "#/$defs/AgentModelBindingV1"
+        },
+        "credential": {
+          "$ref": "#/$defs/AgentCredentialStatusV1"
+        },
+        "availability": {
+          "type": "string",
+          "enum": [
+            "DISABLED",
+            "AVAILABLE",
+            "REVOKED",
+            "BLOCKED"
+          ]
+        },
+        "adapter": {
+          "type": "string",
+          "enum": [
+            "OPENAI_RESPONSES",
+            "ANTHROPIC_MESSAGES"
+          ]
+        },
+        "outputSchemaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "schemaSubsetVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "structuredOutputSupported": {
+          "type": "boolean"
+        },
+        "maxInputTokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "maxOutputTokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "cancelSupport": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "BEST_EFFORT"
+          ]
+        },
+        "rateLimitSupport": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "BOUNDED_RETRY_AFTER"
+          ]
+        },
+        "dataHandlingPolicyId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "dataHandlingPolicyVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "pricingVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "lastProbeId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "probeState": {
+          "$ref": "#/$defs/AgentProviderProbeStateV1"
+        }
+      }
+    },
+    "AgentProviderProbeRequestV1": {
+      "type": "object",
+      "description": "Explicit synthetic connectivity probe. No Research context is accepted. Separate probe, provider and global budgets apply.",
+      "additionalProperties": false,
+      "required": [
+        "profileId",
+        "profileGeneration",
+        "modelGeneration",
+        "credentialGeneration"
+      ],
+      "properties": {
+        "profileId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "profileGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "modelGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "credentialGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        }
+      }
+    },
+    "AgentProviderProbeResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "probeId",
+        "provider",
+        "profileId",
+        "profileGeneration",
+        "modelGeneration",
+        "credentialGeneration",
+        "status",
+        "acceptedAt"
+      ],
+      "properties": {
+        "probeId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "provider": {
+          "$ref": "#/$defs/AgentProviderId"
+        },
+        "profileId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "profileGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "modelGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "credentialGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "status": {
+          "$ref": "#/$defs/AgentProviderProbeStateV1"
+        },
+        "acceptedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "reasonCode": {
+          "$ref": "#/$defs/AgentRunReasonV1"
+        }
+      }
+    },
+    "AgentCredentialSaveRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedCredentialVersion",
+        "credential"
+      ],
+      "properties": {
+        "expectedCredentialVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "credential": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "writeOnly": true,
+          "format": "password",
+          "description": "Transient provider credential for this request only. Never returned, logged, or saved in browser state."
+        }
+      }
+    },
+    "AgentCredentialRotateRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedCredentialVersion",
+        "expectedCredentialGeneration",
+        "credential"
+      ],
+      "properties": {
+        "expectedCredentialVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "expectedCredentialGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "credential": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "writeOnly": true,
+          "format": "password",
+          "description": "Transient provider credential for this request only. Never returned, logged, or saved in browser state."
+        }
+      }
+    },
+    "AgentCredentialActivateRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedCredentialVersion",
+        "profileId",
+        "profileGeneration",
+        "modelGeneration",
+        "credentialGeneration",
+        "verifiedProbeId"
+      ],
+      "properties": {
+        "expectedCredentialVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "profileId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "profileGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "modelGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "credentialGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "verifiedProbeId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        }
+      }
+    },
+    "AgentCredentialRevokeRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedCredentialVersion",
+        "credentialGeneration"
+      ],
+      "properties": {
+        "expectedCredentialVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "credentialGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        }
+      }
+    },
+    "AgentRegistryPageV1": {
+      "type": "object",
+      "description": "The opaque cursor continues the same stable ordering. An absent cursor means the last page.",
+      "additionalProperties": false,
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentRegistryEntryV1"
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "nextCursor": {
+          "$ref": "#/$defs/Cursor"
+        }
+      }
+    },
+    "AgentRunPageV1": {
+      "type": "object",
+      "description": "The opaque cursor continues the same stable ordering. An absent cursor means the last page.",
+      "additionalProperties": false,
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentRunV1"
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "nextCursor": {
+          "$ref": "#/$defs/Cursor"
+        }
+      }
+    },
+    "AgentRunEventPageV1": {
+      "type": "object",
+      "description": "The opaque cursor continues the same stable ordering. An absent cursor means the last page.",
+      "additionalProperties": false,
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentRunEventV1"
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "nextCursor": {
+          "$ref": "#/$defs/Cursor"
+        }
+      }
+    },
+    "AgentProviderPageV1": {
+      "type": "object",
+      "description": "The opaque cursor continues the same stable ordering. An absent cursor means the last page.",
+      "additionalProperties": false,
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AgentProviderCapabilityV1"
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "nextCursor": {
+          "$ref": "#/$defs/Cursor"
+        }
+      }
+    },
+    "AgentQuantPolicyBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policyId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "revision": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "hash": {
+          "$ref": "#/$defs/BacktestHash"
+        }
+      },
+      "required": [
+        "policyId",
+        "revision",
+        "hash"
+      ]
+    },
+    "AgentQuantApproximationBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "decisionId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "revision": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "hash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "required": [
+        "decisionId",
+        "revision",
+        "hash",
+        "description"
+      ]
+    },
+    "AgentQuantApprovalBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "runVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "operatorId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "ideaId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "ideaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "hypothesisVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "hypothesisHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "approximation": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/AgentQuantApproximationBindingV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "experimentId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "definitionVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "definitionHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "validationId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "validationHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "researchMode": {
+          "$ref": "#/$defs/BacktestResearchMode"
+        },
+        "resourceBudget": {
+          "$ref": "#/$defs/QuantLabBudgetEstimate"
+        },
+        "activePolicies": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/AgentQuantPolicyBindingV1"
+          },
+          "minItems": 1
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      },
+      "required": [
+        "runId",
+        "runVersion",
+        "operatorId",
+        "ideaId",
+        "ideaVersion",
+        "hypothesisVersion",
+        "hypothesisHash",
+        "approximation",
+        "experimentId",
+        "definitionVersion",
+        "definitionHash",
+        "validationId",
+        "validationHash",
+        "researchMode",
+        "resourceBudget",
+        "activePolicies",
+        "expiresAt"
+      ]
+    },
+    "AgentQuantApprovalV1": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AgentQuantStartedApprovalV1"
+        },
+        {
+          "$ref": "#/$defs/AgentQuantUnstartedApprovalV1"
+        }
+      ],
+      "description": "The evidence references, definition, budget, hypothesis and policy versions are resolved by the server from the same immutable approval binding. The server checks authorization and cross-resource identity and hashes again before admission. Evidence is read-only and client decisions cannot replace it."
+    },
+    "AgentQuantApprovalPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/AgentQuantApprovalV1"
+          }
+        },
+        "nextCursor": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "items",
+        "nextCursor"
+      ]
+    },
+    "AgentQuantApprovalStartV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "APPROVE_AND_START"
+          ]
+        },
+        "expectedApprovalVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "bindingHash": {
+          "$ref": "#/$defs/BacktestHash"
+        }
+      },
+      "required": [
+        "action",
+        "expectedApprovalVersion",
+        "bindingHash"
+      ]
+    },
+    "AgentQuantApprovalRejectV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "REJECT"
+          ]
+        },
+        "expectedApprovalVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "bindingHash": {
+          "$ref": "#/$defs/BacktestHash"
+        }
+      },
+      "required": [
+        "action",
+        "expectedApprovalVersion",
+        "bindingHash"
+      ]
+    },
+    "AgentQuantApprovalDecisionV1": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AgentQuantApprovalStartV1"
+        },
+        {
+          "$ref": "#/$defs/AgentQuantApprovalRejectV1"
+        }
+      ],
+      "discriminator": {
+        "propertyName": "action",
+        "mapping": {
+          "APPROVE_AND_START": "#/$defs/AgentQuantApprovalStartV1",
+          "REJECT": "#/$defs/AgentQuantApprovalRejectV1"
+        }
+      }
+    },
+    "AgentQuantApprovalStartedV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "approvalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "approvalVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "STARTED"
+          ]
+        },
+        "batchId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "decidedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      },
+      "required": [
+        "approvalId",
+        "approvalVersion",
+        "state",
+        "batchId",
+        "decidedAt"
+      ]
+    },
+    "AgentQuantApprovalRejectedV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "approvalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "approvalVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "REJECTED"
+          ]
+        },
+        "decidedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      },
+      "required": [
+        "approvalId",
+        "approvalVersion",
+        "state",
+        "decidedAt"
+      ]
+    },
+    "AgentQuantApprovalReasonV1": {
+      "type": "string",
+      "enum": [
+        "APPROVAL_REQUIRED",
+        "APPROVAL_STALE",
+        "APPROVAL_EXPIRED",
+        "APPROVAL_ALREADY_DECIDED",
+        "RUN_BLOCKED",
+        "POLICY_REVOKED",
+        "QUANT_CAPACITY_EXHAUSTED",
+        "AGENT_BUDGET_EXHAUSTED",
+        "IDEMPOTENCY_CONFLICT"
+      ]
+    },
+    "AgentQuantApprovalProblemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "format": "uri"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "status": {
+          "type": "integer",
+          "enum": [
+            409,
+            429
+          ]
+        },
+        "code": {
+          "$ref": "#/$defs/AgentQuantApprovalReasonV1"
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "status",
+        "code",
+        "traceId"
+      ]
+    },
+    "AgentReportResultReferenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "batchId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "manifestHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "fieldPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "pattern": "^(/[^/~]*(~[01][^/~]*)*)+$"
+        },
+        "phase": {
+          "type": "string",
+          "enum": [
+            "IN_SAMPLE",
+            "VALIDATION",
+            "WALK_FORWARD_OOS",
+            "HOLDOUT"
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "enum": [
+            "CANDIDATE",
+            "BENCHMARK"
+          ]
+        },
+        "subjectId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "RATIO",
+            "COUNT",
+            "MONEY",
+            "BASIS_POINTS",
+            "DAYS",
+            "BARS",
+            "PERCENT"
+          ]
+        }
+      },
+      "required": [
+        "batchId",
+        "manifestHash",
+        "fieldPath",
+        "phase",
+        "subject",
+        "subjectId",
+        "unit"
+      ]
+    },
+    "AgentReportMetricClaimV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claimId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "reference": {
+          "$ref": "#/$defs/AgentReportResultReferenceV1"
+        },
+        "value": {
+          "$ref": "#/$defs/QuantLabExactDecimal"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        }
+      },
+      "required": [
+        "claimId",
+        "reference",
+        "value",
+        "label"
+      ]
+    },
+    "AgentReportEvidenceReferenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "evidenceId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "revision": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "hash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "sourceType": {
+          "type": "string",
+          "enum": [
+            "MARKET_REVISION",
+            "RESEARCH_FINDING",
+            "QUANT_RESULT",
+            "RELIABILITY_REPORT"
+          ]
+        }
+      },
+      "required": [
+        "evidenceId",
+        "revision",
+        "hash",
+        "sourceType"
+      ]
+    },
+    "AgentReportFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claimId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "evidence": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/AgentReportEvidenceReferenceV1"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "claimId",
+        "statement",
+        "evidence"
+      ]
+    },
+    "AgentReportInterpretationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claimId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        },
+        "supportingClaimIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/AgentOpaqueId"
+          }
+        }
+      },
+      "required": [
+        "claimId",
+        "statement",
+        "supportingClaimIds"
+      ]
+    },
+    "AgentReportUnknownV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "UNAVAILABLE",
+            "INSUFFICIENT_DATA",
+            "NOT_COMPARABLE",
+            "NOT_SELECTED",
+            "INTERPRETATION_REJECTED",
+            "NOT_APPLICABLE"
+          ]
+        }
+      },
+      "required": [
+        "field",
+        "reason"
+      ]
+    },
+    "AgentReportPhaseV1": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AgentReportAvailablePhaseV1"
+        },
+        {
+          "$ref": "#/$defs/AgentReportUnavailablePhaseV1"
+        }
+      ]
+    },
+    "AgentReportRightsWarningV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "evidenceId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "RETRACTED",
+            "RIGHTS_REVOKED",
+            "STALE"
+          ]
+        },
+        "observedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      },
+      "required": [
+        "evidenceId",
+        "status",
+        "observedAt"
+      ]
+    },
+    "AgentReportSummaryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reportId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "reportVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "reportHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "ideaId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "ideaVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "batchId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "interpretationStatus": {
+          "type": "string",
+          "enum": [
+            "VALIDATED",
+            "FACTS_ONLY"
+          ]
+        }
+      },
+      "required": [
+        "reportId",
+        "reportVersion",
+        "reportHash",
+        "createdAt",
+        "ideaId",
+        "ideaVersion",
+        "batchId",
+        "title",
+        "interpretationStatus"
+      ]
+    },
+    "AgentReportPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/AgentReportSummaryV1"
+          }
+        },
+        "nextCursor": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "items",
+        "nextCursor"
+      ]
+    },
+    "AgentReportV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "$ref": "#/$defs/AgentReportSummaryV1"
+        },
+        "hypothesisVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "researchQuestion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "hypothesis": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        },
+        "assumptions": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          }
+        },
+        "dataBasis": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        },
+        "evidence": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/AgentReportEvidenceReferenceV1"
+          }
+        },
+        "experimentId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "definitionVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "definitionHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "manifest": {
+          "$ref": "#/$defs/QuantLabManifestReference"
+        },
+        "definition": {
+          "$ref": "#/$defs/QuantLabExperimentCreateRequest"
+        },
+        "selection": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/QuantLabSelection"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reliability": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/QuantLabReliabilityReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "researchHistory": {
+          "$ref": "#/$defs/QuantLabResearchHistory"
+        },
+        "phases": {
+          "$ref": "#/$defs/AgentReportPhasesV1"
+        },
+        "facts": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/AgentReportFactV1"
+          }
+        },
+        "interpretations": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/AgentReportInterpretationV1"
+          }
+        },
+        "unknowns": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/AgentReportUnknownV1"
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          }
+        },
+        "conclusion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        },
+        "furtherResearch": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "currentRightsWarnings": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/AgentReportRightsWarningV1"
+          }
+        }
+      },
+      "required": [
+        "summary",
+        "hypothesisVersion",
+        "researchQuestion",
+        "hypothesis",
+        "assumptions",
+        "dataBasis",
+        "evidence",
+        "experimentId",
+        "definitionVersion",
+        "definitionHash",
+        "manifest",
+        "definition",
+        "selection",
+        "reliability",
+        "researchHistory",
+        "phases",
+        "facts",
+        "interpretations",
+        "unknowns",
+        "limitations",
+        "conclusion",
+        "furtherResearch",
+        "currentRightsWarnings"
+      ]
+    },
+    "AgentQuantStartedApprovalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "approvalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "approvalVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "APPROVE_AND_START"
+          ]
+        },
+        "bindingHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "STARTED"
+          ]
+        },
+        "requestedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "binding": {
+          "$ref": "#/$defs/AgentQuantApprovalBindingV1"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "hypothesis": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        },
+        "assumptions": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          }
+        },
+        "definition": {
+          "$ref": "#/$defs/QuantLabExperimentCreateRequest"
+        },
+        "batchId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "evidence": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/AgentReportEvidenceReferenceV1"
+          }
+        }
+      },
+      "required": [
+        "approvalId",
+        "approvalVersion",
+        "action",
+        "bindingHash",
+        "state",
+        "requestedAt",
+        "binding",
+        "question",
+        "hypothesis",
+        "assumptions",
+        "definition",
+        "batchId",
+        "evidence"
+      ],
+      "description": "The evidence references, definition, budget, hypothesis and policy versions are resolved by the server from the same immutable approval binding. The server checks authorization and cross-resource identity and hashes again before admission. Evidence is read-only and client decisions cannot replace it."
+    },
+    "AgentQuantUnstartedApprovalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "approvalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "approvalVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "APPROVE_AND_START"
+          ]
+        },
+        "bindingHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "PENDING",
+            "REJECTED",
+            "EXPIRED",
+            "INVALIDATED"
+          ]
+        },
+        "requestedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "binding": {
+          "$ref": "#/$defs/AgentQuantApprovalBindingV1"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "hypothesis": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        },
+        "assumptions": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          }
+        },
+        "definition": {
+          "$ref": "#/$defs/QuantLabExperimentCreateRequest"
+        },
+        "evidence": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/AgentReportEvidenceReferenceV1"
+          }
+        }
+      },
+      "required": [
+        "approvalId",
+        "approvalVersion",
+        "action",
+        "bindingHash",
+        "state",
+        "requestedAt",
+        "binding",
+        "question",
+        "hypothesis",
+        "assumptions",
+        "definition",
+        "evidence"
+      ],
+      "description": "The evidence references, definition, budget, hypothesis and policy versions are resolved by the server from the same immutable approval binding. The server checks authorization and cross-resource identity and hashes again before admission. Evidence is read-only and client decisions cannot replace it."
+    },
+    "AgentReportAvailablePhaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "AVAILABLE"
+          ]
+        },
+        "metrics": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/AgentReportMetricClaimV1"
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          }
+        }
+      },
+      "required": [
+        "status",
+        "metrics",
+        "limitations"
+      ]
+    },
+    "AgentReportUnavailablePhaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "NOT_SELECTED",
+            "UNAVAILABLE",
+            "NOT_EVALUABLE"
+          ]
+        },
+        "metrics": {
+          "type": "array",
+          "maxItems": 0,
+          "items": {
+            "$ref": "#/$defs/AgentReportMetricClaimV1"
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          }
+        }
+      },
+      "required": [
+        "status",
+        "metrics",
+        "limitations"
+      ]
+    },
+    "AgentReportPhasesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inSample": {
+          "$ref": "#/$defs/AgentReportPhaseV1"
+        },
+        "validation": {
+          "$ref": "#/$defs/AgentReportPhaseV1"
+        },
+        "walkForwardOos": {
+          "$ref": "#/$defs/AgentReportPhaseV1"
+        },
+        "holdout": {
+          "$ref": "#/$defs/AgentReportPhaseV1"
+        }
+      },
+      "required": [
+        "inSample",
+        "validation",
+        "walkForwardOos",
+        "holdout"
+      ],
+      "description": "The four roles are distinct. The server checks that every quantitative claim points to the matching persisted phase, subject and field on the exact bound manifest and batch. It separately checks read permissions and source rights and never changes historical report evidence when presenting current warnings."
+    },
+    "AgentOpaqueId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "AgentProviderId": {
+      "type": "string",
+      "enum": [
+        "OPENAI",
+        "ANTHROPIC"
+      ]
+    },
+    "AgentRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "BacktestHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "BacktestId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "BacktestResearchMode": {
+      "type": "string",
+      "enum": [
+        "STRICT_PIT",
+        "RETROSPECTIVE_EXPLORATORY"
+      ],
+      "default": "STRICT_PIT"
+    },
+    "Cursor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "example": "c_000123"
+    },
+    "Decimal": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$",
+      "example": "123.45"
+    },
+    "ProcessingStatusV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "turnId",
+        "turnVersion",
+        "dialogueVersion",
+        "purpose",
+        "state",
+        "delivery",
+        "costState"
+      ],
+      "properties": {
+        "turnId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "turnVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "dialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "HYPOTHESIS_INTERPRETATION_V1"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/AgentProcessingState"
+        },
+        "delivery": {
+          "type": "string",
+          "enum": [
+            "NOT_SENT",
+            "MAY_HAVE_BEEN_SENT",
+            "SENT"
+          ]
+        },
+        "reasonCode": {
+          "$ref": "#/$defs/AgentProcessingReason"
+        },
+        "receipt": {
+          "$ref": "#/$defs/AgentProcessingReceiptV1"
+        },
+        "proposalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "costState": {
+          "type": "string",
+          "enum": [
+            "NOT_INCURRED",
+            "KNOWN",
+            "UNKNOWN"
+          ]
+        }
+      }
+    },
+    "QuantLabBudgetEstimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "candidateCount",
+        "reservedQueueSlots",
+        "snapshotRows",
+        "simulationBarSteps",
+        "publicationBytes",
+        "calendarConfirmed",
+        "withinLimits"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "quant-lab-v1"
+        },
+        "candidateCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "reservedQueueSlots": {
+          "type": "integer",
+          "minimum": 3,
+          "maximum": 34
+        },
+        "snapshotRows": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "simulationBarSteps": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "publicationBytes": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12582912
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "calendarConfirmed": {
+          "type": "boolean"
+        },
+        "withinLimits": {
+          "type": "boolean"
+        }
+      },
+      "description": "Conservative estimate without hypothetical cache: candidates/references, repeated seeds/phases and final test. Missing calendar cannot yield positive admission. Not latency promise."
+    },
+    "QuantLabExactDecimal": {
+      "type": "string",
+      "maxLength": 80,
+      "pattern": "^(?!-0$)-?(?:0|[1-9][0-9]*)(?:\\.[0-9]*[1-9])?$(?![\\s\\S])",
+      "description": "Canonical finite Decimal38 after arithmetic, without output quantization: no exponent, plus sign, negative zero or trailing fractional zero. At most38 significant digits checked semantically. Selection never compares twelve-place display values."
+    },
+    "QuantLabExperimentCreateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "hypothesis",
+        "predecessorDefinitionId",
+        "supersedesBatchId",
+        "searchSpaces",
+        "protocol",
+        "strategySelectionPolicy",
+        "instrumentId",
+        "symbol",
+        "currency",
+        "feed",
+        "interval",
+        "adjustment",
+        "researchMode",
+        "dataSelectionPolicyVersion",
+        "startCash",
+        "feeUsd",
+        "slippageBps",
+        "quantityStep"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "quant-lab-v1"
+        },
+        "hypothesis": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "predecessorDefinitionId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/BacktestId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supersedesBatchId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/BacktestId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "searchSpaces": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/QuantLabSearchSpace"
+          }
+        },
+        "protocol": {
+          "$ref": "#/$defs/QuantLabProtocol"
+        },
+        "strategySelectionPolicy": {
+          "$ref": "#/$defs/QuantLabStrategySelectionPolicy"
+        },
+        "instrumentId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "symbol": {
+          "type": "string",
+          "enum": [
+            "SPY",
+            "QQQ"
+          ]
+        },
+        "currency": {
+          "type": "string",
+          "const": "USD"
+        },
+        "feed": {
+          "type": "string",
+          "const": "IEX"
+        },
+        "interval": {
+          "type": "string",
+          "const": "15Min"
+        },
+        "adjustment": {
+          "type": "string",
+          "const": "raw"
+        },
+        "researchMode": {
+          "$ref": "#/$defs/BacktestResearchMode",
+          "default": "STRICT_PIT"
+        },
+        "dataSelectionPolicyVersion": {
+          "type": "string",
+          "enum": [
+            "strict-pit-v1",
+            "retrospective-v1"
+          ]
+        },
+        "startCash": {
+          "$ref": "#/$defs/BacktestStartCash"
+        },
+        "feeUsd": {
+          "$ref": "#/$defs/BacktestFeeUsd"
+        },
+        "slippageBps": {
+          "$ref": "#/$defs/BacktestSlippageBps"
+        },
+        "quantityStep": {
+          "type": "string",
+          "const": "0.000001"
+        }
+      },
+      "description": "Immutable redacted draft version, no executable content/URLs. POST creates revision, never mutates. Entire Cartesian grid valid/unique total1..32 plus two fixed references. Domain checks mapping/chronology/canonical decimals and mode/data-policy agreement. Strict default; retrospective explicit without fallback."
+    },
+    "QuantLabManifestReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "manifestVersion",
+        "manifestHash",
+        "snapshotHash",
+        "comparisonFingerprint",
+        "strategySelectionPolicyHash",
+        "researchProtocolHash",
+        "implementationFingerprint",
+        "buildSha",
+        "metricsVersion",
+        "simulatorVersion",
+        "commonWarmupBars",
+        "phaseBindings",
+        "snapshotReference",
+        "selectorVersion",
+        "selectorFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "quant-lab-v1"
+        },
+        "manifestVersion": {
+          "type": "string",
+          "const": "quant-experiment-v1"
+        },
+        "manifestHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "snapshotHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "comparisonFingerprint": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "strategySelectionPolicyHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "researchProtocolHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "implementationFingerprint": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "buildSha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "metricsVersion": {
+          "type": "string",
+          "const": "quant-metrics-v1"
+        },
+        "simulatorVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "commonWarmupBars": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "phaseBindings": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 13,
+          "items": {
+            "$ref": "#/$defs/QuantLabPhaseBinding"
+          }
+        },
+        "snapshotReference": {
+          "$ref": "#/$defs/BacktestSnapshotReference"
+        },
+        "selectorVersion": {
+          "type": "string",
+          "const": "quant-selection-v1"
+        },
+        "selectorFingerprint": {
+          "$ref": "#/$defs/BacktestHash"
+        }
+      },
+      "description": "Immutable existing revision/calendar/trust storage references, no copied finance/bar ledger. Common snapshot/policies/mode/cost/fill/protocol/seed/build/metrics/benchmark. Snapshot binds in RUNNING before simulation."
+    },
+    "QuantLabReliabilityReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "reportId",
+        "reportHash",
+        "eligibility",
+        "rating",
+        "evidenceStatus"
+      ],
+      "properties": {
+        "runId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "reportId": {
+          "$ref": "#/$defs/BacktestId"
+        },
+        "reportHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "eligibility": {
+          "$ref": "#/$defs/BacktestReliabilityEligibility"
+        },
+        "rating": {
+          "$ref": "#/$defs/BacktestReliabilityRating"
+        },
+        "evidenceStatus": {
+          "$ref": "#/$defs/QuantLabReliabilityEvidenceStatus"
+        }
+      },
+      "description": "References getQuantLabReliabilityReport under its owning experiment batch and the Quant Lab result resource. Childrun ID is an immutable execution reference; new QSL strategies/modes are not representable by legacy run/report DTOs. No duplicated result payload. Eligibility describes computability under exploratory research limitations, never PIT evidence or trading permission; evidenceStatus independently describes PIT/data evidence.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "evidenceStatus": {
+                    "type": "string",
+                    "enum": [
+                      "STRICT_PIT_EVIDENCE_COMPLETE",
+                      "EXPLORATORY_WITH_LIMITATIONS"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "eligibility": {
+                    "type": "string",
+                    "const": "EXPLORATORY_WITH_LIMITATIONS"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "evidenceStatus": {
+                    "type": "string",
+                    "enum": [
+                      "BLOCKED",
+                      "INCOMPLETE"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "eligibility": {
+                    "type": "string",
+                    "const": "BLOCKED"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "evidenceStatus": {
+                    "type": "string",
+                    "enum": [
+                      "STRICT_PIT_EVIDENCE_COMPLETE"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "rating": {
+                    "type": "string",
+                    "const": "PASS"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "QuantLabResearchHistory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "registryVersion",
+        "registryHash",
+        "boundAt",
+        "registeredRoundCount",
+        "priorFailedRoundCount",
+        "priorBlockedRoundCount",
+        "supersededRoundCount",
+        "overlapCount",
+        "repeatedValidationCount",
+        "reuseStatus",
+        "externalKnowledgeStatus",
+        "candidateCounts",
+        "referenceCounts",
+        "overlaps",
+        "nextOverlapCursor",
+        "warmupOverlapCount",
+        "limitations"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "quant-lab-v1"
+        },
+        "registryVersion": {
+          "type": "string",
+          "const": "quant-exposure-v1"
+        },
+        "registryHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "boundAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "registeredRoundCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "priorFailedRoundCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "priorBlockedRoundCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "supersededRoundCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "overlapCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "repeatedValidationCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "reuseStatus": {
+          "type": "string",
+          "enum": [
+            "REGISTERED_REUSE",
+            "NO_REGISTERED_PRIOR_USE"
+          ]
+        },
+        "externalKnowledgeStatus": {
+          "type": "string",
+          "const": "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        },
+        "candidateCounts": {
+          "$ref": "#/$defs/QuantLabCandidateCounts"
+        },
+        "referenceCounts": {
+          "$ref": "#/$defs/QuantLabReferenceCounts"
+        },
+        "overlaps": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/QuantLabExposureOverlap"
+          }
+        },
+        "nextOverlapCursor": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/QuantLabCursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "warmupOverlapCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "limitations": {
+          "$ref": "#/$defs/QuantLabLimitations"
+        }
+      },
+      "description": "Validation current preview; admission atomically binds predecessor register/current round. Drafts not tests, retries once. No overlap never certifies independence/freshness. Later warnings do not change bound hashes.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "reuseStatus": {
+                    "type": "string",
+                    "const": "REGISTERED_REUSE"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "overlapCount": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483647
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "reuseStatus": {
+                    "type": "string",
+                    "const": "NO_REGISTERED_PRIOR_USE"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "overlapCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 0
+                  },
+                  "overlaps": {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 0,
+                    "items": {
+                      "$ref": "#/$defs/QuantLabExposureOverlap"
+                    }
+                  },
+                  "nextOverlapCursor": {
+                    "type": "null"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "QuantLabSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "selectionHash",
+        "scope",
+        "fold",
+        "status",
+        "selectedCandidateId",
+        "strategySelectionPolicy",
+        "strategySelectionPolicyHash",
+        "validationInputHash",
+        "candidateIds",
+        "candidateCount",
+        "eligibleCount",
+        "candidates",
+        "frozenAt",
+        "rankingReasons",
+        "selectorVersion",
+        "selectorFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "quant-lab-v1"
+        },
+        "selectionHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "FOLD",
+            "FINAL"
+          ]
+        },
+        "fold": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "SELECTED",
+            "NO_ELIGIBLE_CANDIDATE",
+            "INCOMPLETE"
+          ]
+        },
+        "selectedCandidateId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/BacktestHash"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "strategySelectionPolicy": {
+          "$ref": "#/$defs/QuantLabStrategySelectionPolicy"
+        },
+        "strategySelectionPolicyHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "validationInputHash": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "candidateIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/BacktestHash"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        },
+        "candidateCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "eligibleCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "candidates": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/QuantLabCandidateSelectionEvidence"
+          }
+        },
+        "frozenAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "rankingReasons": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "enum": [
+              "MAX_NET_RETURN",
+              "MIN_DRAWDOWN",
+              "MIN_TURNOVER",
+              "CANONICAL_CANDIDATE_ID",
+              "COMPONENTWISE_VALIDATION_MEDIANS",
+              "ALL_VALIDATION_GATES",
+              "NO_ELIGIBLE_CANDIDATE",
+              "INCOMPLETE_CANDIDATE_SET"
+            ]
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        },
+        "selectorVersion": {
+          "type": "string",
+          "const": "quant-selection-v1"
+        },
+        "selectorFingerprint": {
+          "$ref": "#/$defs/BacktestHash"
+        }
+      },
+      "description": "All decisions atomically frozen before any OOS. SELECTED winner required; complete NO_ELIGIBLE_CANDIDATE null/no fallback. INCOMPLETE no winner/full ranking, blocks success. Negative/flat allowed. FINAL fold=null. Bad holdout never reselection.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "const": "SELECTED"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "selectedCandidateId": {
+                    "$ref": "#/$defs/BacktestHash"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "else": {
+                "properties": {
+                  "selectedCandidateId": {
+                    "type": "null"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "scope": {
+                    "type": "string",
+                    "const": "FINAL"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "fold": {
+                    "type": "null"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "scope": {
+                    "type": "string",
+                    "const": "FOLD"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "fold": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "const": "SELECTED"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "eligibleCount": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 32
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "const": "NO_ELIGIBLE_CANDIDATE"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "eligibleCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 0
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "const": "SELECTED"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "candidates": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 32,
+                    "items": {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/QuantLabCandidateSelectionEvidence"
+                        },
+                        {
+                          "not": {
+                            "not": {
+                              "if": {
+                                "properties": {
+                                  "eligibility": {
+                                    "type": "string",
+                                    "const": "ELIGIBLE"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "then": {
+                                "properties": {
+                                  "rankingKey": {
+                                    "$ref": "#/$defs/QuantLabRankingKey"
+                                  },
+                                  "rank": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 32
+                                  }
+                                },
+                                "additionalProperties": true
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "const": "INCOMPLETE"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "candidates": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 32,
+                    "items": {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/QuantLabCandidateSelectionEvidence"
+                        },
+                        {
+                          "properties": {
+                            "rank": {
+                              "type": "null"
+                            },
+                            "rankingKey": {
+                              "type": "null"
+                            }
+                          },
+                          "additionalProperties": true
+                        }
+                      ]
+                    }
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "const": "NO_ELIGIBLE_CANDIDATE"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "candidates": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 32,
+                    "items": {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/QuantLabCandidateSelectionEvidence"
+                        },
+                        {
+                          "properties": {
+                            "eligibility": {
+                              "type": "string",
+                              "const": "INELIGIBLE"
+                            }
+                          },
+                          "additionalProperties": true
+                        }
+                      ]
+                    }
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "TraceId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "example": "4bf92f3577b34da6a3ce929d0e0e4736"
+    },
+    "UtcTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "example": "2026-10-12T10:00:00Z"
+    },
+    "AgentProcessingReason": {
+      "type": "string",
+      "enum": [
+        "MODEL_CONTEXT_UNCLASSIFIED",
+        "MODEL_CONTEXT_DENIED",
+        "PROCESSING_GRANT_REQUIRED",
+        "PROCESSING_GRANT_INVALID",
+        "PROCESSING_GRANT_REVOKED",
+        "PROCESSING_PREVIEW_UNAVAILABLE",
+        "SESSION_REQUIRED",
+        "REQUEST_FORBIDDEN",
+        "RESOURCE_NOT_FOUND",
+        "VERSION_CONFLICT",
+        "IDEMPOTENCY_CONFLICT",
+        "INVALID_REQUEST",
+        "BUDGET_EXHAUSTED",
+        "PROVIDER_UNAVAILABLE"
+      ]
+    },
+    "AgentProcessingReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receiptId",
+        "turnId",
+        "decidedAt",
+        "purpose",
+        "state",
+        "auditId"
+      ],
+      "properties": {
+        "receiptId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "turnId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "decidedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "HYPOTHESIS_INTERPRETATION_V1"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/AgentProcessingState"
+        },
+        "auditId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "provider": {
+          "$ref": "#/$defs/AgentProviderId"
+        },
+        "profileId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "profileGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "policyGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "projectionBinding": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 256
+        }
+      }
+    },
+    "AgentProcessingState": {
+      "type": "string",
+      "enum": [
+        "LOCAL_CLARIFICATION",
+        "AWAITING_DECISION",
+        "SEND_AUTHORIZED",
+        "IN_FLIGHT",
+        "PROPOSAL_VALIDATED",
+        "BLOCKED",
+        "DECLINED",
+        "REVOKED"
+      ]
+    },
+    "BacktestFeeUsd": {
+      "type": "string",
+      "pattern": "^(?:(?:0|[1-9][0-9]{0,2})(?:\\.[0-9]{1,8})?|1000(?:\\.0{1,8})?)$"
+    },
+    "BacktestReliabilityEligibility": {
+      "type": "string",
+      "enum": [
+        "BLOCKED",
+        "EXPLORATORY_WITH_LIMITATIONS"
+      ]
+    },
+    "BacktestReliabilityRating": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "LIMITED",
+        "UNKNOWN",
+        "BLOCKED",
+        "NOT_EVALUATED"
+      ]
+    },
+    "BacktestSlippageBps": {
+      "type": "string",
+      "pattern": "^(?:(?:0|[1-9][0-9]?)(?:\\.[0-9]{1,8})?|100(?:\\.0{1,8})?)$"
+    },
+    "BacktestSnapshotReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshotVersion",
+        "snapshotAt"
+      ],
+      "properties": {
+        "snapshotVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "snapshotAt": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      },
+      "description": "Immutable complete-commit dataset boundary; later commits remain excluded even when their timestamps are earlier."
+    },
+    "BacktestStartCash": {
+      "type": "string",
+      "pattern": "^(?:(?:[1-9][0-9]{0,8})(?:\\.[0-9]{1,8})?|0\\.(?!0{1,8}$)[0-9]{1,8}|1000000000(?:\\.0{1,8})?)$",
+      "description": "Positive USD cash at most 1000000000, at most 8 fractional digits."
+    },
+    "BacktestTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+      "description": "UTC with Z and at most microsecond precision; local offsets and naive values are rejected."
+    },
+    "QuantLabCandidateCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planned",
+        "started",
+        "complete",
+        "failed",
+        "blocked",
+        "notEvaluated"
+      ],
+      "properties": {
+        "planned": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "started": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "complete": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "blocked": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "notEvaluated": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        }
+      },
+      "description": "Search only, retries count once; references separate. Complete/failed/blocked/notEvaluated disjoint terminal counts, started includes attempted."
+    },
+    "QuantLabCandidateSelectionEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "candidateId",
+        "eligibility",
+        "validationValues",
+        "medianSelectionValues",
+        "rankingKey",
+        "rank",
+        "reasons"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "quant-lab-v1"
+        },
+        "candidateId": {
+          "$ref": "#/$defs/BacktestHash"
+        },
+        "eligibility": {
+          "type": "string",
+          "enum": [
+            "ELIGIBLE",
+            "INELIGIBLE",
+            "INCOMPLETE"
+          ]
+        },
+        "validationValues": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "fold",
+              "selectionValues",
+              "gates"
+            ],
+            "properties": {
+              "fold": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              "selectionValues": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/QuantLabSelectionValues"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "gates": {
+                "type": "array",
+                "minItems": 7,
+                "maxItems": 7,
+                "items": {
+                  "$ref": "#/$defs/QuantLabSelectionGate"
+                },
+                "allOf": [
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "gate": {
+                          "type": "string",
+                          "const": "COMPLETE_DATA"
+                        }
+                      },
+                      "required": [
+                        "gate"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "gate": {
+                          "type": "string",
+                          "const": "RELIABILITY"
+                        }
+                      },
+                      "required": [
+                        "gate"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "gate": {
+                          "type": "string",
+                          "const": "MINIMUM_VALIDATION_SESSIONS"
+                        }
+                      },
+                      "required": [
+                        "gate"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "gate": {
+                          "type": "string",
+                          "const": "VALID_REQUIRED_METRICS"
+                        }
+                      },
+                      "required": [
+                        "gate"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "gate": {
+                          "type": "string",
+                          "const": "MAX_DRAWDOWN"
+                        }
+                      },
+                      "required": [
+                        "gate"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "gate": {
+                          "type": "string",
+                          "const": "MINIMUM_ENTRY_COUNT"
+                        }
+                      },
+                      "required": [
+                        "gate"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "gate": {
+                          "type": "string",
+                          "const": "MINIMUM_INVESTED_BAR_RATIO"
+                        }
+                      },
+                      "required": [
+                        "gate"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "medianSelectionValues": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/QuantLabSelectionMedians"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rankingKey": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/QuantLabRankingKey"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rank": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/QuantLabReasonCode"
+          }
+        }
+      },
+      "description": "Every gate including disabled minima per validation. Final eligibility requires all gates in every validation. No OOS/holdout value in selector input.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "eligibility": {
+                    "type": "string",
+                    "const": "ELIGIBLE"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "validationValues": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 4,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "fold",
+                        "selectionValues",
+                        "gates"
+                      ],
+                      "properties": {
+                        "fold": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 3
+                        },
+                        "selectionValues": {
+                          "$ref": "#/$defs/QuantLabSelectionValues"
+                        },
+                        "gates": {
+                          "type": "array",
+                          "minItems": 7,
+                          "maxItems": 7,
+                          "items": {
+                            "$ref": "#/$defs/QuantLabSelectionGate"
+                          },
+                          "allOf": [
+                            {
+                              "contains": {
+                                "type": "object",
+                                "properties": {
+                                  "gate": {
+                                    "type": "string",
+                                    "const": "COMPLETE_DATA"
+                                  }
+                                },
+                                "required": [
+                                  "gate"
+                                ],
+                                "additionalProperties": true
+                              },
+                              "minContains": 1,
+                              "maxContains": 1
+                            },
+                            {
+                              "contains": {
+                                "type": "object",
+                                "properties": {
+                                  "gate": {
+                                    "type": "string",
+                                    "const": "RELIABILITY"
+                                  }
+                                },
+                                "required": [
+                                  "gate"
+                                ],
+                                "additionalProperties": true
+                              },
+                              "minContains": 1,
+                              "maxContains": 1
+                            },
+                            {
+                              "contains": {
+                                "type": "object",
+                                "properties": {
+                                  "gate": {
+                                    "type": "string",
+                                    "const": "MINIMUM_VALIDATION_SESSIONS"
+                                  }
+                                },
+                                "required": [
+                                  "gate"
+                                ],
+                                "additionalProperties": true
+                              },
+                              "minContains": 1,
+                              "maxContains": 1
+                            },
+                            {
+                              "contains": {
+                                "type": "object",
+                                "properties": {
+                                  "gate": {
+                                    "type": "string",
+                                    "const": "VALID_REQUIRED_METRICS"
+                                  }
+                                },
+                                "required": [
+                                  "gate"
+                                ],
+                                "additionalProperties": true
+                              },
+                              "minContains": 1,
+                              "maxContains": 1
+                            },
+                            {
+                              "contains": {
+                                "type": "object",
+                                "properties": {
+                                  "gate": {
+                                    "type": "string",
+                                    "const": "MAX_DRAWDOWN"
+                                  }
+                                },
+                                "required": [
+                                  "gate"
+                                ],
+                                "additionalProperties": true
+                              },
+                              "minContains": 1,
+                              "maxContains": 1
+                            },
+                            {
+                              "contains": {
+                                "type": "object",
+                                "properties": {
+                                  "gate": {
+                                    "type": "string",
+                                    "const": "MINIMUM_ENTRY_COUNT"
+                                  }
+                                },
+                                "required": [
+                                  "gate"
+                                ],
+                                "additionalProperties": true
+                              },
+                              "minContains": 1,
+                              "maxContains": 1
+                            },
+                            {
+                              "contains": {
+                                "type": "object",
+                                "properties": {
+                                  "gate": {
+                                    "type": "string",
+                                    "const": "MINIMUM_INVESTED_BAR_RATIO"
+                                  }
+                                },
+                                "required": [
+                                  "gate"
+                                ],
+                                "additionalProperties": true
+                              },
+                              "minContains": 1,
+                              "maxContains": 1
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "medianSelectionValues": {
+                    "$ref": "#/$defs/QuantLabSelectionMedians"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "eligibility": {
+                    "type": "string",
+                    "const": "INELIGIBLE"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "rankingKey": {
+                    "type": "null"
+                  },
+                  "rank": {
+                    "type": "null"
+                  },
+                  "reasons": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 32,
+                    "items": {
+                      "$ref": "#/$defs/QuantLabReasonCode"
+                    }
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "eligibility": {
+                    "type": "string",
+                    "const": "INCOMPLETE"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "rankingKey": {
+                    "type": "null"
+                  },
+                  "rank": {
+                    "type": "null"
+                  },
+                  "reasons": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 32,
+                    "items": {
+                      "$ref": "#/$defs/QuantLabReasonCode"
+                    }
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "QuantLabCursor": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 1024,
+      "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+      "description": "Opaque authenticated cursor bound to session, operation, resource/immutable report or definition hash, snapshot, filters, phase/fold and order. Foreign/tampered/expired=>400 CURSOR_INVALID. Never infer offsets or tokens."
+    },
+    "QuantLabExposureOverlap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "currentRole",
+        "priorRole",
+        "currentInterval",
+        "priorInterval",
+        "overlapInterval",
+        "priorBatchId",
+        "priorRunId",
+        "priorDefinitionHash",
+        "priorStatus",
+        "knowledgeStatus",
+        "overlapBarCount"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "quant-lab-v1"
+        },
+        "currentRole": {
+          "$ref": "#/$defs/QuantLabResearchRole"
+        },
+        "priorRole": {
+          "type": "string",
+          "enum": [
+            "IN_SAMPLE_ANALYSIS",
+            "PARAMETER_SELECTION",
+            "WALK_FORWARD_OOS",
+            "FINAL_HOLDOUT",
+            "UNKNOWN"
+          ]
+        },
+        "currentInterval": {
+          "$ref": "#/$defs/QuantLabInterval"
+        },
+        "priorInterval": {
+          "$ref": "#/$defs/QuantLabInterval"
+        },
+        "overlapInterval": {
+          "$ref": "#/$defs/QuantLabInterval"
+        },
+        "priorBatchId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/BacktestId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "priorRunId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/BacktestId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "priorDefinitionHash": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/BacktestHash"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "priorStatus": {
+          "$ref": "#/$defs/QuantLabState"
+        },
+        "knowledgeStatus": {
+          "type": "string",
+          "enum": [
+            "REQUESTED",
+            "RESULT_AVAILABLE"
+          ]
+        },
+        "overlapBarCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        }
+      },
+      "description": "Every historical performance role including legacy/failed/blocked/superseded, independent of hypothesis, actor, revision or mode. At least one prior batch/run ID. Warm-up overlap separate causal history.",
+      "anyOf": [
+        {
+          "properties": {
+            "priorBatchId": {
+              "$ref": "#/$defs/BacktestId"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "properties": {
+            "priorRunId": {
+              "$ref": "#/$defs/BacktestId"
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "QuantLabLimitations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/$defs/QuantLabLimitation"
+      },
+      "not": {
+        "not": {
+          "uniqueItems": true
+        }
+      }
+    },
+    "QuantLabPhaseBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "phase",
+        "researchRole",
+        "fold",
+        "interval",
+        "seedInterval",
+        "seedBarCount",
+        "fittingStatus"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "quant-lab-v1"
+        },
+        "phase": {
+          "$ref": "#/$defs/QuantLabPhase"
+        },
+        "researchRole": {
+          "$ref": "#/$defs/QuantLabResearchRole"
+        },
+        "fold": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "interval": {
+          "$ref": "#/$defs/QuantLabInterval"
+        },
+        "seedInterval": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/QuantLabInterval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "seedBarCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "fittingStatus": {
+          "$ref": "#/$defs/QuantLabFittingStatus"
+        }
+      },
+      "description": "Shared W=max(slow-1,RSI period,0) completed calendar bars immediately before each phase. Holdout alone fold=null. Warm-up initializes features without fills or fitted coefficients.",
+      "allOf": [
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "phase": {
+                    "type": "string",
+                    "const": "training"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "researchRole": {
+                    "type": "string",
+                    "const": "IN_SAMPLE_ANALYSIS"
+                  },
+                  "fold": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "phase": {
+                    "type": "string",
+                    "const": "validation"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "researchRole": {
+                    "type": "string",
+                    "const": "PARAMETER_SELECTION"
+                  },
+                  "fold": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "phase": {
+                    "type": "string",
+                    "const": "test"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "researchRole": {
+                    "type": "string",
+                    "const": "WALK_FORWARD_OOS"
+                  },
+                  "fold": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "not": {
+              "if": {
+                "properties": {
+                  "phase": {
+                    "type": "string",
+                    "const": "holdout"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "then": {
+                "properties": {
+                  "researchRole": {
+                    "type": "string",
+                    "const": "FINAL_HOLDOUT"
+                  },
+                  "fold": {
+                    "type": "null"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "QuantLabProtocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "protocolVersion",
+        "folds",
+        "holdout",
+        "fittingStatus"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "quant-lab-v1"
+        },
+        "protocolVersion": {
+          "type": "string",
+          "const": "quant-protocol-v1"
+        },
+        "folds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/QuantLabFold"
+          }
+        },
+        "holdout": {
+          "$ref": "#/$defs/QuantLabInterval"
+        },
+        "fittingStatus": {
+          "$ref": "#/$defs/QuantLabFittingStatus"
+        }
+      },
+      "description": "Positive disjoint non-expanding phases: trainEnd<=validationStart, validationEnd<=testStart, testEnd_i<=trainingStart_i+1, final testEnd<=holdoutStart. Span with seed<=366days. All fold/final decisions atomically freeze before any OOS. Every phase resets cash/FLAT/state. In-sample descriptive; validation optimization, not independent validation."
+    },
+    "QuantLabRankingKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary",
+        "secondary",
+        "turnover",
+        "candidateId"
+      ],
+      "properties": {
+        "primary": {
+          "$ref": "#/$defs/QuantLabExactDecimal"
+        },
+        "secondary": {
+          "$ref": "#/$defs/QuantLabExactDecimal"
+        },
+        "turnover": {
+          "$ref": "#/$defs/QuantLabExactDecimal"
+        },
+        "candidateId": {
+          "$ref": "#/$defs/BacktestHash"
+        }
+      },
+      "description": "Ascending exact: standard(-netReturn,maxDrawdown,turnover,candidateId); preservation(maxDrawdown,-netReturn,turnover,candidateId). Final components validation medians. IDs lowercase ASCII."
+    },
+    "QuantLabReferenceCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planned",
+        "started",
+        "complete",
+        "failed",
+        "blocked",
+        "notEvaluated"
+      ],
+      "properties": {
+        "planned": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "started": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "complete": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "blocked": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "notEvaluated": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        }
+      }
+    },
+    "QuantLabReliabilityEvidenceStatus": {
+      "type": "string",
+      "enum": [
+        "STRICT_PIT_EVIDENCE_COMPLETE",
+        "EXPLORATORY_WITH_LIMITATIONS",
+        "BLOCKED",
+        "INCOMPLETE"
+      ]
+    },
+    "QuantLabSearchSpace": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "strategyId",
+            "version",
+            "parameterValues"
+          ],
+          "properties": {
+            "strategyId": {
+              "type": "string",
+              "enum": [
+                "flat-v1",
+                "buy-hold-v1"
+              ]
+            },
+            "version": {
+              "type": "string",
+              "const": "1"
+            },
+            "parameterValues": {
+              "$ref": "#/$defs/QuantLabEmptyParameters"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "strategyId",
+            "version",
+            "parameterValues"
+          ],
+          "properties": {
+            "strategyId": {
+              "type": "string",
+              "enum": [
+                "sma-cross-v1",
+                "ema-cross-v1"
+              ]
+            },
+            "version": {
+              "type": "string",
+              "const": "1"
+            },
+            "parameterValues": {
+              "$ref": "#/$defs/QuantLabCrossGrid"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "strategyId",
+            "version",
+            "parameterValues"
+          ],
+          "properties": {
+            "strategyId": {
+              "type": "string",
+              "enum": [
+                "rsi-mean-reversion-v1"
+              ]
+            },
+            "version": {
+              "type": "string",
+              "const": "1"
+            },
+            "parameterValues": {
+              "$ref": "#/$defs/QuantLabRsiGrid"
+            }
+          }
+        }
+      ],
+      "description": "At most3 parameters/32 explicit values each; no ranges, code, imports or URLs. Saturating product count rejects total>32 before materialization. Canonically duplicate values/candidates and any invalid combination reject the whole grid before jobs."
+    },
+    "QuantLabStrategySelectionPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policyId",
+        "maxDrawdown",
+        "minValidationSessions",
+        "minimumEntryCount",
+        "minimumInvestedBarRatio"
+      ],
+      "properties": {
+        "policyId": {
+          "type": "string",
+          "enum": [
+            "MAX_NET_RETURN_WITH_DRAWDOWN_CONSTRAINT_V1",
+            "CAPITAL_PRESERVATION_DRAWDOWN_FIRST_V1"
+          ],
+          "default": "MAX_NET_RETURN_WITH_DRAWDOWN_CONSTRAINT_V1"
+        },
+        "maxDrawdown": {
+          "$ref": "#/$defs/QuantLabUnitDecimal"
+        },
+        "minValidationSessions": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 252
+        },
+        "minimumEntryCount": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "minimumInvestedBarRatio": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/QuantLabUnitDecimal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "description": "Exactly five fields. Explicit null minima disable gates; maxDrawdown has no hidden default. Immutable hash binding includes every parameter/null. Inclusive exact comparisons. Drawdown-first explicitly prefers capital preservation including flat. Distinct from data-selection policy."
+    },
+    "QuantLabCrossGrid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fast",
+        "slow"
+      ],
+      "properties": {
+        "fast": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 99
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        },
+        "slow": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 100
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "QuantLabEmptyParameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
+    "QuantLabFittingStatus": {
+      "type": "string",
+      "const": "NOT_TRAINABLE"
+    },
+    "QuantLabFold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fold",
+        "training",
+        "validation",
+        "test"
+      ],
+      "properties": {
+        "fold": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "training": {
+          "$ref": "#/$defs/QuantLabInterval"
+        },
+        "validation": {
+          "$ref": "#/$defs/QuantLabInterval"
+        },
+        "test": {
+          "$ref": "#/$defs/QuantLabInterval"
+        }
+      }
+    },
+    "QuantLabInterval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        },
+        "end": {
+          "$ref": "#/$defs/BacktestTimestamp"
+        }
+      },
+      "description": "Positive half-open UTC [start,end) at valid15-minute calendar boundaries; checked semantically."
+    },
+    "QuantLabLimitation": {
+      "type": "string",
+      "enum": [
+        "PRICE_ONLY",
+        "DIVIDENDS_EXCLUDED",
+        "IEX_PARTIAL_MARKET",
+        "NO_TRADING_AUTHORIZATION",
+        "NOT_STRICT_PIT",
+        "EX_POST_REVISIONS",
+        "SURVIVORSHIP_BIAS",
+        "FINITE_SEED",
+        "NOT_TRAINABLE",
+        "VALIDATION_IS_OPTIMIZATION",
+        "MULTIPLE_TESTING",
+        "EXTERNAL_KNOWLEDGE_UNKNOWN",
+        "NO_STATISTICAL_GUARANTEE",
+        "BAR_WEIGHTED_NOT_TIME_WEIGHTED",
+        "PHASE_RESETS",
+        "SMALL_FOLD_SAMPLE"
+      ]
+    },
+    "QuantLabPhase": {
+      "type": "string",
+      "enum": [
+        "training",
+        "validation",
+        "test",
+        "holdout"
+      ]
+    },
+    "QuantLabReasonCode": {
+      "type": "string",
+      "enum": [
+        "VERSION_UNAVAILABLE",
+        "CONFIGURATION_INVALID",
+        "INVALID_PARAMETERS",
+        "INVALID_PROTOCOL",
+        "INCOMPLETE_CANDIDATE_SET",
+        "INCOMPLETE_BAR_SERIES",
+        "NO_EQUITY_OBSERVATIONS",
+        "INCOMPLETE_DAILY_SERIES",
+        "INSUFFICIENT_OBSERVATIONS",
+        "NON_POSITIVE_EQUITY",
+        "ZERO_VARIANCE",
+        "LEDGER_INCONSISTENT",
+        "MISSING_FILL_EVIDENCE",
+        "MISSING_DECISION_EVIDENCE",
+        "MISSING_CALENDAR",
+        "SNAPSHOT_UNAVAILABLE",
+        "RELIABILITY_BLOCKED",
+        "MAX_DRAWDOWN_EXCEEDED",
+        "MINIMUM_SESSIONS_NOT_MET",
+        "MINIMUM_ENTRIES_NOT_MET",
+        "MINIMUM_INVESTED_BAR_RATIO_NOT_MET",
+        "NO_ELIGIBLE_CANDIDATE",
+        "NO_SELECTED_CANDIDATE",
+        "NO_PAIRED_VALIDATION",
+        "NOT_EVALUATED_BY_PROTOCOL",
+        "NOT_EVALUATED_NO_SELECTION",
+        "INCOMPARABLE_BINDINGS",
+        "BUDGET_EXCEEDED",
+        "DEADLINE_EXCEEDED",
+        "ATTEMPTS_EXHAUSTED",
+        "DATA_UNAVAILABLE",
+        "INVALID_NUMERIC_INPUT",
+        "UNKNOWN_HISTORICAL_ROLE"
+      ]
+    },
+    "QuantLabResearchRole": {
+      "type": "string",
+      "enum": [
+        "IN_SAMPLE_ANALYSIS",
+        "PARAMETER_SELECTION",
+        "WALK_FORWARD_OOS",
+        "FINAL_HOLDOUT"
+      ]
+    },
+    "QuantLabRsiGrid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "period",
+        "entry",
+        "exit"
+      ],
+      "properties": {
+        "period": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 50
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        },
+        "entry": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/QuantLabRsiThreshold"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        },
+        "exit": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/QuantLabRsiThreshold"
+          },
+          "not": {
+            "not": {
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "QuantLabSelectionGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gate",
+        "status",
+        "threshold",
+        "value",
+        "reasonCodes"
+      ],
+      "properties": {
+        "gate": {
+          "type": "string",
+          "enum": [
+            "COMPLETE_DATA",
+            "RELIABILITY",
+            "MINIMUM_VALIDATION_SESSIONS",
+            "VALID_REQUIRED_METRICS",
+            "MAX_DRAWDOWN",
+            "MINIMUM_ENTRY_COUNT",
+            "MINIMUM_INVESTED_BAR_RATIO"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "PASSED",
+            "FAILED",
+            "DISABLED",
+            "INCOMPLETE"
+          ]
+        },
+        "threshold": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/QuantLabExactDecimal"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100000
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "value": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/QuantLabExactDecimal"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100000
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reasonCodes": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/QuantLabReasonCode"
+          }
+        }
+      }
+    },
+    "QuantLabSelectionMedians": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "netReturn",
+        "maxDrawdown",
+        "turnover",
+        "investedBarRatio"
+      ],
+      "properties": {
+        "netReturn": {
+          "$ref": "#/$defs/QuantLabExactDecimal"
+        },
+        "maxDrawdown": {
+          "$ref": "#/$defs/QuantLabExactDecimal"
+        },
+        "turnover": {
+          "$ref": "#/$defs/QuantLabExactDecimal"
+        },
+        "investedBarRatio": {
+          "$ref": "#/$defs/QuantLabExactDecimal"
+        }
+      },
+      "description": "Componentwise Decimal38 validation medians, without output quantization. Even fold counts use (lower+upper)/2. No invented median entry/session counts: activity/session eligibility is checked as exact integers in every validation fold."
+    },
+    "QuantLabSelectionValues": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "netReturn",
+        "maxDrawdown",
+        "turnover",
+        "investedBarRatio",
+        "entryCount",
+        "completeValidationSessions"
+      ],
+      "properties": {
+        "netReturn": {
+          "$ref": "#/$defs/QuantLabExactDecimal"
+        },
+        "maxDrawdown": {
+          "$ref": "#/$defs/QuantLabExactDecimal"
+        },
+        "turnover": {
+          "$ref": "#/$defs/QuantLabExactDecimal"
+        },
+        "investedBarRatio": {
+          "$ref": "#/$defs/QuantLabExactDecimal"
+        },
+        "entryCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "completeValidationSessions": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 366
+        }
+      },
+      "description": "Exact canonical Decimal38 selector inputs. Final component medians (lower+upper)/2 without display quantization. Counts stay integers; eligibility always per-fold, never median counts."
+    },
+    "QuantLabState": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "VALIDATED",
+        "ACCEPTED",
+        "RUNNING",
+        "SUCCEEDED",
+        "BLOCKED",
+        "FAILED"
+      ]
+    },
+    "QuantLabUnitDecimal": {
+      "type": "string",
+      "maxLength": 14,
+      "pattern": "^(?:0(?:\\.[0-9]{1,12})?|1(?:\\.0{1,12})?)$(?![\\s\\S])"
+    },
+    "QuantLabRsiThreshold": {
+      "type": "string",
+      "maxLength": 9,
+      "pattern": "^(?:(?:0|[1-9][0-9]?)(?:\\.[0-9]{1,4})?|100(?:\\.0{1,4})?)$(?![\\s\\S])"
+    }
+  }
+}

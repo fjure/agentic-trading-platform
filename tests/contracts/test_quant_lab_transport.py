@@ -174,7 +174,11 @@ def test_contract_stage_does_not_fabricate_runtime_routes():
 
 def test_existing_legacy_http_paths_are_unchanged():
     new_paths = {path for path, _, _ in D7.values()}
-    legacy = {path: item for path, item in OAS["paths"].items() if path not in new_paths}
+    apf_prefixes = ("/api/v1/research/agent/", "/api/v1/integrations/research-providers/")
+    legacy = {
+        path: item for path, item in OAS["paths"].items()
+        if path not in new_paths and not path.startswith(apf_prefixes)
+    }
     digest = hashlib.sha256(
         json.dumps(legacy, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
     ).hexdigest()

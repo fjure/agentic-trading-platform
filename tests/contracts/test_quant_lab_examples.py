@@ -122,8 +122,11 @@ def test_fixture_suite_covers_distinct_research_states_and_required_observations
 def test_legacy_components_and_standalone_contracts_remain_frozen():
     # Literal pre-QSL baseline, captured from HEAD before authoring QSL-01.
     # In particular this prevents widening the old strategy unions for EMA/RSI.
-    legacy = {name: schema for name, schema in OAS["components"]["schemas"].items()
-              if not name.startswith("QuantLab")}
+    legacy = {
+        name: schema for name, schema in OAS["components"]["schemas"].items()
+        if name == "AgentRun" or not name.startswith(("QuantLab", "Agent", "Processing",
+                                                      "ResearchHypothesisInterpretationV1"))
+    }
     assert canonical_digest(legacy) == (
         "d309096c85f6c9bcd166bac03d6b3ab8829627fe8a25d93cccf104ab77f88918"
     )

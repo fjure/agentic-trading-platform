@@ -1,0 +1,42 @@
+{
+  "send": {
+    "action": "SEND",
+    "expectedTurnVersion": 1,
+    "expectedDialogueVersion": 2,
+    "previewId": "preview-1",
+    "projectionBinding": "opaque-binding-fixture-1"
+  },
+  "status": {
+    "turnId": "turn-1",
+    "turnVersion": 1,
+    "dialogueVersion": 2,
+    "purpose": "HYPOTHESIS_INTERPRETATION_V1",
+    "state": "SEND_AUTHORIZED",
+    "delivery": "NOT_SENT",
+    "receipt": {
+      "receiptId": "receipt-1",
+      "turnId": "turn-1",
+      "decidedAt": "2026-11-08T12:03:00Z",
+      "purpose": "HYPOTHESIS_INTERPRETATION_V1",
+      "state": "SEND_AUTHORIZED",
+      "auditId": "audit-1",
+      "provider": "OPENAI",
+      "profileId": "research-v1",
+      "profileGeneration": 1,
+      "policyGeneration": 1,
+      "projectionBinding": "opaque-binding-fixture-1"
+    },
+    "costState": "NOT_INCURRED"
+  },
+  "decline": {
+    "action": "DECLINE",
+    "expectedTurnVersion": 1,
+    "expectedDialogueVersion": 2
+  },
+  "revoke": {
+    "action": "REVOKE",
+    "expectedTurnVersion": 1,
+    "expectedDialogueVersion": 2,
+    "receiptId": "receipt-1"
+  }
+}

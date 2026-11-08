@@ -1,0 +1,919 @@
+[
+  {
+    "case": "listAgentIdeas-200",
+    "schema": "AgentIdeaListV1",
+    "value": {
+      "items": [
+        {
+          "id": "idea-1",
+          "version": 1,
+          "previousVersion": null,
+          "status": "PROPOSED",
+          "origin": "USER",
+          "initiatorId": "operator-1",
+          "title": "Reaktion auf Quartalszahlen",
+          "description": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+          "originalText": "Technologieaktien erholen sich nach schlechten Quartalszahlen.",
+          "createdAt": "2026-11-08T12:00:00Z",
+          "hypothesis": {
+            "statement": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+            "market": "Technologieaktien",
+            "trigger": "Quartalszahlen unter den Erwartungen",
+            "signal": "Anfänglicher Kursrückgang",
+            "observationWindow": null,
+            "target": "Erholung eines Teils des Rückgangs",
+            "measurementHorizon": null,
+            "benchmark": null,
+            "evaluationCriterion": null
+          },
+          "openQuestions": [
+            {
+              "field": "MEASUREMENT_HORIZON",
+              "question": "Innerhalb wie vieler Handelstage soll die Erholung erfolgen?"
+            }
+          ],
+          "assumptions": [],
+          "uncertainties": [],
+          "instrumentIds": [],
+          "evidence": [],
+          "testability": null,
+          "experimentDraftIds": [],
+          "experimentIds": [],
+          "relatedIdeaIds": []
+        },
+        {
+          "id": "idea-2",
+          "version": 1,
+          "previousVersion": null,
+          "status": "PROPOSED",
+          "origin": "AGENT",
+          "initiatorId": "operator-1",
+          "title": "Reaktion auf Quartalszahlen",
+          "description": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+          "createdAt": "2026-11-08T12:00:00Z",
+          "hypothesis": {
+            "statement": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+            "market": "Technologieaktien",
+            "trigger": "Quartalszahlen unter den Erwartungen",
+            "signal": "Anfänglicher Kursrückgang",
+            "observationWindow": null,
+            "target": "Erholung eines Teils des Rückgangs",
+            "measurementHorizon": null,
+            "benchmark": null,
+            "evaluationCriterion": null
+          },
+          "openQuestions": [
+            {
+              "field": "MEASUREMENT_HORIZON",
+              "question": "Innerhalb wie vieler Handelstage soll die Erholung erfolgen?"
+            }
+          ],
+          "assumptions": [],
+          "uncertainties": [],
+          "instrumentIds": [],
+          "evidence": [],
+          "testability": null,
+          "experimentDraftIds": [],
+          "experimentIds": [],
+          "relatedIdeaIds": [],
+          "sourceId": "revision-1",
+          "runId": "run-1",
+          "discovery": {
+            "priorityRuleVersion": "discovery-v1",
+            "priorityReason": "New eligible source revision.",
+            "latestEvidenceAt": "2026-11-08T11:00:00Z",
+            "freshnessEvaluatedAt": "2026-11-08T12:00:00Z",
+            "freshness": "CURRENT",
+            "estimatedEffort": "MEDIUM",
+            "effortReason": "Requires a supported earnings-event strategy.",
+            "limitations": [
+              "Earnings data is not yet available."
+            ]
+          }
+        }
+      ],
+      "nextCursor": null
+    }
+  },
+  {
+    "case": "createAgentIdea-request",
+    "schema": "AgentCreateIdeaV1",
+    "value": {
+      "title": "Reaktion auf Quartalszahlen",
+      "originalText": "Technologieaktien erholen sich nach schlechten Quartalszahlen."
+    }
+  },
+  {
+    "case": "createAgentIdea-201",
+    "schema": "AgentIdeaVersionV1",
+    "value": {
+      "id": "idea-1",
+      "version": 1,
+      "previousVersion": null,
+      "status": "PROPOSED",
+      "origin": "USER",
+      "initiatorId": "operator-1",
+      "title": "Reaktion auf Quartalszahlen",
+      "description": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+      "originalText": "Technologieaktien erholen sich nach schlechten Quartalszahlen.",
+      "createdAt": "2026-11-08T12:00:00Z",
+      "hypothesis": {
+        "statement": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+        "market": "Technologieaktien",
+        "trigger": "Quartalszahlen unter den Erwartungen",
+        "signal": "Anfänglicher Kursrückgang",
+        "observationWindow": null,
+        "target": "Erholung eines Teils des Rückgangs",
+        "measurementHorizon": null,
+        "benchmark": null,
+        "evaluationCriterion": null
+      },
+      "openQuestions": [
+        {
+          "field": "MEASUREMENT_HORIZON",
+          "question": "Innerhalb wie vieler Handelstage soll die Erholung erfolgen?"
+        }
+      ],
+      "assumptions": [],
+      "uncertainties": [],
+      "instrumentIds": [],
+      "evidence": [],
+      "testability": null,
+      "experimentDraftIds": [],
+      "experimentIds": [],
+      "relatedIdeaIds": []
+    }
+  },
+  {
+    "case": "getAgentIdea-200",
+    "schema": "AgentIdeaVersionV1",
+    "value": {
+      "id": "idea-1",
+      "version": 1,
+      "previousVersion": null,
+      "status": "PROPOSED",
+      "origin": "USER",
+      "initiatorId": "operator-1",
+      "title": "Reaktion auf Quartalszahlen",
+      "description": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+      "originalText": "Technologieaktien erholen sich nach schlechten Quartalszahlen.",
+      "createdAt": "2026-11-08T12:00:00Z",
+      "hypothesis": {
+        "statement": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+        "market": "Technologieaktien",
+        "trigger": "Quartalszahlen unter den Erwartungen",
+        "signal": "Anfänglicher Kursrückgang",
+        "observationWindow": null,
+        "target": "Erholung eines Teils des Rückgangs",
+        "measurementHorizon": null,
+        "benchmark": null,
+        "evaluationCriterion": null
+      },
+      "openQuestions": [
+        {
+          "field": "MEASUREMENT_HORIZON",
+          "question": "Innerhalb wie vieler Handelstage soll die Erholung erfolgen?"
+        }
+      ],
+      "assumptions": [],
+      "uncertainties": [],
+      "instrumentIds": [],
+      "evidence": [],
+      "testability": null,
+      "experimentDraftIds": [],
+      "experimentIds": [],
+      "relatedIdeaIds": []
+    }
+  },
+  {
+    "case": "reviseAgentIdea-request",
+    "schema": "AgentIdeaRevisionV1",
+    "value": {
+      "action": "REVIEW",
+      "expectedVersion": 1
+    }
+  },
+  {
+    "case": "reviseAgentIdea-201",
+    "schema": "AgentIdeaVersionV1",
+    "value": {
+      "id": "idea-1",
+      "version": 2,
+      "previousVersion": 1,
+      "status": "REVIEWED",
+      "origin": "USER",
+      "initiatorId": "operator-1",
+      "title": "Reaktion auf Quartalszahlen",
+      "description": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+      "originalText": "Technologieaktien erholen sich nach schlechten Quartalszahlen.",
+      "createdAt": "2026-11-08T12:00:00Z",
+      "hypothesis": {
+        "statement": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+        "market": "Technologieaktien",
+        "trigger": "Quartalszahlen unter den Erwartungen",
+        "signal": "Anfänglicher Kursrückgang",
+        "observationWindow": null,
+        "target": "Erholung eines Teils des Rückgangs",
+        "measurementHorizon": null,
+        "benchmark": null,
+        "evaluationCriterion": null
+      },
+      "openQuestions": [
+        {
+          "field": "MEASUREMENT_HORIZON",
+          "question": "Innerhalb wie vieler Handelstage soll die Erholung erfolgen?"
+        }
+      ],
+      "assumptions": [],
+      "uncertainties": [],
+      "instrumentIds": [],
+      "evidence": [],
+      "testability": null,
+      "experimentDraftIds": [],
+      "experimentIds": [],
+      "relatedIdeaIds": [],
+      "decisionId": "decision-1"
+    }
+  },
+  {
+    "case": "createAgentDialogue-request",
+    "schema": "AgentCreateDialogueV1",
+    "value": {
+      "ideaId": "idea-1",
+      "expectedIdeaVersion": 1,
+      "expertExperiment": {
+        "definitionId": "experiment-1",
+        "definitionVersion": 3,
+        "definitionHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    }
+  },
+  {
+    "case": "createAgentDialogue-201",
+    "schema": "AgentDialogueV1",
+    "value": {
+      "id": "dialogue-1",
+      "version": 1,
+      "ideaId": "idea-1",
+      "ideaVersion": 1,
+      "createdAt": "2026-11-08T12:00:00Z",
+      "turns": [],
+      "nextCursor": null,
+      "confirmedHypothesis": null,
+      "confirmedAssumptions": [],
+      "confirmedFields": [],
+      "expertExperiment": {
+        "definitionId": "experiment-1",
+        "definitionVersion": 3,
+        "definitionHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    }
+  },
+  {
+    "case": "getAgentDialogue-200",
+    "schema": "AgentDialogueV1",
+    "value": {
+      "id": "dialogue-1",
+      "version": 2,
+      "ideaId": "idea-1",
+      "ideaVersion": 1,
+      "createdAt": "2026-11-08T12:00:00Z",
+      "turns": [
+        {
+          "turnId": "turn-1",
+          "turnVersion": 1,
+          "dialogueId": "dialogue-1",
+          "dialogueVersion": 2,
+          "ideaVersion": 1,
+          "createdAt": "2026-11-08T12:00:00Z",
+          "originalId": "original-1",
+          "processing": {
+            "turnId": "turn-1",
+            "turnVersion": 1,
+            "dialogueVersion": 2,
+            "purpose": "HYPOTHESIS_INTERPRETATION_V1",
+            "state": "LOCAL_CLARIFICATION",
+            "delivery": "NOT_SENT",
+            "costState": "NOT_INCURRED"
+          },
+          "localQuestions": [
+            {
+              "field": "MEASUREMENT_HORIZON",
+              "question": "Innerhalb wie vieler Handelstage soll die Erholung erfolgen?",
+              "id": "question-horizon"
+            }
+          ],
+          "proposal": {
+            "proposalId": "proposal-1",
+            "proposalHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "originalId": "original-1",
+            "turnId": "turn-1",
+            "ideaVersion": 1,
+            "dialogueVersion": 2,
+            "origin": "LOCAL_CLARIFICATION",
+            "interpretation": {
+              "schemaVersion": "V1",
+              "hypothesis": {
+                "statement": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+                "market": "Technologieaktien",
+                "trigger": "Quartalszahlen unter den Erwartungen",
+                "signal": "Anfänglicher Kursrückgang",
+                "observationWindow": null,
+                "target": "Erholung eines Teils des Rückgangs",
+                "measurementHorizon": null,
+                "benchmark": null,
+                "evaluationCriterion": null
+              },
+              "requiredDataTypes": [
+                "PRICE_BARS",
+                "EARNINGS_RELEASES",
+                "EARNINGS_EXPECTATIONS"
+              ],
+              "openQuestions": [
+                {
+                  "field": "MEASUREMENT_HORIZON",
+                  "question": "Innerhalb wie vieler Handelstage soll die Erholung erfolgen?"
+                }
+              ],
+              "assumptions": [],
+              "unsupportedAspects": [],
+              "confidence": "UNKNOWN",
+              "proposedTestability": null
+            },
+            "conflicts": [],
+            "approximation": {
+              "approximationId": "approximation-1",
+              "approximationHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "ideaVersion": 1,
+              "proposalId": "proposal-1",
+              "dialogueVersion": 2,
+              "original": {
+                "statement": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+                "market": "Technologieaktien",
+                "trigger": "Quartalszahlen unter den Erwartungen",
+                "signal": "Anfänglicher Kursrückgang",
+                "observationWindow": null,
+                "target": "Erholung eines Teils des Rückgangs",
+                "measurementHorizon": null,
+                "benchmark": null,
+                "evaluationCriterion": null
+              },
+              "substitute": {
+                "statement": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+                "market": "Technologieaktien",
+                "trigger": "Three consecutive negative trading days",
+                "signal": "Three consecutive daily returns below zero",
+                "observationWindow": "Three trading days",
+                "target": "Erholung eines Teils des Rückgangs",
+                "measurementHorizon": "Five trading days",
+                "benchmark": null,
+                "evaluationCriterion": null
+              },
+              "difference": "Substitutes a price-only signal for an earnings event.",
+              "limitations": [
+                "Cannot establish that the reversal follows an earnings surprise."
+              ]
+            }
+          }
+        }
+      ],
+      "nextCursor": null,
+      "confirmedHypothesis": null,
+      "confirmedAssumptions": [],
+      "confirmedFields": [],
+      "expertExperiment": {
+        "definitionId": "experiment-1",
+        "definitionVersion": 3,
+        "definitionHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    }
+  },
+  {
+    "case": "createAgentDialogueTurn-request-freeText",
+    "schema": "AgentCreateDialogueTurnV1",
+    "value": {
+      "kind": "FREE_TEXT_RESEARCH",
+      "expectedDialogueVersion": 1,
+      "expectedIdeaVersion": 1,
+      "text": "Die Erholung soll innerhalb von fünf Handelstagen liegen."
+    }
+  },
+  {
+    "case": "createAgentDialogueTurn-request-localAnswer",
+    "schema": "AgentCreateDialogueTurnV1",
+    "value": {
+      "kind": "LOCAL_STRUCTURED_ANSWER",
+      "expectedDialogueVersion": 2,
+      "expectedIdeaVersion": 1,
+      "questionId": "question-horizon",
+      "field": "MEASUREMENT_HORIZON",
+      "value": "Fünf Handelstage"
+    }
+  },
+  {
+    "case": "createAgentDialogueTurn-202",
+    "schema": "AgentDialogueTurnV1",
+    "value": {
+      "turnId": "turn-1",
+      "turnVersion": 1,
+      "dialogueId": "dialogue-1",
+      "dialogueVersion": 2,
+      "ideaVersion": 1,
+      "createdAt": "2026-11-08T12:00:00Z",
+      "originalId": "original-1",
+      "processing": {
+        "turnId": "turn-1",
+        "turnVersion": 1,
+        "dialogueVersion": 2,
+        "purpose": "HYPOTHESIS_INTERPRETATION_V1",
+        "state": "LOCAL_CLARIFICATION",
+        "delivery": "NOT_SENT",
+        "costState": "NOT_INCURRED"
+      },
+      "localQuestions": [
+        {
+          "field": "MEASUREMENT_HORIZON",
+          "question": "Innerhalb wie vieler Handelstage soll die Erholung erfolgen?",
+          "id": "question-horizon"
+        }
+      ]
+    }
+  },
+  {
+    "case": "decideAgentHypothesis-request",
+    "schema": "AgentDialogueDecisionV1",
+    "value": {
+      "action": "CONFIRM_HYPOTHESIS",
+      "expectedIdeaVersion": 1,
+      "expectedDialogueVersion": 2,
+      "proposalId": "proposal-1",
+      "proposalHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "confirmedFields": [
+        {
+          "field": "MEASUREMENT_HORIZON",
+          "value": "Fünf Handelstage"
+        }
+      ],
+      "confirmedAssumptionIds": []
+    }
+  },
+  {
+    "case": "decideAgentHypothesis-200",
+    "schema": "AgentDialogueDecisionReceiptV1",
+    "value": {
+      "decisionId": "decision-1",
+      "action": "CONFIRM_HYPOTHESIS",
+      "ideaId": "idea-1",
+      "ideaVersion": 2,
+      "dialogueId": "dialogue-1",
+      "dialogueVersion": 3,
+      "proposalId": "proposal-1",
+      "recordedAt": "2026-11-08T12:00:00Z"
+    }
+  },
+  {
+    "case": "getAgentRegistry-200",
+    "schema": "AgentRegistryPageV1",
+    "value": {
+      "items": [
+        {
+          "agentId": "quant-research-agent-v1",
+          "version": 1,
+          "policyVersion": 1,
+          "role": "QUANT_RESEARCH",
+          "description": "Versioned local research agent",
+          "promptVersion": 1,
+          "tools": [
+            {
+              "toolId": "RESEARCH_READ",
+              "toolVersion": 1
+            }
+          ],
+          "outputSchemaVersion": 1,
+          "limits": {
+            "maxInputTokens": 4096,
+            "maxOutputTokens": 1024,
+            "maxCost": "0.10",
+            "currency": "USD",
+            "maxModelCalls": 8,
+            "maxSteps": 24,
+            "maxToolCalls": 16,
+            "maxExperiments": 1,
+            "maxParallelism": 1,
+            "maxActiveSeconds": 600,
+            "maxWallSeconds": 3600
+          },
+          "autonomyLevel": 0,
+          "abstentionRules": [
+            "MISSING_EVIDENCE"
+          ],
+          "implementationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "availability": "AVAILABLE"
+        }
+      ]
+    }
+  },
+  {
+    "case": "listResearchAgentRuns-200",
+    "schema": "AgentRunPageV1",
+    "value": {
+      "items": [
+        {
+          "runId": "run-001",
+          "version": 1,
+          "kind": "DIALOGUE",
+          "state": "QUEUED",
+          "agentId": "quant-research-agent-v1",
+          "agentVersion": 1,
+          "policyVersion": 1,
+          "requestHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+          "createdAt": "2026-11-08T11:00:00Z",
+          "updatedAt": "2026-11-08T11:00:00Z",
+          "deadlineAt": "2026-11-08T12:00:00Z",
+          "limits": {
+            "maxInputTokens": 4096,
+            "maxOutputTokens": 1024,
+            "maxCost": "0.10",
+            "currency": "USD",
+            "maxModelCalls": 8,
+            "maxSteps": 24,
+            "maxToolCalls": 16,
+            "maxExperiments": 1,
+            "maxParallelism": 1,
+            "maxActiveSeconds": 600,
+            "maxWallSeconds": 3600
+          },
+          "usage": {
+            "tokenUsageState": "NOT_INCURRED",
+            "costState": "NOT_INCURRED",
+            "reservedCost": "0",
+            "currency": "USD",
+            "modelCalls": 0,
+            "steps": 0,
+            "toolCalls": 0,
+            "experiments": 0
+          },
+          "providerOutcome": "NOT_DISPATCHED"
+        }
+      ]
+    }
+  },
+  {
+    "case": "getAgentRun-200",
+    "schema": "AgentRunV1",
+    "value": {
+      "runId": "run-001",
+      "version": 1,
+      "kind": "DIALOGUE",
+      "state": "QUEUED",
+      "agentId": "quant-research-agent-v1",
+      "agentVersion": 1,
+      "policyVersion": 1,
+      "requestHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+      "createdAt": "2026-11-08T11:00:00Z",
+      "updatedAt": "2026-11-08T11:00:00Z",
+      "deadlineAt": "2026-11-08T12:00:00Z",
+      "limits": {
+        "maxInputTokens": 4096,
+        "maxOutputTokens": 1024,
+        "maxCost": "0.10",
+        "currency": "USD",
+        "maxModelCalls": 8,
+        "maxSteps": 24,
+        "maxToolCalls": 16,
+        "maxExperiments": 1,
+        "maxParallelism": 1,
+        "maxActiveSeconds": 600,
+        "maxWallSeconds": 3600
+      },
+      "usage": {
+        "tokenUsageState": "NOT_INCURRED",
+        "costState": "NOT_INCURRED",
+        "reservedCost": "0",
+        "currency": "USD",
+        "modelCalls": 0,
+        "steps": 0,
+        "toolCalls": 0,
+        "experiments": 0
+      },
+      "providerOutcome": "NOT_DISPATCHED"
+    }
+  },
+  {
+    "case": "listAgentRunEvents-200",
+    "schema": "AgentRunEventPageV1",
+    "value": {
+      "items": [
+        {
+          "eventId": "event-001",
+          "runId": "run-001",
+          "runVersion": 1,
+          "occurredAt": "2026-11-08T11:00:00Z",
+          "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+          "kind": "STATE_CHANGED",
+          "state": "QUEUED"
+        }
+      ]
+    }
+  },
+  {
+    "case": "cancelAgentRun-request",
+    "schema": "AgentRunCancelRequestV1",
+    "value": {
+      "expectedVersion": 1
+    }
+  },
+  {
+    "case": "cancelAgentRun-200",
+    "schema": "AgentRunCancellationV1",
+    "value": {
+      "runId": "run-001",
+      "runVersion": 2,
+      "state": "CANCELLED",
+      "recordedAt": "2026-11-08T11:00:00Z",
+      "receiptId": "cancel-001"
+    }
+  },
+  {
+    "case": "getAgentSchedule-200",
+    "schema": "AgentScheduleV1",
+    "value": {
+      "scheduleId": "schedule-001",
+      "version": 1,
+      "state": "DISABLED",
+      "timeZone": "Europe/Berlin",
+      "localTime": "09:00",
+      "scope": {
+        "instrumentIds": [
+          "instrument-001"
+        ],
+        "sourceKinds": [
+          "HISTORICAL_REVISION"
+        ]
+      },
+      "limits": {
+        "maxInputTokens": 4096,
+        "maxOutputTokens": 1024,
+        "maxCost": "0.10",
+        "currency": "USD",
+        "maxModelCalls": 1,
+        "maxIdeas": 3,
+        "maxSourceItems": 100,
+        "maxPendingItems": 50
+      },
+      "triggerPolicyVersion": 1,
+      "tzdataVersion": "2026a"
+    }
+  },
+  {
+    "case": "updateAgentSchedule-request",
+    "schema": "AgentScheduleUpdateV1",
+    "value": {
+      "expectedVersion": 1,
+      "timeZone": "Europe/Berlin",
+      "localTime": "09:00",
+      "scope": {
+        "instrumentIds": [
+          "instrument-001"
+        ],
+        "sourceKinds": [
+          "HISTORICAL_REVISION"
+        ]
+      },
+      "limits": {
+        "maxInputTokens": 4096,
+        "maxOutputTokens": 1024,
+        "maxCost": "0.10",
+        "currency": "USD",
+        "maxModelCalls": 1,
+        "maxIdeas": 3,
+        "maxSourceItems": 100,
+        "maxPendingItems": 50
+      }
+    }
+  },
+  {
+    "case": "updateAgentSchedule-200",
+    "schema": "AgentScheduleV1",
+    "value": {
+      "scheduleId": "schedule-001",
+      "version": 2,
+      "state": "DISABLED",
+      "timeZone": "Europe/Berlin",
+      "localTime": "09:00",
+      "scope": {
+        "instrumentIds": [
+          "instrument-001"
+        ],
+        "sourceKinds": [
+          "HISTORICAL_REVISION"
+        ]
+      },
+      "limits": {
+        "maxInputTokens": 4096,
+        "maxOutputTokens": 1024,
+        "maxCost": "0.10",
+        "currency": "USD",
+        "maxModelCalls": 1,
+        "maxIdeas": 3,
+        "maxSourceItems": 100,
+        "maxPendingItems": 50
+      },
+      "triggerPolicyVersion": 1,
+      "tzdataVersion": "2026a"
+    }
+  },
+  {
+    "case": "commandAgentSchedule-request",
+    "schema": "AgentScheduleCommandV1",
+    "value": {
+      "action": "PAUSE",
+      "expectedVersion": 1
+    }
+  },
+  {
+    "case": "commandAgentSchedule-200",
+    "schema": "AgentScheduleCommandResultV1",
+    "value": {
+      "commandId": "command-001",
+      "scheduleId": "schedule-001",
+      "scheduleVersion": 2,
+      "state": "PAUSED"
+    }
+  },
+  {
+    "case": "listAgentProviders-200",
+    "schema": "AgentProviderPageV1",
+    "value": {
+      "items": [
+        {
+          "binding": {
+            "provider": "OPENAI",
+            "profileId": "profile-001",
+            "profileGeneration": 1,
+            "modelId": "approved-model",
+            "modelGeneration": 1
+          },
+          "credential": {
+            "credentialVersion": 1,
+            "state": "NOT_CONFIGURED",
+            "providerRevocationState": "NOT_CONFIRMED",
+            "updatedAt": "2026-11-08T11:00:00Z"
+          },
+          "availability": "DISABLED",
+          "adapter": "OPENAI_RESPONSES",
+          "outputSchemaVersion": 1,
+          "schemaSubsetVersion": 1,
+          "structuredOutputSupported": true,
+          "maxInputTokens": 4096,
+          "maxOutputTokens": 1024,
+          "timeoutSeconds": 15,
+          "cancelSupport": "BEST_EFFORT",
+          "rateLimitSupport": "BOUNDED_RETRY_AFTER",
+          "dataHandlingPolicyId": "policy-001",
+          "dataHandlingPolicyVersion": 1,
+          "probeState": "NOT_TESTED"
+        }
+      ]
+    }
+  },
+  {
+    "case": "probeAgentProvider-request",
+    "schema": "AgentProviderProbeRequestV1",
+    "value": {
+      "profileId": "profile-001",
+      "profileGeneration": 1,
+      "modelGeneration": 1,
+      "credentialGeneration": 1
+    }
+  },
+  {
+    "case": "probeAgentProvider-202",
+    "schema": "AgentProviderProbeResultV1",
+    "value": {
+      "probeId": "probe-001",
+      "provider": "OPENAI",
+      "profileId": "profile-001",
+      "profileGeneration": 1,
+      "modelGeneration": 1,
+      "credentialGeneration": 1,
+      "status": "QUEUED",
+      "acceptedAt": "2026-11-08T11:00:00Z"
+    }
+  },
+  {
+    "case": "saveAgentProviderCredential-200",
+    "schema": "AgentCredentialStatusV1",
+    "value": {
+      "credentialVersion": 2,
+      "state": "STORED",
+      "providerRevocationState": "NOT_CONFIRMED",
+      "updatedAt": "2026-11-08T11:00:00Z",
+      "credentialGeneration": 1
+    }
+  },
+  {
+    "case": "rotateAgentProviderCredential-200",
+    "schema": "AgentCredentialStatusV1",
+    "value": {
+      "credentialVersion": 2,
+      "state": "STORED",
+      "providerRevocationState": "NOT_CONFIRMED",
+      "updatedAt": "2026-11-08T11:00:00Z",
+      "credentialGeneration": 1
+    }
+  },
+  {
+    "case": "activateAgentProviderCredential-200",
+    "schema": "AgentCredentialStatusV1",
+    "value": {
+      "credentialVersion": 2,
+      "state": "ACTIVE",
+      "providerRevocationState": "NOT_CONFIRMED",
+      "updatedAt": "2026-11-08T11:00:00Z",
+      "credentialGeneration": 1
+    }
+  },
+  {
+    "case": "revokeAgentProviderCredential-200",
+    "schema": "AgentCredentialStatusV1",
+    "value": {
+      "credentialVersion": 2,
+      "state": "REVOKED",
+      "providerRevocationState": "NOT_CONFIRMED",
+      "updatedAt": "2026-11-08T11:00:00Z",
+      "credentialGeneration": 1,
+      "locallyRevokedAt": "2026-11-08T11:00:00Z"
+    }
+  },
+  {
+    "case": "listAgentQuantApprovals-200",
+    "schema": "AgentQuantApprovalPageV1",
+    "value": {
+      "items": [],
+      "nextCursor": null
+    }
+  },
+  {
+    "case": "decideAgentQuantApproval-request",
+    "schema": "AgentQuantApprovalDecisionV1",
+    "value": {
+      "action": "APPROVE_AND_START",
+      "expectedApprovalVersion": 1,
+      "bindingHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  },
+  {
+    "case": "decideAgentQuantApproval-200",
+    "schema": "AgentQuantApprovalRejectedV1",
+    "value": {
+      "approvalId": "approval-1",
+      "approvalVersion": 2,
+      "state": "REJECTED",
+      "decidedAt": "2026-11-08T12:03:00Z"
+    }
+  },
+  {
+    "case": "decideAgentQuantApproval-202",
+    "schema": "AgentQuantApprovalStartedV1",
+    "value": {
+      "approvalId": "approval-1",
+      "approvalVersion": 2,
+      "state": "STARTED",
+      "batchId": "88598178-180e-4208-8a90-243d48f88200",
+      "decidedAt": "2026-11-08T12:03:00Z"
+    }
+  },
+  {
+    "case": "decideAgentQuantApproval-409",
+    "schema": "AgentQuantApprovalProblemV1",
+    "value": {
+      "type": "https://agentic-trading-lab.invalid/problems/agent-approval",
+      "title": "Approval binding is stale",
+      "status": 409,
+      "code": "APPROVAL_STALE",
+      "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
+    }
+  },
+  {
+    "case": "decideAgentQuantApproval-429",
+    "schema": "AgentQuantApprovalProblemV1",
+    "value": {
+      "type": "https://agentic-trading-lab.invalid/problems/agent-approval",
+      "title": "Quant admission capacity is exhausted",
+      "status": 429,
+      "code": "QUANT_CAPACITY_EXHAUSTED",
+      "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
+    }
+  },
+  {
+    "case": "listAgentResearchReports-200",
+    "schema": "AgentReportPageV1",
+    "value": {
+      "items": [],
+      "nextCursor": null
+    }
+  }
+]

@@ -1,11 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import {
-  ControlService,
-  HistoryService,
-  RiskPolicyService,
-  SnapshotService,
-} from '../api/generated/control-api/api/api';
+import { ControlService } from '../api/generated/control-api/api/control.service';
+import { HistoryService } from '../api/generated/control-api/api/history.service';
+import { RiskPolicyService } from '../api/generated/control-api/api/riskPolicy.service';
+import { SnapshotService } from '../api/generated/control-api/api/snapshot.service';
 import type {
   ModeState,
   RiskPolicy,

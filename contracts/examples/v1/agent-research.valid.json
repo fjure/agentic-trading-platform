@@ -1,0 +1,92 @@
+{
+  "items": [
+    {
+      "id": "idea-1",
+      "version": 1,
+      "previousVersion": null,
+      "status": "PROPOSED",
+      "origin": "USER",
+      "initiatorId": "operator-1",
+      "title": "Reaktion auf Quartalszahlen",
+      "description": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+      "originalText": "Technologieaktien erholen sich nach schlechten Quartalszahlen.",
+      "createdAt": "2026-11-08T12:00:00Z",
+      "hypothesis": {
+        "statement": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+        "market": "Technologieaktien",
+        "trigger": "Quartalszahlen unter den Erwartungen",
+        "signal": "Anfänglicher Kursrückgang",
+        "observationWindow": null,
+        "target": "Erholung eines Teils des Rückgangs",
+        "measurementHorizon": null,
+        "benchmark": null,
+        "evaluationCriterion": null
+      },
+      "openQuestions": [
+        {
+          "field": "MEASUREMENT_HORIZON",
+          "question": "Innerhalb wie vieler Handelstage soll die Erholung erfolgen?"
+        }
+      ],
+      "assumptions": [],
+      "uncertainties": [],
+      "instrumentIds": [],
+      "evidence": [],
+      "testability": null,
+      "experimentDraftIds": [],
+      "experimentIds": [],
+      "relatedIdeaIds": []
+    },
+    {
+      "id": "idea-2",
+      "version": 1,
+      "previousVersion": null,
+      "status": "PROPOSED",
+      "origin": "AGENT",
+      "initiatorId": "operator-1",
+      "title": "Reaktion auf Quartalszahlen",
+      "description": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+      "createdAt": "2026-11-08T12:00:00Z",
+      "hypothesis": {
+        "statement": "Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang eine Erholung.",
+        "market": "Technologieaktien",
+        "trigger": "Quartalszahlen unter den Erwartungen",
+        "signal": "Anfänglicher Kursrückgang",
+        "observationWindow": null,
+        "target": "Erholung eines Teils des Rückgangs",
+        "measurementHorizon": null,
+        "benchmark": null,
+        "evaluationCriterion": null
+      },
+      "openQuestions": [
+        {
+          "field": "MEASUREMENT_HORIZON",
+          "question": "Innerhalb wie vieler Handelstage soll die Erholung erfolgen?"
+        }
+      ],
+      "assumptions": [],
+      "uncertainties": [],
+      "instrumentIds": [],
+      "evidence": [],
+      "testability": null,
+      "experimentDraftIds": [],
+      "experimentIds": [],
+      "relatedIdeaIds": [],
+      "sourceId": "revision-1",
+      "runId": "run-1",
+      "discovery": {
+        "priorityRuleVersion": "discovery-v1",
+        "priorityReason": "New eligible source revision.",
+        "latestEvidenceAt": "2026-11-08T11:00:00Z",
+        "freshnessEvaluatedAt": "2026-11-08T12:00:00Z",
+        "freshness": "CURRENT",
+        "estimatedEffort": "MEDIUM",
+        "effortReason": "Requires a supported earnings-event strategy.",
+        "limitations": [
+          "Earnings data is not yet available."
+        ]
+      }
+    }
+  ],
+  "nextCursor": null
+}
