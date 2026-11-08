@@ -4,7 +4,7 @@ Jede Checkbox bezeichnet ein Issue. Akzeptanz, Dateizuständigkeit und Prüfunge
 
 ## 1. Additiven HTTP-Vertrag festlegen
 
-- [ ] 1.1 [APF-01 Additiven HTTP-Vertrag festlegen](work-packages/APF-01.md).
+- [x] 1.1 [APF-01 Additiven HTTP-Vertrag festlegen](work-packages/APF-01.md).
 
 ## 2. Researchlauf und Budget absichern
 

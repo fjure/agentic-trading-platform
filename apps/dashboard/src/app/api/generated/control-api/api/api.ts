@@ -1,3 +1,9 @@
+export * from './agentProviderSetup.service';
+import { AgentProviderSetupService } from './agentProviderSetup.service';
+export * from './agentProviderSetup.serviceInterface';
+export * from './agentResearch.service';
+import { AgentResearchService } from './agentResearch.service';
+export * from './agentResearch.serviceInterface';
 export * from './backtesting.service';
 import { BacktestingService } from './backtesting.service';
 export * from './backtesting.serviceInterface';
@@ -28,4 +34,4 @@ export * from './snapshot.serviceInterface';
 export * from './stream.service';
 import { StreamService } from './stream.service';
 export * from './stream.serviceInterface';
-export const APIS = [BacktestingService, ControlService, DemoService, HistoryService, PaperService, ResearchService, RiskPolicyService, SetupService, SnapshotService, StreamService];
+export const APIS = [AgentProviderSetupService, AgentResearchService, BacktestingService, ControlService, DemoService, HistoryService, PaperService, ResearchService, RiskPolicyService, SetupService, SnapshotService, StreamService];

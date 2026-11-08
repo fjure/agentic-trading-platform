@@ -27,6 +27,10 @@ tags:
   description: Stored conservative research evidence and bounded ingestion, without trading permission.
 - name: Backtesting
   description: Bounded deterministic local simulation without trading permission.
+- name: Agent research
+  description: Operator-controlled research with isolated external processing.
+- name: Agent provider setup
+  description: Local write-only credential setup for research providers.
 paths:
   /health:
     get:
@@ -8403,6 +8407,2104 @@ paths:
           - FINDINGS
           - REVISION_REFERENCES
           default: FINDINGS
+  /api/v1/research/agent/dialogues/{id}/turns/{turnId}/processing-previews:
+    post:
+      tags:
+      - Agent research
+      operationId: createAgentProcessingPreview
+      summary: Create a volatile processing preview
+      description: Requires a current local session and same-origin JSON write. Replay returns the same
+        preview only while live and within the bound session. Expired or lost previews are never reconstructed
+        or retained in durable idempotency storage. No provider dispatch occurs.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - name: turnId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - $ref: '#/components/parameters/AgentPreviewIdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessingPreviewRequestV1'
+            example:
+              expectedTurnVersion: 1
+              expectedDialogueVersion: 2
+              profileId: research-v1
+      responses:
+        '201':
+          description: Create a volatile processing preview
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessingPreviewV1'
+              example:
+                previewId: preview-1
+                turnId: turn-1
+                turnVersion: 1
+                dialogueVersion: 2
+                provider: OPENAI
+                profileId: research-v1
+                profileGeneration: 1
+                modelId: offline-model-v1
+                envelopeVersion: interpretation-v1
+                credentialGeneration: 1
+                policyGeneration: 1
+                purpose: HYPOTHESIS_INTERPRETATION_V1
+                dataClasses:
+                - OPERATOR_RESEARCH_EXCERPT
+                - CONFIRMED_RESEARCH_FIELDS
+                expiresAt: '2026-11-08T12:10:00Z'
+                projectionBinding: opaque-binding-fixture-1
+                projection:
+                  excerpt: Technologieaktien erholen sich nach einer Überreaktion auf Quartalszahlen.
+                  confirmedContext:
+                    market: Technologieaktien
+                modelGeneration: 1
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/dialogues/{id}/turns/{turnId}/processing:
+    get:
+      tags:
+      - Agent research
+      operationId: getAgentProcessingStatus
+      summary: Read the safe processing status
+      description: Returns the current durable state without preview text or provider payload. Requires
+        a current local session.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - name: turnId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      responses:
+        '200':
+          description: Read the safe processing status
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessingStatusV1'
+              example:
+                turnId: turn-1
+                turnVersion: 1
+                dialogueVersion: 2
+                purpose: HYPOTHESIS_INTERPRETATION_V1
+                state: SEND_AUTHORIZED
+                delivery: NOT_SENT
+                receipt:
+                  receiptId: receipt-1
+                  turnId: turn-1
+                  decidedAt: '2026-11-08T12:03:00Z'
+                  purpose: HYPOTHESIS_INTERPRETATION_V1
+                  state: SEND_AUTHORIZED
+                  auditId: audit-1
+                  provider: OPENAI
+                  profileId: research-v1
+                  profileGeneration: 1
+                  policyGeneration: 1
+                  projectionBinding: opaque-binding-fixture-1
+                costState: NOT_INCURRED
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/dialogues/{id}/turns/{turnId}/processing-decisions:
+    post:
+      tags:
+      - Agent research
+      operationId: decideAgentProcessing
+      summary: Record a processing decision
+      description: Requires a current local session and same-origin JSON write. SEND also requires a fresh
+        operator session. An identical retry returns the same decision receipt. DECLINE binds only the current
+        revisions. REVOKE binds the receipt and blocks acceptance of any later provider result. This endpoint
+        grants no hypothesis confirmation or experiment approval.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - name: turnId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessingDecisionV1'
+            example:
+              action: SEND
+              expectedTurnVersion: 1
+              expectedDialogueVersion: 2
+              previewId: preview-1
+              projectionBinding: opaque-binding-fixture-1
+      responses:
+        '202':
+          description: Record a processing decision
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentSendAcceptedV1'
+              example:
+                turnId: turn-1
+                turnVersion: 1
+                dialogueVersion: 2
+                purpose: HYPOTHESIS_INTERPRETATION_V1
+                state: SEND_AUTHORIZED
+                delivery: NOT_SENT
+                receipt:
+                  receiptId: receipt-1
+                  turnId: turn-1
+                  decidedAt: '2026-11-08T12:03:00Z'
+                  purpose: HYPOTHESIS_INTERPRETATION_V1
+                  state: SEND_AUTHORIZED
+                  auditId: audit-1
+                  provider: OPENAI
+                  profileId: research-v1
+                  profileGeneration: 1
+                  policyGeneration: 1
+                  projectionBinding: opaque-binding-fixture-1
+                costState: NOT_INCURRED
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+        '200':
+          description: The local processing decision was recorded.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessingStatusV1'
+              example:
+                turnId: turn-1
+                turnVersion: 1
+                dialogueVersion: 2
+                purpose: HYPOTHESIS_INTERPRETATION_V1
+                state: DECLINED
+                delivery: NOT_SENT
+                receipt:
+                  receiptId: receipt-1
+                  turnId: turn-1
+                  decidedAt: '2026-11-08T12:03:00Z'
+                  purpose: HYPOTHESIS_INTERPRETATION_V1
+                  auditId: audit-1
+                  state: DECLINED
+                costState: NOT_INCURRED
+  /api/v1/research/agent/ideas:
+    get:
+      tags:
+      - Agent research
+      operationId: listAgentIdeas
+      summary: List visible research ideas
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: List visible research ideas
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentIdeaListV1'
+              example:
+                items:
+                - id: idea-1
+                  version: 1
+                  previousVersion: null
+                  status: PROPOSED
+                  origin: USER
+                  initiatorId: operator-1
+                  title: Reaktion auf Quartalszahlen
+                  description: Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang
+                    eine Erholung.
+                  originalText: Technologieaktien erholen sich nach schlechten Quartalszahlen.
+                  createdAt: '2026-11-08T12:00:00Z'
+                  hypothesis:
+                    statement: Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang
+                      eine Erholung.
+                    market: Technologieaktien
+                    trigger: Quartalszahlen unter den Erwartungen
+                    signal: Anfänglicher Kursrückgang
+                    observationWindow: null
+                    target: Erholung eines Teils des Rückgangs
+                    measurementHorizon: null
+                    benchmark: null
+                    evaluationCriterion: null
+                  openQuestions:
+                  - field: MEASUREMENT_HORIZON
+                    question: Innerhalb wie vieler Handelstage soll die Erholung erfolgen?
+                  assumptions: []
+                  uncertainties: []
+                  instrumentIds: []
+                  evidence: []
+                  testability: null
+                  experimentDraftIds: []
+                  experimentIds: []
+                  relatedIdeaIds: []
+                - id: idea-2
+                  version: 1
+                  previousVersion: null
+                  status: PROPOSED
+                  origin: AGENT
+                  initiatorId: operator-1
+                  title: Reaktion auf Quartalszahlen
+                  description: Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang
+                    eine Erholung.
+                  createdAt: '2026-11-08T12:00:00Z'
+                  hypothesis:
+                    statement: Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang
+                      eine Erholung.
+                    market: Technologieaktien
+                    trigger: Quartalszahlen unter den Erwartungen
+                    signal: Anfänglicher Kursrückgang
+                    observationWindow: null
+                    target: Erholung eines Teils des Rückgangs
+                    measurementHorizon: null
+                    benchmark: null
+                    evaluationCriterion: null
+                  openQuestions:
+                  - field: MEASUREMENT_HORIZON
+                    question: Innerhalb wie vieler Handelstage soll die Erholung erfolgen?
+                  assumptions: []
+                  uncertainties: []
+                  instrumentIds: []
+                  evidence: []
+                  testability: null
+                  experimentDraftIds: []
+                  experimentIds: []
+                  relatedIdeaIds: []
+                  sourceId: revision-1
+                  runId: run-1
+                  discovery:
+                    priorityRuleVersion: discovery-v1
+                    priorityReason: New eligible source revision.
+                    latestEvidenceAt: '2026-11-08T11:00:00Z'
+                    freshnessEvaluatedAt: '2026-11-08T12:00:00Z'
+                    freshness: CURRENT
+                    estimatedEffort: MEDIUM
+                    effortReason: Requires a supported earnings-event strategy.
+                    limitations:
+                    - Earnings data is not yet available.
+                nextCursor: null
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+    post:
+      tags:
+      - Agent research
+      operationId: createAgentIdea
+      summary: Create a local research idea
+      description: Requires an active local session and a same-origin JSON request. Only text passing the
+        local storage policy may be persisted.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCreateIdeaV1'
+            example:
+              title: Reaktion auf Quartalszahlen
+              originalText: Technologieaktien erholen sich nach schlechten Quartalszahlen.
+      responses:
+        '201':
+          description: Create a local research idea
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentIdeaVersionV1'
+              example:
+                id: idea-1
+                version: 1
+                previousVersion: null
+                status: PROPOSED
+                origin: USER
+                initiatorId: operator-1
+                title: Reaktion auf Quartalszahlen
+                description: Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang
+                  eine Erholung.
+                originalText: Technologieaktien erholen sich nach schlechten Quartalszahlen.
+                createdAt: '2026-11-08T12:00:00Z'
+                hypothesis:
+                  statement: Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang
+                    eine Erholung.
+                  market: Technologieaktien
+                  trigger: Quartalszahlen unter den Erwartungen
+                  signal: Anfänglicher Kursrückgang
+                  observationWindow: null
+                  target: Erholung eines Teils des Rückgangs
+                  measurementHorizon: null
+                  benchmark: null
+                  evaluationCriterion: null
+                openQuestions:
+                - field: MEASUREMENT_HORIZON
+                  question: Innerhalb wie vieler Handelstage soll die Erholung erfolgen?
+                assumptions: []
+                uncertainties: []
+                instrumentIds: []
+                evidence: []
+                testability: null
+                experimentDraftIds: []
+                experimentIds: []
+                relatedIdeaIds: []
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/ideas/{id}:
+    get:
+      tags:
+      - Agent research
+      operationId: getAgentIdea
+      summary: Read a visible research idea
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - name: version
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/AgentRevision'
+        description: Select a historical immutable revision. Omit to retrieve the current revision.
+      responses:
+        '200':
+          description: Read a visible research idea
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentIdeaVersionV1'
+              example:
+                id: idea-1
+                version: 1
+                previousVersion: null
+                status: PROPOSED
+                origin: USER
+                initiatorId: operator-1
+                title: Reaktion auf Quartalszahlen
+                description: Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang
+                  eine Erholung.
+                originalText: Technologieaktien erholen sich nach schlechten Quartalszahlen.
+                createdAt: '2026-11-08T12:00:00Z'
+                hypothesis:
+                  statement: Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang
+                    eine Erholung.
+                  market: Technologieaktien
+                  trigger: Quartalszahlen unter den Erwartungen
+                  signal: Anfänglicher Kursrückgang
+                  observationWindow: null
+                  target: Erholung eines Teils des Rückgangs
+                  measurementHorizon: null
+                  benchmark: null
+                  evaluationCriterion: null
+                openQuestions:
+                - field: MEASUREMENT_HORIZON
+                  question: Innerhalb wie vieler Handelstage soll die Erholung erfolgen?
+                assumptions: []
+                uncertainties: []
+                instrumentIds: []
+                evidence: []
+                testability: null
+                experimentDraftIds: []
+                experimentIds: []
+                relatedIdeaIds: []
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/ideas/{id}/revisions:
+    post:
+      tags:
+      - Agent research
+      operationId: reviseAgentIdea
+      summary: Revise or review a research idea
+      description: Requires an active local session and a same-origin JSON request. The server owns lifecycle
+        transitions, testability and all evidence bindings.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentIdeaRevisionV1'
+            example:
+              action: REVIEW
+              expectedVersion: 1
+      responses:
+        '201':
+          description: Revise or review a research idea
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentIdeaVersionV1'
+              example:
+                id: idea-1
+                version: 2
+                previousVersion: 1
+                status: REVIEWED
+                origin: USER
+                initiatorId: operator-1
+                title: Reaktion auf Quartalszahlen
+                description: Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang
+                  eine Erholung.
+                originalText: Technologieaktien erholen sich nach schlechten Quartalszahlen.
+                createdAt: '2026-11-08T12:00:00Z'
+                hypothesis:
+                  statement: Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang
+                    eine Erholung.
+                  market: Technologieaktien
+                  trigger: Quartalszahlen unter den Erwartungen
+                  signal: Anfänglicher Kursrückgang
+                  observationWindow: null
+                  target: Erholung eines Teils des Rückgangs
+                  measurementHorizon: null
+                  benchmark: null
+                  evaluationCriterion: null
+                openQuestions:
+                - field: MEASUREMENT_HORIZON
+                  question: Innerhalb wie vieler Handelstage soll die Erholung erfolgen?
+                assumptions: []
+                uncertainties: []
+                instrumentIds: []
+                evidence: []
+                testability: null
+                experimentDraftIds: []
+                experimentIds: []
+                relatedIdeaIds: []
+                decisionId: decision-1
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/dialogues:
+    post:
+      tags:
+      - Agent research
+      operationId: createAgentDialogue
+      summary: Open a dialogue for an idea
+      description: Requires an active local session and a same-origin JSON request. An optional expertExperiment
+        binds the existing Quant Lab definition exactly. Local clarification and interpretation may surface
+        conflicts but never replace the referenced expert values.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCreateDialogueV1'
+            example:
+              ideaId: idea-1
+              expectedIdeaVersion: 1
+              expertExperiment:
+                definitionId: experiment-1
+                definitionVersion: 3
+                definitionHash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+      responses:
+        '201':
+          description: Open a dialogue for an idea
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDialogueV1'
+              example:
+                id: dialogue-1
+                version: 1
+                ideaId: idea-1
+                ideaVersion: 1
+                createdAt: '2026-11-08T12:00:00Z'
+                turns: []
+                nextCursor: null
+                confirmedHypothesis: null
+                confirmedAssumptions: []
+                confirmedFields: []
+                expertExperiment:
+                  definitionId: experiment-1
+                  definitionVersion: 3
+                  definitionHash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/dialogues/{id}:
+    get:
+      tags:
+      - Agent research
+      operationId: getAgentDialogue
+      summary: Resume a visible research dialogue
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Resume a visible research dialogue
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDialogueV1'
+              example:
+                id: dialogue-1
+                version: 2
+                ideaId: idea-1
+                ideaVersion: 1
+                createdAt: '2026-11-08T12:00:00Z'
+                turns:
+                - turnId: turn-1
+                  turnVersion: 1
+                  dialogueId: dialogue-1
+                  dialogueVersion: 2
+                  ideaVersion: 1
+                  createdAt: '2026-11-08T12:00:00Z'
+                  originalId: original-1
+                  processing:
+                    turnId: turn-1
+                    turnVersion: 1
+                    dialogueVersion: 2
+                    purpose: HYPOTHESIS_INTERPRETATION_V1
+                    state: LOCAL_CLARIFICATION
+                    delivery: NOT_SENT
+                    costState: NOT_INCURRED
+                  localQuestions:
+                  - field: MEASUREMENT_HORIZON
+                    question: Innerhalb wie vieler Handelstage soll die Erholung erfolgen?
+                    id: question-horizon
+                  proposal:
+                    proposalId: proposal-1
+                    proposalHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                    originalId: original-1
+                    turnId: turn-1
+                    ideaVersion: 1
+                    dialogueVersion: 2
+                    origin: LOCAL_CLARIFICATION
+                    interpretation:
+                      schemaVersion: V1
+                      hypothesis:
+                        statement: Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang
+                          eine Erholung.
+                        market: Technologieaktien
+                        trigger: Quartalszahlen unter den Erwartungen
+                        signal: Anfänglicher Kursrückgang
+                        observationWindow: null
+                        target: Erholung eines Teils des Rückgangs
+                        measurementHorizon: null
+                        benchmark: null
+                        evaluationCriterion: null
+                      requiredDataTypes:
+                      - PRICE_BARS
+                      - EARNINGS_RELEASES
+                      - EARNINGS_EXPECTATIONS
+                      openQuestions:
+                      - field: MEASUREMENT_HORIZON
+                        question: Innerhalb wie vieler Handelstage soll die Erholung erfolgen?
+                      assumptions: []
+                      unsupportedAspects: []
+                      confidence: UNKNOWN
+                      proposedTestability: null
+                    conflicts: []
+                    approximation:
+                      approximationId: approximation-1
+                      approximationHash: cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+                      ideaVersion: 1
+                      proposalId: proposal-1
+                      dialogueVersion: 2
+                      original:
+                        statement: Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang
+                          eine Erholung.
+                        market: Technologieaktien
+                        trigger: Quartalszahlen unter den Erwartungen
+                        signal: Anfänglicher Kursrückgang
+                        observationWindow: null
+                        target: Erholung eines Teils des Rückgangs
+                        measurementHorizon: null
+                        benchmark: null
+                        evaluationCriterion: null
+                      substitute:
+                        statement: Nach enttäuschenden Quartalszahlen folgt auf den anfänglichen Kursrückgang
+                          eine Erholung.
+                        market: Technologieaktien
+                        trigger: Three consecutive negative trading days
+                        signal: Three consecutive daily returns below zero
+                        observationWindow: Three trading days
+                        target: Erholung eines Teils des Rückgangs
+                        measurementHorizon: Five trading days
+                        benchmark: null
+                        evaluationCriterion: null
+                      difference: Substitutes a price-only signal for an earnings event.
+                      limitations:
+                      - Cannot establish that the reversal follows an earnings surprise.
+                nextCursor: null
+                confirmedHypothesis: null
+                confirmedAssumptions: []
+                confirmedFields: []
+                expertExperiment:
+                  definitionId: experiment-1
+                  definitionVersion: 3
+                  definitionHash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+      description: Returns a bounded turn page and current confirmations. Persisted dialogue projections
+        contain no provider prompt, preview payload or raw model output.
+  /api/v1/research/agent/dialogues/{id}/turns:
+    post:
+      tags:
+      - Agent research
+      operationId: createAgentDialogueTurn
+      summary: Accept a dialogue turn
+      description: Requires an active local session and a same-origin JSON request. Text is classified locally
+        before storage. Accepting a turn grants no permission to dispatch. A structured answer binds an
+        outstanding local question and the exact field, and never initiates external processing. A free-text
+        turn can be considered for a separate preview and SEND decision.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCreateDialogueTurnV1'
+            examples:
+              freeText:
+                value:
+                  kind: FREE_TEXT_RESEARCH
+                  expectedDialogueVersion: 1
+                  expectedIdeaVersion: 1
+                  text: Die Erholung soll innerhalb von fünf Handelstagen liegen.
+              localAnswer:
+                value:
+                  kind: LOCAL_STRUCTURED_ANSWER
+                  expectedDialogueVersion: 2
+                  expectedIdeaVersion: 1
+                  questionId: question-horizon
+                  field: MEASUREMENT_HORIZON
+                  value: Fünf Handelstage
+      responses:
+        '202':
+          description: Accept a dialogue turn
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDialogueTurnV1'
+              example:
+                turnId: turn-1
+                turnVersion: 1
+                dialogueId: dialogue-1
+                dialogueVersion: 2
+                ideaVersion: 1
+                createdAt: '2026-11-08T12:00:00Z'
+                originalId: original-1
+                processing:
+                  turnId: turn-1
+                  turnVersion: 1
+                  dialogueVersion: 2
+                  purpose: HYPOTHESIS_INTERPRETATION_V1
+                  state: LOCAL_CLARIFICATION
+                  delivery: NOT_SENT
+                  costState: NOT_INCURRED
+                localQuestions:
+                - field: MEASUREMENT_HORIZON
+                  question: Innerhalb wie vieler Handelstage soll die Erholung erfolgen?
+                  id: question-horizon
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/dialogues/{id}/decisions:
+    post:
+      tags:
+      - Agent research
+      operationId: decideAgentHypothesis
+      summary: Record a research decision
+      description: Requires an active local session and a same-origin JSON request. A decision binds the
+        current idea, dialogue and exact proposal. It neither authorizes provider dispatch nor grants experiment
+        approval.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentDialogueDecisionV1'
+            example:
+              action: CONFIRM_HYPOTHESIS
+              expectedIdeaVersion: 1
+              expectedDialogueVersion: 2
+              proposalId: proposal-1
+              proposalHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+              confirmedFields:
+              - field: MEASUREMENT_HORIZON
+                value: Fünf Handelstage
+              confirmedAssumptionIds: []
+      responses:
+        '200':
+          description: Record a research decision
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDialogueDecisionReceiptV1'
+              example:
+                decisionId: decision-1
+                action: CONFIRM_HYPOTHESIS
+                ideaId: idea-1
+                ideaVersion: 2
+                dialogueId: dialogue-1
+                dialogueVersion: 3
+                proposalId: proposal-1
+                recordedAt: '2026-11-08T12:00:00Z'
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/registry:
+    get:
+      tags:
+      - Agent research
+      operationId: getAgentRegistry
+      summary: List versioned research agents
+      description: List versioned research agents.
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRegistryPageV1'
+              example:
+                items:
+                - agentId: quant-research-agent-v1
+                  version: 1
+                  policyVersion: 1
+                  role: QUANT_RESEARCH
+                  description: Versioned local research agent
+                  promptVersion: 1
+                  tools:
+                  - toolId: RESEARCH_READ
+                    toolVersion: 1
+                  outputSchemaVersion: 1
+                  limits:
+                    maxInputTokens: 4096
+                    maxOutputTokens: 1024
+                    maxCost: '0.10'
+                    currency: USD
+                    maxModelCalls: 8
+                    maxSteps: 24
+                    maxToolCalls: 16
+                    maxExperiments: 1
+                    maxParallelism: 1
+                    maxActiveSeconds: 600
+                    maxWallSeconds: 3600
+                  autonomyLevel: 0
+                  abstentionRules:
+                  - MISSING_EVIDENCE
+                  implementationFingerprint: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                  availability: AVAILABLE
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/runs:
+    get:
+      tags:
+      - Agent research
+      operationId: listResearchAgentRuns
+      summary: List redacted research runs
+      description: List redacted research runs.
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRunPageV1'
+              example:
+                items:
+                - runId: run-001
+                  version: 1
+                  kind: DIALOGUE
+                  state: QUEUED
+                  agentId: quant-research-agent-v1
+                  agentVersion: 1
+                  policyVersion: 1
+                  requestHash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                  traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+                  createdAt: '2026-11-08T11:00:00Z'
+                  updatedAt: '2026-11-08T11:00:00Z'
+                  deadlineAt: '2026-11-08T12:00:00Z'
+                  limits:
+                    maxInputTokens: 4096
+                    maxOutputTokens: 1024
+                    maxCost: '0.10'
+                    currency: USD
+                    maxModelCalls: 8
+                    maxSteps: 24
+                    maxToolCalls: 16
+                    maxExperiments: 1
+                    maxParallelism: 1
+                    maxActiveSeconds: 600
+                    maxWallSeconds: 3600
+                  usage:
+                    tokenUsageState: NOT_INCURRED
+                    costState: NOT_INCURRED
+                    reservedCost: '0'
+                    currency: USD
+                    modelCalls: 0
+                    steps: 0
+                    toolCalls: 0
+                    experiments: 0
+                  providerOutcome: NOT_DISPATCHED
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/runs/{id}:
+    get:
+      tags:
+      - Agent research
+      operationId: getAgentRun
+      summary: Read one redacted research run
+      description: Read one redacted research run.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRunV1'
+              example:
+                runId: run-001
+                version: 1
+                kind: DIALOGUE
+                state: QUEUED
+                agentId: quant-research-agent-v1
+                agentVersion: 1
+                policyVersion: 1
+                requestHash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+                createdAt: '2026-11-08T11:00:00Z'
+                updatedAt: '2026-11-08T11:00:00Z'
+                deadlineAt: '2026-11-08T12:00:00Z'
+                limits:
+                  maxInputTokens: 4096
+                  maxOutputTokens: 1024
+                  maxCost: '0.10'
+                  currency: USD
+                  maxModelCalls: 8
+                  maxSteps: 24
+                  maxToolCalls: 16
+                  maxExperiments: 1
+                  maxParallelism: 1
+                  maxActiveSeconds: 600
+                  maxWallSeconds: 3600
+                usage:
+                  tokenUsageState: NOT_INCURRED
+                  costState: NOT_INCURRED
+                  reservedCost: '0'
+                  currency: USD
+                  modelCalls: 0
+                  steps: 0
+                  toolCalls: 0
+                  experiments: 0
+                providerOutcome: NOT_DISPATCHED
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/runs/{id}/events:
+    get:
+      tags:
+      - Agent research
+      operationId: listAgentRunEvents
+      summary: List redacted events for a research run
+      description: List redacted events for a research run.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRunEventPageV1'
+              example:
+                items:
+                - eventId: event-001
+                  runId: run-001
+                  runVersion: 1
+                  occurredAt: '2026-11-08T11:00:00Z'
+                  traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+                  kind: STATE_CHANGED
+                  state: QUEUED
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/runs/{id}/cancel:
+    post:
+      tags:
+      - Agent research
+      operationId: cancelAgentRun
+      summary: Request a version-bound research cancellation
+      description: Request a version-bound research cancellation. Requires a current same-origin operator
+        session and JSON CSRF boundary. Identical authorized retries return the stored semantic result,
+        while changed payloads under the same key conflict.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRunCancelRequestV1'
+            example:
+              expectedVersion: 1
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRunCancellationV1'
+              example:
+                runId: run-001
+                runVersion: 2
+                state: CANCELLED
+                recordedAt: '2026-11-08T11:00:00Z'
+                receiptId: cancel-001
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/schedule:
+    get:
+      tags:
+      - Agent research
+      operationId: getAgentSchedule
+      summary: Read the current research schedule
+      description: Read the current research schedule.
+      parameters: []
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentScheduleV1'
+              example:
+                scheduleId: schedule-001
+                version: 1
+                state: DISABLED
+                timeZone: Europe/Berlin
+                localTime: 09:00
+                scope:
+                  instrumentIds:
+                  - instrument-001
+                  sourceKinds:
+                  - HISTORICAL_REVISION
+                limits:
+                  maxInputTokens: 4096
+                  maxOutputTokens: 1024
+                  maxCost: '0.10'
+                  currency: USD
+                  maxModelCalls: 1
+                  maxIdeas: 3
+                  maxSourceItems: 100
+                  maxPendingItems: 50
+                triggerPolicyVersion: 1
+                tzdataVersion: 2026a
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+    put:
+      tags:
+      - Agent research
+      operationId: updateAgentSchedule
+      summary: Update the version-bound schedule configuration
+      description: Updates the schedule configuration without changing its activation state. Requires a
+        current same-origin operator session and JSON CSRF boundary. Identical authorized retries return
+        the stored semantic result, while changed payloads under the same key conflict.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentScheduleUpdateV1'
+            example:
+              expectedVersion: 1
+              timeZone: Europe/Berlin
+              localTime: 09:00
+              scope:
+                instrumentIds:
+                - instrument-001
+                sourceKinds:
+                - HISTORICAL_REVISION
+              limits:
+                maxInputTokens: 4096
+                maxOutputTokens: 1024
+                maxCost: '0.10'
+                currency: USD
+                maxModelCalls: 1
+                maxIdeas: 3
+                maxSourceItems: 100
+                maxPendingItems: 50
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentScheduleV1'
+              example:
+                scheduleId: schedule-001
+                version: 2
+                state: DISABLED
+                timeZone: Europe/Berlin
+                localTime: 09:00
+                scope:
+                  instrumentIds:
+                  - instrument-001
+                  sourceKinds:
+                  - HISTORICAL_REVISION
+                limits:
+                  maxInputTokens: 4096
+                  maxOutputTokens: 1024
+                  maxCost: '0.10'
+                  currency: USD
+                  maxModelCalls: 1
+                  maxIdeas: 3
+                  maxSourceItems: 100
+                  maxPendingItems: 50
+                triggerPolicyVersion: 1
+                tzdataVersion: 2026a
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/schedule/commands:
+    post:
+      tags:
+      - Agent research
+      operationId: commandAgentSchedule
+      summary: Pause, resume or explicitly authorize reevaluation
+      description: Records a version-bound operator command. Scheduled research never authorizes experiments.
+        Requires a current same-origin operator session and JSON CSRF boundary. Identical authorized retries
+        return the stored semantic result, while changed payloads under the same key conflict.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentScheduleCommandV1'
+            example:
+              action: PAUSE
+              expectedVersion: 1
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentScheduleCommandResultV1'
+              example:
+                commandId: command-001
+                scheduleId: schedule-001
+                scheduleVersion: 2
+                state: PAUSED
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/providers:
+    get:
+      tags:
+      - Agent research
+      operationId: listAgentProviders
+      summary: List redacted research provider capability profiles
+      description: List redacted research provider capability profiles.
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentProviderPageV1'
+              example:
+                items:
+                - binding:
+                    provider: OPENAI
+                    profileId: profile-001
+                    profileGeneration: 1
+                    modelId: approved-model
+                    modelGeneration: 1
+                  credential:
+                    credentialVersion: 1
+                    state: NOT_CONFIGURED
+                    providerRevocationState: NOT_CONFIRMED
+                    updatedAt: '2026-11-08T11:00:00Z'
+                  availability: DISABLED
+                  adapter: OPENAI_RESPONSES
+                  outputSchemaVersion: 1
+                  schemaSubsetVersion: 1
+                  structuredOutputSupported: true
+                  maxInputTokens: 4096
+                  maxOutputTokens: 1024
+                  timeoutSeconds: 15
+                  cancelSupport: BEST_EFFORT
+                  rateLimitSupport: BOUNDED_RETRY_AFTER
+                  dataHandlingPolicyId: policy-001
+                  dataHandlingPolicyVersion: 1
+                  probeState: NOT_TESTED
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/providers/{provider}/probe:
+    post:
+      tags:
+      - Agent research
+      operationId: probeAgentProvider
+      summary: Request an authorized synthetic provider probe
+      description: Requires separately authorized probe egress and quota, including for a profile not enabled
+        for research. No research data is sent. Requires a current same-origin operator session and JSON
+        CSRF boundary. Identical authorized retries return the stored semantic result, while changed payloads
+        under the same key conflict.
+      parameters:
+      - name: provider
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentProviderId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentProviderProbeRequestV1'
+            example:
+              profileId: profile-001
+              profileGeneration: 1
+              modelGeneration: 1
+              credentialGeneration: 1
+      responses:
+        '202':
+          description: Request accepted
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentProviderProbeResultV1'
+              example:
+                probeId: probe-001
+                provider: OPENAI
+                profileId: profile-001
+                profileGeneration: 1
+                modelGeneration: 1
+                credentialGeneration: 1
+                status: QUEUED
+                acceptedAt: '2026-11-08T11:00:00Z'
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/integrations/research-providers/{provider}:
+    put:
+      tags:
+      - Agent provider setup
+      operationId: saveAgentProviderCredential
+      summary: Store a new provider credential without verification
+      description: Requires separate setup and storage authorization. Saving grants no probe or research
+        egress. Requires a current same-origin operator session and JSON CSRF boundary. Identical authorized
+        retries return the stored semantic result, while changed payloads under the same key conflict.
+      parameters:
+      - name: provider
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentProviderId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCredentialSaveRequestV1'
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCredentialStatusV1'
+              example:
+                credentialVersion: 2
+                state: STORED
+                providerRevocationState: NOT_CONFIRMED
+                updatedAt: '2026-11-08T11:00:00Z'
+                credentialGeneration: 1
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/integrations/research-providers/{provider}/rotate:
+    post:
+      tags:
+      - Agent provider setup
+      operationId: rotateAgentProviderCredential
+      summary: Store a replacement provider credential generation
+      description: Requires separate setup and storage authorization. Rotation does not activate the replacement
+        generation or grant new rights. Requires a current same-origin operator session and JSON CSRF boundary.
+        Identical authorized retries return the stored semantic result, while changed payloads under the
+        same key conflict.
+      parameters:
+      - name: provider
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentProviderId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCredentialRotateRequestV1'
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCredentialStatusV1'
+              example:
+                credentialVersion: 2
+                state: STORED
+                providerRevocationState: NOT_CONFIRMED
+                updatedAt: '2026-11-08T11:00:00Z'
+                credentialGeneration: 1
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/integrations/research-providers/{provider}/activate:
+    post:
+      tags:
+      - Agent provider setup
+      operationId: activateAgentProviderCredential
+      summary: Activate a verified provider generation
+      description: Requires independent research and egress authorization and a successful synthetic probe
+        on the same bound profile, model and credential generation. Requires a current same-origin operator
+        session and JSON CSRF boundary. Identical authorized retries return the stored semantic result,
+        while changed payloads under the same key conflict.
+      parameters:
+      - name: provider
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentProviderId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCredentialActivateRequestV1'
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCredentialStatusV1'
+              example:
+                credentialVersion: 2
+                state: ACTIVE
+                providerRevocationState: NOT_CONFIRMED
+                updatedAt: '2026-11-08T11:00:00Z'
+                credentialGeneration: 1
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/integrations/research-providers/{provider}/revoke:
+    post:
+      tags:
+      - Agent provider setup
+      operationId: revokeAgentProviderCredential
+      summary: Revoke local use of a provider credential generation
+      description: Further local use is denied. Revocation does not assert that the provider revoked the
+        remote credential. Requires a current same-origin operator session and JSON CSRF boundary. Identical
+        authorized retries return the stored semantic result, while changed payloads under the same key
+        conflict.
+      parameters:
+      - name: provider
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentProviderId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCredentialRevokeRequestV1'
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCredentialStatusV1'
+              example:
+                credentialVersion: 2
+                state: REVOKED
+                providerRevocationState: NOT_CONFIRMED
+                updatedAt: '2026-11-08T11:00:00Z'
+                credentialGeneration: 1
+                locallyRevokedAt: '2026-11-08T11:00:00Z'
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/approvals:
+    get:
+      tags:
+      - Agent research
+      operationId: listAgentQuantApprovals
+      summary: List Quant approvals
+      description: Requires a current local session. Pages have a stable ordering and expose only operator-visible
+        approvals.
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: An operator-visible page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentQuantApprovalPageV1'
+              example:
+                items: []
+                nextCursor: null
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/approvals/{id}:
+    get:
+      tags:
+      - Agent research
+      operationId: getAgentQuantApproval
+      summary: Read a Quant approval
+      description: Shows the exact bound definition, hypothesis, strategy settings, research periods and
+        budget before a decision.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      responses:
+        '200':
+          description: The current visible approval and immutable start binding.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentQuantApprovalV1'
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/approvals/{id}/decision:
+    post:
+      tags:
+      - Agent research
+      operationId: decideAgentQuantApproval
+      summary: Decide a Quant approval
+      description: Requires a fresh authorized local operator session and same-origin JSON write. The server
+        verifies the exact immutable binding and expected approval version. APPROVE_AND_START checks budget,
+        consumes the approval and admits the existing Quant batch in one transaction. An identical idempotent
+        replay returns the same batch. REJECT records a decision without admission.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentQuantApprovalDecisionV1'
+            example:
+              action: APPROVE_AND_START
+              expectedApprovalVersion: 1
+              bindingHash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+      responses:
+        '200':
+          description: The rejection was recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentQuantApprovalRejectedV1'
+              example:
+                approvalId: approval-1
+                approvalVersion: 2
+                state: REJECTED
+                decidedAt: '2026-11-08T12:03:00Z'
+        '202':
+          description: The exact bound batch was admitted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentQuantApprovalStartedV1'
+              example:
+                approvalId: approval-1
+                approvalVersion: 2
+                state: STARTED
+                batchId: 88598178-180e-4208-8a90-243d48f88200
+                decidedAt: '2026-11-08T12:03:00Z'
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          description: The requested approval cannot be consumed. No budget or batch is committed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AgentQuantApprovalProblemV1'
+              example:
+                type: https://agentic-trading-lab.invalid/problems/agent-approval
+                title: Approval binding is stale
+                status: 409
+                code: APPROVAL_STALE
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          description: Agent budget or Quant admission capacity is exhausted. A new explicit operator request
+            is required.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AgentQuantApprovalProblemV1'
+              example:
+                type: https://agentic-trading-lab.invalid/problems/agent-approval
+                title: Quant admission capacity is exhausted
+                status: 429
+                code: QUANT_CAPACITY_EXHAUSTED
+                traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/reports:
+    get:
+      tags:
+      - Agent research
+      operationId: listAgentResearchReports
+      summary: List research reports
+      description: Requires a current local session. Pages have a stable ordering and contain only reports
+        the operator can see.
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: An operator-visible page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentReportPageV1'
+              example:
+                items: []
+                nextCursor: null
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/reports/{id}:
+    get:
+      tags:
+      - Agent research
+      operationId: getAgentResearchReport
+      summary: Read a research report
+      description: Loads the latest report version or the specified immutable version. Current rights warnings
+        are evaluated separately. Numerical claims reference persisted and authorized Quant evidence. Facts
+        remain available when interpretation cannot be validated.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - name: version
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/AgentRevision'
+      responses:
+        '200':
+          description: The report, bound evidence and current warnings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentReportV1'
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
 components:
   securitySchemes:
     LocalSession:
@@ -8456,7 +10558,102 @@ components:
         minimum: 1
         maximum: 200
         default: 50
+    AgentPreviewIdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: A preview key scoped to this operation and the active operator session. Replays only the
+        same live preview. Expired, consumed or lost previews return a safe conflict and are never reconstructed.
+      schema:
+        type: string
+        minLength: 16
+        maxLength: 128
+        pattern: ^[A-Za-z0-9._:-]+$
   responses:
+    AgentProcessing401:
+      description: SESSION_REQUIRED
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/AgentProcessingProblem'
+          example:
+            type: https://agentic-trading-lab.invalid/problems/agent-processing
+            title: Research processing refused
+            status: 401
+            code: SESSION_REQUIRED
+            traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+    AgentProcessing403:
+      description: REQUEST_FORBIDDEN
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/AgentProcessingProblem'
+          example:
+            type: https://agentic-trading-lab.invalid/problems/agent-processing
+            title: Research processing refused
+            status: 403
+            code: REQUEST_FORBIDDEN
+            traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+    AgentProcessing404:
+      description: RESOURCE_NOT_FOUND
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/AgentProcessingProblem'
+          example:
+            type: https://agentic-trading-lab.invalid/problems/agent-processing
+            title: Research processing refused
+            status: 404
+            code: RESOURCE_NOT_FOUND
+            traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+    AgentProcessing409:
+      description: VERSION_CONFLICT
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/AgentProcessingProblem'
+          example:
+            type: https://agentic-trading-lab.invalid/problems/agent-processing
+            title: Research processing refused
+            status: 409
+            code: VERSION_CONFLICT
+            traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+    AgentProcessing422:
+      description: INVALID_REQUEST
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/AgentProcessingProblem'
+          example:
+            type: https://agentic-trading-lab.invalid/problems/agent-processing
+            title: Research processing refused
+            status: 422
+            code: INVALID_REQUEST
+            traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+    AgentProcessing429:
+      description: BUDGET_EXHAUSTED
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/AgentProcessingProblem'
+          example:
+            type: https://agentic-trading-lab.invalid/problems/agent-processing
+            title: Research processing refused
+            status: 429
+            code: BUDGET_EXHAUSTED
+            traceId: 4bf92f3577b34da6a3ce929d0e0e4736
+    AgentProcessing503:
+      description: PROVIDER_UNAVAILABLE
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/AgentProcessingProblem'
+          example:
+            type: https://agentic-trading-lab.invalid/problems/agent-processing
+            title: Research processing refused
+            status: 503
+            code: PROVIDER_UNAVAILABLE
+            traceId: 4bf92f3577b34da6a3ce929d0e0e4736
     Refused:
       description: Business rule refused the requested state transition.
       content:
@@ -8559,6 +10756,3143 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    AgentHypothesisSlotText:
+      type: string
+      minLength: 1
+      maxLength: 240
+    AgentHypothesisField:
+      type: string
+      enum:
+      - MARKET
+      - TRIGGER
+      - SIGNAL
+      - OBSERVATION_WINDOW
+      - TARGET
+      - MEASUREMENT_HORIZON
+      - BENCHMARK
+      - EVALUATION_CRITERION
+    AgentHypothesisAssumption:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - statement
+      properties:
+        id:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        statement:
+          type: string
+          minLength: 1
+          maxLength: 240
+    AgentConfirmedHypothesisField:
+      type: object
+      additionalProperties: false
+      required:
+      - field
+      - value
+      properties:
+        field:
+          $ref: '#/components/schemas/AgentHypothesisField'
+        value:
+          type: string
+          minLength: 1
+          maxLength: 240
+    AgentHypothesisQuestion:
+      type: object
+      additionalProperties: false
+      required:
+      - field
+      - question
+      properties:
+        field:
+          $ref: '#/components/schemas/AgentHypothesisField'
+        question:
+          type: string
+          minLength: 1
+          maxLength: 320
+    AgentResearchHypothesis:
+      type: object
+      additionalProperties: false
+      required:
+      - statement
+      - market
+      - trigger
+      - signal
+      - observationWindow
+      - target
+      - measurementHorizon
+      - benchmark
+      - evaluationCriterion
+      properties:
+        statement:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        market:
+          anyOf:
+          - $ref: '#/components/schemas/AgentHypothesisSlotText'
+          - type: 'null'
+        trigger:
+          anyOf:
+          - $ref: '#/components/schemas/AgentHypothesisSlotText'
+          - type: 'null'
+        signal:
+          anyOf:
+          - $ref: '#/components/schemas/AgentHypothesisSlotText'
+          - type: 'null'
+        observationWindow:
+          anyOf:
+          - $ref: '#/components/schemas/AgentHypothesisSlotText'
+          - type: 'null'
+        target:
+          anyOf:
+          - $ref: '#/components/schemas/AgentHypothesisSlotText'
+          - type: 'null'
+        measurementHorizon:
+          anyOf:
+          - $ref: '#/components/schemas/AgentHypothesisSlotText'
+          - type: 'null'
+        benchmark:
+          anyOf:
+          - $ref: '#/components/schemas/AgentHypothesisSlotText'
+          - type: 'null'
+        evaluationCriterion:
+          anyOf:
+          - $ref: '#/components/schemas/AgentHypothesisSlotText'
+          - type: 'null'
+    AgentTestabilityClass:
+      type: string
+      enum:
+      - EXACTLY_TESTABLE
+      - TESTABLE_WITH_DECLARED_APPROXIMATION
+      - REQUIRES_NEW_STRATEGY
+      - INSUFFICIENT_DATA
+      - UNSUPPORTED
+    AgentTestabilityAssessment:
+      type: object
+      additionalProperties: false
+      required:
+      - classification
+      - catalogVersion
+      - mappingVersion
+      - reasons
+      - limitations
+      - options
+      properties:
+        classification:
+          $ref: '#/components/schemas/AgentTestabilityClass'
+        catalogVersion:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        mappingVersion:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        reasons:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 240
+          maxItems: 20
+          minItems: 1
+        limitations:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 240
+          maxItems: 20
+        options:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 240
+          maxItems: 20
+    AgentHypothesisDataType:
+      type: string
+      enum:
+      - PRICE_BARS
+      - CORPORATE_ACTIONS
+      - EARNINGS_RELEASES
+      - EARNINGS_EXPECTATIONS
+      - UNIVERSE_MEMBERSHIP
+      - OTHER_UNSUPPORTED
+    ResearchHypothesisInterpretationV1:
+      type: object
+      additionalProperties: false
+      required:
+      - schemaVersion
+      - hypothesis
+      - requiredDataTypes
+      - openQuestions
+      - assumptions
+      - unsupportedAspects
+      - confidence
+      - proposedTestability
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+          - V1
+        hypothesis:
+          $ref: '#/components/schemas/AgentResearchHypothesis'
+        requiredDataTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentHypothesisDataType'
+          maxItems: 20
+        openQuestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentHypothesisQuestion'
+          maxItems: 20
+        assumptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentHypothesisAssumption'
+          maxItems: 20
+        unsupportedAspects:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 240
+          maxItems: 20
+        confidence:
+          type: string
+          enum:
+          - LOW
+          - MEDIUM
+          - HIGH
+          - UNKNOWN
+        proposedTestability:
+          anyOf:
+          - $ref: '#/components/schemas/AgentTestabilityClass'
+          - type: 'null'
+    AgentHypothesisProposalV1:
+      type: object
+      additionalProperties: false
+      required:
+      - proposalId
+      - proposalHash
+      - originalId
+      - turnId
+      - ideaVersion
+      - dialogueVersion
+      - origin
+      - interpretation
+      - conflicts
+      properties:
+        proposalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        proposalHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        originalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        turnId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        ideaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        dialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        origin:
+          type: string
+          enum:
+          - LOCAL_CLARIFICATION
+          - MODEL_INTERPRETATION
+        interpretation:
+          $ref: '#/components/schemas/ResearchHypothesisInterpretationV1'
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentHypothesisQuestion'
+          maxItems: 20
+        approximation:
+          $ref: '#/components/schemas/AgentHypothesisApproximationV1'
+    AgentIdeaStatus:
+      type: string
+      enum:
+      - DISCOVERED
+      - PROPOSED
+      - REVIEWED
+      - EXPERIMENT_DRAFTED
+      - TESTED
+      - BLOCKED
+      - UNSUPPORTED
+      - REJECTED
+    AgentIdeaOrigin:
+      type: string
+      enum:
+      - USER
+      - AGENT
+    AgentIdeaEvidenceReference:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - evidenceId
+      - revision
+      - observedAt
+      - qualityFindings
+      properties:
+        kind:
+          type: string
+          enum:
+          - MARKET_REVISION
+          - RESEARCH_FINDING
+          - QUANT_RESULT
+          - DATA_QUALITY
+        evidenceId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        revision:
+          $ref: '#/components/schemas/AgentRevision'
+        observedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        qualityFindings:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 240
+          maxItems: 20
+    AgentIdeaVersionV1:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - version
+      - previousVersion
+      - status
+      - origin
+      - initiatorId
+      - title
+      - description
+      - createdAt
+      - hypothesis
+      - openQuestions
+      - assumptions
+      - uncertainties
+      - instrumentIds
+      - evidence
+      - testability
+      - experimentDraftIds
+      - experimentIds
+      - relatedIdeaIds
+      properties:
+        id:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        version:
+          $ref: '#/components/schemas/AgentRevision'
+        previousVersion:
+          anyOf:
+          - $ref: '#/components/schemas/AgentRevision'
+          - type: 'null'
+        status:
+          $ref: '#/components/schemas/AgentIdeaStatus'
+        origin:
+          $ref: '#/components/schemas/AgentIdeaOrigin'
+        initiatorId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        description:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        originalText:
+          type: string
+          minLength: 1
+          maxLength: 2048
+        sourceId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        createdAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        hypothesis:
+          anyOf:
+          - $ref: '#/components/schemas/AgentResearchHypothesis'
+          - type: 'null'
+        interpretation:
+          $ref: '#/components/schemas/AgentHypothesisProposalV1'
+        openQuestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentHypothesisQuestion'
+          maxItems: 20
+        assumptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentHypothesisAssumption'
+          maxItems: 20
+        uncertainties:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 240
+          maxItems: 20
+        observationStart:
+          $ref: '#/components/schemas/UtcTimestamp'
+        observationEnd:
+          $ref: '#/components/schemas/UtcTimestamp'
+        instrumentIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentOpaqueId'
+          maxItems: 50
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentIdeaEvidenceReference'
+          maxItems: 50
+        testability:
+          anyOf:
+          - $ref: '#/components/schemas/AgentTestabilityAssessment'
+          - type: 'null'
+        experimentDraftIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentOpaqueId'
+          maxItems: 50
+        experimentIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentOpaqueId'
+          maxItems: 50
+        relatedIdeaIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentOpaqueId'
+          maxItems: 50
+        runId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        dialogueId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        decisionId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        discovery:
+          $ref: '#/components/schemas/AgentIdeaDiscoveryV1'
+      allOf:
+      - not:
+          not:
+            if:
+              properties:
+                origin:
+                  const: AGENT
+              additionalProperties: true
+            then:
+              required:
+              - discovery
+              - sourceId
+              additionalProperties: true
+              properties:
+                discovery:
+                  $ref: '#/components/schemas/AgentIdeaDiscoveryV1'
+                sourceId:
+                  $ref: '#/components/schemas/AgentOpaqueId'
+    AgentIdeaListV1:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentIdeaVersionV1'
+          maxItems: 200
+        nextCursor:
+          anyOf:
+          - $ref: '#/components/schemas/Cursor'
+          - type: 'null'
+    AgentCreateIdeaV1:
+      type: object
+      additionalProperties: false
+      required:
+      - title
+      - originalText
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        originalText:
+          type: string
+          minLength: 1
+          maxLength: 2048
+        hypothesis:
+          $ref: '#/components/schemas/AgentResearchHypothesis'
+    AgentReviewIdeaV1:
+      type: object
+      additionalProperties: false
+      required:
+      - action
+      - expectedVersion
+      properties:
+        action:
+          type: string
+          enum:
+          - REVIEW
+        expectedVersion:
+          $ref: '#/components/schemas/AgentRevision'
+    AgentReviseIdeaV1:
+      type: object
+      additionalProperties: false
+      required:
+      - action
+      - expectedVersion
+      - title
+      - description
+      properties:
+        action:
+          type: string
+          enum:
+          - REVISE
+        expectedVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        description:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        hypothesis:
+          $ref: '#/components/schemas/AgentResearchHypothesis'
+    AgentCreateDialogueV1:
+      type: object
+      additionalProperties: false
+      required:
+      - ideaId
+      - expectedIdeaVersion
+      properties:
+        ideaId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        expectedIdeaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        expertExperiment:
+          $ref: '#/components/schemas/AgentExpertExperimentBindingV1'
+    AgentCreateDialogueTurnV1:
+      oneOf:
+      - $ref: '#/components/schemas/AgentDialogueFreeTextTurnV1'
+      - $ref: '#/components/schemas/AgentDialogueLocalAnswerTurnV1'
+      discriminator:
+        propertyName: kind
+        mapping:
+          FREE_TEXT_RESEARCH: '#/components/schemas/AgentDialogueFreeTextTurnV1'
+          LOCAL_STRUCTURED_ANSWER: '#/components/schemas/AgentDialogueLocalAnswerTurnV1'
+    AgentDialogueTurnV1:
+      type: object
+      additionalProperties: false
+      required:
+      - turnId
+      - turnVersion
+      - dialogueId
+      - dialogueVersion
+      - ideaVersion
+      - createdAt
+      - originalId
+      - processing
+      - localQuestions
+      properties:
+        turnId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        turnVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        dialogueId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        dialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        ideaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        createdAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        runId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        originalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        processing:
+          $ref: '#/components/schemas/ProcessingStatusV1'
+        proposal:
+          $ref: '#/components/schemas/AgentHypothesisProposalV1'
+        localQuestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentLocalHypothesisQuestion'
+          maxItems: 20
+    AgentDialogueV1:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - version
+      - ideaId
+      - ideaVersion
+      - createdAt
+      - turns
+      - nextCursor
+      - confirmedHypothesis
+      - confirmedAssumptions
+      - confirmedFields
+      properties:
+        id:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        version:
+          $ref: '#/components/schemas/AgentRevision'
+        ideaId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        ideaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        createdAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        turns:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentDialogueTurnV1'
+          maxItems: 200
+        nextCursor:
+          anyOf:
+          - $ref: '#/components/schemas/Cursor'
+          - type: 'null'
+        confirmedHypothesis:
+          anyOf:
+          - $ref: '#/components/schemas/AgentResearchHypothesis'
+          - type: 'null'
+        confirmedFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentConfirmedHypothesisField'
+          maxItems: 8
+        confirmedAssumptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentHypothesisAssumption'
+          maxItems: 20
+        expertExperiment:
+          $ref: '#/components/schemas/AgentExpertExperimentBindingV1'
+    AgentConfirmHypothesisV1:
+      type: object
+      additionalProperties: false
+      required:
+      - action
+      - expectedIdeaVersion
+      - expectedDialogueVersion
+      - proposalId
+      - proposalHash
+      - confirmedFields
+      - confirmedAssumptionIds
+      properties:
+        action:
+          type: string
+          enum:
+          - CONFIRM_HYPOTHESIS
+        expectedIdeaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        expectedDialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        proposalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        proposalHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        confirmedFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentConfirmedHypothesisField'
+          maxItems: 8
+          minItems: 1
+        confirmedAssumptionIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentOpaqueId'
+          maxItems: 20
+    AgentRequestHypothesisChangesV1:
+      type: object
+      additionalProperties: false
+      required:
+      - action
+      - expectedIdeaVersion
+      - expectedDialogueVersion
+      - proposalId
+      - proposalHash
+      - requestedFields
+      - clarification
+      properties:
+        action:
+          type: string
+          enum:
+          - REQUEST_CHANGES
+        expectedIdeaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        expectedDialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        proposalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        proposalHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        requestedFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentHypothesisField'
+          maxItems: 8
+          minItems: 1
+          uniqueItems: true
+        clarification:
+          type: string
+          minLength: 1
+          maxLength: 320
+    AgentAcceptApproximationV1:
+      type: object
+      additionalProperties: false
+      required:
+      - action
+      - expectedIdeaVersion
+      - expectedDialogueVersion
+      - proposalId
+      - proposalHash
+      - approximationId
+      - approximationHash
+      properties:
+        action:
+          type: string
+          enum:
+          - ACCEPT_APPROXIMATION
+        expectedIdeaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        expectedDialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        proposalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        proposalHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        approximationId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        approximationHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+    AgentDialogueDecisionReceiptV1:
+      type: object
+      additionalProperties: false
+      required:
+      - decisionId
+      - action
+      - ideaId
+      - ideaVersion
+      - dialogueId
+      - dialogueVersion
+      - proposalId
+      - recordedAt
+      properties:
+        decisionId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        action:
+          type: string
+          enum:
+          - CONFIRM_HYPOTHESIS
+          - REQUEST_CHANGES
+          - ACCEPT_APPROXIMATION
+        ideaId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        ideaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        dialogueId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        dialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        proposalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        recordedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+    AgentIdeaRevisionV1:
+      oneOf:
+      - $ref: '#/components/schemas/AgentReviseIdeaV1'
+      - $ref: '#/components/schemas/AgentReviewIdeaV1'
+      - $ref: '#/components/schemas/AgentRejectIdeaV1'
+      discriminator:
+        propertyName: action
+        mapping:
+          REVISE: '#/components/schemas/AgentReviseIdeaV1'
+          REVIEW: '#/components/schemas/AgentReviewIdeaV1'
+          REJECT: '#/components/schemas/AgentRejectIdeaV1'
+    AgentDialogueDecisionV1:
+      oneOf:
+      - $ref: '#/components/schemas/AgentConfirmHypothesisV1'
+      - $ref: '#/components/schemas/AgentRequestHypothesisChangesV1'
+      - $ref: '#/components/schemas/AgentAcceptApproximationV1'
+      discriminator:
+        propertyName: action
+        mapping:
+          CONFIRM_HYPOTHESIS: '#/components/schemas/AgentConfirmHypothesisV1'
+          REQUEST_CHANGES: '#/components/schemas/AgentRequestHypothesisChangesV1'
+          ACCEPT_APPROXIMATION: '#/components/schemas/AgentAcceptApproximationV1'
+    AgentRejectIdeaV1:
+      type: object
+      additionalProperties: false
+      required:
+      - action
+      - expectedVersion
+      properties:
+        action:
+          type: string
+          enum:
+          - REJECT
+        expectedVersion:
+          $ref: '#/components/schemas/AgentRevision'
+    AgentDialogueFreeTextTurnV1:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - expectedDialogueVersion
+      - expectedIdeaVersion
+      - text
+      properties:
+        kind:
+          type: string
+          enum:
+          - FREE_TEXT_RESEARCH
+        expectedDialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        expectedIdeaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        text:
+          type: string
+          minLength: 1
+          maxLength: 2048
+    AgentDialogueLocalAnswerTurnV1:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - expectedDialogueVersion
+      - expectedIdeaVersion
+      - questionId
+      - field
+      - value
+      properties:
+        kind:
+          type: string
+          enum:
+          - LOCAL_STRUCTURED_ANSWER
+        expectedDialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        expectedIdeaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        questionId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        field:
+          $ref: '#/components/schemas/AgentHypothesisField'
+        value:
+          type: string
+          minLength: 1
+          maxLength: 240
+    AgentExpertExperimentBindingV1:
+      type: object
+      additionalProperties: false
+      required:
+      - definitionId
+      - definitionVersion
+      - definitionHash
+      properties:
+        definitionId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        definitionVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        definitionHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+      description: Immutable binding to an existing Quant Lab experiment definition. The server resolves the
+        original strategy version, parameters, research mode, selection policy and time protocol from that
+        exact definition.
+    AgentIdeaDiscoveryV1:
+      type: object
+      additionalProperties: false
+      required:
+      - priorityRuleVersion
+      - priorityReason
+      - latestEvidenceAt
+      - freshnessEvaluatedAt
+      - freshness
+      - estimatedEffort
+      - effortReason
+      - limitations
+      properties:
+        priorityRuleVersion:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        priorityReason:
+          type: string
+          minLength: 1
+          maxLength: 320
+        latestEvidenceAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        freshnessEvaluatedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        freshness:
+          type: string
+          enum:
+          - CURRENT
+          - STALE
+          - UNKNOWN
+        estimatedEffort:
+          type: string
+          enum:
+          - LOW
+          - MEDIUM
+          - HIGH
+          - UNKNOWN
+        effortReason:
+          type: string
+          minLength: 1
+          maxLength: 320
+        limitations:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 240
+          maxItems: 20
+      description: Deterministic evidence freshness and prioritization. Priority does not estimate profitability.
+    AgentLocalHypothesisQuestion:
+      type: object
+      additionalProperties: false
+      required:
+      - field
+      - question
+      - id
+      properties:
+        field:
+          $ref: '#/components/schemas/AgentHypothesisField'
+        question:
+          type: string
+          minLength: 1
+          maxLength: 320
+        id:
+          $ref: '#/components/schemas/AgentOpaqueId'
+    AgentHypothesisApproximationV1:
+      type: object
+      additionalProperties: false
+      required:
+      - approximationId
+      - approximationHash
+      - ideaVersion
+      - proposalId
+      - dialogueVersion
+      - original
+      - substitute
+      - difference
+      - limitations
+      properties:
+        approximationId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        approximationHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        ideaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        proposalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        dialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        original:
+          $ref: '#/components/schemas/AgentResearchHypothesis'
+        substitute:
+          $ref: '#/components/schemas/AgentResearchHypothesis'
+        difference:
+          type: string
+          minLength: 1
+          maxLength: 320
+        limitations:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 240
+      description: Deterministically supported alternative evaluated against the exact idea and proposal revisions.
+        Availability does not authorize experiment admission.
+    AgentRunLimitsV1:
+      type: object
+      additionalProperties: false
+      required:
+      - maxInputTokens
+      - maxOutputTokens
+      - maxCost
+      - currency
+      - maxModelCalls
+      - maxSteps
+      - maxToolCalls
+      - maxExperiments
+      - maxParallelism
+      - maxActiveSeconds
+      - maxWallSeconds
+      properties:
+        maxInputTokens:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+        maxOutputTokens:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+        maxCost:
+          $ref: '#/components/schemas/Decimal'
+          description: Nonnegative decimal string. Currency is carried separately.
+        currency:
+          type: string
+          enum:
+          - USD
+        maxModelCalls:
+          type: integer
+          minimum: 0
+          maximum: 1000
+        maxSteps:
+          type: integer
+          minimum: 1
+          maximum: 1000
+        maxToolCalls:
+          type: integer
+          minimum: 0
+          maximum: 1000
+        maxExperiments:
+          type: integer
+          minimum: 0
+          maximum: 1000
+        maxParallelism:
+          type: integer
+          minimum: 1
+          maximum: 100
+        maxActiveSeconds:
+          type: integer
+          minimum: 1
+          maximum: 86400
+        maxWallSeconds:
+          type: integer
+          minimum: 1
+          maximum: 604800
+    AgentRegisteredToolV1:
+      type: string
+      enum:
+      - RESEARCH_READ
+      - QUANT_READ
+      - IDEA_MANAGE
+      - QUANT_PREPARE
+    AgentToolBindingV1:
+      type: object
+      additionalProperties: false
+      required:
+      - toolId
+      - toolVersion
+      properties:
+        toolId:
+          $ref: '#/components/schemas/AgentRegisteredToolV1'
+        toolVersion:
+          $ref: '#/components/schemas/AgentRevision'
+    AgentModelBindingV1:
+      type: object
+      additionalProperties: false
+      required:
+      - provider
+      - profileId
+      - profileGeneration
+      - modelId
+      - modelGeneration
+      properties:
+        provider:
+          $ref: '#/components/schemas/AgentProviderId'
+        profileId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        profileGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        modelId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        modelGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+    AgentRegistryEntryV1:
+      type: object
+      additionalProperties: false
+      required:
+      - agentId
+      - version
+      - policyVersion
+      - role
+      - description
+      - promptVersion
+      - tools
+      - outputSchemaVersion
+      - limits
+      - autonomyLevel
+      - abstentionRules
+      - implementationFingerprint
+      - availability
+      properties:
+        agentId:
+          type: string
+          enum:
+          - quant-research-agent-v1
+        version:
+          $ref: '#/components/schemas/AgentRevision'
+        policyVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        role:
+          type: string
+          enum:
+          - QUANT_RESEARCH
+        description:
+          type: string
+          minLength: 1
+          maxLength: 400
+        promptVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        modelBinding:
+          $ref: '#/components/schemas/AgentModelBindingV1'
+        tools:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentToolBindingV1'
+          minItems: 1
+          maxItems: 16
+        outputSchemaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        limits:
+          $ref: '#/components/schemas/AgentRunLimitsV1'
+        autonomyLevel:
+          type: integer
+          enum:
+          - 0
+        abstentionRules:
+          type: array
+          items:
+            type: string
+            enum:
+            - MISSING_EVIDENCE
+            - UNSUPPORTED_RESEARCH
+            - INSUFFICIENT_BUDGET
+            - POLICY_DENIED
+          minItems: 1
+          maxItems: 8
+        implementationFingerprint:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        availability:
+          type: string
+          enum:
+          - AVAILABLE
+          - REVOKED
+          - BLOCKED
+    AgentRunStateV1:
+      type: string
+      enum:
+      - CREATED
+      - QUEUED
+      - RUNNING
+      - WAITING_FOR_INPUT
+      - WAITING_FOR_PROCESSING_DECISION
+      - WAITING_FOR_APPROVAL
+      - WAITING_FOR_BATCH
+      - COMPLETED
+      - BLOCKED
+      - FAILED
+      - CANCELLED
+      - TIMED_OUT
+      - BUDGET_EXHAUSTED
+    AgentRunReasonV1:
+      type: string
+      enum:
+      - AGENT_POLICY_DENIED
+      - LEASE_LOST
+      - BUDGET_EXHAUSTED
+      - IDEMPOTENCY_CONFLICT
+      - TOOL_OUTCOME_UNKNOWN
+      - PROVIDER_RESULT_UNAVAILABLE
+      - PROVIDER_OUTCOME_UNKNOWN
+      - PROVIDER_UNAVAILABLE
+      - CAPABILITY_MISMATCH
+      - RATE_LIMITED
+      - APPROVAL_REQUIRED
+      - EVIDENCE_NOT_ELIGIBLE
+      - BACKPRESSURE
+      - DEADLINE_EXCEEDED
+      - CANCELLED_BY_OPERATOR
+      - PROCESSING_GRANT_REQUIRED
+      - PROCESSING_GRANT_INVALID
+      - PROCESSING_GRANT_REVOKED
+    AgentRunUsageV1:
+      type: object
+      description: Unknown usage or costs are explicit and omitted amounts are never interpreted as zero.
+      additionalProperties: false
+      required:
+      - tokenUsageState
+      - costState
+      - reservedCost
+      - currency
+      - modelCalls
+      - steps
+      - toolCalls
+      - experiments
+      properties:
+        tokenUsageState:
+          type: string
+          enum:
+          - KNOWN
+          - UNKNOWN
+          - NOT_INCURRED
+        costState:
+          type: string
+          enum:
+          - KNOWN
+          - UNKNOWN
+          - NOT_INCURRED
+        reportedInputTokens:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        reportedOutputTokens:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        estimatedCost:
+          $ref: '#/components/schemas/Decimal'
+          description: Nonnegative decimal string. Currency is carried separately.
+        confirmedCost:
+          $ref: '#/components/schemas/Decimal'
+          description: Nonnegative decimal string. Currency is carried separately.
+        reservedCost:
+          $ref: '#/components/schemas/Decimal'
+          description: Nonnegative decimal string. Currency is carried separately.
+        currency:
+          type: string
+          enum:
+          - USD
+        pricingVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        modelCalls:
+          type: integer
+          minimum: 0
+          maximum: 1000
+        steps:
+          type: integer
+          minimum: 0
+          maximum: 1000
+        toolCalls:
+          type: integer
+          minimum: 0
+          maximum: 1000
+        experiments:
+          type: integer
+          minimum: 0
+          maximum: 1000
+    AgentRunV1:
+      type: object
+      description: Redacted projection. Internal claims, prompts, tool arguments and provider payloads are
+        never returned.
+      additionalProperties: false
+      required:
+      - runId
+      - version
+      - kind
+      - state
+      - agentId
+      - agentVersion
+      - policyVersion
+      - requestHash
+      - traceId
+      - createdAt
+      - deadlineAt
+      - updatedAt
+      - limits
+      - usage
+      - providerOutcome
+      properties:
+        runId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        version:
+          $ref: '#/components/schemas/AgentRevision'
+        kind:
+          type: string
+          enum:
+          - DIALOGUE
+          - SCHEDULED
+          - REEVALUATION
+        state:
+          $ref: '#/components/schemas/AgentRunStateV1'
+        reasonCode:
+          $ref: '#/components/schemas/AgentRunReasonV1'
+        result:
+          type: string
+          enum:
+          - RESEARCH_IDEAS_PUBLISHED
+          - NO_NEW_RESEARCH_IDEAS
+          - ABSTAINED
+          - REPORT_AVAILABLE
+        agentId:
+          type: string
+          enum:
+          - quant-research-agent-v1
+        agentVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        policyVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        modelBinding:
+          $ref: '#/components/schemas/AgentModelBindingV1'
+        requestHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+        createdAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        deadlineAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        updatedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        checkpointVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        dialogueId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        ideaId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        scheduleId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        priorRunId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        approvalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        batchId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        reportId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        limits:
+          $ref: '#/components/schemas/AgentRunLimitsV1'
+        usage:
+          $ref: '#/components/schemas/AgentRunUsageV1'
+        providerOutcome:
+          type: string
+          enum:
+          - NOT_DISPATCHED
+          - IN_FLIGHT
+          - REJECTED_BEFORE_EXECUTION
+          - ACCEPTED
+          - OUTCOME_UNKNOWN
+          - RESULT_UNAVAILABLE
+        cancellationRequestedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+    AgentRunEventV1:
+      type: object
+      additionalProperties: false
+      required:
+      - eventId
+      - runId
+      - runVersion
+      - occurredAt
+      - traceId
+      - kind
+      properties:
+        eventId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        runId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        runVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        occurredAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+        kind:
+          type: string
+          enum:
+          - STATE_CHANGED
+          - TOOL_ACCEPTED
+          - TOOL_REJECTED
+          - TOOL_COMPLETED
+          - PROVIDER_STATUS_CHANGED
+          - BUDGET_RESERVED
+          - BUDGET_RECONCILED
+          - APPROVAL_CHANGED
+          - CANCELLATION_RECORDED
+        state:
+          $ref: '#/components/schemas/AgentRunStateV1'
+        tool:
+          $ref: '#/components/schemas/AgentToolBindingV1'
+        reasonCode:
+          $ref: '#/components/schemas/AgentRunReasonV1'
+        resultRef:
+          $ref: '#/components/schemas/AgentOpaqueId'
+    AgentRunCancelRequestV1:
+      type: object
+      additionalProperties: false
+      required:
+      - expectedVersion
+      properties:
+        expectedVersion:
+          $ref: '#/components/schemas/AgentRevision'
+    AgentRunCancellationV1:
+      type: object
+      description: A cancellation fences further agent work. An admitted Quant batch has its own lifecycle.
+      additionalProperties: false
+      required:
+      - runId
+      - runVersion
+      - state
+      - recordedAt
+      - receiptId
+      properties:
+        runId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        runVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        state:
+          $ref: '#/components/schemas/AgentRunStateV1'
+        recordedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        receiptId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+    AgentScheduleStateV1:
+      type: string
+      enum:
+      - DISABLED
+      - ACTIVE
+      - PAUSED
+    AgentScheduleScopeV1:
+      type: object
+      additionalProperties: false
+      required:
+      - instrumentIds
+      - sourceKinds
+      properties:
+        instrumentIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentOpaqueId'
+          minItems: 1
+          maxItems: 200
+          uniqueItems: true
+        sourceKinds:
+          type: array
+          items:
+            type: string
+            enum:
+            - HISTORICAL_REVISION
+            - PERSISTED_RESEARCH_RESULT
+          minItems: 1
+          maxItems: 2
+          uniqueItems: true
+    AgentScheduleLimitsV1:
+      type: object
+      additionalProperties: false
+      required:
+      - maxInputTokens
+      - maxOutputTokens
+      - maxCost
+      - currency
+      - maxModelCalls
+      - maxIdeas
+      - maxSourceItems
+      - maxPendingItems
+      properties:
+        maxInputTokens:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+        maxOutputTokens:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+        maxCost:
+          $ref: '#/components/schemas/Decimal'
+          description: Nonnegative decimal string. Currency is carried separately.
+        currency:
+          type: string
+          enum:
+          - USD
+        maxModelCalls:
+          type: integer
+          minimum: 0
+          maximum: 100
+        maxIdeas:
+          type: integer
+          minimum: 0
+          maximum: 100
+        maxSourceItems:
+          type: integer
+          minimum: 1
+          maximum: 10000
+        maxPendingItems:
+          type: integer
+          minimum: 1
+          maximum: 10000
+    AgentScheduleV1:
+      type: object
+      description: At most one scheduled run per local date. Skipped times resolve to the next valid instant,
+        duplicated times to the first instant. Only the newest missed execution can be recovered.
+      additionalProperties: false
+      required:
+      - scheduleId
+      - version
+      - state
+      - timeZone
+      - localTime
+      - scope
+      - limits
+      - triggerPolicyVersion
+      - tzdataVersion
+      properties:
+        scheduleId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        version:
+          $ref: '#/components/schemas/AgentRevision'
+        state:
+          $ref: '#/components/schemas/AgentScheduleStateV1'
+        timeZone:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: IANA time zone. The service validates the identifier against its pinned time-zone database.
+        localTime:
+          type: string
+          pattern: ^(?:[01][0-9]|2[0-3]):[0-5][0-9]$
+        scope:
+          $ref: '#/components/schemas/AgentScheduleScopeV1'
+        limits:
+          $ref: '#/components/schemas/AgentScheduleLimitsV1'
+        nextExecutionAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        lastExecutionAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        checkpointId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        triggerPolicyVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        tzdataVersion:
+          type: string
+          minLength: 1
+          maxLength: 40
+    AgentScheduleUpdateV1:
+      type: object
+      additionalProperties: false
+      required:
+      - expectedVersion
+      - timeZone
+      - localTime
+      - scope
+      - limits
+      properties:
+        expectedVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        timeZone:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: IANA time zone. The service validates the identifier against its pinned time-zone database.
+        localTime:
+          type: string
+          pattern: ^(?:[01][0-9]|2[0-3]):[0-5][0-9]$
+        scope:
+          $ref: '#/components/schemas/AgentScheduleScopeV1'
+        limits:
+          $ref: '#/components/schemas/AgentScheduleLimitsV1'
+    AgentSchedulePauseV1:
+      type: object
+      additionalProperties: false
+      required:
+      - action
+      - expectedVersion
+      properties:
+        action:
+          type: string
+          enum:
+          - PAUSE
+        expectedVersion:
+          $ref: '#/components/schemas/AgentRevision'
+    AgentScheduleResumeV1:
+      type: object
+      additionalProperties: false
+      required:
+      - action
+      - expectedVersion
+      properties:
+        action:
+          type: string
+          enum:
+          - RESUME
+        expectedVersion:
+          $ref: '#/components/schemas/AgentRevision'
+    AgentScheduleReevaluateV1:
+      type: object
+      description: Explicitly authorize an audit-bound reevaluation of previously handled evidence with a
+        changed model or prompt binding. Existing publication controls apply.
+      additionalProperties: false
+      required:
+      - action
+      - expectedVersion
+      - evidenceSetId
+      - agentVersion
+      - reason
+      properties:
+        action:
+          type: string
+          enum:
+          - REEVALUATE
+        expectedVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        evidenceSetId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        agentVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 300
+    AgentScheduleCommandV1:
+      oneOf:
+      - $ref: '#/components/schemas/AgentSchedulePauseV1'
+      - $ref: '#/components/schemas/AgentScheduleResumeV1'
+      - $ref: '#/components/schemas/AgentScheduleReevaluateV1'
+      discriminator:
+        propertyName: action
+        mapping:
+          PAUSE: '#/components/schemas/AgentSchedulePauseV1'
+          RESUME: '#/components/schemas/AgentScheduleResumeV1'
+          REEVALUATE: '#/components/schemas/AgentScheduleReevaluateV1'
+    AgentScheduleCommandResultV1:
+      type: object
+      additionalProperties: false
+      required:
+      - commandId
+      - scheduleId
+      - scheduleVersion
+      - state
+      properties:
+        commandId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        scheduleId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        scheduleVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        state:
+          $ref: '#/components/schemas/AgentScheduleStateV1'
+        runId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+    AgentProviderProbeStateV1:
+      type: string
+      enum:
+      - NOT_TESTED
+      - QUEUED
+      - IN_FLIGHT
+      - VERIFIED
+      - REJECTED_BEFORE_EXECUTION
+      - RATE_LIMITED
+      - OUTCOME_UNKNOWN
+      - FAILED
+    AgentCredentialStatusV1:
+      type: object
+      description: Only redacted generation and state are returned. Local revocation does not imply provider
+        revocation.
+      additionalProperties: false
+      required:
+      - credentialVersion
+      - state
+      - providerRevocationState
+      - updatedAt
+      properties:
+        credentialVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        state:
+          type: string
+          enum:
+          - NOT_CONFIGURED
+          - STORED
+          - VERIFIED
+          - ACTIVE
+          - REVOKED
+        credentialGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        locallyRevokedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        providerRevocationState:
+          type: string
+          enum:
+          - NOT_CONFIRMED
+          - CONFIRMED
+        updatedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+    AgentProviderCapabilityV1:
+      type: object
+      description: Versioned redacted capability view. No endpoint URLs, credential values, raw provider response
+        or hosted tools.
+      additionalProperties: false
+      required:
+      - binding
+      - credential
+      - availability
+      - adapter
+      - outputSchemaVersion
+      - schemaSubsetVersion
+      - structuredOutputSupported
+      - maxInputTokens
+      - maxOutputTokens
+      - timeoutSeconds
+      - cancelSupport
+      - rateLimitSupport
+      - dataHandlingPolicyId
+      - dataHandlingPolicyVersion
+      - probeState
+      properties:
+        binding:
+          $ref: '#/components/schemas/AgentModelBindingV1'
+        credential:
+          $ref: '#/components/schemas/AgentCredentialStatusV1'
+        availability:
+          type: string
+          enum:
+          - DISABLED
+          - AVAILABLE
+          - REVOKED
+          - BLOCKED
+        adapter:
+          type: string
+          enum:
+          - OPENAI_RESPONSES
+          - ANTHROPIC_MESSAGES
+        outputSchemaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        schemaSubsetVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        structuredOutputSupported:
+          type: boolean
+        maxInputTokens:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+        maxOutputTokens:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+        timeoutSeconds:
+          type: integer
+          minimum: 1
+          maximum: 86400
+        cancelSupport:
+          type: string
+          enum:
+          - NONE
+          - BEST_EFFORT
+        rateLimitSupport:
+          type: string
+          enum:
+          - NONE
+          - BOUNDED_RETRY_AFTER
+        dataHandlingPolicyId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        dataHandlingPolicyVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        pricingVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        lastProbeId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        probeState:
+          $ref: '#/components/schemas/AgentProviderProbeStateV1'
+    AgentProviderProbeRequestV1:
+      type: object
+      description: Explicit synthetic connectivity probe. No Research context is accepted. Separate probe,
+        provider and global budgets apply.
+      additionalProperties: false
+      required:
+      - profileId
+      - profileGeneration
+      - modelGeneration
+      - credentialGeneration
+      properties:
+        profileId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        profileGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        modelGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        credentialGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+    AgentProviderProbeResultV1:
+      type: object
+      additionalProperties: false
+      required:
+      - probeId
+      - provider
+      - profileId
+      - profileGeneration
+      - modelGeneration
+      - credentialGeneration
+      - status
+      - acceptedAt
+      properties:
+        probeId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        provider:
+          $ref: '#/components/schemas/AgentProviderId'
+        profileId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        profileGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        modelGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        credentialGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        status:
+          $ref: '#/components/schemas/AgentProviderProbeStateV1'
+        acceptedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        reasonCode:
+          $ref: '#/components/schemas/AgentRunReasonV1'
+    AgentCredentialSaveRequestV1:
+      type: object
+      additionalProperties: false
+      required:
+      - expectedCredentialVersion
+      - credential
+      properties:
+        expectedCredentialVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        credential:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          writeOnly: true
+          format: password
+          description: Transient provider credential for this request only. Never returned, logged, or saved
+            in browser state.
+    AgentCredentialRotateRequestV1:
+      type: object
+      additionalProperties: false
+      required:
+      - expectedCredentialVersion
+      - expectedCredentialGeneration
+      - credential
+      properties:
+        expectedCredentialVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        expectedCredentialGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        credential:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          writeOnly: true
+          format: password
+          description: Transient provider credential for this request only. Never returned, logged, or saved
+            in browser state.
+    AgentCredentialActivateRequestV1:
+      type: object
+      additionalProperties: false
+      required:
+      - expectedCredentialVersion
+      - profileId
+      - profileGeneration
+      - modelGeneration
+      - credentialGeneration
+      - verifiedProbeId
+      properties:
+        expectedCredentialVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        profileId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        profileGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        modelGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        credentialGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        verifiedProbeId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+    AgentCredentialRevokeRequestV1:
+      type: object
+      additionalProperties: false
+      required:
+      - expectedCredentialVersion
+      - credentialGeneration
+      properties:
+        expectedCredentialVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        credentialGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+    AgentRegistryPageV1:
+      type: object
+      description: The opaque cursor continues the same stable ordering. An absent cursor means the last page.
+      additionalProperties: false
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentRegistryEntryV1'
+          minItems: 0
+          maxItems: 200
+        nextCursor:
+          $ref: '#/components/schemas/Cursor'
+    AgentRunPageV1:
+      type: object
+      description: The opaque cursor continues the same stable ordering. An absent cursor means the last page.
+      additionalProperties: false
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentRunV1'
+          minItems: 0
+          maxItems: 200
+        nextCursor:
+          $ref: '#/components/schemas/Cursor'
+    AgentRunEventPageV1:
+      type: object
+      description: The opaque cursor continues the same stable ordering. An absent cursor means the last page.
+      additionalProperties: false
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentRunEventV1'
+          minItems: 0
+          maxItems: 200
+        nextCursor:
+          $ref: '#/components/schemas/Cursor'
+    AgentProviderPageV1:
+      type: object
+      description: The opaque cursor continues the same stable ordering. An absent cursor means the last page.
+      additionalProperties: false
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentProviderCapabilityV1'
+          minItems: 0
+          maxItems: 200
+        nextCursor:
+          $ref: '#/components/schemas/Cursor'
+    AgentQuantPolicyBindingV1:
+      type: object
+      additionalProperties: false
+      properties:
+        policyId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        revision:
+          $ref: '#/components/schemas/AgentRevision'
+        hash:
+          $ref: '#/components/schemas/BacktestHash'
+      required:
+      - policyId
+      - revision
+      - hash
+    AgentQuantApproximationBindingV1:
+      type: object
+      additionalProperties: false
+      properties:
+        decisionId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        revision:
+          $ref: '#/components/schemas/AgentRevision'
+        hash:
+          $ref: '#/components/schemas/BacktestHash'
+        description:
+          type: string
+          minLength: 1
+          maxLength: 1000
+      required:
+      - decisionId
+      - revision
+      - hash
+      - description
+    AgentQuantApprovalBindingV1:
+      type: object
+      additionalProperties: false
+      properties:
+        runId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        runVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        operatorId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        ideaId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        ideaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        hypothesisVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        hypothesisHash:
+          $ref: '#/components/schemas/BacktestHash'
+        approximation:
+          oneOf:
+          - $ref: '#/components/schemas/AgentQuantApproximationBindingV1'
+          - type: 'null'
+        experimentId:
+          $ref: '#/components/schemas/BacktestId'
+        definitionVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        definitionHash:
+          $ref: '#/components/schemas/BacktestHash'
+        validationId:
+          $ref: '#/components/schemas/BacktestId'
+        validationHash:
+          $ref: '#/components/schemas/BacktestHash'
+        researchMode:
+          $ref: '#/components/schemas/BacktestResearchMode'
+        resourceBudget:
+          $ref: '#/components/schemas/QuantLabBudgetEstimate'
+        activePolicies:
+          type: array
+          maxItems: 16
+          items:
+            $ref: '#/components/schemas/AgentQuantPolicyBindingV1'
+          minItems: 1
+        expiresAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+      required:
+      - runId
+      - runVersion
+      - operatorId
+      - ideaId
+      - ideaVersion
+      - hypothesisVersion
+      - hypothesisHash
+      - approximation
+      - experimentId
+      - definitionVersion
+      - definitionHash
+      - validationId
+      - validationHash
+      - researchMode
+      - resourceBudget
+      - activePolicies
+      - expiresAt
+    AgentQuantApprovalV1:
+      oneOf:
+      - $ref: '#/components/schemas/AgentQuantStartedApprovalV1'
+      - $ref: '#/components/schemas/AgentQuantUnstartedApprovalV1'
+      description: The evidence references, definition, budget, hypothesis and policy versions are resolved
+        by the server from the same immutable approval binding. The server checks authorization and cross-resource
+        identity and hashes again before admission. Evidence is read-only and client decisions cannot replace
+        it.
+    AgentQuantApprovalPageV1:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/AgentQuantApprovalV1'
+        nextCursor:
+          oneOf:
+          - $ref: '#/components/schemas/Cursor'
+          - type: 'null'
+      required:
+      - items
+      - nextCursor
+    AgentQuantApprovalStartV1:
+      type: object
+      additionalProperties: false
+      properties:
+        action:
+          type: string
+          enum:
+          - APPROVE_AND_START
+        expectedApprovalVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        bindingHash:
+          $ref: '#/components/schemas/BacktestHash'
+      required:
+      - action
+      - expectedApprovalVersion
+      - bindingHash
+    AgentQuantApprovalRejectV1:
+      type: object
+      additionalProperties: false
+      properties:
+        action:
+          type: string
+          enum:
+          - REJECT
+        expectedApprovalVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        bindingHash:
+          $ref: '#/components/schemas/BacktestHash'
+      required:
+      - action
+      - expectedApprovalVersion
+      - bindingHash
+    AgentQuantApprovalDecisionV1:
+      oneOf:
+      - $ref: '#/components/schemas/AgentQuantApprovalStartV1'
+      - $ref: '#/components/schemas/AgentQuantApprovalRejectV1'
+      discriminator:
+        propertyName: action
+        mapping:
+          APPROVE_AND_START: '#/components/schemas/AgentQuantApprovalStartV1'
+          REJECT: '#/components/schemas/AgentQuantApprovalRejectV1'
+    AgentQuantApprovalStartedV1:
+      type: object
+      additionalProperties: false
+      properties:
+        approvalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        approvalVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        state:
+          type: string
+          enum:
+          - STARTED
+        batchId:
+          $ref: '#/components/schemas/BacktestId'
+        decidedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+      required:
+      - approvalId
+      - approvalVersion
+      - state
+      - batchId
+      - decidedAt
+    AgentQuantApprovalRejectedV1:
+      type: object
+      additionalProperties: false
+      properties:
+        approvalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        approvalVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        state:
+          type: string
+          enum:
+          - REJECTED
+        decidedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+      required:
+      - approvalId
+      - approvalVersion
+      - state
+      - decidedAt
+    AgentQuantApprovalReasonV1:
+      type: string
+      enum:
+      - APPROVAL_REQUIRED
+      - APPROVAL_STALE
+      - APPROVAL_EXPIRED
+      - APPROVAL_ALREADY_DECIDED
+      - RUN_BLOCKED
+      - POLICY_REVOKED
+      - QUANT_CAPACITY_EXHAUSTED
+      - AGENT_BUDGET_EXHAUSTED
+      - IDEMPOTENCY_CONFLICT
+    AgentQuantApprovalProblemV1:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        status:
+          type: integer
+          enum:
+          - 409
+          - 429
+        code:
+          $ref: '#/components/schemas/AgentQuantApprovalReasonV1'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+      required:
+      - type
+      - title
+      - status
+      - code
+      - traceId
+    AgentReportResultReferenceV1:
+      type: object
+      additionalProperties: false
+      properties:
+        batchId:
+          $ref: '#/components/schemas/BacktestId'
+        manifestHash:
+          $ref: '#/components/schemas/BacktestHash'
+        fieldPath:
+          type: string
+          minLength: 1
+          maxLength: 200
+          pattern: ^(/[^/~]*(~[01][^/~]*)*)+$
+        phase:
+          type: string
+          enum:
+          - IN_SAMPLE
+          - VALIDATION
+          - WALK_FORWARD_OOS
+          - HOLDOUT
+        subject:
+          type: string
+          enum:
+          - CANDIDATE
+          - BENCHMARK
+        subjectId:
+          $ref: '#/components/schemas/BacktestId'
+        unit:
+          type: string
+          enum:
+          - RATIO
+          - COUNT
+          - MONEY
+          - BASIS_POINTS
+          - DAYS
+          - BARS
+          - PERCENT
+      required:
+      - batchId
+      - manifestHash
+      - fieldPath
+      - phase
+      - subject
+      - subjectId
+      - unit
+    AgentReportMetricClaimV1:
+      type: object
+      additionalProperties: false
+      properties:
+        claimId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        reference:
+          $ref: '#/components/schemas/AgentReportResultReferenceV1'
+        value:
+          $ref: '#/components/schemas/QuantLabExactDecimal'
+        label:
+          type: string
+          minLength: 1
+          maxLength: 120
+      required:
+      - claimId
+      - reference
+      - value
+      - label
+    AgentReportEvidenceReferenceV1:
+      type: object
+      additionalProperties: false
+      properties:
+        evidenceId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        revision:
+          $ref: '#/components/schemas/AgentRevision'
+        hash:
+          $ref: '#/components/schemas/BacktestHash'
+        sourceType:
+          type: string
+          enum:
+          - MARKET_REVISION
+          - RESEARCH_FINDING
+          - QUANT_RESULT
+          - RELIABILITY_REPORT
+      required:
+      - evidenceId
+      - revision
+      - hash
+      - sourceType
+    AgentReportFactV1:
+      type: object
+      additionalProperties: false
+      properties:
+        claimId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        statement:
+          type: string
+          minLength: 1
+          maxLength: 500
+        evidence:
+          type: array
+          maxItems: 16
+          items:
+            $ref: '#/components/schemas/AgentReportEvidenceReferenceV1'
+          minItems: 1
+      required:
+      - claimId
+      - statement
+      - evidence
+    AgentReportInterpretationV1:
+      type: object
+      additionalProperties: false
+      properties:
+        claimId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        statement:
+          type: string
+          minLength: 1
+          maxLength: 600
+        supportingClaimIds:
+          type: array
+          minItems: 1
+          maxItems: 16
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/AgentOpaqueId'
+      required:
+      - claimId
+      - statement
+      - supportingClaimIds
+    AgentReportUnknownV1:
+      type: object
+      additionalProperties: false
+      properties:
+        field:
+          type: string
+          minLength: 1
+          maxLength: 120
+        reason:
+          type: string
+          enum:
+          - UNAVAILABLE
+          - INSUFFICIENT_DATA
+          - NOT_COMPARABLE
+          - NOT_SELECTED
+          - INTERPRETATION_REJECTED
+          - NOT_APPLICABLE
+      required:
+      - field
+      - reason
+    AgentReportPhaseV1:
+      oneOf:
+      - $ref: '#/components/schemas/AgentReportAvailablePhaseV1'
+      - $ref: '#/components/schemas/AgentReportUnavailablePhaseV1'
+    AgentReportRightsWarningV1:
+      type: object
+      additionalProperties: false
+      properties:
+        evidenceId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        status:
+          type: string
+          enum:
+          - RETRACTED
+          - RIGHTS_REVOKED
+          - STALE
+        observedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+      required:
+      - evidenceId
+      - status
+      - observedAt
+    AgentReportSummaryV1:
+      type: object
+      additionalProperties: false
+      properties:
+        reportId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        reportVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        reportHash:
+          $ref: '#/components/schemas/BacktestHash'
+        createdAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        ideaId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        ideaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        batchId:
+          $ref: '#/components/schemas/BacktestId'
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        interpretationStatus:
+          type: string
+          enum:
+          - VALIDATED
+          - FACTS_ONLY
+      required:
+      - reportId
+      - reportVersion
+      - reportHash
+      - createdAt
+      - ideaId
+      - ideaVersion
+      - batchId
+      - title
+      - interpretationStatus
+    AgentReportPageV1:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/AgentReportSummaryV1'
+        nextCursor:
+          oneOf:
+          - $ref: '#/components/schemas/Cursor'
+          - type: 'null'
+      required:
+      - items
+      - nextCursor
+    AgentReportV1:
+      type: object
+      additionalProperties: false
+      properties:
+        summary:
+          $ref: '#/components/schemas/AgentReportSummaryV1'
+        hypothesisVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        researchQuestion:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        hypothesis:
+          type: string
+          minLength: 1
+          maxLength: 1200
+        assumptions:
+          type: array
+          maxItems: 32
+          items:
+            type: string
+            minLength: 1
+            maxLength: 400
+        dataBasis:
+          type: string
+          minLength: 1
+          maxLength: 1200
+        evidence:
+          type: array
+          maxItems: 128
+          items:
+            $ref: '#/components/schemas/AgentReportEvidenceReferenceV1'
+        experimentId:
+          $ref: '#/components/schemas/BacktestId'
+        definitionVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        definitionHash:
+          $ref: '#/components/schemas/BacktestHash'
+        manifest:
+          $ref: '#/components/schemas/QuantLabManifestReference'
+        definition:
+          $ref: '#/components/schemas/QuantLabExperimentCreateRequest'
+        selection:
+          oneOf:
+          - $ref: '#/components/schemas/QuantLabSelection'
+          - type: 'null'
+        reliability:
+          oneOf:
+          - $ref: '#/components/schemas/QuantLabReliabilityReference'
+          - type: 'null'
+        researchHistory:
+          $ref: '#/components/schemas/QuantLabResearchHistory'
+        phases:
+          $ref: '#/components/schemas/AgentReportPhasesV1'
+        facts:
+          type: array
+          maxItems: 64
+          items:
+            $ref: '#/components/schemas/AgentReportFactV1'
+        interpretations:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/AgentReportInterpretationV1'
+        unknowns:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/AgentReportUnknownV1'
+        limitations:
+          type: array
+          maxItems: 32
+          items:
+            type: string
+            minLength: 1
+            maxLength: 400
+        conclusion:
+          type: string
+          minLength: 1
+          maxLength: 1200
+        furtherResearch:
+          type: array
+          maxItems: 16
+          items:
+            type: string
+            minLength: 1
+            maxLength: 500
+        currentRightsWarnings:
+          type: array
+          maxItems: 128
+          items:
+            $ref: '#/components/schemas/AgentReportRightsWarningV1'
+      required:
+      - summary
+      - hypothesisVersion
+      - researchQuestion
+      - hypothesis
+      - assumptions
+      - dataBasis
+      - evidence
+      - experimentId
+      - definitionVersion
+      - definitionHash
+      - manifest
+      - definition
+      - selection
+      - reliability
+      - researchHistory
+      - phases
+      - facts
+      - interpretations
+      - unknowns
+      - limitations
+      - conclusion
+      - furtherResearch
+      - currentRightsWarnings
+    AgentQuantStartedApprovalV1:
+      type: object
+      additionalProperties: false
+      properties:
+        approvalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        approvalVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        action:
+          type: string
+          enum:
+          - APPROVE_AND_START
+        bindingHash:
+          $ref: '#/components/schemas/BacktestHash'
+        state:
+          type: string
+          enum:
+          - STARTED
+        requestedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        binding:
+          $ref: '#/components/schemas/AgentQuantApprovalBindingV1'
+        question:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        hypothesis:
+          type: string
+          minLength: 1
+          maxLength: 1200
+        assumptions:
+          type: array
+          maxItems: 32
+          items:
+            type: string
+            minLength: 1
+            maxLength: 400
+        definition:
+          $ref: '#/components/schemas/QuantLabExperimentCreateRequest'
+        batchId:
+          $ref: '#/components/schemas/BacktestId'
+        evidence:
+          type: array
+          maxItems: 128
+          items:
+            $ref: '#/components/schemas/AgentReportEvidenceReferenceV1'
+      required:
+      - approvalId
+      - approvalVersion
+      - action
+      - bindingHash
+      - state
+      - requestedAt
+      - binding
+      - question
+      - hypothesis
+      - assumptions
+      - definition
+      - batchId
+      - evidence
+      description: The evidence references, definition, budget, hypothesis and policy versions are resolved
+        by the server from the same immutable approval binding. The server checks authorization and cross-resource
+        identity and hashes again before admission. Evidence is read-only and client decisions cannot replace
+        it.
+    AgentQuantUnstartedApprovalV1:
+      type: object
+      additionalProperties: false
+      properties:
+        approvalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        approvalVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        action:
+          type: string
+          enum:
+          - APPROVE_AND_START
+        bindingHash:
+          $ref: '#/components/schemas/BacktestHash'
+        state:
+          type: string
+          enum:
+          - PENDING
+          - REJECTED
+          - EXPIRED
+          - INVALIDATED
+        requestedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        binding:
+          $ref: '#/components/schemas/AgentQuantApprovalBindingV1'
+        question:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        hypothesis:
+          type: string
+          minLength: 1
+          maxLength: 1200
+        assumptions:
+          type: array
+          maxItems: 32
+          items:
+            type: string
+            minLength: 1
+            maxLength: 400
+        definition:
+          $ref: '#/components/schemas/QuantLabExperimentCreateRequest'
+        evidence:
+          type: array
+          maxItems: 128
+          items:
+            $ref: '#/components/schemas/AgentReportEvidenceReferenceV1'
+      required:
+      - approvalId
+      - approvalVersion
+      - action
+      - bindingHash
+      - state
+      - requestedAt
+      - binding
+      - question
+      - hypothesis
+      - assumptions
+      - definition
+      - evidence
+      description: The evidence references, definition, budget, hypothesis and policy versions are resolved
+        by the server from the same immutable approval binding. The server checks authorization and cross-resource
+        identity and hashes again before admission. Evidence is read-only and client decisions cannot replace
+        it.
+    AgentReportAvailablePhaseV1:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+          - AVAILABLE
+        metrics:
+          type: array
+          maxItems: 64
+          items:
+            $ref: '#/components/schemas/AgentReportMetricClaimV1'
+        limitations:
+          type: array
+          maxItems: 16
+          items:
+            type: string
+            minLength: 1
+            maxLength: 400
+      required:
+      - status
+      - metrics
+      - limitations
+    AgentReportUnavailablePhaseV1:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+          - NOT_SELECTED
+          - UNAVAILABLE
+          - NOT_EVALUABLE
+        metrics:
+          type: array
+          maxItems: 0
+          items:
+            $ref: '#/components/schemas/AgentReportMetricClaimV1'
+        limitations:
+          type: array
+          maxItems: 16
+          items:
+            type: string
+            minLength: 1
+            maxLength: 400
+      required:
+      - status
+      - metrics
+      - limitations
+    AgentReportPhasesV1:
+      type: object
+      additionalProperties: false
+      properties:
+        inSample:
+          $ref: '#/components/schemas/AgentReportPhaseV1'
+        validation:
+          $ref: '#/components/schemas/AgentReportPhaseV1'
+        walkForwardOos:
+          $ref: '#/components/schemas/AgentReportPhaseV1'
+        holdout:
+          $ref: '#/components/schemas/AgentReportPhaseV1'
+      required:
+      - inSample
+      - validation
+      - walkForwardOos
+      - holdout
+      description: The four roles are distinct. The server checks that every quantitative claim points to
+        the matching persisted phase, subject and field on the exact bound manifest and batch. It separately
+        checks read permissions and source rights and never changes historical report evidence when presenting
+        current warnings.
+    AgentOpaqueId:
+      type: string
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9._:-]+$
+    AgentRevision:
+      type: integer
+      minimum: 1
+    AgentProviderId:
+      type: string
+      enum:
+      - OPENAI
+      - ANTHROPIC
+    AgentConfirmedContextV1:
+      type: object
+      additionalProperties: false
+      required: []
+      properties:
+        market:
+          type: string
+          minLength: 1
+          maxLength: 240
+        trigger:
+          type: string
+          minLength: 1
+          maxLength: 240
+        signal:
+          type: string
+          minLength: 1
+          maxLength: 240
+        observationWindow:
+          type: string
+          minLength: 1
+          maxLength: 240
+        expectedOutcome:
+          type: string
+          minLength: 1
+          maxLength: 240
+        measurementHorizon:
+          type: string
+          minLength: 1
+          maxLength: 240
+        benchmark:
+          type: string
+          minLength: 1
+          maxLength: 240
+    AgentProcessingDataClass:
+      type: string
+      enum:
+      - OPERATOR_RESEARCH_EXCERPT
+      - CONFIRMED_RESEARCH_FIELDS
+    AgentProcessingProjectionV1:
+      type: object
+      additionalProperties: false
+      required:
+      - excerpt
+      - confirmedContext
+      properties:
+        excerpt:
+          type: string
+          minLength: 1
+          maxLength: 2048
+        confirmedContext:
+          $ref: '#/components/schemas/AgentConfirmedContextV1'
+    ProcessingPreviewRequestV1:
+      type: object
+      additionalProperties: false
+      required:
+      - expectedTurnVersion
+      - expectedDialogueVersion
+      - profileId
+      properties:
+        expectedTurnVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        expectedDialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        profileId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+          description: Selects an existing server-approved profile. It cannot configure the provider, model
+            or data policy.
+    ProcessingPreviewV1:
+      type: object
+      additionalProperties: false
+      required:
+      - previewId
+      - turnId
+      - turnVersion
+      - dialogueVersion
+      - provider
+      - profileId
+      - profileGeneration
+      - modelId
+      - envelopeVersion
+      - credentialGeneration
+      - policyGeneration
+      - purpose
+      - dataClasses
+      - expiresAt
+      - projectionBinding
+      - projection
+      - modelGeneration
+      properties:
+        previewId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        turnId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        turnVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        dialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        provider:
+          $ref: '#/components/schemas/AgentProviderId'
+        profileId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        profileGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        modelId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        envelopeVersion:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        credentialGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        policyGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        purpose:
+          type: string
+          enum:
+          - HYPOTHESIS_INTERPRETATION_V1
+        dataClasses:
+          type: array
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/AgentProcessingDataClass'
+          minItems: 1
+          uniqueItems: true
+          contains:
+            const: OPERATOR_RESEARCH_EXCERPT
+          description: The projection always declares OPERATOR_RESEARCH_EXCERPT. The server includes CONFIRMED_RESEARCH_FIELDS
+            exactly when confirmedContext is nonempty and checks that binding before dispatch.
+        expiresAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+          description: At most ten minutes after creation and no later than the run deadline.
+        projectionBinding:
+          type: string
+          minLength: 16
+          maxLength: 256
+        projection:
+          $ref: '#/components/schemas/AgentProcessingProjectionV1'
+        modelGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+    AgentProcessingSendV1:
+      type: object
+      additionalProperties: false
+      required:
+      - action
+      - expectedTurnVersion
+      - expectedDialogueVersion
+      - previewId
+      - projectionBinding
+      properties:
+        action:
+          type: string
+          enum:
+          - SEND
+        expectedTurnVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        expectedDialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        previewId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        projectionBinding:
+          type: string
+          minLength: 16
+          maxLength: 256
+    AgentProcessingDeclineV1:
+      type: object
+      additionalProperties: false
+      required:
+      - action
+      - expectedTurnVersion
+      - expectedDialogueVersion
+      properties:
+        action:
+          type: string
+          enum:
+          - DECLINE
+        expectedTurnVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        expectedDialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+    AgentProcessingRevokeV1:
+      type: object
+      additionalProperties: false
+      required:
+      - action
+      - expectedTurnVersion
+      - expectedDialogueVersion
+      - receiptId
+      properties:
+        action:
+          type: string
+          enum:
+          - REVOKE
+        expectedTurnVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        expectedDialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        receiptId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+    AgentProcessingReason:
+      type: string
+      enum:
+      - MODEL_CONTEXT_UNCLASSIFIED
+      - MODEL_CONTEXT_DENIED
+      - PROCESSING_GRANT_REQUIRED
+      - PROCESSING_GRANT_INVALID
+      - PROCESSING_GRANT_REVOKED
+      - PROCESSING_PREVIEW_UNAVAILABLE
+      - SESSION_REQUIRED
+      - REQUEST_FORBIDDEN
+      - RESOURCE_NOT_FOUND
+      - VERSION_CONFLICT
+      - IDEMPOTENCY_CONFLICT
+      - INVALID_REQUEST
+      - BUDGET_EXHAUSTED
+      - PROVIDER_UNAVAILABLE
+    AgentProcessingState:
+      type: string
+      enum:
+      - LOCAL_CLARIFICATION
+      - AWAITING_DECISION
+      - SEND_AUTHORIZED
+      - IN_FLIGHT
+      - PROPOSAL_VALIDATED
+      - BLOCKED
+      - DECLINED
+      - REVOKED
+    AgentProcessingReceiptV1:
+      type: object
+      additionalProperties: false
+      required:
+      - receiptId
+      - turnId
+      - decidedAt
+      - purpose
+      - state
+      - auditId
+      properties:
+        receiptId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        turnId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        decidedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        purpose:
+          type: string
+          enum:
+          - HYPOTHESIS_INTERPRETATION_V1
+        state:
+          $ref: '#/components/schemas/AgentProcessingState'
+        auditId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        provider:
+          $ref: '#/components/schemas/AgentProviderId'
+        profileId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        profileGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        policyGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        projectionBinding:
+          type: string
+          minLength: 16
+          maxLength: 256
+    ProcessingStatusV1:
+      type: object
+      additionalProperties: false
+      required:
+      - turnId
+      - turnVersion
+      - dialogueVersion
+      - purpose
+      - state
+      - delivery
+      - costState
+      properties:
+        turnId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        turnVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        dialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        purpose:
+          type: string
+          enum:
+          - HYPOTHESIS_INTERPRETATION_V1
+        state:
+          $ref: '#/components/schemas/AgentProcessingState'
+        delivery:
+          type: string
+          enum:
+          - NOT_SENT
+          - MAY_HAVE_BEEN_SENT
+          - SENT
+        reasonCode:
+          $ref: '#/components/schemas/AgentProcessingReason'
+        receipt:
+          $ref: '#/components/schemas/AgentProcessingReceiptV1'
+        proposalId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        costState:
+          type: string
+          enum:
+          - NOT_INCURRED
+          - KNOWN
+          - UNKNOWN
+    AgentProcessingProblem:
+      type: object
+      additionalProperties: false
+      required:
+      - type
+      - title
+      - status
+      - code
+      - traceId
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        status:
+          type: integer
+          enum:
+          - 401
+          - 403
+          - 404
+          - 409
+          - 422
+          - 429
+          - 503
+        code:
+          $ref: '#/components/schemas/AgentProcessingReason'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    ProcessingDecisionV1:
+      oneOf:
+      - $ref: '#/components/schemas/AgentProcessingSendV1'
+      - $ref: '#/components/schemas/AgentProcessingDeclineV1'
+      - $ref: '#/components/schemas/AgentProcessingRevokeV1'
+      discriminator:
+        propertyName: action
+        mapping:
+          SEND: '#/components/schemas/AgentProcessingSendV1'
+          DECLINE: '#/components/schemas/AgentProcessingDeclineV1'
+          REVOKE: '#/components/schemas/AgentProcessingRevokeV1'
+    AgentSendReceiptV1:
+      type: object
+      additionalProperties: false
+      required:
+      - receiptId
+      - turnId
+      - decidedAt
+      - purpose
+      - state
+      - auditId
+      - provider
+      - profileId
+      - profileGeneration
+      - policyGeneration
+      - projectionBinding
+      properties:
+        receiptId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        turnId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        decidedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        purpose:
+          type: string
+          enum:
+          - HYPOTHESIS_INTERPRETATION_V1
+        state:
+          type: string
+          enum:
+          - SEND_AUTHORIZED
+        auditId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        provider:
+          $ref: '#/components/schemas/AgentProviderId'
+        profileId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        profileGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        policyGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        projectionBinding:
+          type: string
+          minLength: 16
+          maxLength: 256
+    AgentSendAcceptedV1:
+      type: object
+      additionalProperties: false
+      required:
+      - turnId
+      - turnVersion
+      - dialogueVersion
+      - purpose
+      - state
+      - delivery
+      - costState
+      - receipt
+      properties:
+        turnId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        turnVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        dialogueVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        purpose:
+          type: string
+          enum:
+          - HYPOTHESIS_INTERPRETATION_V1
+        state:
+          type: string
+          enum:
+          - SEND_AUTHORIZED
+        delivery:
+          type: string
+          enum:
+          - NOT_SENT
+        costState:
+          type: string
+          enum:
+          - NOT_INCURRED
+        receipt:
+          $ref: '#/components/schemas/AgentSendReceiptV1'
     RuntimeHealth:
       type: object
       additionalProperties: false

@@ -151,7 +151,12 @@ def main() -> None:
             operations.append(operation.get("operationId", ""))
             if method != "get":
                 refs = [p.get("$ref", "") for p in operation.get("parameters", [])]
-                if "#/components/parameters/IdempotencyKey" not in refs:
+                key = "IdempotencyKey"
+                if method == "post" and path == (
+                    "/api/v1/research/agent/dialogues/{id}/turns/{turnId}/processing-previews"
+                ):
+                    key = "AgentPreviewIdempotencyKey"
+                if f"#/components/parameters/{key}" not in refs:
                     fail(f"missing Idempotency-Key on {method.upper()} {path}")
             if path == "/api/v1/risk-policy" and method == "put":
                 refs = [p.get("$ref", "") for p in operation.get("parameters", [])]

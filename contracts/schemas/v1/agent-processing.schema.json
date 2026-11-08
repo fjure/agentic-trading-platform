@@ -1,0 +1,614 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-trading-lab.invalid/contracts/schemas/v1/agent-processing.schema.json",
+  "title": "APF operator processing contract",
+  "$ref": "#/$defs/ProcessingPreviewV1",
+  "$defs": {
+    "AgentOpaqueId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "AgentRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "AgentProviderId": {
+      "type": "string",
+      "enum": [
+        "OPENAI",
+        "ANTHROPIC"
+      ]
+    },
+    "AgentConfirmedContextV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "market": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "trigger": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "signal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "observationWindow": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "expectedOutcome": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "measurementHorizon": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "benchmark": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        }
+      }
+    },
+    "AgentProcessingDataClass": {
+      "type": "string",
+      "enum": [
+        "OPERATOR_RESEARCH_EXCERPT",
+        "CONFIRMED_RESEARCH_FIELDS"
+      ]
+    },
+    "AgentProcessingProjectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "excerpt",
+        "confirmedContext"
+      ],
+      "properties": {
+        "excerpt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "confirmedContext": {
+          "$ref": "#/$defs/AgentConfirmedContextV1"
+        }
+      }
+    },
+    "ProcessingPreviewRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedTurnVersion",
+        "expectedDialogueVersion",
+        "profileId"
+      ],
+      "properties": {
+        "expectedTurnVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "expectedDialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "profileId": {
+          "$ref": "#/$defs/AgentOpaqueId",
+          "description": "Selects an existing server-approved profile. It cannot configure the provider, model or data policy."
+        }
+      }
+    },
+    "ProcessingPreviewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "previewId",
+        "turnId",
+        "turnVersion",
+        "dialogueVersion",
+        "provider",
+        "profileId",
+        "profileGeneration",
+        "modelId",
+        "envelopeVersion",
+        "credentialGeneration",
+        "policyGeneration",
+        "purpose",
+        "dataClasses",
+        "expiresAt",
+        "projectionBinding",
+        "projection",
+        "modelGeneration"
+      ],
+      "properties": {
+        "previewId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "turnId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "turnVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "dialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "provider": {
+          "$ref": "#/$defs/AgentProviderId"
+        },
+        "profileId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "profileGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "modelId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "envelopeVersion": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "credentialGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "policyGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "HYPOTHESIS_INTERPRETATION_V1"
+          ]
+        },
+        "dataClasses": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/AgentProcessingDataClass"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "contains": {
+            "const": "OPERATOR_RESEARCH_EXCERPT"
+          },
+          "description": "The projection always declares OPERATOR_RESEARCH_EXCERPT. The server includes CONFIRMED_RESEARCH_FIELDS exactly when confirmedContext is nonempty and checks that binding before dispatch."
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/UtcTimestamp",
+          "description": "At most ten minutes after creation and no later than the run deadline."
+        },
+        "projectionBinding": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 256
+        },
+        "projection": {
+          "$ref": "#/$defs/AgentProcessingProjectionV1"
+        },
+        "modelGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        }
+      }
+    },
+    "AgentProcessingSendV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedTurnVersion",
+        "expectedDialogueVersion",
+        "previewId",
+        "projectionBinding"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "SEND"
+          ]
+        },
+        "expectedTurnVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "expectedDialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "previewId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "projectionBinding": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 256
+        }
+      }
+    },
+    "AgentProcessingDeclineV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedTurnVersion",
+        "expectedDialogueVersion"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "DECLINE"
+          ]
+        },
+        "expectedTurnVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "expectedDialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        }
+      }
+    },
+    "AgentProcessingRevokeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expectedTurnVersion",
+        "expectedDialogueVersion",
+        "receiptId"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "REVOKE"
+          ]
+        },
+        "expectedTurnVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "expectedDialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "receiptId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        }
+      }
+    },
+    "AgentProcessingReason": {
+      "type": "string",
+      "enum": [
+        "MODEL_CONTEXT_UNCLASSIFIED",
+        "MODEL_CONTEXT_DENIED",
+        "PROCESSING_GRANT_REQUIRED",
+        "PROCESSING_GRANT_INVALID",
+        "PROCESSING_GRANT_REVOKED",
+        "PROCESSING_PREVIEW_UNAVAILABLE",
+        "SESSION_REQUIRED",
+        "REQUEST_FORBIDDEN",
+        "RESOURCE_NOT_FOUND",
+        "VERSION_CONFLICT",
+        "IDEMPOTENCY_CONFLICT",
+        "INVALID_REQUEST",
+        "BUDGET_EXHAUSTED",
+        "PROVIDER_UNAVAILABLE"
+      ]
+    },
+    "AgentProcessingState": {
+      "type": "string",
+      "enum": [
+        "LOCAL_CLARIFICATION",
+        "AWAITING_DECISION",
+        "SEND_AUTHORIZED",
+        "IN_FLIGHT",
+        "PROPOSAL_VALIDATED",
+        "BLOCKED",
+        "DECLINED",
+        "REVOKED"
+      ]
+    },
+    "AgentProcessingReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receiptId",
+        "turnId",
+        "decidedAt",
+        "purpose",
+        "state",
+        "auditId"
+      ],
+      "properties": {
+        "receiptId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "turnId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "decidedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "HYPOTHESIS_INTERPRETATION_V1"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/AgentProcessingState"
+        },
+        "auditId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "provider": {
+          "$ref": "#/$defs/AgentProviderId"
+        },
+        "profileId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "profileGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "policyGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "projectionBinding": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 256
+        }
+      }
+    },
+    "ProcessingStatusV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "turnId",
+        "turnVersion",
+        "dialogueVersion",
+        "purpose",
+        "state",
+        "delivery",
+        "costState"
+      ],
+      "properties": {
+        "turnId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "turnVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "dialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "HYPOTHESIS_INTERPRETATION_V1"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/AgentProcessingState"
+        },
+        "delivery": {
+          "type": "string",
+          "enum": [
+            "NOT_SENT",
+            "MAY_HAVE_BEEN_SENT",
+            "SENT"
+          ]
+        },
+        "reasonCode": {
+          "$ref": "#/$defs/AgentProcessingReason"
+        },
+        "receipt": {
+          "$ref": "#/$defs/AgentProcessingReceiptV1"
+        },
+        "proposalId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "costState": {
+          "type": "string",
+          "enum": [
+            "NOT_INCURRED",
+            "KNOWN",
+            "UNKNOWN"
+          ]
+        }
+      }
+    },
+    "AgentProcessingProblem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "title",
+        "status",
+        "code",
+        "traceId"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "format": "uri"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "status": {
+          "type": "integer",
+          "enum": [
+            401,
+            403,
+            404,
+            409,
+            422,
+            429,
+            503
+          ]
+        },
+        "code": {
+          "$ref": "#/$defs/AgentProcessingReason"
+        },
+        "traceId": {
+          "$ref": "#/$defs/TraceId"
+        }
+      }
+    },
+    "ProcessingDecisionV1": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AgentProcessingSendV1"
+        },
+        {
+          "$ref": "#/$defs/AgentProcessingDeclineV1"
+        },
+        {
+          "$ref": "#/$defs/AgentProcessingRevokeV1"
+        }
+      ],
+      "discriminator": {
+        "propertyName": "action",
+        "mapping": {
+          "SEND": "#/$defs/AgentProcessingSendV1",
+          "DECLINE": "#/$defs/AgentProcessingDeclineV1",
+          "REVOKE": "#/$defs/AgentProcessingRevokeV1"
+        }
+      }
+    },
+    "AgentSendReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receiptId",
+        "turnId",
+        "decidedAt",
+        "purpose",
+        "state",
+        "auditId",
+        "provider",
+        "profileId",
+        "profileGeneration",
+        "policyGeneration",
+        "projectionBinding"
+      ],
+      "properties": {
+        "receiptId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "turnId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "decidedAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "HYPOTHESIS_INTERPRETATION_V1"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "SEND_AUTHORIZED"
+          ]
+        },
+        "auditId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "provider": {
+          "$ref": "#/$defs/AgentProviderId"
+        },
+        "profileId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "profileGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "policyGeneration": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "projectionBinding": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 256
+        }
+      }
+    },
+    "AgentSendAcceptedV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "turnId",
+        "turnVersion",
+        "dialogueVersion",
+        "purpose",
+        "state",
+        "delivery",
+        "costState",
+        "receipt"
+      ],
+      "properties": {
+        "turnId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "turnVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "dialogueVersion": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "HYPOTHESIS_INTERPRETATION_V1"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "SEND_AUTHORIZED"
+          ]
+        },
+        "delivery": {
+          "type": "string",
+          "enum": [
+            "NOT_SENT"
+          ]
+        },
+        "costState": {
+          "type": "string",
+          "enum": [
+            "NOT_INCURRED"
+          ]
+        },
+        "receipt": {
+          "$ref": "#/$defs/AgentSendReceiptV1"
+        }
+      }
+    },
+    "UtcTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "example": "2026-10-12T10:00:00Z"
+    },
+    "TraceId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "example": "4bf92f3577b34da6a3ce929d0e0e4736"
+    }
+  }
+}

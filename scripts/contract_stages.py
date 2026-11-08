@@ -38,9 +38,26 @@ QUANT_LAB_OPERATIONS = dict.fromkeys((
     "getQuantLabDrawdown", "compareQuantLabExperiments", "getQuantLabReliabilityReport",
 ), "QSL-07")
 
+AGENT_RESEARCH_TASKS = (
+    Path(__file__).resolve().parents[1]
+    / "openspec/changes/agent-platform-foundation/tasks.md"
+)
+AGENT_RESEARCH_OPERATIONS = dict.fromkeys((
+    "createAgentProcessingPreview", "getAgentProcessingStatus", "decideAgentProcessing",
+    "listAgentIdeas", "createAgentIdea", "getAgentIdea", "reviseAgentIdea",
+    "createAgentDialogue", "getAgentDialogue", "createAgentDialogueTurn", "decideAgentHypothesis",
+    "getAgentRegistry", "listResearchAgentRuns", "getAgentRun", "listAgentRunEvents",
+    "cancelAgentRun",
+    "getAgentSchedule", "updateAgentSchedule", "commandAgentSchedule", "listAgentProviders",
+    "probeAgentProvider", "saveAgentProviderCredential", "rotateAgentProviderCredential",
+    "activateAgentProviderCredential", "revokeAgentProviderCredential", "listAgentQuantApprovals",
+    "getAgentQuantApproval", "decideAgentQuantApproval", "listAgentResearchReports",
+    "getAgentResearchReport",
+), "APF-08")
+
 
 def _pending(text: str, operations: dict[str, str]) -> set[str]:
-    parsed = re.findall(r"^- \[([ x])\] \d+\.\d+ ([A-Z]+-\d{2}) ", text, re.M)
+    parsed = re.findall(r"^- \[([ x])\] \d+\.\d+ \[?([A-Z]+-\d{2}) ", text, re.M)
     pending = set()
     for operation, task in operations.items():
         matching = [status for status, task_id in parsed if task_id == task]
@@ -53,7 +70,7 @@ def _pending(text: str, operations: dict[str, str]) -> set[str]:
 
 def pending_contract_operations(
     tasks_text: str | None = None, retrospective_tasks_text: str | None = None,
-    quant_lab_tasks_text: str | None = None,
+    quant_lab_tasks_text: str | None = None, agent_research_tasks_text: str | None = None,
 ) -> set[str]:
     text = TASKS.read_text("utf-8") if tasks_text is None else tasks_text
     retrospective = (
@@ -64,8 +81,13 @@ def pending_contract_operations(
         QUANT_LAB_TASKS.read_text("utf-8")
         if quant_lab_tasks_text is None else quant_lab_tasks_text
     )
+    agent_research = (
+        AGENT_RESEARCH_TASKS.read_text("utf-8")
+        if agent_research_tasks_text is None else agent_research_tasks_text
+    )
     return (
         _pending(text, STAGED_OPERATIONS)
         | _pending(retrospective, RETROSPECTIVE_OPERATIONS)
         | _pending(quant_lab, QUANT_LAB_OPERATIONS)
+        | _pending(agent_research, AGENT_RESEARCH_OPERATIONS)
     )

@@ -1,0 +1,27 @@
+{
+  "previewId": "preview-1",
+  "turnId": "turn-1",
+  "turnVersion": 1,
+  "dialogueVersion": 2,
+  "provider": "OPENAI",
+  "profileId": "research-v1",
+  "profileGeneration": 1,
+  "modelId": "offline-model-v1",
+  "envelopeVersion": "interpretation-v1",
+  "credentialGeneration": 1,
+  "policyGeneration": 1,
+  "purpose": "HYPOTHESIS_INTERPRETATION_V1",
+  "dataClasses": [
+    "OPERATOR_RESEARCH_EXCERPT",
+    "CONFIRMED_RESEARCH_FIELDS"
+  ],
+  "expiresAt": "2026-11-08T12:10:00Z",
+  "projectionBinding": "opaque-binding-fixture-1",
+  "projection": {
+    "excerpt": "Technologieaktien erholen sich nach einer Überreaktion auf Quartalszahlen.",
+    "confirmedContext": {
+      "market": "Technologieaktien"
+    }
+  },
+  "modelGeneration": 1
+}
