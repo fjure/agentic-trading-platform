@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "repository": "fjure/agentic-trading-platform",
+  "changeId": "agent-platform-foundation",
+  "transport": "gh-cli",
+  "issues": [
+    {
+      "taskId": "APF-01",
+      "number": 86,
+      "databaseId": 6269616331,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/86",
+      "contentHash": "fb5521b91a19fda2595eb01cf8a4a7fd78f487bdadd18ce0b1b5ddb8f7148057",
+      "dependencies": [],
+      "syncedAt": "2026-11-08T09:37:26.7600940+00:00",
+      "blockedBy": [],
+      "blocking": [
+        87,
+        88,
+        89
+      ]
+    },
+    {
+      "taskId": "APF-02",
+      "number": 87,
+      "databaseId": 6269616513,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/87",
+      "contentHash": "c044c92a51d26a1754649189ab858336711067c1c24cefba81a4c11681606947",
+      "dependencies": [
+        "APF-01"
+      ],
+      "syncedAt": "2026-11-08T09:37:27.9452887+00:00",
+      "blockedBy": [
+        86
+      ],
+      "blocking": [
+        88,
+        89,
+        90,
+        91
+      ]
+    },
+    {
+      "taskId": "APF-03",
+      "number": 88,
+      "databaseId": 6269616656,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/88",
+      "contentHash": "39a1b1001d2044ad07d607125ed974c421615ac4b151755d7703ba64750c5493",
+      "dependencies": [
+        "APF-01",
+        "APF-02"
+      ],
+      "syncedAt": "2026-11-08T09:37:29.1200367+00:00",
+      "blockedBy": [
+        86,
+        87
+      ],
+      "blocking": [
+        89,
+        91
+      ]
+    },
+    {
+      "taskId": "APF-04",
+      "number": 89,
+      "databaseId": 6269616800,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/89",
+      "contentHash": "516ba98f9be25320464dc79a507a76a0add0781954c553275dac1fb3223994e8",
+      "dependencies": [
+        "APF-01",
+        "APF-02",
+        "APF-03"
+      ],
+      "syncedAt": "2026-11-08T09:37:30.2115646+00:00",
+      "blockedBy": [
+        86,
+        87,
+        88
+      ],
+      "blocking": [
+        90,
+        91
+      ]
+    },
+    {
+      "taskId": "APF-05",
+      "number": 90,
+      "databaseId": 6269616917,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/90",
+      "contentHash": "3d28a4e94a1bed0b2a72c1885c4d1a321e688476568521fbf31441dba6daf4ec",
+      "dependencies": [
+        "APF-02",
+        "APF-04"
+      ],
+      "syncedAt": "2026-11-08T09:37:31.3618635+00:00",
+      "blockedBy": [
+        87,
+        89
+      ],
+      "blocking": [
+        92,
+        93
+      ]
+    },
+    {
+      "taskId": "APF-06",
+      "number": 91,
+      "databaseId": 6269617082,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/91",
+      "contentHash": "5202bffeefe2189d4eec402daabf3c2ab3e0e11c170764c643022d508a9aac08",
+      "dependencies": [
+        "APF-02",
+        "APF-03",
+        "APF-04"
+      ],
+      "syncedAt": "2026-11-08T09:37:32.5861692+00:00",
+      "blockedBy": [
+        87,
+        88,
+        89
+      ],
+      "blocking": [
+        93
+      ]
+    },
+    {
+      "taskId": "APF-07",
+      "number": 92,
+      "databaseId": 6269617238,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/92",
+      "contentHash": "66c643842eef1e2bbea32aa534b9ed71e4647bc6166de2239d332e13c2713eca",
+      "dependencies": [
+        "APF-05"
+      ],
+      "syncedAt": "2026-11-08T09:37:33.6541996+00:00",
+      "blockedBy": [
+        90
+      ],
+      "blocking": [
+        93
+      ]
+    },
+    {
+      "taskId": "APF-08",
+      "number": 93,
+      "databaseId": 6269617368,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/93",
+      "contentHash": "c42839b16a9441398895fe32d3840b6770422bf9990d40f13714e6c697b7b9c7",
+      "dependencies": [
+        "APF-05",
+        "APF-06",
+        "APF-07"
+      ],
+      "syncedAt": "2026-11-08T09:37:34.9060498+00:00",
+      "blockedBy": [
+        90,
+        91,
+        92
+      ],
+      "blocking": [
+        94
+      ]
+    },
+    {
+      "taskId": "APF-09",
+      "number": 94,
+      "databaseId": 6269617538,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/94",
+      "contentHash": "72550bae05ee27b6c3b4c9116a7d80836cb6d941f4dab5e76652d5b1207d44c7",
+      "dependencies": [
+        "APF-08"
+      ],
+      "syncedAt": "2026-11-08T09:37:36.0282647+00:00",
+      "blockedBy": [
+        93
+      ],
+      "blocking": [
+        95
+      ]
+    },
+    {
+      "taskId": "APF-10",
+      "number": 95,
+      "databaseId": 6269617689,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/95",
+      "contentHash": "b5425dfc39cb07ea655d86422751664a66be7455c6bb7f507ebb8373679fbcf9",
+      "dependencies": [
+        "APF-09"
+      ],
+      "syncedAt": "2026-11-08T09:37:37.0451734+00:00",
+      "blockedBy": [
+        94
+      ],
+      "blocking": []
+    }
+  ]
+}
