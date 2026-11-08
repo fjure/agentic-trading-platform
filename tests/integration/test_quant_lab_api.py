@@ -702,6 +702,84 @@ def guest():
                 "CURSOR_INVALID",
             )
 
+        # A short grid at the candidate cap reserves all 32 candidates and both references.
+        from packages.backtesting.experiment_storage import ExperimentStorage
+
+        with engine.begin() as connection:
+            prior = phases[0] - timedelta(days=3)
+            connection.execute(
+                text("ALTER TABLE research.calendar_versions DISABLE TRIGGER a_stamp")
+            )
+            connection.execute(
+                text("""INSERT INTO research.calendar_versions
+                  (session_id,session_date,opens_at,closes_at,version,source,
+                   commit_version,ingested_at)
+                  VALUES(:id,:day,:open,:close,:version,'alpaca-v2-calendar',
+                         research.reserve_version(),:ingested)"""),
+                dict(
+                    id=uuid4(),
+                    day=prior.date(),
+                    open=prior,
+                    close=prior + timedelta(hours=1),
+                    version="a" * 64,
+                    ingested=phases[0] - timedelta(days=1),
+                ),
+            )
+            connection.execute(
+                text("ALTER TABLE research.calendar_versions ENABLE TRIGGER a_stamp")
+            )
+        maximum = dict(
+            payload,
+            searchSpaces=[
+                {
+                    "strategyId": "rsi-mean-reversion-v1",
+                    "version": "1",
+                    "parameterValues": {
+                        "period": [2],
+                        "entry": [str(n) for n in range(1, 33)],
+                        "exit": ["75"],
+                    },
+                }
+            ],
+        )
+        max_draft = post(http, definitions_path, maximum, "quant-draft-maximum-01", 201)
+        assert max_draft["candidateCount"] == 32
+        max_path = definitions_path + "/" + max_draft["id"]
+        binding = {
+            "schemaVersion": "quant-lab-v1",
+            "definitionVersion": max_draft["definitionVersion"],
+            "definitionHash": max_draft["definitionHash"],
+        }
+        max_validation = post(
+            http, max_path + "/validations", binding, "quant-max-validate-01", 201
+        )
+        if max_validation["status"] != "VALIDATED":
+            print("MAX VALIDATION", max_validation["status"], max_validation["budgetEstimate"])
+            raise AssertionError("bounded 32-candidate grid could not be validated")
+        assert max_validation["budgetEstimate"]["reservedQueueSlots"] == 34
+        maximum_batch = post(
+            http,
+            max_path + "/batches",
+            {
+                **binding,
+                "validationId": max_validation["id"],
+                "validationHash": max_validation["validationHash"],
+            },
+            "quant-max-start-01",
+            202,
+        )
+        with engine.connect() as connection:
+            assert connection.execute(text("SELECT backtest.active_slots()")).scalar_one() == 37
+        jobs = ExperimentStorage(role_engine(engine, "atl_backtest_worker"))
+        first_lease = jobs.claim(uuid4())
+        assert str(first_lease.batch_id) == batch["id"]
+        jobs.publish(first_lease, status="BLOCKED", error_code="RELIABILITY_BLOCKED")
+        maximum_lease = jobs.claim(uuid4())
+        assert str(maximum_lease.batch_id) == maximum_batch["id"]
+        jobs.publish(maximum_lease, status="BLOCKED", error_code="RELIABILITY_BLOCKED")
+        batch = post(http, batches, start_binding, "quant-replace-queue-first", 202)
+        batch_path = BASE + f"experiment-batches/{batch['id']}"
+
         # C+2 weight is 3. Existing first batch and 32 further batches occupy 99.
         for index in range(32):
             queued = post(http, batches, start_binding, f"quant-fill-queue-{index:03}", 202)

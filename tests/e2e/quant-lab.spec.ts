@@ -10,6 +10,8 @@ test.describe.configure({ mode: 'serial' });
 const root = '/api/v1/research';
 const lab = (page: Page) => page.locator('atl-quant-lab');
 const periods = JSON.parse(process.env.QSL_BROWSER_PERIODS ?? '{}') as Record<string, [string, string]>;
+const fullSessions = process.env.QSL_BROWSER_FULL === '1';
+const hypothesis = fullSessions ? 'Synthetische EMA-Vollsitzungen' : 'Konstante synthetische EMA-Preise';
 let cookies: Awaited<ReturnType<BrowserContext['cookies']>> = [];
 let batchId = '';
 let definitionId = '';
@@ -59,7 +61,7 @@ test('authenticated Material builder runs nine real strategies and restores the 
   const instrument = scope.getByLabel('Instrument', { exact: true });
   await instrument.click();
   await page.getByRole('option', { name: /^SPY\b/ }).click();
-  await scope.getByLabel('Forschungshypothese', { exact: true }).fill('Konstante synthetische EMA-Preise');
+  await scope.getByLabel('Forschungshypothese', { exact: true }).fill(hypothesis);
   await expect(scope.getByLabel('Strategie für Raster 1', { exact: true })).toContainText(/EMA/i);
   await scope.getByLabel('Fast-Werte (Raster 1)', { exact: true }).fill('5,10,15');
   await scope.getByLabel('Slow-Werte (Raster 1)', { exact: true }).fill('30,40,50');
@@ -70,7 +72,7 @@ test('authenticated Material builder runs nine real strategies and restores the 
   }
   await scope.getByLabel('Maximaler Drawdown', { exact: true }).fill('0.15');
   await scope.getByLabel('Minimale Validation-Sitzungen', { exact: true }).fill('20');
-  await scope.getByLabel('Minimale Entries', { exact: true }).fill('1');
+  await scope.getByLabel('Minimale Entries', { exact: true }).fill(fullSessions ? '50' : '1');
   await scope.getByLabel('Gebühr (USD)', { exact: true }).fill('1');
   const draftResponse = await submit<QuantLabExperimentDefinition>(page, '/experiments', () =>
     scope.getByRole('button', { name: 'Entwurf speichern', exact: true }).click());
@@ -121,7 +123,11 @@ test('authenticated Material builder runs nine real strategies and restores the 
   expect(training.status()).toBe(200);
   const results = (await training.json() as QuantLabResultPage).items;
   const buyHold = results.find(row => row.role === 'REFERENCE_BUY_HOLD');
-  expect(buyHold?.metrics?.netReturn.value).toMatch(/^-/);
+  if (fullSessions) {
+    expect(Number(buyHold?.metrics?.netReturn.value)).toBeGreaterThan(0);
+  } else {
+    expect(buyHold?.metrics?.netReturn.value).toMatch(/^-/);
+  }
 
   await scope.getByRole('button', { name: 'Kurven ansehen', exact: true }).first().click();
   await expect(scope.getByText('Equity und Drawdown', { exact: true })).toBeVisible();
@@ -134,7 +140,7 @@ test('authenticated Material builder runs nine real strategies and restores the 
   await page.reload();
   await expect(scope.getByText('Reliability-Bericht', { exact: true })).toBeVisible();
   await expect(scope).toContainText('STRICT_PIT_EVIDENCE_COMPLETE');
-  await expect(scope.getByLabel('Forschungshypothese', { exact: true })).toHaveValue('Konstante synthetische EMA-Preise');
+  await expect(scope.getByLabel('Forschungshypothese', { exact: true })).toHaveValue(hypothesis);
   expect(new URL(page.url()).searchParams.get('quantBatch')).toBe(batchId);
 });
 
@@ -156,6 +162,9 @@ test('session loss discards a delayed real response and stops Quant Lab requests
   expect(active.state).toBe('ACCEPTED');
   await page.goto('/?quantBatch=' + active.id);
   await expect(scope.getByRole('button', { name: 'Batchstatus aktualisieren', exact: true })).toBeVisible();
+  await expect(scope.getByText('REGISTERED_REUSE', { exact: true })).toBeVisible();
+  await expect(scope.getByRole('cell', { name: 'WALK_FORWARD_OOS / WALK_FORWARD_OOS' })).toBeVisible();
+  await expect(scope.getByRole('cell', { name: 'FINAL_HOLDOUT / FINAL_HOLDOUT' })).toBeVisible();
 
   let release!: () => void;
   let received!: () => void;
