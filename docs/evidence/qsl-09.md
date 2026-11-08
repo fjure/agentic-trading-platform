@@ -110,3 +110,15 @@ Finanzfingerprints und die tatsächliche OOM-/Fence-Kette. Die Reviews
 hinterließen keine offenen kritischen Befunde. Die korrigierten
 SQL-Grenzproben setzen den synthetischen Vorverbrauch als Migrationseigentümer
 und führen den Report-Insert mit Workerrechten aus.
+
+## Integration
+
+Der geprüfte Abnahmecommit `b039d9f` wurde auf dem Issue-Branch
+verifiziert und als `ebea739` nach `main` integriert. Der Remote-Read-back
+bestätigte den Merge und den identischen Baum des geprüften Commits.
+
+Nach dem Merge schloss der autorisierte GitHub-Abgleich ausschließlich
+Issue #85. Die erneute Anwendung änderte kein Issue. Alle neun Issues
+wurden als geschlossen zurückgelesen. Der native Graph enthält exakt
+19 Abhängigkeiten und stimmt vorwärts und rückwärts mit OpenSpec überein.
+OpenSpec meldete nach strikter Validierung neun abgeschlossene Tasks.
