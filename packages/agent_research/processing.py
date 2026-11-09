@@ -13,7 +13,7 @@ from threading import Lock, Timer
 from uuid import UUID, uuid4
 
 from sqlalchemy import text
-from sqlalchemy.engine import Connection, Engine
+from sqlalchemy.engine import Connection, Engine, Row
 
 from packages.persistence.transaction import ReadOnlyScopedConnection, ScopedConnection
 
@@ -212,14 +212,15 @@ def _audit(connection: Connection, receipt_id: UUID) -> None:
     """), {"id": receipt_id})
 
 
-def _lock_claim(connection: Connection, claim: Claim) -> dict:
+def _lock_claim(connection: Connection, claim: Claim) -> Row:
     held = connection.execute(text("""
-        SELECT agent_binding FROM agent_research.runs
+        SELECT agent_binding,least(deadline_at,lease_until) AS dispatch_deadline
+        FROM agent_research.runs
         WHERE run_id=:run_id AND owner=:owner AND fence=:fence AND version=:version
           AND kind='DIALOGUE' AND state='RUNNING' AND lease_until>clock_timestamp()
           AND deadline_at>clock_timestamp() FOR UPDATE
     """), {"run_id": claim.run_id, "owner": claim.owner, "fence": claim.fence,
-            "version": claim.version}).scalar_one_or_none()
+            "version": claim.version}).one_or_none()
     if held is None:
         raise RunConflict("LEASE_LOST")
     return held
@@ -346,10 +347,11 @@ class ProcessingStore:
     def authorize(
         self, claim: Claim, receipt_id: UUID, attempt_id: UUID, binding: ProcessingBinding,
         *, check_policy: Callable[[ReadOnlyScopedConnection, ProcessingBinding], None],
+        validate_dispatch: Callable[[str, bytes, int, int, datetime], bool] | None = None,
     ) -> AuthorizedProjection:
         """Consume consent and authorize the reserved model attempt in one transaction."""
         with self.engine.begin() as connection:
-            agent = _lock_claim(connection, claim)
+            held = _lock_claim(connection, claim)
             grant = connection.execute(text("""
                 SELECT *,expires_at>clock_timestamp() AS live
                 FROM agent_research.processing_grants WHERE receipt_id=:id AND run_id=:run_id
@@ -361,16 +363,22 @@ class ProcessingStore:
                 raise RunConflict("PROCESSING_GRANT_REVOKED")
             if (
                 grant.state != "AUTHORIZED" or not grant.live or grant.binding != binding.record()
-                or agent["model_binding"] != binding.model_record()
+                or held.agent_binding["model_binding"] != binding.model_record()
             ):
                 raise _invalid()
-            attempt_step = connection.execute(text("""
-                SELECT step_id FROM agent_research.model_attempts
+            attempt = connection.execute(text("""
+                SELECT step_id,input_bound,output_bound,deadline_at
+                FROM agent_research.model_attempts
                 WHERE attempt_id=:attempt AND run_id=:run_id
-            """), {"attempt": attempt_id, "run_id": claim.run_id}).scalar_one_or_none()
-            if attempt_step != binding.step_id:
+            """), {"attempt": attempt_id, "run_id": claim.run_id}).one_or_none()
+            if attempt is None or attempt.step_id != binding.step_id:
                 raise _invalid()
             content = self.vault._dispatch_content(grant.preview_id, binding, grant.commitment)
+            if validate_dispatch is not None and not validate_dispatch(
+                grant.commitment, content, attempt.input_bound, attempt.output_bound,
+                min(grant.expires_at, attempt.deadline_at, held.dispatch_deadline),
+            ):
+                raise _invalid()
             check_policy(ReadOnlyScopedConnection(connection), binding)
             ModelAttemptStore.authorize_in_transaction(
                 connection, claim, attempt_id, grant.commitment, dialogue_authorized=True,

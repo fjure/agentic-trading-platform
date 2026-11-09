@@ -71,7 +71,8 @@ def _prepare_consent(worker, store, request):
     )
     vault = ProjectionVault()
     preview = vault.issue(
-        binding, session="synthetic-session", content=b"synthetic-context-that-must-not-persist",
+        binding, session="synthetic-session",
+        content=b'{"excerpt":"synthetic-context-that-must-not-persist","confirmedContext":{}}',
         deadline=datetime.now(UTC) + timedelta(minutes=2),
     )
     return ProcessingStore(worker, vault), preview, binding
@@ -238,7 +239,9 @@ def _verify_model_bound_run(owner, worker, store, request, agent, model):
         )
 
     admitted = dispatch()
-    assert admitted.content == b"synthetic-context-that-must-not-persist"
+    assert admitted.content == (
+        b'{"excerpt":"synthetic-context-that-must-not-persist","confirmedContext":{}}'
+    )
     assert admitted.attempt_id == attempt.attempt_id
     _expect_conflict("PROCESSING_GRANT_INVALID", dispatch)
     revoked = processing.revoke(receipt.receipt_id, actor=binding.actor, expected_revision=2)
@@ -328,10 +331,9 @@ def _verify_model_bound_run(owner, worker, store, request, agent, model):
     claim = store.claim(uuid4())
     assert claim is not None and claim.run_id == binding.run_id
     reserve = reserve | {"step_id": binding.step_id, "request_hash": preview.commitment}
-    attempt = attempts.reserve(claim, attempt_id=uuid4(), **reserve)
-    processing.authorize(
-        claim, receipt.receipt_id, attempt.attempt_id, binding, check_policy=lambda *_: None,
-    )
+    gateway_reserve = reserve | {"tokens": Tokens(800, 50)}
+    attempt = attempts.reserve(claim, attempt_id=uuid4(), **gateway_reserve)
+    usage = _dispatch_through_gateway(processing, preview, binding, receipt, claim, attempt)
     _expect_conflict(
         "PROCESSING_GRANT_REQUIRED",
         lambda: attempts.settle(
@@ -341,7 +343,8 @@ def _verify_model_bound_run(owner, worker, store, request, agent, model):
     accepted = processing.accept_result(
         claim, receipt.receipt_id, attempt.attempt_id, "persisted-result", binding=binding,
         check_policy=lambda *_: None, persist_result=lambda scope: scope.execute(text("SELECT 1")),
-        reported_tokens=Tokens(50, 20), confirmed_cost=Decimal("0.00009"),
+        reported_tokens=Tokens(usage.input_tokens, usage.output_tokens),
+        confirmed_cost=Decimal("0.00009"),
     )
     assert accepted.state == "ACCEPTED" and accepted.result_ref == "persisted-result"
     with owner.begin() as connection:
@@ -352,11 +355,96 @@ def _verify_model_bound_run(owner, worker, store, request, agent, model):
     recovered = store.claim(uuid4())
     assert recovered is not None and recovered.run_id == claim.run_id
     assert recovered.fence > claim.fence
-    result = attempts.reserve(recovered, attempt_id=attempt.attempt_id, **reserve)
+    result = attempts.reserve(recovered, attempt_id=attempt.attempt_id, **gateway_reserve)
     assert result.status == "COMPLETED" and result.result_ref == "persisted-result"
     assert attempts.recover(recovered) == (result,)
     store.cancel(recovered.run_id, recovered.version)
     _verify_stale_attempts(owner, store, attempts, request, model, reserve)
+
+
+def _dispatch_through_gateway(processing, preview, binding, receipt, claim, attempt):
+    from dataclasses import replace
+    from datetime import UTC, datetime, timedelta
+    from hashlib import sha256
+    from tempfile import TemporaryDirectory
+
+    import httpx
+    from fastapi.testclient import TestClient
+
+    from services.llm_gateway.app import GatewayDispatchClient, create_gateway_app
+    from services.llm_gateway.dispatch_journal import DispatchJournal
+    from services.llm_gateway.offline_gateway import DispatchRequest, OfflineGateway
+    from services.llm_gateway.provider_http import Capability, OfflineProviderHttp
+    from services.llm_gateway.provider_wire import Provider, ResultState
+    from services.llm_gateway.supervisor_rpc import (
+        AdmissionAuthentication,
+        AdmissionClient,
+        create_admission_app,
+    )
+    from services.runtime.research_admission import PendingDispatch, ResearchDispatchAdmission
+    from services.setup.llm_credentials import CredentialBinding, SyntheticCredentialStore
+
+    content = b'{"excerpt":"synthetic-context-that-must-not-persist","confirmedContext":{}}'
+    request = DispatchRequest(
+        attempt.attempt_id, preview.commitment, sha256(content).hexdigest(), Provider.OPENAI,
+        binding.model_id, binding.profile_id, 1, 1, 1, binding.envelope_version,
+        min(preview.expires_at, datetime.now(UTC) + timedelta(seconds=10)),
+    )
+    profile = Capability(
+        request.provider, request.model, request.profile_id, 1, 1, 1, request.envelope_version,
+        "synthetic instructions", '{"type":"object","additionalProperties":false}', 50, 2,
+    )
+    pending = PendingDispatch(request, claim, receipt.receipt_id, binding, profile)
+    bridge = ResearchDispatchAdmission(processing, lambda _: pending, lambda *_: None)
+    for denied in (
+        replace(pending, capability=replace(profile, instructions="x" * 1000)),
+        replace(pending, capability=replace(profile, max_output_tokens=51)),
+        replace(pending, request=replace(request, expires_at=preview.expires_at)),
+    ):
+        blocked = ResearchDispatchAdmission(processing, lambda _, row=denied: row, lambda *_: None)
+        _expect_conflict(
+            "PROCESSING_GRANT_INVALID",
+            lambda admission=blocked, command=denied.request: admission.consume(command),
+        )
+    auth = AdmissionAuthentication(bytes(range(32)))
+    credentials = SyntheticCredentialStore()
+    credential_binding = CredentialBinding(request.provider, 1, request.profile_id, 1, 1)
+    saved = credentials.save(request.provider, expected_version=1)
+    probe = credentials.begin_probe(credential_binding, expected_version=saved.version)
+    credentials.take_probe(probe)
+    verified = credentials.record_probe(probe, passed=True)
+    credentials.activate(
+        credential_binding, expected_version=verified.version, verified_probe_id=probe.probe_id,
+    )
+    calls = []
+
+    def provider(http_request):
+        calls.append(http_request.url)
+        assert json.loads(http_request.content)["input"][0]["content"] == content.decode()
+        return httpx.Response(200, json={
+            "model": request.model, "status": "completed",
+            "usage": {"input_tokens": 50, "output_tokens": 20}, "output": [{
+                "type": "message", "role": "assistant", "status": "completed",
+                "content": [{"type": "output_text", "text": "{}"}],
+            }],
+        })
+
+    with TemporaryDirectory() as temporary, TestClient(
+        create_admission_app(auth, bridge.consume)
+    ) as client:
+        journal = DispatchJournal.provision(Path(temporary) / "dispatch.sqlite")
+        gateway = OfflineGateway(
+            journal, OfflineProviderHttp(httpx.MockTransport(provider)),
+            AdmissionClient(client, auth).authorize, credentials=credentials,
+            capabilities=(profile,),
+        )
+        with TestClient(create_gateway_app(gateway, auth)) as gateway_http:
+            dispatch = GatewayDispatchClient(gateway_http, auth)
+            result = dispatch.dispatch(request)
+            assert result.state is ResultState.ACCEPTED
+            assert dispatch.dispatch(request).state is ResultState.OUTCOME_UNKNOWN
+    assert len(calls) == 1
+    return result.usage
 
 
 def _verify_stale_attempts(owner, store, attempts, request, model, reserve):
