@@ -8,7 +8,7 @@ Jede Checkbox bezeichnet ein Issue. Akzeptanz, Dateizuständigkeit und Prüfunge
 
 ## 2. Researchlauf und Budget absichern
 
-- [ ] 2.1 [APF-02 Researchlauf und Budget absichern](work-packages/APF-02.md) · abhängig von APF-01.
+- [x] 2.1 [APF-02 Researchlauf und Budget absichern](work-packages/APF-02.md) · abhängig von APF-01.
 
 ## 3. Isoliertes LLM-Gateway anbinden
 
