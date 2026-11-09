@@ -12,7 +12,7 @@ Jede Checkbox bezeichnet ein Issue. Akzeptanz, Dateizuständigkeit und Prüfunge
 
 ## 3. Isoliertes LLM-Gateway anbinden
 
-- [ ] 3.1 [APF-03 Isoliertes LLM-Gateway anbinden](work-packages/APF-03.md) · abhängig von APF-01, APF-02.
+- [x] 3.1 [APF-03 Isoliertes LLM-Gateway anbinden](work-packages/APF-03.md) · abhängig von APF-01, APF-02.
 
 ## 4. Ideen und Dialog versionieren
 

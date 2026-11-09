@@ -11,6 +11,7 @@ from dataclasses import dataclass
 DESTINATIONS = {
     "execution": frozenset({"paper-api.alpaca.markets", "data.alpaca.markets"}),
     "worker": frozenset({"api.typesafe.ai"}),
+    "research-gateway": frozenset({"api.openai.com", "api.anthropic.com"}),
 }
 MAX_HEADER = 8192
 MAX_HELLO = 16384
@@ -79,12 +80,17 @@ def destination(header: bytes, role: str) -> str:
         for line in lines[1:-2]:
             name, value = line.split(":", 1)
             name = name.lower()
-            if name in seen or name not in {"host", "proxy-connection"}:
+            allowed = {"host", "proxy-connection"}
+            if role == "research-gateway":
+                allowed.add("accept")
+            if name in seen or name not in allowed:
                 raise EgressDenied("egress denied")
             seen.add(name)
             if name == "host" and value.strip() != authority:
                 raise EgressDenied("egress denied")
             if name == "proxy-connection" and value.strip().lower() != "keep-alive":
+                raise EgressDenied("egress denied")
+            if name == "accept" and value.strip() != "*/*":
                 raise EgressDenied("egress denied")
         return host
     except (ValueError, KeyError, UnicodeError) as exc:
@@ -106,6 +112,10 @@ class ConnectProxy:
             raise EgressDenied("egress denied")
         if mock_route is not None and mock_route.host not in DESTINATIONS[role]:
             raise EgressDenied("egress denied")
+        if role == "research-gateway" and (
+            mock_route is None or mock_route.address != "127.0.0.1"
+        ):
+            raise EgressDenied("egress denied")
         self.role = role
         self.mock_route = mock_route
         self.slots = asyncio.Semaphore(32)
@@ -113,6 +123,8 @@ class ConnectProxy:
     async def resolve(self, host: str) -> tuple[str, int]:
         if self.mock_route is not None and host == self.mock_route.host:
             return self.mock_route.address, self.mock_route.port
+        if self.role == "research-gateway":
+            raise EgressDenied("egress denied")
         answers = await asyncio.get_running_loop().getaddrinfo(
             host, 443, type=socket.SOCK_STREAM
         )

@@ -29,6 +29,7 @@ class RunKind(StrEnum):
     DIALOGUE = "DIALOGUE"
     SCHEDULED = "SCHEDULED"
     REEVALUATION = "REEVALUATION"
+    PROVIDER_PROBE = "PROVIDER_PROBE"
 
 
 class RunConflict(ValueError):
@@ -50,6 +51,7 @@ class ClaimedInput:
     kind: RunKind
     input_ref: str
     checkpoint_ref: str | None
+    dispatch_deadline: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -210,7 +212,8 @@ class RunStore:
         }
         with self.engine.connect() as connection:
             row = connection.execute(text("""
-                SELECT kind,input_ref,checkpoint_ref,agent_binding FROM agent_research.runs
+                SELECT kind,input_ref,checkpoint_ref,agent_binding,
+                    least(deadline_at,lease_until) AS dispatch_deadline FROM agent_research.runs
                 WHERE run_id=:id AND owner=:owner AND fence=:fence AND version=:version
                   AND state='RUNNING' AND lease_until>clock_timestamp()
             """), params).one_or_none()
@@ -220,7 +223,9 @@ class RunStore:
         agent = require_agent(binding["agent_id"], binding["version"], binding["policy_version"])
         if json.loads(_agent_binding(agent)) != binding:
             raise AgentPolicyDenied(AgentPolicyDenied.code)
-        return ClaimedInput(RunKind(row.kind), row.input_ref, row.checkpoint_ref)
+        return ClaimedInput(
+            RunKind(row.kind), row.input_ref, row.checkpoint_ref, row.dispatch_deadline,
+        )
 
     @staticmethod
     def _reap(connection: Connection) -> None:
