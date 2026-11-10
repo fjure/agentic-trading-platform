@@ -10,6 +10,8 @@ from uuid import NAMESPACE_URL, uuid5
 
 from sqlalchemy import text
 
+from packages.agent_research.companion.testability import Assessment, Classification
+from packages.agent_research.quant_approval import ApprovalBinding, ApprovalDenied
 from packages.backtesting.calendar import (
     first_signal_knowledge,
     read_schedule_rows,
@@ -370,10 +372,17 @@ class QuantLabService:
     _verify = BacktestService._verify
     _binding = staticmethod(BacktestService._binding)
 
-    def __init__(self, engine, *, code_version, cursor_key=None):
+    def __init__(
+        self, engine, *, code_version, cursor_key=None, approval_engine=None,
+        authorize_operator=None,
+    ):
         if not isinstance(code_version, str) or not re.fullmatch(r"[0-9a-f]{40}", code_version):
             raise ValueError("verified code version required")
         self.storage, self.code_version = ExperimentStorage(engine), code_version
+        self._approval_storage = None if approval_engine is None else ExperimentStorage(
+            approval_engine,
+        )
+        self._authorize_operator = authorize_operator
         if cursor_key is None:
             with self.storage.transaction() as connection:
                 cursor_key = connection.execute(
@@ -437,7 +446,9 @@ class QuantLabService:
         ):
             raise BacktestError(400, "INVALID_REQUEST")
 
-    def create_experiment(self, payload, *, actor, key, trace, scope="creation"):
+    def create_experiment(
+        self, payload, *, actor, key, trace, scope="creation", _agent_origin=None,
+    ):
         self._write(actor, key, trace)
         domain = _invalid_definition(payload)
         candidates = [
@@ -456,11 +467,19 @@ class QuantLabService:
                 ),
             ]
         ]
-        identifier = uuid5(NAMESPACE_URL, f"quant-lab-v1:create:{actor}:{key}")
+        namespace = "create" if _agent_origin is None else f"agent-create:{_agent_origin[0]}"
+        identifier = uuid5(NAMESPACE_URL, f"quant-lab-v1:{namespace}:{actor}:{key}")
+        origin = {} if _agent_origin is None else {"agent_origin": _agent_origin}
         row = self.storage.create_definition(
-            payload, candidates, actor=actor, identifier=identifier
+            payload, candidates, actor=actor, identifier=identifier, **origin,
         )
         return self._definition_wire(row, {}, scope=scope, force_draft=True)
+
+    def create_agent_experiment(self, payload, *, actor, key, trace, run_id, idea_id, idea_version):
+        return self.create_experiment(
+            payload, actor=actor, key=key, trace=trace,
+            _agent_origin=(identity(run_id), idea_id, idea_version),
+        )
 
     @staticmethod
     def _version(row, payload):
@@ -470,7 +489,9 @@ class QuantLabService:
         ):
             raise BacktestError(409, "DEFINITION_CONFLICT")
 
-    def validate_experiment(self, id, payload, *, actor, key, trace, scope="validation"):
+    def validate_experiment(
+        self, id, payload, *, actor, key, trace, scope="validation", _agent_preflight=False,
+    ):
         self._write(actor, key, trace)
         identifier = identity(id)
         definition = self.storage.definition(identifier)
@@ -485,6 +506,14 @@ class QuantLabService:
             with self.storage.transaction() as connection:
                 snapshot = DatasetPort().snapshot(connection)
                 body, starts = estimate_budget(connection, definition, domain, snapshot)
+                if _agent_preflight:
+                    context = connection.execute(
+                        text("SELECT backtest.agent_validation_context(:version)"),
+                        {"version": snapshot.version},
+                    ).scalar_one()
+                    if context is None:
+                        raise BacktestError(409, "APPROVAL_STALE")
+                    body["agentValidationContext"] = context
                 body["validatedAt"] = utc_string(snapshot.at)
                 receipt = dict(history_bound(connection))
                 body["registryWatermark"] = receipt["mark"]
@@ -510,6 +539,11 @@ class QuantLabService:
                 history, nextOverlapCursor=self._next(binding, receipt, len(history["overlaps"]))
             )
         return result
+
+    def validate_agent_experiment(self, id, payload, *, actor, key, trace, scope="validation"):
+        return self.validate_experiment(
+            id, payload, actor=actor, key=key, trace=trace, scope=scope, _agent_preflight=True,
+        )
 
     def _predecessor_hash(self, definition):
         predecessor = definition["predecessor_id"]
@@ -571,6 +605,91 @@ class QuantLabService:
                 raise BacktestError(429, "ADMISSION_LIMIT") from None
             raise
         return self._batch_detail(batch["batch_id"], {}, scope=scope)
+
+    def _require_approval_operator(self, actor, key, trace):
+        self._write(actor, key, trace)
+        if self._approval_storage is None or self._authorize_operator is None:
+            raise BacktestError(403, "APPROVAL_REQUIRED")
+        if self._authorize_operator(actor) is not True:
+            raise BacktestError(403, "APPROVAL_REQUIRED")
+
+    def prepare_agent_approval(self, binding_document, *, actor, key, trace):
+        self._require_approval_operator(actor, key, trace)
+        try:
+            binding = ApprovalBinding.parse(binding_document)
+        except ApprovalDenied:
+            raise BacktestError(409, "APPROVAL_STALE") from None
+        if binding.to_document()["operatorId"] != actor:
+            raise BacktestError(403, "APPROVAL_REQUIRED")
+        return self._approval_storage.prepare_approval(binding, key), binding.binding_hash
+
+    def accept_agent_approximation(
+        self, *, actor, key, trace, idea_id, idea_version, decision_id, revision,
+        proposal_id, proposal_hash,
+    ):
+        self._require_approval_operator(actor, key, trace)
+        if (
+            any(not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", value)
+                for value in (idea_id, decision_id, proposal_id))
+            or any(type(value) is not int or not 1 <= value <= 2**53 - 1
+                   for value in (idea_version, revision))
+            or not isinstance(proposal_hash, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", proposal_hash)
+        ):
+            raise BacktestError(400, "INVALID_REQUEST")
+        return self._approval_storage.record_approximation(
+            actor, idea_id, idea_version, decision_id, revision, proposal_id, proposal_hash,
+        )
+
+    def register_agent_approximation(self, definition_id, proposal_id, assessment):
+        if (
+            not isinstance(assessment, Assessment)
+            or assessment.classification is not Classification.TESTABLE_WITH_DECLARED_APPROXIMATION
+            or assessment.approximation is None
+            or assessment.mapping != assessment.approximation.mapping
+        ):
+            raise BacktestError(409, "APPROVAL_STALE")
+        identifier = identity(definition_id)
+        definition = self.storage.definition(identifier)
+        domain = definition_domain(
+            definition["body"], definition_version=definition["definition_version"],
+            predecessor_hash=self._predecessor_hash(definition),
+        )
+        mapping = assessment.approximation.mapping
+        if len(domain.candidates) != 1 or domain.research_mode != mapping.research_mode:
+            raise BacktestError(409, "APPROVAL_STALE")
+        candidate = domain.candidates[0]
+        if (candidate.strategy_id, candidate.strategy_version, candidate.parameters) != (
+            mapping.strategy_id, mapping.strategy_version, mapping.parameters,
+        ):
+            raise BacktestError(409, "APPROVAL_STALE")
+        self.storage.register_approximation(identifier, proposal_id, assessment.approximation)
+
+    def start_approved_experiment_batch(
+        self, approval_id, binding_hash, *, actor, key, trace, scope="admission",
+    ):
+        self._require_approval_operator(actor, key, trace)
+        if not isinstance(binding_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", binding_hash):
+            raise BacktestError(409, "APPROVAL_STALE")
+        approval_id = identity(approval_id)
+        try:
+            batch_id = self._approval_storage.enqueue_approved(
+                approval_id, binding_hash, actor, key, trace, self.code_version,
+            )
+        except BacktestError as error:
+            code = "QUANT_CAPACITY_EXHAUSTED" if error.status == 429 else error.code
+            if code in {
+                "APPROVAL_STALE", "QUANT_CAPACITY_EXHAUSTED",
+                "BUDGET_EXHAUSTED", "IDEMPOTENCY_CONFLICT",
+            }:
+                try:
+                    self._approval_storage.record_approval_denial(approval_id, actor, trace, code)
+                except BacktestError:
+                    pass
+            if error.status == 429:
+                raise BacktestError(429, code) from None
+            raise
+        return self._batch_detail(batch_id, {}, scope=scope)
 
     def _history(
         self,

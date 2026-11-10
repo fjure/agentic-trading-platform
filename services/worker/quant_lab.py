@@ -106,6 +106,40 @@ def _reliability(inputs):
     )
 
 
+def _check_approved_budget(budget, lease, definition, receipt):
+    counts = ("candidateCount", "reservedQueueSlots", "snapshotRows", "simulationBarSteps",
+              "publicationBytes")
+    if (
+        budget.get("calendarConfirmed") is not True or budget.get("withinLimits") is not True
+        or any(type(budget.get(key)) is not int or budget[key] <= 0 for key in counts)
+        or budget["candidateCount"] != len(definition.candidates)
+        or budget["reservedQueueSlots"] != definition.queue_slots
+        or budget["reservedQueueSlots"] != lease.row["slots"]
+        or lease.row["bar_steps"] > budget["simulationBarSteps"]
+        or lease.row["publication_bytes"] > budget["publicationBytes"]
+    ):
+        raise BacktestBudgetExceeded("approved quant budget unavailable or exhausted")
+    license_status = receipt["license_body"]["status"]
+    if license_status in ("DENIED", "BLOCKED"):
+        raise BacktestBlocked("LICENSE_DENIED")
+    if license_status not in ("CONFIRMED", "DECLARED_CONFIRMED"):
+        raise BacktestBlocked("LICENSE_UNKNOWN")
+
+
+def _check_approved_inputs(budget, definition, inputs, receipt):
+    steps = sum(
+        (len(phase.dataset.steps) + len(phase.dataset.warmup))
+        * (definition.queue_slots if phase.binding.phase in ("training", "validation")
+           else len(REFERENCE_CONFIGURATIONS) + 1)
+        for phase in inputs.phases
+    )
+    # Admission bounds the complete read set. These immutable bindings provide an
+    # independent lower bound without counting repeated projections of a source.
+    rows = len(inputs.references) + len(receipt["trust_body"]["decisions"]) + 1
+    if steps > budget["simulationBarSteps"] or rows > budget["snapshotRows"]:
+        raise BacktestBudgetExceeded("materialized quant inputs exceed approved budget")
+
+
 def _findings(reliability, phase):
     b = phase.binding
     period = _period(b.window.start, b.window.end)
@@ -529,11 +563,20 @@ class QuantLabWorker:
             else None,
         )
         receipt = self.storage.source_receipt(lease.batch_id)
+        budget = self.storage.approval_budget(lease.batch_id)
+        if budget is not None:
+            _check_approved_budget(budget, lease, definition, receipt)
         inputs = load_quant_inputs(
             self.storage, lease, definition, receipt, checkpoint, deadline or checkpoint
         )
         context = QuantValidationContext(inputs.manifest, inputs.phases)
+        if budget is not None:
+            _check_approved_inputs(budget, definition, inputs, receipt)
         common = self._bind(lease, row, inputs)
+        if budget is not None:
+            gate = self._gate(lease)
+            if gate:
+                raise BacktestBlocked(gate)
         validation_rows = {}
         for planned in plan_analysis_validation(definition):
             rows = self._run_phase(lease, context, inputs, planned, common, checkpoint)
