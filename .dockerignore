@@ -13,6 +13,7 @@ contracts/schemas/*
 contracts/schemas/v1/*
 !contracts/schemas/v1/backtesting.schema.json
 !contracts/schemas/v1/quant-lab.schema.json
+!contracts/schemas/v1/agent-research.schema.json
 tests
 __pycache__
 *.pyc
