@@ -14,6 +14,7 @@ COPY packages /opt/lab/packages
 COPY config /opt/lab/config
 COPY contracts/schemas/v1/backtesting.schema.json /opt/lab/contracts/schemas/v1/backtesting.schema.json
 COPY contracts/schemas/v1/quant-lab.schema.json /opt/lab/contracts/schemas/v1/quant-lab.schema.json
+COPY contracts/schemas/v1/agent-research.schema.json /opt/lab/contracts/schemas/v1/agent-research.schema.json
 COPY alembic.ini /opt/lab/alembic.ini
 ARG SOURCE_REVISION=""
 RUN printf '%s' "$SOURCE_REVISION" > /opt/lab/git-revision

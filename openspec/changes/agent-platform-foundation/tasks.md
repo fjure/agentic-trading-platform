@@ -16,7 +16,7 @@ Jede Checkbox bezeichnet ein Issue. Akzeptanz, Dateizuständigkeit und Prüfunge
 
 ## 4. Ideen und Dialog versionieren
 
-- [ ] 4.1 [APF-04 Ideen und Dialog versionieren](work-packages/APF-04.md) · abhängig von APF-01, APF-02, APF-03.
+- [x] 4.1 [APF-04 Ideen und Dialog versionieren](work-packages/APF-04.md) · abhängig von APF-01, APF-02, APF-03.
 
 ## 5. Quant-Draft und Approval atomar binden
 
