@@ -20,7 +20,7 @@ Jede Checkbox bezeichnet ein Issue. Akzeptanz, Dateizuständigkeit und Prüfunge
 
 ## 5. Quant-Draft und Approval atomar binden
 
-- [ ] 5.1 [APF-05 Quant-Draft und Approval atomar binden](work-packages/APF-05.md) · abhängig von APF-02, APF-04.
+- [x] 5.1 [APF-05 Quant-Draft und Approval atomar binden](work-packages/APF-05.md) · abhängig von APF-02, APF-04.
 
 ## 6. Proaktive Researchpipeline ergänzen
 

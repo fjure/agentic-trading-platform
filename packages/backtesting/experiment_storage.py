@@ -226,6 +226,8 @@ class ExperimentStorage:
                 "quant snapshot conflict": (409, "SNAPSHOT_CONFLICT"),
                 "quant seed conflict": (409, "SNAPSHOT_CONFLICT"),
                 "quant budget exhausted": (409, "BUDGET_EXHAUSTED"),
+                "APPROVAL_REQUIRED": (409, "APPROVAL_REQUIRED"),
+                "quant approval conflict": (409, "APPROVAL_STALE"),
             }.get(message, (503, "UNAVAILABLE"))
             failure = BacktestError(status, code)
         if failure:
@@ -235,7 +237,10 @@ class ExperimentStorage:
     def fenced(connection, lease):
         connection.execute(text("SELECT backtest.assert_quant_fence(:id)"), {"id": lease.batch_id})
 
-    def create_definition(self, definition, candidates, *, actor="local-operator", identifier=None):
+    def create_definition(
+        self, definition, candidates, *, actor="local-operator", identifier=None,
+        agent_origin: tuple[UUID, str, int] | None = None,
+    ):
         """Candidates are validated QSL domain configurations with explicit roles.
 
         Configuration hashing excludes role, so an explicit search flat remains a
@@ -308,13 +313,28 @@ class ExperimentStorage:
                     or existing["body"] != definition
                 ):
                     raise BacktestError(409, "IDEMPOTENCY_CONFLICT")
+                if agent_origin is not None:
+                    bound = connection.execute(text("""
+                        SELECT run_id,idea_id,idea_version
+                        FROM backtest.experiment_agent_provenance WHERE definition_id=:id
+                    """), {"id": identifier}).one_or_none()
+                    if bound is None or tuple(bound) != agent_origin:
+                        raise BacktestError(409, "IDEMPOTENCY_CONFLICT")
                 return dict(existing)
+            operation = (
+                "request_experiment_definition" if agent_origin is None
+                else "request_agent_experiment_definition"
+            )
+            origin_arguments = "" if agent_origin is None else ",:run,:idea,:idea_version"
+            origin_values = {} if agent_origin is None else dict(
+                zip(("run", "idea", "idea_version"), agent_origin, strict=True),
+            )
             connection.execute(
                 text(
-                    "SELECT backtest.request_experiment_definition(:id,:actor,"
+                    f"SELECT backtest.{operation}(:id,:actor,"
                     "CAST(:body AS "
                     "jsonb),:canonical,:hash,:policy,:policy_canonical,CAST(:candidates AS "
-                    "jsonb))"
+                    f"jsonb){origin_arguments})"
                 ),
                 dict(
                     id=identifier,
@@ -327,6 +347,7 @@ class ExperimentStorage:
                         canonical_policy_preimage(domain.strategy_selection_policy)
                     ),
                     candidates=encoded(prepared),
+                    **origin_values,
                 ),
             )
             return self._definition(connection, identifier)
@@ -465,6 +486,68 @@ class ExperimentStorage:
                 .mappings()
                 .one()
             )
+
+    def enqueue_approved(self, approval_id, binding_hash, actor, key, trace, code_version):
+        """The private role can consume a persisted approval through canonical admission."""
+        with self.transaction() as connection:
+            batch_id = connection.execute(text("""
+                SELECT agent_research.consume_quant_approval(
+                    :approval,:hash,:actor,:key,:trace,:code,:batch)
+            """), {
+                "approval": approval_id, "hash": binding_hash, "actor": actor,
+                "key": key, "trace": trace, "code": code_version, "batch": uuid4(),
+            }).scalar_one()
+            return batch_id
+
+    def prepare_approval(self, binding, key):
+        with self.transaction() as connection:
+            return connection.execute(text("""
+                SELECT agent_research.prepare_quant_approval(:id,CAST(:binding AS jsonb),:body,:key)
+            """), {
+                "id": uuid4(), "binding": binding.canonical_text, "body": binding.canonical_text,
+                "key": key,
+            }).scalar_one()
+
+    def record_approximation(
+        self, actor, idea_id, idea_version, decision_id, revision, proposal_id, proposal_hash,
+    ):
+        with self.transaction() as connection:
+            return connection.execute(text("""
+                SELECT agent_research.record_quant_approximation(
+                    :actor,:idea,:version,:decision,:revision,:proposal,:hash)
+            """), {
+                "actor": actor, "idea": idea_id, "version": idea_version,
+                "decision": decision_id, "revision": revision,
+                "proposal": proposal_id, "hash": proposal_hash,
+            }).scalar_one()
+
+    def register_approximation(self, definition_id, proposal_id, approximation):
+        with self.transaction() as connection:
+            connection.execute(text("""
+                SELECT agent_research.register_quant_approximation(
+                    :idea,:version,:definition,:proposal,:hash,:description)
+            """), {
+                "idea": approximation.idea_id, "version": approximation.idea_version,
+                "definition": definition_id, "proposal": proposal_id,
+                "hash": approximation.binding, "description": approximation.difference,
+            })
+
+    def record_approval_denial(self, approval_id, actor, trace, code):
+        with self.transaction() as connection:
+            connection.execute(text("""
+                SELECT agent_research.record_quant_approval_denial(:id,:actor,:trace,:code)
+            """), {"id": approval_id, "actor": actor, "trace": trace, "code": code})
+
+    def approval_budget(self, batch_id):
+        with self.transaction() as connection:
+            available = connection.execute(
+                text("SELECT to_regprocedure('backtest.agent_batch_budget(uuid)') IS NOT NULL"),
+            ).scalar_one()
+            if not available:
+                return None
+            return connection.execute(
+                text("SELECT backtest.agent_batch_budget(:id)"), {"id": batch_id},
+            ).scalar_one()
 
     def claim(self, owner):
         if not isinstance(owner, UUID):
