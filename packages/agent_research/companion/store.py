@@ -100,6 +100,7 @@ class CompanionStore:
     def create(
         self, actor: str, idea_id: str, dialogue_id: str, dialogue: dict, *,
         key: str, command: bytes, make_idea: Callable[[], dict],
+        scope: ScopedConnection | None = None, successor: dict | None = None,
     ) -> dict:
         _identity(actor, idea_id, dialogue_id, key)
         if type(command) is not bytes or len(command) > 65536:
@@ -107,7 +108,7 @@ class CompanionStore:
         key_hash = digest(self._key, b"companion-create-key-v1\0" + key.encode(), "sha256").hex()
         command_hash = digest(self._key, b"companion-create-v1\0" + command, "sha256").hex()
         try:
-            with self._engine.begin() as connection:
+            with nullcontext(scope) if scope is not None else self._engine.begin() as connection:
                 _lock_idea(connection, f"create:{actor}:{key_hash}")
                 replay = connection.execute(text("""
                     SELECT idea_id,command_hash FROM agent_research.companion_ideas
@@ -124,6 +125,8 @@ class CompanionStore:
                     VALUES (:idea,:actor,:key,:hash)
                 """), {"idea": idea_id, "actor": actor, "key": key_hash, "hash": command_hash})
                 _insert_idea(connection, idea_id, 1, idea)
+                if successor is not None:
+                    _insert_idea(connection, idea_id, 2, successor)
                 connection.execute(text("""
                     INSERT INTO agent_research.companion_dialogues (dialogue_id,idea_id)
                     VALUES (:dialogue,:idea)
@@ -131,8 +134,10 @@ class CompanionStore:
                 connection.execute(text("""
                     INSERT INTO agent_research.companion_dialogue_versions
                       (dialogue_id,idea_id,version,idea_version,document)
-                    VALUES (:dialogue,:idea,1,1,CAST(:document AS jsonb))
-                """), {"dialogue": dialogue_id, "idea": idea_id, "document": _encode(dialogue)})
+                    VALUES (:dialogue,:idea,1,:idea_version,CAST(:document AS jsonb))
+                """), {"dialogue": dialogue_id, "idea": idea_id,
+                        "idea_version": 1 if successor is None else 2,
+                        "document": _encode(dialogue)})
                 return _idea(connection, actor, idea_id, 1).document
         except IntegrityError:
             raise CompanionConflict("COMPANION_ID_CONFLICT") from None
