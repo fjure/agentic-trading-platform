@@ -49,7 +49,7 @@ def test_research_report_actual_postgresql():
         ledger_support.GROUPS, harness.TABLES = previous_groups, previous_tables
 
 
-def _approved_batch(owner, service, runs):
+def _approved_batch(owner, service, runs, *, start):
     instrument_id = seed_market(owner)
     _seed_idea(owner)
     request, _ = fixture()
@@ -114,32 +114,80 @@ def _approved_batch(owner, service, runs):
     approval_id, digest = service.prepare_agent_approval(
         binding.to_document(), actor=_OPERATOR, key="report-fixture-prepare", trace=_TRACE,
     )
-    return service.start_approved_experiment_batch(
-        str(approval_id), digest, actor=_OPERATOR, key="report-fixture-consume", trace=_TRACE,
-    )["id"]
+    return start(approval_id, digest)
 
 
 def _verify(owner, control, dispatch, research, admission):
+    import httpx
+    from fastapi.testclient import TestClient
+
+    from services.control_api.auth import LocalAuth
+    from services.runtime.agent_quant_admission import (
+        PATH,
+        QuantAdmissionAuthentication,
+        QuantAdmissionClient,
+        create_quant_admission_app,
+        started_receipt_reader,
+    )
+    from tests.contracts.test_agent_research_routes import activate, client
+
     quant = QuantLabService(
         control, code_version=_CODE, approval_engine=admission,
         authorize_operator=lambda actor: actor == _OPERATOR,
     )
-    batch = _approved_batch(owner, quant, RunStore(research))
+    def start(approval_id, digest):
+        relay_auth = QuantAdmissionAuthentication(bytes(range(32)))
+        auth = LocalAuth()
+        app = create_quant_admission_app(
+            relay_auth, service=quant, read_started_at=started_receipt_reader(admission),
+        )
+        with TestClient(app) as authority:
+            def forward(request):
+                response = authority.post(PATH, headers=request.headers, content=request.content)
+                return httpx.Response(response.status_code, headers=response.headers,
+                                      stream=httpx.ByteStream(response.content))
+
+            approved = QuantAdmissionClient(relay_auth, transport=httpx.MockTransport(forward))
+            with client(auth, approval_handler=approved) as http:
+                activate(http, auth, "report-control-authenticate")
+                path = f"/api/v1/research/agent/approvals/{approval_id}/decision"
+                headers = {"Origin": auth.origin, "Idempotency-Key": "report-fixture-consume"}
+                payload = {"action": "APPROVE_AND_START", "expectedApprovalVersion": 1,
+                           "bindingHash": digest}
+                response = http.post(path, headers=headers, json=payload)
+                assert response.status_code == 202
+                receipt = response.json()
+                assert receipt["approvalVersion"] == 2 and receipt["state"] == "STARTED"
+                assert http.post(path, headers=headers, json=payload).json() == receipt
+                return receipt["batchId"]
+
+    batch = _approved_batch(owner, quant, RunStore(research), start=start)
     store = ReportStore(research)
     assert store.authorize(batch, actor=_OPERATOR) is None
     worker = BacktestWorker(dispatch, enabled=True, code_version=_CODE)
-    assert worker.tick()
+    worked = worker.tick()
     with owner.connect() as connection:
         status, error = connection.execute(text("""
             SELECT status,error_code FROM backtest.experiment_batches WHERE batch_id=:batch
         """), {"batch": batch}).one()
-    assert status == "SUCCEEDED", error
+    if not worked or status != "SUCCEEDED":
+        print(f"QUANT_WORKER_STATUS {status} {error or 'NO_REASON'}")
+        raise AssertionError("native Quant worker did not complete")
     assert store.authorize(batch, actor="another-operator") is None
 
     service = ResearchReports(QuantReportSource(research), store, permits=lambda _: True)
     proposal = b'{"raw":"synthetic-confidential-marker"}'
-    published = service.publish(batch, actor=_OPERATOR, proposal=proposal)
+    with research.begin() as connection:
+        assert connection.scalar(text("SELECT agent_research.ready_quant_runs()")) == 1
+        assert connection.scalar(text("SELECT agent_research.ready_quant_runs()")) == 0
+    runs = RunStore(research)
+    claim = runs.claim(uuid4())
+    assert claim is not None
+    published = service.publish(batch, actor=_OPERATOR, proposal=proposal, claim=claim)
     report_id = published["summary"]["reportId"]
+    runs.transition(claim, RunState.COMPLETED, checkpoint_ref=report_id)
+    with pytest.raises(ReportStoreError, match="REPORT_SCOPE_DENIED"):
+        store.publish(published, actor=_OPERATOR, claim=claim)
     assert published["summary"]["interpretationStatus"] == "FACTS_ONLY"
     assert published["selection"]["status"] == "SELECTED"
     holdout = published["phases"]["holdout"]["metrics"]

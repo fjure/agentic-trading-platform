@@ -182,6 +182,7 @@ def safety():
     import psycopg
     from sqlalchemy import text
 
+    from services.execution.recovery_health import heartbeat_execution_owner
     from tests.integration.test_paper_lifecycle import PaperFixture
 
     fixture = PaperFixture()
@@ -197,7 +198,16 @@ def safety():
         ) as listener:
             listener.execute("LISTEN qsl09_active_simulation")
             print("READY", flush=True)
-            assert next(listener.notifies(timeout=295, stop_after=1), None)
+            deadline = monotonic() + 295
+            while monotonic() < deadline:
+                if next(listener.notifies(timeout=3, stop_after=1), None):
+                    break
+                heartbeat_execution_owner(
+                    ledger=fixture.ledger, account_id="paper", owner_id=fixture.owner,
+                    fencing_token=fixture.fence,
+                )
+            else:
+                raise AssertionError("Quant simulation did not begin")
             fixture.refresh()
             _, _, _, activation = fixture.start()
             assert set(activation) == {"activationId", "expiresAt"}
@@ -523,8 +533,9 @@ if __name__ == "__main__":
         }[sys.argv[1]](*sys.argv[2:])
     except Exception as error:
         last = traceback.extract_tb(error.__traceback__)[-1]
+        reason = getattr(error, "reason_code", "")
         print(
-            f"FAIL backtest isolation {type(error).__name__} "
+            f"FAIL backtest isolation {type(error).__name__} {reason} "
             f"{Path(last.filename).name}:{last.lineno}"
         )
         raise SystemExit(1) from None

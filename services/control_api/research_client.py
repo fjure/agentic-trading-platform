@@ -7,9 +7,11 @@ from time import monotonic
 import httpx
 
 from packages.research.jobs import ResearchJobError
+from services.control_api.agent_research_routes import AgentResearchError
 from services.control_api.research_dto import RESPONSE_MODELS
 from services.control_api.research_routes import CURRENT_TRACE, ERROR_CODES
 from services.control_api.research_service import identity
+from services.runtime import agent_research_relay as relay
 
 
 def _pairs(items):
@@ -112,3 +114,54 @@ class ResearchClient:
         if actor != "local-operator":
             raise ResearchJobError(403, "FORBIDDEN")
         return self._request("resume_job", "ingestion-jobs", body=payload, key=key)
+
+
+class AgentResearchClient:
+    """Send authenticated operations to the fixed private Research supervisor."""
+
+    def __init__(self, auth: relay.AgentRelayAuthentication, *, transport=None):
+        if transport is not None and type(transport) is not httpx.MockTransport:
+            raise ValueError("exact MockTransport required")
+        self._auth = auth
+        self._transport = transport
+
+    def __call__(self, operation, params, query, payload, *, actor, key, trace, scope):
+        try:
+            body = relay.request_body(
+                operation, params, query, payload, actor=actor, key=key, trace=trace, scope=scope,
+            )
+            deadline = monotonic() + 8
+            with httpx.Client(
+                transport=self._transport, timeout=5, trust_env=False, follow_redirects=False,
+            ) as client:
+                with client.stream("POST", relay.RELAY_URL, content=body, headers={
+                    "Content-Type": "application/json", "Accept-Encoding": "identity",
+                    relay.SIGNATURE_HEADER: self._auth.request_signature(body),
+                }) as response:
+                    signatures = response.headers.get_list(relay.SIGNATURE_HEADER)
+                    if (
+                        response.status_code != 200
+                        or response.headers.get("content-type") != "application/json"
+                        or response.headers.get("content-encoding", "identity") != "identity"
+                        or len(signatures) != 1
+                    ):
+                        raise ValueError("invalid Research relay response")
+                    lengths = response.headers.get_list("content-length")
+                    if lengths and (
+                        len(lengths) != 1 or not lengths[0].isascii() or not lengths[0].isdigit()
+                        or len(lengths[0]) > 8 or int(lengths[0]) > relay.MAX_REPLY
+                    ):
+                        raise ValueError("invalid Research relay response length")
+                    raw = bytearray()
+                    for chunk in response.iter_raw():
+                        if len(raw) + len(chunk) > relay.MAX_REPLY or monotonic() >= deadline:
+                            raise ValueError("Research relay response limit exceeded")
+                        raw.extend(chunk)
+            reply = bytes(raw)
+            expected_signature = self._auth.response_signature(body, reply)
+            if not relay.matches_signature(expected_signature, signatures[0]):
+                raise ValueError("invalid Research relay response signature")
+            return relay.parse_reply(operation, trace, reply)
+        except Exception:
+            pass
+        raise AgentResearchError(503, "PROVIDER_UNAVAILABLE")

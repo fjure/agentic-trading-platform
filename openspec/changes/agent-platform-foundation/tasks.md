@@ -32,7 +32,7 @@ Jede Checkbox bezeichnet ein Issue. Akzeptanz, Dateizuständigkeit und Prüfunge
 
 ## 8. Control API und Supervisor integrieren
 
-- [ ] 8.1 [APF-08 Control API und Supervisor integrieren](work-packages/APF-08.md) · abhängig von APF-05, APF-06, APF-07.
+- [x] 8.1 [APF-08 Control API und Supervisor integrieren](work-packages/APF-08.md) · abhängig von APF-05, APF-06, APF-07.
 
 ## 9. Material-Researchoberfläche integrieren
 

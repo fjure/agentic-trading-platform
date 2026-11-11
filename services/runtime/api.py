@@ -213,11 +213,15 @@ def run_api(config, ledger, telemetry=None):
     from services.control_api.events import EventFeed
     from services.control_api.paper_client import PaperClient
     from services.control_api.readiness_client import ReadinessClient
-    from services.control_api.research_client import ResearchClient
+    from services.control_api.research_client import AgentResearchClient, ResearchClient
     from services.control_api.snapshot import SnapshotReader
     from services.control_api.trading_profile import TradingProfileBackend
     from services.execution.control_socket import LocalControlServer, dispatcher
     from services.setup.client import FixedSetupClient
+
+    from .agent_quant_admission import QuantAdmissionClient, load_quant_admission_authentication
+    from .agent_research_relay import AgentRelayAuthentication
+    from .agent_service import load_relay_key
 
     auth = LocalAuth(config.origin, transport_origin="http://127.0.0.1:8001")
     sampler = RuntimeMetrics(ledger, telemetry, config.account_id) if telemetry else None
@@ -238,6 +242,14 @@ def run_api(config, ledger, telemetry=None):
         }
 
     backtesting = BacktestClient()
+    try:
+        agent_research = AgentResearchClient(AgentRelayAuthentication(load_relay_key()))
+    except ValueError:
+        agent_research = None
+    try:
+        agent_quant_approval = QuantAdmissionClient(load_quant_admission_authentication())
+    except ValueError:
+        agent_quant_approval = None
     canonical = create_app(
         auth=auth,
         backend=ControlBackend(ledger, config.account_id),
@@ -254,6 +266,8 @@ def run_api(config, ledger, telemetry=None):
         readiness=ReadinessClient(),
         collection=CollectionClient(),
         quant_lab=backtesting.quant_lab,
+        agent_research=agent_research,
+        agent_quant_approval=agent_quant_approval,
     )
 
     def status_loop():

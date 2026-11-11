@@ -184,6 +184,18 @@ class CompanionStore:
                 raise CompanionConflict("STALE_IDEA_VERSION")
             return dialogue
 
+    def read_owned_dialogue(self, actor: str, dialogue_id: str) -> tuple[str, DialogueRevision]:
+        _identity(actor, dialogue_id)
+        with self._engine.connect() as connection:
+            idea_id = connection.execute(text("""
+                SELECT d.idea_id FROM agent_research.companion_dialogues d
+                JOIN agent_research.companion_ideas i USING (idea_id)
+                WHERE i.actor=:actor AND d.dialogue_id=:dialogue
+            """), {"actor": actor, "dialogue": dialogue_id}).scalar_one_or_none()
+            if idea_id is None:
+                raise CompanionConflict("COMPANION_NOT_FOUND")
+            return idea_id, self._dialogue(connection, idea_id, dialogue_id)
+
     def check_current_turn(
         self, scope: ReadOnlyScopedConnection, actor: str, idea_id: str, dialogue_id: str, *,
         idea_version: int, dialogue_version: int, turn_id: str, original_id: str,

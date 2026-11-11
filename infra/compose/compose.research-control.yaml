@@ -1,0 +1,71 @@
+# Optional APF Control services. Apply this overlay with the base compose file.
+x-private-research: &private-research
+  profiles: [research-control]
+  build:
+    context: ../..
+    dockerfile: infra/containers/Dockerfile
+    args:
+      SOURCE_REVISION: ${ATL_SOURCE_REVISION:-}
+  user: "10001:10001"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  tmpfs: [/tmp]
+  init: true
+  restart: "no"
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  control-api:
+    networks: [research_control_rpc, quant_admission_rpc]
+    secrets:
+      - source: research_relay_key
+        target: research-relay-key
+      - source: quant_admission_relay_key
+        target: quant-admission-relay-key
+  postgres:
+    networks: [research_supervisor_db, quant_admission_db]
+  research-supervisor:
+    <<: *private-research
+    command: [python, -m, services.runtime.agent_service]
+    networks: [research_control_rpc, research_supervisor_db]
+    secrets:
+      - source: research_relay_key
+        target: research-relay-key
+      - source: research_command_key
+        target: research-command-key
+      - source: agent_research_database
+        target: agent-research-database
+  quant-admission:
+    <<: *private-research
+    command: [python, -m, services.runtime.agent_quant_admission]
+    networks: [quant_admission_rpc, quant_admission_db]
+    secrets:
+      - source: quant_admission_relay_key
+        target: quant-admission-relay-key
+      - source: quant_admission_database
+        target: quant-admission-database
+
+networks:
+  research_control_rpc:
+    internal: true
+  research_supervisor_db:
+    internal: true
+  quant_admission_rpc:
+    internal: true
+  quant_admission_db:
+    internal: true
+
+secrets:
+  research_relay_key:
+    file: ../../.tooling/application/runtime/research-relay-key
+  research_command_key:
+    file: ../../.tooling/application/runtime/research-command-key
+  agent_research_database:
+    file: ../../.tooling/application/runtime/agent-research-database.json
+  quant_admission_relay_key:
+    file: ../../.tooling/application/runtime/quant-admission-relay-key
+  quant_admission_database:
+    file: ../../.tooling/application/runtime/quant-admission-database.json

@@ -118,6 +118,21 @@ class CompanionService:
             command, "submit-original", arguments | {"expert": expert_reference}, change,
         )
 
+    def bind_expert(self, command: DialogueCommand, reference: tuple[str, int, str]):
+        def change(_idea, state):
+            if (state.turn_id is not None or state.expert is not None
+                    or self._resolve_expert is None):
+                raise CompanionConflict("EXPERT_REFERENCE_DENIED")
+            expert = self._resolve_expert(command.actor, *reference)
+            if expert is None or (
+                expert.definition_id, expert.definition_version, expert.definition_hash
+            ) != reference:
+                raise CompanionConflict("EXPERT_REFERENCE_DENIED")
+            revised = replace(state, version=state.version + 1, expert=expert)
+            return DialogueChange(revised.record(), "EXPERT_BOUND")
+
+        return self._change(command, "bind-expert", {"reference": reference}, change)
+
     def answer_local(
         self, command: DialogueCommand, *, question_id: str, field: str, value: str,
         turn_id: str, proposal_id: str,

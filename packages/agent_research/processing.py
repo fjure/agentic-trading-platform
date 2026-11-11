@@ -4,6 +4,7 @@ import hmac
 import json
 import re
 from collections.abc import Callable
+from contextlib import nullcontext
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -247,6 +248,7 @@ class ProcessingStore:
     def confirm(
         self, preview_id: UUID, commitment: str, binding: ProcessingBinding, *, session: str,
         key: str, check_current: Callable[[ReadOnlyScopedConnection, ProcessingBinding], None],
+        scope: ScopedConnection | None = None,
     ) -> ProcessingReceipt:
         """Bind the current server-produced preview; only exact replay can survive its loss."""
         if not session or not _KEY.fullmatch(key) or not _COMMITMENT.fullmatch(commitment):
@@ -260,7 +262,7 @@ class ProcessingStore:
             "key_hash": sha256(key.encode()).hexdigest(), "binding": json.dumps(binding.record()),
             "request_hash": sha256(request.encode()).hexdigest(),
         }
-        with self.engine.begin() as connection:
+        with nullcontext(scope) if scope is not None else self.engine.begin() as connection:
             run = connection.execute(text("""
                 SELECT state, deadline_at>clock_timestamp() AS live
                 FROM agent_research.runs WHERE run_id=:run_id AND actor=:actor
@@ -321,10 +323,13 @@ class ProcessingStore:
                 raise RunConflict("PROCESSING_GRANT_REQUIRED")
             return self._current_receipt(connection, row)
 
-    def revoke(self, receipt_id: UUID, *, actor: str, expected_revision: int) -> ProcessingReceipt:
+    def revoke(
+        self, receipt_id: UUID, *, actor: str, expected_revision: int,
+        scope: ScopedConnection | None = None,
+    ) -> ProcessingReceipt:
         if type(expected_revision) is not int or expected_revision < 1:
             raise _invalid()
-        with self.engine.begin() as connection:
+        with nullcontext(scope) if scope is not None else self.engine.begin() as connection:
             params = {"id": receipt_id, "actor": actor, "revision": expected_revision}
             changed = connection.execute(text("""
                 UPDATE agent_research.processing_grants SET state='REVOKED',revision=revision+1
@@ -341,7 +346,8 @@ class ProcessingStore:
             else:
                 _audit(connection, receipt_id)
             receipt = _receipt(changed)
-        self.vault.discard(changed.preview_id)
+        if scope is None:
+            self.vault.discard(changed.preview_id)
         return receipt
 
     def authorize(
