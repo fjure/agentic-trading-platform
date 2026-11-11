@@ -10,6 +10,7 @@ import { ResearchService } from '../api/generated/control-api/api/research.servi
 import type { ResearchBarPage, ResearchContext, ResearchEvidenceResult, ResearchInstrument, ResearchInterval, ResearchJob, ResearchJobRequest, ResearchSourceCatalog } from '../api/generated/control-api/model/models';
 import { httpStatus, safeError } from '../state/supervisor-api';
 import { BacktestingComponent } from './backtesting.component';
+import { AgentCompanionComponent } from './agent-companion.component';
 import { QuantLabComponent } from './quant-lab/quant-lab.component';
 
 const ACTIVE = new Set(['ACCEPTED', 'RUNNING', 'RETRY_WAIT']);
@@ -19,7 +20,7 @@ type Bound = { instrumentId: string; start: string; end: string; interval: Resea
 
 @Component({
   selector: 'atl-research',
-  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule, BacktestingComponent, QuantLabComponent],
+  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule, AgentCompanionComponent, BacktestingComponent, QuantLabComponent],
   templateUrl: './research.component.html',
   styleUrl: './research.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,6 +28,8 @@ type Bound = { instrumentId: string; start: string; end: string; interval: Resea
 export class ResearchComponent implements OnInit, OnDestroy {
   private readonly api = inject(ResearchService);
   readonly sessionLost = output<void>();
+  readonly companionOpen = signal(['researchIdea', 'researchApproval', 'researchReport'].some(
+    key => new URL(window.location.href).searchParams.has(key)));
   readonly quantOpen = signal(['quantExperiment', 'quantBatch'].some(
     key => new URL(window.location.href).searchParams.has(key),
   ));

@@ -36,7 +36,7 @@ Jede Checkbox bezeichnet ein Issue. Akzeptanz, Dateizuständigkeit und Prüfunge
 
 ## 9. Material-Researchoberfläche integrieren
 
-- [ ] 9.1 [APF-09 Material-Researchoberfläche integrieren](work-packages/APF-09.md) · abhängig von APF-08.
+- [x] 9.1 [APF-09 Material-Researchoberfläche integrieren](work-packages/APF-09.md) · abhängig von APF-08.
 
 ## 10. Zusammenhängende Researchabnahme durchführen
 

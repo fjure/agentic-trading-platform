@@ -1,0 +1,315 @@
+<mat-card aria-labelledby="companion-title">
+  <mat-card-header><mat-card-title id="companion-title">Research Companion</mat-card-title></mat-card-header>
+  <mat-card-content>
+    @if (error()) { <p role="alert">{{ error() }}</p> }
+    @if (busy()) { <p role="status">Researchdaten werden geladen.</p> }
+    <button mat-stroked-button type="button" [attr.aria-expanded]="advanced()" (click)="advanced.set(!advanced())">
+      {{ advanced() ? 'Advanced ausblenden' : 'Advanced anzeigen' }}
+    </button>
+    <form [formGroup]="form" (ngSubmit)="create()">
+      <mat-form-field><mat-label>Titel</mat-label><input matInput formControlName="title" maxlength="160"></mat-form-field>
+      <mat-form-field><mat-label>Forschungsfrage</mat-label><textarea matInput formControlName="originalText" maxlength="2048"></textarea></mat-form-field>
+      <button mat-flat-button type="submit" [disabled]="form.invalid || busy()">Forschungsfrage speichern</button>
+    </form>
+    <h3>Gespeicherte Ideen</h3>
+    <button mat-button type="button" (click)="reload()" [disabled]="busy()">Ideen neu laden</button>
+    <ul>
+      @for (idea of ideas(); track idea.id) {
+        <li><button mat-button type="button" (click)="open(idea.id)" [disabled]="busy()" [attr.aria-current]="selected()?.id === idea.id ? 'true' : null">{{ idea.title }}</button> {{ idea.status }} · Version {{ idea.version }}</li>
+      }
+    </ul>
+    @if (cursor()) { <button mat-button type="button" (click)="reload(true)" [disabled]="busy()">Weitere Ideen</button> }
+    <h3>Providerstatus</h3>
+    <button mat-button type="button" (click)="loadProviders()" [disabled]="busy()">Providerstatus laden</button>
+    <ul>
+      @for (provider of providers(); track provider.binding.profileId) {
+        <li>
+          {{ provider.binding.provider }} · {{ provider.binding.modelId }} · {{ provider.availability }} · {{ provider.probeState }} · {{ provider.credential.state }}
+          <details><summary>Modellfähigkeiten</summary>
+            <p>Strukturierte Ausgabe {{ provider.structuredOutputSupported ? 'verfügbar' : 'nicht verfügbar' }} · Schema {{ provider.outputSchemaVersion }}</p>
+            <p>Eingabelimit {{ provider.maxInputTokens }} Token · Ausgabelimit {{ provider.maxOutputTokens }} Token</p>
+            <p>Datenrichtlinie {{ provider.dataHandlingPolicyId }} · Version {{ provider.dataHandlingPolicyVersion }}</p>
+          </details>
+        </li>
+      }
+    </ul>
+    @if (providerCursor()) { <button mat-button type="button" (click)="loadProviders(true)" [disabled]="busy()">Weitere Providerprofile</button> }
+    @if (selected(); as idea) {
+      <section aria-labelledby="companion-idea">
+        <h3 #ideaHeading id="companion-idea" tabindex="-1">{{ idea.title }}</h3>
+        <p>{{ idea.originalText ?? idea.description }}</p>
+        @if (idea.discovery; as discovery) {
+          <h4>Discovery</h4>
+          <p>{{ discovery.priorityReason }}</p>
+          <p>Datenaktualität {{ discovery.freshness }} · Aufwand {{ discovery.estimatedEffort }} · {{ discovery.effortReason }}</p>
+          <p>Jüngste Evidenz {{ discovery.latestEvidenceAt }} · bewertet am {{ discovery.freshnessEvaluatedAt }}</p>
+          <ul>@for (limitation of discovery.limitations; track $index) { <li>{{ limitation }}</li> }</ul>
+        }
+        @if (idea.evidence.length) {
+          <details><summary>Evidenzreferenzen</summary><pre>{{ idea.evidence | json }}</pre></details>
+        }
+        @if (idea.hypothesis; as hypothesis) { <p>{{ hypothesis.statement }}</p> }
+        @for (uncertainty of idea.uncertainties; track $index) { <p>{{ uncertainty }}</p> }
+        @if (idea.testability; as assessment) {
+          <h4>Testbarkeit</h4>
+          <p>{{ testabilityLabels[assessment.classification] }} · {{ assessment.classification }}</p>
+          <ul>@for (reason of assessment.reasons; track $index) { <li>{{ reason }}</li> }</ul>
+          <ul>@for (limit of assessment.limitations; track $index) { <li>{{ limit }}</li> }</ul>
+          <ul>@for (option of assessment.options; track $index) { <li>{{ option }}</li> }</ul>
+          @if (advanced()) {
+            <p>Katalogversion {{ assessment.catalogVersion }} · Abbildungsversion {{ assessment.mappingVersion }}</p>
+          }
+        }
+        @if (idea.experimentDraftIds.length) {
+          <h4>Experimententwürfe</h4>
+          <ul>@for (draft of idea.experimentDraftIds; track draft) {
+            <li><a [href]="quantLink(draft)">Entwurf {{ draft }} im Quant Lab öffnen</a></li>
+          }</ul>
+        }
+        @if (advanced()) {
+          <dl>
+            <dt>Idee</dt><dd>{{ idea.id }} · Version {{ idea.version }}</dd>
+            @for (experiment of idea.experimentIds; track experiment) {
+              <dt>Experiment</dt><dd><a [href]="quantLink(experiment)">{{ experiment }}</a></dd>
+            }
+            @if (dialogue(); as thread) {
+              <dt>Dialog</dt><dd>{{ thread.id }} · Version {{ thread.version }}</dd>
+              @if (thread.expertExperiment; as experiment) {
+                <dt>Quant Lab</dt><dd><a [href]="quantLink(experiment.definitionId)">Experiment öffnen</a> · Version {{ experiment.definitionVersion }}</dd>
+              } @else if (thread.version === 1) {
+                <dt>Quant Lab</dt><dd>
+                  <form (submit)="$event.preventDefault(); bindExperiment(experimentId.value)">
+                    <mat-form-field><mat-label>Gespeicherte Experiment-ID</mat-label><input matInput #experimentId required></mat-form-field>
+                    <button mat-stroked-button type="submit" [disabled]="busy()">Expertenvorgaben übernehmen</button>
+                  </form>
+                </dd>
+              }
+            }
+          </dl>
+        }
+        @if (dialogue(); as thread) {
+          <h4>Gespeicherter Dialog</h4>
+          <p>Bei der lokalen Klärung bleiben Antworten im Researchdienst. Eine Übermittlung erfordert eine Sendefassung und deine Freigabe.</p>
+          <button mat-button type="button" (click)="open(idea.id)" [disabled]="busy()">Dialogstatus aktualisieren</button>
+          @if (thread.confirmedFields.length) {
+            <h5>Bestätigte Felder</h5>
+            <p>Ideenversion {{ thread.ideaVersion }}</p>
+            <ul>@for (field of thread.confirmedFields; track field.field) { <li>{{ field.field }} · {{ field.value }}</li> }</ul>
+          }
+          @if (thread.confirmedAssumptions.length) {
+            <h5>Bestätigte Annahmen</h5>
+            <ul>@for (assumption of thread.confirmedAssumptions; track assumption.id) { <li>{{ assumption.statement }}</li> }</ul>
+          }
+          @for (turn of thread.turns; track turn.turnId) {
+            <article>
+              <p role="status">{{ processingLabels[turn.processing.state] }} · {{ turn.processing.state }} · {{ turn.processing.delivery }} · Kostenstatus {{ turn.processing.costState }}</p>
+              @if (turn.processing.reasonCode; as reason) { <p>{{ reason }}</p> }
+              @for (question of turn.localQuestions; track question.id) {
+                <form (submit)="$event.preventDefault(); answer(question, localAnswer.value)">
+                  <mat-form-field>
+                    <mat-label>{{ question.question }}</mat-label>
+                    <input matInput #localAnswer maxlength="240" required>
+                  </mat-form-field>
+                  <button mat-stroked-button type="submit" [disabled]="busy() || activeProcessing() || turn.dialogueVersion !== thread.version">Lokal beantworten</button>
+                </form>
+              }
+              @if (turn.dialogueVersion === thread.version && (turn.processing.state === 'LOCAL_CLARIFICATION' || turn.processing.state === 'AWAITING_DECISION')) {
+                @for (provider of providers(); track provider.binding.profileId) {
+                  @if (provider.availability === 'AVAILABLE' && provider.structuredOutputSupported) {
+                    <button mat-stroked-button type="button" (click)="showPreview(turn, provider.binding.profileId)" [disabled]="busy()">
+                      Sendefassung für {{ provider.binding.modelId }} anzeigen
+                    </button>
+                  }
+                }
+                <button mat-button type="button" (click)="decideProcessing(turn, 'DECLINE')" [disabled]="busy()">Übermittlung ablehnen</button>
+              }
+              @if (preview(); as send) {
+                @if (send.turnId === turn.turnId) {
+                  <section aria-label="Sendefassung">
+                    <h5 #previewHeading tabindex="-1">Sendefassung</h5>
+                    <p>{{ send.provider }} · {{ send.modelId }} · {{ send.purpose }}</p>
+                    <p>Datenklassen {{ send.dataClasses }}</p>
+                    <p>Dialogversion {{ send.dialogueVersion }} · Beitragsversion {{ send.turnVersion }}</p>
+                    <p>Profil {{ send.profileId }} · Profilversion {{ send.profileGeneration }} · Modellversion {{ send.modelGeneration }}</p>
+                    <p>Richtlinienversion {{ send.policyGeneration }} · Zugangsversion {{ send.credentialGeneration }} · Umschlag {{ send.envelopeVersion }}</p>
+                    <p>Gültig bis {{ send.expiresAt }}</p>
+                    <pre>{{ send.projection.excerpt }}</pre>
+                    <pre>{{ send.projection.confirmedContext | json }}</pre>
+                    @if (previewExpired()) { <p role="status">Die Sendefassung ist abgelaufen. Erstelle eine neue Vorschau.</p> }
+                    <button mat-flat-button type="button" (click)="decideProcessing(turn, 'SEND')" [disabled]="busy() || previewExpired()">Diese Fassung senden</button>
+                  </section>
+                }
+              }
+              @if (turn.dialogueVersion === thread.version &&
+                (turn.processing.state === 'SEND_AUTHORIZED' || turn.processing.state === 'IN_FLIGHT') && turn.processing.receipt) {
+                <button mat-stroked-button type="button" (click)="decideProcessing(turn, 'REVOKE')" [disabled]="busy()">Übermittlung widerrufen</button>
+              }
+              @if (turn.proposal; as proposal) {
+                <h5>Hypothesenvorschlag</h5>
+                <p>{{ proposal.interpretation.hypothesis.statement }}</p>
+                @if (proposal.interpretation.requiredDataTypes.length) {
+                  <p>Benötigte Daten · {{ proposal.interpretation.requiredDataTypes.join(', ') }}</p>
+                }
+                @for (conflict of proposal.conflicts; track $index) { <p role="status">Konflikt · {{ conflict.question }}</p> }
+                @for (question of proposal.interpretation.openQuestions; track $index) { <p>Offen · {{ question.question }}</p> }
+                @for (aspect of proposal.interpretation.unsupportedAspects; track $index) { <p>{{ aspect }}</p> }
+                @if (proposal.dialogueVersion === thread.version && proposal.ideaVersion === thread.ideaVersion) {
+                  <form #hypothesisForm (submit)="$event.preventDefault(); confirmHypothesis(proposal, hypothesisForm)">
+                    <fieldset>
+                      <legend>Felder und Annahmen zur Bestätigung auswählen</legend>
+                      @for (field of hypothesisFields; track field.field) {
+                        <p>
+                          <label><input type="checkbox" [name]="field.field"> {{ field.label }} · {{ proposal.interpretation.hypothesis[field.key] ?? 'offen' }}</label>
+                          @if (thread.confirmedHypothesis?.[field.key]; as confirmed) { <span> · Bisher bestätigt {{ confirmed }}</span> }
+                        </p>
+                      }
+                      @for (assumption of proposal.interpretation.assumptions; track assumption.id) {
+                        <p><label><input type="checkbox" name="assumption" [value]="assumption.id"> {{ assumption.statement }}</label></p>
+                      }
+                    </fieldset>
+                    <button mat-flat-button type="submit" [disabled]="busy()">Auswahl als Hypothese bestätigen</button>
+                    <mat-form-field><mat-label>Gewünschte Änderung</mat-label><textarea matInput name="clarification" maxlength="320"></textarea></mat-form-field>
+                    <button mat-stroked-button type="button" [disabled]="busy()" (click)="requestChanges(proposal, hypothesisForm)">Änderung anfordern</button>
+                  </form>
+                }
+                @if (proposal.approximation; as approximation) {
+                  <h5>Approximation</h5>
+                  <dl>
+                    <dt>Original</dt><dd>{{ approximation.original.statement }}</dd>
+                    <dt>Ersatz</dt><dd>{{ approximation.substitute.statement }}</dd>
+                    <dt>Unterschied</dt><dd>{{ approximation.difference }}</dd>
+                  </dl>
+                  <ul>@for (limitation of approximation.limitations; track $index) { <li>{{ limitation }}</li> }</ul>
+                  @if (proposal.dialogueVersion === thread.version && proposal.ideaVersion === thread.ideaVersion) {
+                    <button mat-stroked-button type="button" (click)="acceptApproximation(proposal)" [disabled]="busy()">Diese Approximation akzeptieren</button>
+                  }
+                }
+              }
+            </article>
+          } @empty {
+            <p>Für diese Idee gibt es noch keine Dialogbeiträge.</p>
+            @if (idea.originalText) {
+              <button mat-stroked-button type="button" (click)="addTurn(true)" [disabled]="busy()">Gespeicherte Frage lokal klären</button>
+            }
+          }
+          @if (thread.nextCursor) { <button mat-button type="button" [disabled]="busy()" (click)="loadMoreTurns()">Weitere Dialogbeiträge</button> }
+          @if (activeProcessing()) {
+            <p>Aktualisiere den Dialogstatus oder widerrufe die aktive Übermittlung, bevor du die Forschungsidee änderst.</p>
+          }
+          <form (submit)="$event.preventDefault(); addTurn()">
+            <mat-form-field><mat-label>Frage im Dialog</mat-label><textarea matInput [formControl]="followUp" maxlength="2048"></textarea></mat-form-field>
+            <button mat-stroked-button type="submit" [disabled]="followUp.invalid || busy() || activeProcessing() || !!thread.nextCursor">Dialogbeitrag speichern</button>
+          </form>
+        } @else {
+          <p>Zu dieser Idee liegt kein gespeicherter Dialog vor.</p>
+        }
+      </section>
+    }
+    <section aria-labelledby="companion-approvals">
+      <h3 id="companion-approvals">Quant-Freigaben</h3>
+      <button mat-button type="button" [disabled]="busy()" (click)="loadApprovals()">Freigaben laden</button>
+      @if (approvals(); as page) {
+        <ul>
+          @for (item of page.items; track item.approvalId) {
+            <li><button mat-button type="button" [disabled]="busy()" (click)="openApproval(item.approvalId)">{{ item.question }}</button> {{ item.state }}</li>
+          } @empty { <li>Keine Quant-Freigaben vorhanden.</li> }
+        </ul>
+        @if (page.nextCursor) { <button mat-button type="button" [disabled]="busy()" (click)="loadApprovals(true)">Weitere Freigaben</button> }
+      }
+      @if (approval(); as item) {
+        <h4>{{ item.question }}</h4>
+        <p>{{ item.hypothesis }}</p>
+        <p>Freigabeversion {{ item.approvalVersion }} · {{ item.state }} · Gültig bis {{ item.binding.expiresAt }}</p>
+        <p>Bindung <code>{{ item.bindingHash }}</code></p>
+        <p>Forschungsmodus {{ item.binding.researchMode }} · Definition {{ item.binding.definitionVersion }}</p>
+        <ul>@for (assumption of item.assumptions; track $index) { <li>{{ assumption }}</li> }</ul>
+        <h5>Ressourcenbudget</h5><pre>{{ item.binding.resourceBudget | json }}</pre>
+        <details><summary>Definition, Richtlinien und Evidenz</summary>
+          <pre>{{ item.definition | json }}</pre>
+          <pre>{{ item.binding.activePolicies | json }}</pre>
+          <pre>{{ item.evidence | json }}</pre>
+        </details>
+        @if (item.binding.approximation; as approximation) {
+          <h5>Gebundene Approximation</h5>
+          <p>{{ approximation.description }}</p>
+          <p>Revision {{ approximation.revision }} · <code>{{ approximation.hash }}</code></p>
+        }
+        <p><a [href]="quantLink(item.binding.experimentId, 'batchId' in item ? item.batchId : undefined)">Im Quant Lab öffnen</a></p>
+        @if (item.state === 'PENDING') {
+          <details>
+            <summary>Quant-Entscheidung treffen</summary>
+            <button mat-flat-button type="button" [disabled]="busy()" (click)="decideQuant('APPROVE_AND_START')">Freigeben und Quant-Lauf starten</button>
+            <button mat-stroked-button type="button" [disabled]="busy()" (click)="decideQuant('REJECT')">Quant-Lauf ablehnen</button>
+          </details>
+        }
+      }
+    </section>
+    <section aria-labelledby="companion-diagnostics">
+      <h3 id="companion-diagnostics">Researchbetrieb</h3>
+      <button mat-button type="button" [disabled]="busy()" (click)="loadDiagnostics()">Zeitplan, Registry und Läufe laden</button>
+      @if (diagnostics(); as details) {
+        <details><summary>Zeitplan und Limits</summary><pre>{{ details.schedule | json }}</pre></details>
+        <details><summary>Registry und Berechtigungen</summary><pre>{{ details.registry.items | json }}</pre></details>
+        <ul>
+          @for (run of details.runs.items; track run.runId) {
+            <li>
+              <button mat-button type="button" [disabled]="busy()" (click)="loadRunEvents(run.runId)">{{ run.kind }} · {{ run.state }}</button>
+              {{ run.reasonCode }}
+              <details><summary>Budget und Verbrauch</summary><pre>{{ run.limits | json }}</pre><pre>{{ run.usage | json }}</pre></details>
+            </li>
+          } @empty { <li>Keine Läufe vorhanden.</li> }
+        </ul>
+      }
+      @if (runEvents(); as events) {
+        <h4>Toolereignisse</h4><pre>{{ events.items | json }}</pre>
+      }
+    </section>
+    <section aria-labelledby="companion-reports">
+      <h3 id="companion-reports">Researchberichte</h3>
+      <button mat-button type="button" [disabled]="busy()" (click)="loadReports()">Berichte laden</button>
+      @if (reports(); as page) {
+        <ul>
+          @for (item of page.items; track item.reportId) {
+            <li><button mat-button type="button" [disabled]="busy()" (click)="openReport(item.reportId, item.reportVersion)">{{ item.title }}</button> Version {{ item.reportVersion }}</li>
+          } @empty { <li>Keine Researchberichte vorhanden.</li> }
+        </ul>
+        @if (page.nextCursor) { <button mat-button type="button" [disabled]="busy()" (click)="loadReports(true)">Weitere Berichte</button> }
+      }
+      @if (report(); as item) {
+        <h4>{{ item.summary.title }}</h4>
+        <p>{{ item.researchQuestion }}</p>
+        <p>{{ item.hypothesis }}</p>
+        <p>{{ item.dataBasis }}</p>
+        <p>Interpretationsstatus {{ item.summary.interpretationStatus }}</p>
+        <h5>Annahmen</h5>
+        <ul>@for (assumption of item.assumptions; track $index) { <li>{{ assumption }}</li> }</ul>
+        @for (entry of reportPhases(item); track entry.label) {
+          <h5>{{ entry.label }}</h5>
+          <p>{{ entry.phase.status }}</p>
+          <dl>@for (metric of entry.phase.metrics; track metric.claimId) { <dt>{{ metric.label }}</dt><dd>{{ metric.value }}</dd> }</dl>
+          <ul>@for (limit of entry.phase.limitations; track $index) { <li>{{ limit }}</li> }</ul>
+        }
+        <h5>Fakten</h5>
+        <ul>@for (fact of item.facts; track fact.claimId) { <li>{{ fact.statement }}</li> }</ul>
+        <h5>Interpretationen</h5>
+        <ul>@for (interpretation of item.interpretations; track interpretation.claimId) { <li>{{ interpretation.statement }}</li> }</ul>
+        <h5>Offene Punkte</h5>
+        <ul>@for (unknown of item.unknowns; track $index) { <li>{{ unknown.field }} · {{ unknown.reason }}</li> }</ul>
+        <h5>Einschränkungen</h5>
+        <ul>@for (limitation of item.limitations; track $index) { <li>{{ limitation }}</li> }</ul>
+        @if (item.currentRightsWarnings.length) { <p role="status">Hinweise zu Datenrechten</p><pre>{{ item.currentRightsWarnings | json }}</pre> }
+        <p>{{ item.conclusion }}</p>
+        <h5>Weitere Forschungsfragen</h5>
+        <ul>@for (question of item.furtherResearch; track $index) { <li>{{ question }}</li> }</ul>
+        @if (advanced()) {
+          <details><summary>Definition, Datenmanifest und Evidenz</summary>
+            <pre>{{ item.definition | json }}</pre>
+            <pre>{{ item.manifest | json }}</pre>
+            <pre>{{ item.evidence | json }}</pre>
+          </details>
+        }
+        <p><a [href]="quantLink(item.experimentId, item.summary.batchId)">Quant-Evidenz öffnen</a></p>
+      }
+    </section>
+  </mat-card-content>
+</mat-card>

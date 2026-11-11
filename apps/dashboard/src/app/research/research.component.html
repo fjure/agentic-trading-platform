@@ -1,4 +1,9 @@
 <section aria-labelledby="research-title">
+  @defer (when companionOpen()) {
+    <atl-agent-companion (sessionLost)="sessionLost.emit()" />
+  } @placeholder {
+    <button mat-stroked-button type="button" (click)="companionOpen.set(true)">Research Companion öffnen</button>
+  }
   @defer (when quantOpen()) {
     <atl-quant-lab [instruments]="instruments()" (sessionLost)="sessionLost.emit()" />
   } @placeholder {
