@@ -24,7 +24,7 @@ Jede Checkbox bezeichnet ein Issue. Akzeptanz, Dateizuständigkeit und Prüfunge
 
 ## 6. Proaktive Researchpipeline ergänzen
 
-- [ ] 6.1 [APF-06 Proaktive Researchpipeline ergänzen](work-packages/APF-06.md) · abhängig von APF-02, APF-03, APF-04.
+- [x] 6.1 [APF-06 Proaktive Researchpipeline ergänzen](work-packages/APF-06.md) · abhängig von APF-02, APF-03, APF-04.
 
 ## 7. Berichte aus Quant-Evidenz erzeugen
 

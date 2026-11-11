@@ -116,6 +116,17 @@ class RunStore:
         self, *, actor: str, key: str, kind: RunKind, input_ref: str, trace_id: str,
         agent: AgentVersion,
     ) -> UUID:
+        with self.engine.begin() as connection:
+            return self.enqueue_in_transaction(
+                connection, actor=actor, key=key, kind=kind, input_ref=input_ref,
+                trace_id=trace_id, agent=agent,
+            )
+
+    @staticmethod
+    def enqueue_in_transaction(
+        connection: Connection, *, actor: str, key: str, kind: RunKind, input_ref: str,
+        trace_id: str, agent: AgentVersion,
+    ) -> UUID:
         if not all((
             _REFERENCE.fullmatch(actor), _REQUEST_KEY.fullmatch(key),
             _REFERENCE.fullmatch(input_ref), _TRACE_ID.fullmatch(trace_id),
@@ -133,8 +144,7 @@ class RunStore:
             "tools": agent.limits.max_tool_calls,
             "active_ms": agent.limits.max_active_seconds * 1000,
         }
-        with self.engine.begin() as connection:
-            inserted = connection.execute(text("""
+        inserted = connection.execute(text("""
                 INSERT INTO agent_research.runs (
                     run_id, actor, request_key_hash, request_hash, kind, input_ref, trace_id,
                     agent_binding, state, created_at, updated_at, deadline_at, step_limit,
@@ -145,19 +155,26 @@ class RunStore:
                     statement_timestamp() + :deadline * interval '1 second', :steps, :tools,
                     :active_ms
                 ) ON CONFLICT (actor,kind,request_key_hash) DO NOTHING RETURNING run_id
-            """), params).scalar_one_or_none()
-            if inserted is not None:
-                _audit(connection, inserted)
-                return inserted
-            original = connection.execute(text("""
+        """), params).scalar_one_or_none()
+        if inserted is not None:
+            _audit(connection, inserted)
+            return inserted
+        original = connection.execute(text("""
                 SELECT run_id,request_hash FROM agent_research.runs
                 WHERE actor=:actor AND kind=:kind AND request_key_hash=:key
-            """), params).one()
-            if original.request_hash != params["hash"]:
-                raise RunConflict("IDEMPOTENCY_CONFLICT")
-            return original.run_id
+        """), params).one()
+        if original.request_hash != params["hash"]:
+            raise RunConflict("IDEMPOTENCY_CONFLICT")
+        return original.run_id
 
-    def claim(self, owner: UUID) -> Claim | None:
+    def claim(self, owner: UUID, *, discovery: bool = False) -> Claim | None:
+        scheduled_filter = """
+          AND (kind<>'SCHEDULED' OR EXISTS(
+            SELECT FROM agent_research.discovery_occurrences o
+            JOIN agent_research.discovery_schedules s USING(schedule_id)
+            WHERE o.run_id=agent_research.runs.run_id AND s.state='ACTIVE'
+              AND s.epoch=o.schedule_epoch))
+        """ if discovery else "AND kind<>'SCHEDULED'"
         with self.engine.begin() as connection:
             if not connection.execute(
                 text("SELECT pg_try_advisory_xact_lock(:lock)"), {"lock": _CLAIM_LOCK}
@@ -170,6 +187,7 @@ class RunStore:
                     WHERE deadline_at>clock_timestamp() AND steps<step_limit
                       AND {_ACTIVE_MS}<active_limit_ms
                       AND (state='QUEUED' OR (state='RUNNING' AND lease_until<=clock_timestamp()))
+                      {scheduled_filter}
                       AND NOT EXISTS (
                           SELECT FROM agent_research.runs active
                           WHERE active.state='RUNNING' AND active.lease_until>clock_timestamp()

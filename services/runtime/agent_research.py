@@ -32,21 +32,27 @@ _CONFLICT_STATES = {
 class ResearchSupervisor:
     def __init__(
         self, runs: RunStore, steps: Mapping[RunKind, Step], *, attempts: ModelAttemptStore,
+        tick_schedules: Callable[[], None] | None = None,
     ):
         self.runs = runs
         self.attempts = attempts
         self.steps = MappingProxyType(dict(steps))
+        self.tick_schedules = tick_schedules
 
     def run_once(self, owner: UUID) -> bool:
-        claim = self.runs.claim(owner)
+        if self.tick_schedules is not None:
+            self.tick_schedules()
+        discovery = RunKind.SCHEDULED in self.steps
+        claim = self.runs.claim(owner, discovery=True) if discovery else self.runs.claim(owner)
         if claim is None:
             return False
         try:
             recovered = self.attempts.recover(claim)
-            if any(attempt.status == "OUTCOME_UNKNOWN" for attempt in recovered):
+            unknown = any(attempt.status == "OUTCOME_UNKNOWN" for attempt in recovered)
+            request = self.runs.load_input(claim) if discovery or not unknown else None
+            if unknown and (request is None or request.kind is not RunKind.SCHEDULED):
                 result = StepResult(RunState.BLOCKED)
             else:
-                request = self.runs.load_input(claim)
                 step = self.steps.get(request.kind)
                 result = (
                     StepResult(RunState.BLOCKED)
