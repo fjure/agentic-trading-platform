@@ -76,7 +76,9 @@ class ResearchReports:
             raise ReportDenied("REPORT_SCOPE_DENIED")
         return self.source.load(batch_id, actor=actor).current_warnings
 
-    def publish(self, batch_id: str, *, actor: str, proposal: bytes | None = None) -> dict:
+    def publish(
+        self, batch_id: str, *, actor: str, proposal: bytes | None = None, claim=None,
+    ) -> dict:
         authority = self.store.authorize(batch_id, actor=actor)
         if authority is None:
             raise ReportDenied("REPORT_SCOPE_DENIED")
@@ -165,7 +167,8 @@ class ResearchReports:
             "currentRightsWarnings": [],
         }
         try:
-            return self.store.publish(document, actor=actor, rejection_code=rejection)
+            fence = {} if claim is None else {"claim": claim}
+            return self.store.publish(document, actor=actor, rejection_code=rejection, **fence)
         except ReportStoreError as error:
             if error.code != "REPORT_VERSION_CONFLICT":
                 raise

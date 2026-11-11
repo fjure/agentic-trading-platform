@@ -11,7 +11,7 @@ from tests.integration.test_agent_research_runtime import WORKER_ROLE
 _PROOF = "PASS companion immutable versions, original isolation and dialogue replay"
 _TABLES = tuple(f"agent_research.companion_{name}" for name in (
     "ideas", "idea_versions", "dialogues", "dialogue_versions", "originals", "events",
-))
+)) + ("agent_research.processing_operations",)
 
 
 def test_companion_history_and_dialogue_in_postgresql():
@@ -60,7 +60,7 @@ def guest():
         config = Config("alembic.ini")
         with owner.begin() as connection:
             config.attributes["connection"] = connection
-            command.upgrade(config, "0042_research_companion")
+            command.upgrade(config, "0049_processing_operations")
         store = CompanionStore(worker, command_key=bytes(range(32)))
         lifecycle = IdeaLifecycle(
             CONTRACT, permits=safe_result_content, verifies=lambda *_: True,

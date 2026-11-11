@@ -2,6 +2,7 @@
 
 import json
 import re
+from contextlib import nullcontext
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -326,8 +327,11 @@ class RunStore:
                 raise RunConflict("VERSION_CONFLICT")
             _audit(connection, changed)
 
-    def cancel(self, run_id: UUID, expected_version: int) -> None:
-        with self.engine.begin() as connection:
+    def cancel(
+        self, run_id: UUID, expected_version: int, *, connection: Connection | None = None,
+    ) -> None:
+        transaction = nullcontext(connection) if connection is not None else self.engine.begin()
+        with transaction as connection:
             params = {"id": run_id, "version": expected_version}
             state = connection.execute(text("""
                 SELECT state FROM agent_research.runs

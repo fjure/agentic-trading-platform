@@ -25,6 +25,18 @@ def test_existing_collection_manifest_remains_byte_identical():
     ).hexdigest() == ("4b1073b1abd4773af58c6ec229fc1948f8a1a5dd83236d606a361500456f8706")
 
 
+def test_agent_heads_preserve_the_exact_paper_acl_boundary():
+    quant = manifest("0036_quant_validation_attempts")
+    assert manifest("0042_research_companion") == quant
+    apf = manifest("0051_quant_started_receipt")
+    assert quant <= apf
+    assert apf == manifest("0048_quant_report_reader")
+    assert len(apf - quant) == 5
+    assert {grant[2] for grant in apf - quant} == {"atl_paper_control_api"}
+    assert {grant[3] for grant in apf - quant} == {"SELECT", "EXECUTE", "USAGE"}
+    assert all(not grant[4] for grant in apf - quant)
+
+
 def test_retrospective_storage_adds_only_its_eight_control_read_and_request_grants():
     previous = manifest("0032_collection_control")
     current = manifest("0033_retrospective_storage")

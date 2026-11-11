@@ -282,7 +282,17 @@ def _create_identities(connection, directory, existing):
 
 def _dormant_privilege_manifest(revisions):
     """Exact reviewed ACLs only; unknown or multiple migration heads fail closed."""
-    quant_validation_revision = revisions == [("0036_quant_validation_attempts",)]
+    apf_revision = revisions[0][0] if len(revisions) == 1 else None
+    apf_revisions = (
+        "0037_agent_research_runs", "0038_agent_research_budget", "0039_agent_research_processing",
+        "0040_agent_research_work_budget", "0041_agent_provider_probe", "0042_research_companion",
+        "0043_quant_draft_provenance", "0044_quant_operator_approval", "0045_discovery_schedules",
+        "0046_discovery_evidence", "0047_research_reports", "0048_quant_report_reader",
+        "0049_processing_operations", "0050_agent_control_commands", "0051_quant_started_receipt",
+    )
+    quant_validation_revision = (
+        revisions == [("0036_quant_validation_attempts",)] or apf_revision in apf_revisions
+    )
     quant_revision = quant_validation_revision or revisions == [("0035_quant_lab",)]
     retrospective_revision = (
         revisions[0][0]
@@ -751,6 +761,23 @@ def _dormant_privilege_manifest(revisions):
              "atl_paper_control_api", "EXECUTE", False),
             ("function", "backtest.current_quant_gate(uuid)", "atl_paper_control_api",
              "EXECUTE", False),
+        ))
+    if apf_revision in apf_revisions[6:]:
+        expected.add((
+            "function", "backtest.request_agent_experiment_definition("
+            "uuid,text,jsonb,text,text,text,text,jsonb,uuid,text,bigint)",
+            "atl_paper_control_api", "EXECUTE", False,
+        ))
+    if apf_revision in apf_revisions[7:]:
+        expected.update((
+            ("schema", "agent_research", "atl_paper_control_api", "USAGE", False),
+            ("function", "agent_research.register_quant_approximation("
+             "text,bigint,uuid,text,text,text)",
+             "atl_paper_control_api", "EXECUTE", False),
+            ("function", "backtest.agent_validation_context(bigint)",
+             "atl_paper_control_api", "EXECUTE", False),
+            ("relation", "backtest.experiment_agent_provenance",
+             "atl_paper_control_api", "SELECT", False),
         ))
     return expected
 

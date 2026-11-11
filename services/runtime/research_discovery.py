@@ -109,8 +109,10 @@ class ResearchDiscovery:
             attempts=self.attempts, tick_schedules=tick,
         )
 
-    def request_reanalysis(self, schedule_id, epoch, previous_id, approval_id, *, permits):
-        schedule = self.schedules.read(schedule_id)
+    def request_reanalysis(
+        self, schedule_id, epoch, previous_id, approval_id, *, permits, connection=None,
+    ):
+        schedule = self.schedules.read(schedule_id, connection=connection)
         if schedule is None:
             raise ScheduleDenied("DISCOVERY_SCHEDULE_STALE")
         config = self.configure(schedule_id)
@@ -123,6 +125,7 @@ class ResearchDiscovery:
             evaluation=evaluation,
             pending_limit=schedule.to_document()["limits"]["maxPendingItems"],
             permits=permits,
+            connection=connection,
         )
 
     def step(self, claim, work, recovered) -> StepResult:

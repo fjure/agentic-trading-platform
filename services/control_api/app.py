@@ -206,7 +206,16 @@ def create_app(
     readiness=None,
     collection=None,
     quant_lab=None,
+    agent_research=None,
+    agent_provider_setup=None,
+    agent_quant_approval=None,
 ) -> FastAPI:
+    from services.control_api.agent_research_routes import (
+        AgentResearchError,
+        agent_research_path,
+        agent_research_problem,
+        register_agent_research_routes,
+    )
     from services.control_api.paper_commands import PaperCommandError
     from services.control_api.paper_routes import paper_problem, register_paper_routes
     from services.control_api.quant_lab_routes import (
@@ -218,8 +227,19 @@ def create_app(
     auth = auth if auth is not None else LocalAuth()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
     quant_scope_key = secrets.token_bytes(32)
+    research_scope_key = secrets.token_bytes(32)
 
     def public_problem(request, status, code):
+        if agent_research_path(request.url.path):
+            origins = request.headers.getlist("origin")
+            valid_origins = ([], [auth.origin]) if request.method in {"GET", "HEAD"} else (
+                [auth.origin],
+            )
+            if status == 400 and origins not in valid_origins:
+                status = 403
+            code = {400: "INVALID_REQUEST", 401: "UNAUTHORIZED", 403: "FORBIDDEN",
+                    503: "UNAVAILABLE"}.get(status, code)
+            return agent_research_problem(status, code, request.state.trace_id)
         if quant_lab_path(request.url.path):
             if status == 400 and request.headers.getlist("origin") not in ([], [auth.origin]):
                 status = 403
@@ -288,6 +308,10 @@ def create_app(
                 if quant_lab_path(request.url.path):
                     request.state.quant_scope = hmac.digest(
                         quant_scope_key, token.encode("ascii"), "sha256"
+                    ).hex()
+                if agent_research_path(request.url.path):
+                    request.state.agent_research_scope = hmac.digest(
+                        research_scope_key, token.encode("ascii"), "sha256"
                     ).hex()
             response = await call_next(request)
         except AuthDenied as exc:
@@ -507,6 +531,21 @@ def create_app(
     register_quant_lab_routes(
         app, handler=quant_lab, body_reader=_body, key_reader=key,
         scope_reader=lambda request: request.state.quant_scope,
+    )
+
+    def agent_port(operation, params, query, payload, **authority):
+        handler = agent_research
+        if (operation.operation_id == "decideAgentQuantApproval"
+                and payload["action"] == "APPROVE_AND_START"):
+            handler = agent_quant_approval
+        if handler is None:
+            raise AgentResearchError(503, "PROVIDER_UNAVAILABLE")
+        return handler(operation, params, query, payload, **authority)
+
+    register_agent_research_routes(
+        app, handler=agent_port, body_reader=_body, key_reader=key,
+        scope_reader=lambda request: request.state.agent_research_scope,
+        setup_handler=agent_provider_setup,
     )
     from services.control_api.readiness_routes import register_readiness_routes
     register_readiness_routes(app, readiness=readiness, body_reader=_body, key_reader=key)

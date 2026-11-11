@@ -206,10 +206,20 @@ def test_paper_hba_rules_restrict_fixed_logins_before_existing_defaults():
         "atl_paper_control_api_login",
         "atl_paper_watchdog_login",
     }
-    assert len(lines) == 13
-    for rule in lines[:6]:
+    research_logins = {"atl_agent_research_login", "atl_agent_quant_admission_login"}
+    assert len(lines) == 22
+    assert [rule[1] for rule in lines[:5]] == [
+        "lab_paper_runtime", "all", "all", "replication", "replication",
+    ]
+    assert [rule[-1] for rule in lines[:5]] == ["scram-sha-256", *(["reject"] * 4)]
+    assert all(set(rule[2].split(",")) == research_logins for rule in lines[:5])
+    assert [rule[1] for rule in lines[5:9]] == ["lab_paper_runtime", "all", "all", "replication"]
+    assert [rule[-1] for rule in lines[5:9]] == ["scram-sha-256", *(["reject"] * 3)]
+    assert all(rule[2] == "atl_backtest_worker_login" for rule in lines[5:9])
+    paper = lines[9:15]
+    for rule in paper:
         assert set(rule[2].split(",")) == logins
-    assert [rule[1] for rule in lines[:6]] == [
+    assert [rule[1] for rule in paper] == [
         "lab_paper_runtime",
         "lab_paper_runtime",
         "all",
@@ -217,7 +227,7 @@ def test_paper_hba_rules_restrict_fixed_logins_before_existing_defaults():
         "replication",
         "replication",
     ]
-    assert [rule[-1] for rule in lines[:6]] == [
+    assert [rule[-1] for rule in paper] == [
         "scram-sha-256",
         "scram-sha-256",
         "reject",
@@ -225,7 +235,7 @@ def test_paper_hba_rules_restrict_fixed_logins_before_existing_defaults():
         "reject",
         "reject",
     ]
-    assert lines[6:] == [
+    assert lines[15:] == [
         ["local", "all", "all", "trust"],
         ["host", "all", "all", "127.0.0.1/32", "trust"],
         ["host", "all", "all", "::1/128", "trust"],
@@ -239,6 +249,30 @@ def test_paper_hba_rules_restrict_fixed_logins_before_existing_defaults():
         "-c",
         "hba_file=/etc/postgresql/pg_hba.conf",
     ]
+
+
+def test_optional_research_control_has_disjoint_roles_and_no_published_ports():
+    document = yaml.safe_load((ROOT / "infra/compose/compose.research-control.yaml").read_text())
+    services, networks = document["services"], document["networks"]
+    assert all(item == {"internal": True} for item in networks.values())
+    expected = {
+        "research-supervisor": ({"research_control_rpc", "research_supervisor_db"},
+                                {"research-relay-key", "research-command-key",
+                                 "agent-research-database"}),
+        "quant-admission": ({"quant_admission_rpc", "quant_admission_db"},
+                            {"quant-admission-relay-key", "quant-admission-database"}),
+    }
+    for name, (membership, secrets) in expected.items():
+        service = services[name]
+        assert set(service["networks"]) == membership
+        assert {mount["target"] for mount in service["secrets"]} == secrets
+        assert service["profiles"] == ["research-control"] and service["read_only"] is True
+        assert service["cap_drop"] == ["ALL"] and "ports" not in service
+    control = services["control-api"]
+    assert set(control["networks"]) == {"research_control_rpc", "quant_admission_rpc"}
+    assert {mount["target"] for mount in control["secrets"]} == {
+        "research-relay-key", "quant-admission-relay-key",
+    }
 
 
 @pytest.mark.skipif(os.environ.get("PAPER_DOCKER") != "1", reason="requires dormant deployment")

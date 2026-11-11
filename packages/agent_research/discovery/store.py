@@ -2,12 +2,13 @@
 
 import json
 from collections.abc import Callable
+from contextlib import nullcontext
 from dataclasses import asdict, dataclass
 from datetime import timedelta
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 from sqlalchemy import text
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Connection, Engine
 
 from packages.agent_research.budget import ModelOutcome, Tokens
 from packages.agent_research.model_attempts import ModelAttemptStore, _lock_run
@@ -219,8 +220,10 @@ class DiscoveryStore:
         self, *, schedule_id: str, epoch: int, actor: str, previous_id: UUID,
         evaluation: EvaluationBinding, pending_limit: int,
         permits: Callable[[ReadOnlyScopedConnection, str, UUID, EvaluationBinding], bool],
+        connection: Connection | None = None,
     ) -> UUID:
-        with self.engine.begin() as connection:
+        transaction = nullcontext(connection) if connection is not None else self.engine.begin()
+        with transaction as connection:
             self._require_active(connection, schedule_id, epoch)
             old = connection.execute(text("""
                 SELECT s.*,w.evaluation_binding FROM agent_research.discovery_work w

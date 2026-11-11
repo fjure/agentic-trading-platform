@@ -78,13 +78,15 @@ class ReportStore:
         with self._engine.connect() as connection:
             return _scope(connection, batch_id, actor)
 
-    def publish(self, document, *, actor, rejection_code=None):
+    def publish(self, document, *, actor, rejection_code=None, claim=None):
         try:
             batch_id = UUID(document["summary"]["batchId"])
         except (AttributeError, KeyError, ValueError, TypeError):
             raise ReportStoreError("REPORT_INVALID") from None
 
         with self._engine.begin() as connection:
+            if claim is not None:
+                self._require_claim(connection, claim, actor, batch_id)
             scope = _scope(connection, batch_id, actor)
             if scope is None:
                 raise ReportStoreError("REPORT_SCOPE_DENIED")
@@ -154,7 +156,27 @@ class ReportStore:
                     INSERT INTO agent_research.report_rejections (report_id,version,code)
                     VALUES (:report,:version,:code) ON CONFLICT DO NOTHING
                 """), params)
+            if claim is not None:
+                self._require_claim(connection, claim, actor, batch_id)
             return self._project(connection, historical, actor)
+
+    @staticmethod
+    def _require_claim(connection, claim, actor, batch_id):
+        held = connection.execute(text("""
+            SELECT run_id FROM agent_research.runs
+            WHERE run_id=:run AND actor=:actor AND owner=:owner AND fence=:fence
+              AND state='RUNNING' AND lease_until>clock_timestamp()
+              AND deadline_at>clock_timestamp() FOR UPDATE
+        """), {"run": claim.run_id, "actor": actor, "owner": claim.owner,
+                "fence": claim.fence}).scalar_one_or_none()
+        if held is None:
+            raise ReportStoreError("REPORT_SCOPE_DENIED")
+        bound = connection.execute(text("""
+            SELECT batch_id FROM agent_research.claimed_quant_result(:run,:owner,:fence)
+        """), {"run": claim.run_id, "owner": claim.owner,
+                "fence": claim.fence}).scalar_one_or_none()
+        if bound != batch_id:
+            raise ReportStoreError("REPORT_SCOPE_DENIED")
 
     def get(self, report_id, *, actor, version=None):
         with self._engine.connect() as connection:

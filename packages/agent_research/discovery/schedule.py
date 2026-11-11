@@ -2,6 +2,7 @@
 
 import json
 import re
+from contextlib import nullcontext
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
@@ -230,11 +231,15 @@ class ScheduleStore:
                 raise ScheduleDenied("SCHEDULE_EXISTS")
             self._audit(connection, schedule.schedule_id, "CREATE")
 
-    def replace(self, schedule: DailySchedule, *, expected_version: int) -> None:
+    def replace(
+        self, schedule: DailySchedule, *, expected_version: int,
+        connection: Connection | None = None,
+    ) -> None:
         """Update settings or apply a pause/resume by compare-and-swap."""
         if type(expected_version) is not int or schedule.version != expected_version + 1:
             raise ScheduleDenied("STALE_SCHEDULE_VERSION")
-        with self.engine.begin() as connection:
+        transaction = nullcontext(connection) if connection is not None else self.engine.begin()
+        with transaction as connection:
             row = self._lock(connection, schedule.schedule_id)
             if row is None or row["version"] != expected_version:
                 raise ScheduleDenied("STALE_SCHEDULE_VERSION")
@@ -300,8 +305,11 @@ class ScheduleStore:
             })
             return occurrence
 
-    def read(self, schedule_id: str) -> DailySchedule | None:
-        with self.engine.connect() as connection:
+    def read(
+        self, schedule_id: str, *, connection: Connection | None = None,
+    ) -> DailySchedule | None:
+        transaction = nullcontext(connection) if connection is not None else self.engine.connect()
+        with transaction as connection:
             row = connection.execute(text("""
                 SELECT s.*,l.local_date,l.scheduled_at,clock_timestamp() AS now
                 FROM agent_research.discovery_schedules s
