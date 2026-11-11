@@ -28,7 +28,7 @@ Jede Checkbox bezeichnet ein Issue. Akzeptanz, Dateizuständigkeit und Prüfunge
 
 ## 7. Berichte aus Quant-Evidenz erzeugen
 
-- [ ] 7.1 [APF-07 Berichte aus Quant-Evidenz erzeugen](work-packages/APF-07.md) · abhängig von APF-05.
+- [x] 7.1 [APF-07 Berichte aus Quant-Evidenz erzeugen](work-packages/APF-07.md) · abhängig von APF-05.
 
 ## 8. Control API und Supervisor integrieren
 
