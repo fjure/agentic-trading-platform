@@ -6,7 +6,7 @@
 
 ## 2. Gatewaytransport und Egress
 
-- [ ] 2.1 [ARP-02](work-packages/ARP-02.md) Produktive HTTP-Komposition, signierte Dispatch-Grenze und dedizierten CONNECT-Egress verdrahten. Prüfung: Beide Providerwires durch reale TCP/TLS-Komposition im Testnetz.
+- [x] 2.1 [ARP-02](work-packages/ARP-02.md) Produktive HTTP-Komposition, signierte Dispatch-Grenze und dedizierten CONNECT-Egress verdrahten. Prüfung: Beide Providerwires durch reale TCP/TLS-Komposition im Testnetz.
 
 ## 3. BYOK und widerrufbare Generationen
 

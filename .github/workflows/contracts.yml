@@ -1,7 +1,7 @@
 name: Contracts
 on:
   push:
-    branches: [main, 'codex/ptv-96-arp-contracts']
+    branches: [main, 'codex/ptv-*-arp-*']
   pull_request:
 permissions:
   contents: read
@@ -41,7 +41,7 @@ jobs:
         env:
           CONTRACT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          if ($env:GITHUB_REF -eq 'refs/heads/codex/ptv-96-arp-contracts') {
+          if ($env:GITHUB_EVENT_NAME -eq 'push' -and $env:GITHUB_REF -like 'refs/heads/codex/ptv-*-arp-*') {
             $base = git merge-base HEAD refs/remotes/origin/main
             if ($LASTEXITCODE -ne 0 -or $base -notmatch '^[0-9a-f]{40}$') {
               throw 'Missing trustworthy main merge base'
