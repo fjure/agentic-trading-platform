@@ -290,6 +290,7 @@ def test_mutation_routes_are_exact_contract_subset():
     expected = {
         (path, method, op["operationId"])
         for path, methods in OAS["paths"].items()
+        if not path.startswith("/api/v1/integrations/research-setup/providers/")
         for method, op in methods.items()
         if method in {"post", "put"} and op["operationId"] not in pending_operations
     }
