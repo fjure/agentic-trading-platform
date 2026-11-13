@@ -22,7 +22,7 @@
 
 ## 6. NLP-Katalog und Auswertung
 
-- [ ] 6.1 [ARP-06](work-packages/ARP-06.md) 48 unabhängige Goldfälle, Scorer und autorisierungsgebundenes Evaluationsharness erstellen. Prüfung: Versionierte Fixture-Auswertung liefert getrennte und reproduzierbare Kennzahlen.
+- [ ] 6.1 [ARP-06](work-packages/ARP-06.md) 48 unabhängige Goldfälle, Scorer, paarweise Regression und autorisierungsgebundenes Evaluationsharness erstellen. Prüfung: Versionierte Fixture-Auswertung liefert getrennte und reproduzierbare Kennzahlen.
 
 ## 7. Dashboard und Betreiberablauf
 
@@ -30,7 +30,7 @@
 
 ## 8. Autorisierter Smoke-Harness
 
-- [ ] 8.1 [ARP-08](work-packages/ARP-08.md) Synthetischen Einmal-Smoke in die Produktionsroute und ein eigenes Budget integrieren. Prüfung: Emulator belegt exakte Modellbindung und Usage-Erfassung.
+- [ ] 8.1 [ARP-08](work-packages/ARP-08.md) Synthetischen Einmal-Smoke mit modellabhängiger Budgetpolicy in Produktionsroute und hierarchisches Ledger integrieren. Prüfung: Emulator belegt exakte Modellbindung und Usage-Erfassung.
 
 ## 9. Security und Recovery unter Last
 

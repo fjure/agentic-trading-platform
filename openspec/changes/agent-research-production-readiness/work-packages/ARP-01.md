@@ -6,7 +6,7 @@ Additive Status-, Setup-, Probe- und Aktivierungsverträge sowie gesperrte Compo
 
 ## Requirements und Abhängigkeiten
 
-ARP-P01, ARP-K01, ARP-I02. Blockiert durch keine Pakete.
+ARP-I02, ARP-K01, ARP-P01. Blockiert durch keine Pakete.
 
 ## Komponenten
 
@@ -23,3 +23,7 @@ Alte Clients funktionieren, unvollständige Konfiguration bleibt gesperrt. Die [
 ## Definition of Done und Evidenz
 
 Vertragsbericht und Compose-Topologie mit Quell-SHA, reproduzierbarem Prüfkommando und Ergebnis. Relevante Specs, Contract-/CI-Prüfungen und Issue-Read-back sind belegt.
+
+## Normative Abnahme
+
+Die Anbieterquellen belegen Modell- und API-Version, vollständige abrechenbare Obergrenze sowie die aktuelle Tarifrevision. Die Beispielrechnungen sind Katalogevidenz.

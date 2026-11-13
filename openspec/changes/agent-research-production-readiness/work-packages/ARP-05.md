@@ -23,3 +23,7 @@ Absichtlich fehlende Umgebung oder Pflichtsuite wird rot. Die [Sicherheitsgrenze
 ## Definition of Done und Evidenz
 
 GitHub-Run und JUnit mit Quell-SHA, reproduzierbarem Prüfkommando und Ergebnis. Relevante Specs, Contract-/CI-Prüfungen und Issue-Read-back sind belegt.
+
+## Normative Abnahme
+
+Pflichtfall-IDs und SHA-Artefakte im Aggregator erzwingen. Fehlende Umgebung, ausgewählte Skips, fehlende Pflicht-IDs und Artefakte blockieren. Scorer- und Smoke-Suiten werden durch ihre liefernden Pakete registriert.

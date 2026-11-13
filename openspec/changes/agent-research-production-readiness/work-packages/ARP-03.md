@@ -6,7 +6,7 @@ Privaten Research-Setup-Pfad und exklusiven Credential-Lifecycle integrieren.
 
 ## Requirements und Abhängigkeiten
 
-ARP-K01, ARP-K02, ARP-P01. Blockiert durch ARP-01.
+ARP-K01, ARP-K02, ARP-P01, ARP-P06. Blockiert durch ARP-01.
 
 ## Komponenten
 
@@ -23,3 +23,7 @@ CSRF, Symlink, unberechtigter Mount und widerrufene Generation scheitern. Die [S
 ## Definition of Done und Evidenz
 
 Synthetischer Credential- und Mountnachweis mit Quell-SHA, reproduzierbarem Prüfkommando und Ergebnis. Relevante Specs, Contract-/CI-Prüfungen und Issue-Read-back sind belegt.
+
+## Normative Abnahme
+
+Normative Setup-Nachweise prüfen Origin/CSRF, Generation, Mountrollen und Entzug vor Commit.

@@ -2,104 +2,104 @@
   "schemaVersion": 1,
   "repository": "fjure/agentic-trading-platform",
   "changeId": "agent-research-production-readiness",
-  "transport": "GitHub CLI after MCP 403",
+  "transport": "GitHub CLI after MCP 403; native graph verified bidirectionally",
   "issues": [
     {
       "taskId": "ARP-01",
       "issueNumber": 96,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/96",
-      "contentHash": "70fd6b91bac2bb13c10524f1e173cba2c056ace1b38d1a892bb65a869c40d147",
+      "contentHash": "92ab1e459ab1a06c8ef3701f0a14ea2b24470dab4dfb7becc5476511b6d8920b",
       "blockedBy": [],
-      "syncedAt": "2026-11-13T08:39:32.8534717Z"
+      "syncedAt": "2026-11-13T09:43:09.4156568Z"
     },
     {
       "taskId": "ARP-02",
       "issueNumber": 97,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/97",
-      "contentHash": "978455556a6ec1db10208db8ee6667a93a90bcf32283141eb68bc3695ad99624",
+      "contentHash": "c8ba47e4b97a9739333f925dc7fc82401972b74abf19a86411561b9a7c488c69",
       "blockedBy": [
         96
       ],
-      "syncedAt": "2026-11-13T08:39:34.9540353Z"
+      "syncedAt": "2026-11-13T09:43:12.2455972Z"
     },
     {
       "taskId": "ARP-03",
       "issueNumber": 98,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/98",
-      "contentHash": "1459a5ef98c423db05df2661e4e2802194adedd79af4bdd8a3c276b40655603f",
+      "contentHash": "37c9b9071a587a339f3c37e6da88d779efa5fe408b20e28f86c42858f6444413",
       "blockedBy": [
         96
       ],
-      "syncedAt": "2026-11-13T08:39:36.9029547Z"
+      "syncedAt": "2026-11-13T09:43:15.0453088Z"
     },
     {
       "taskId": "ARP-04",
       "issueNumber": 99,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/99",
-      "contentHash": "c55a2ce06edadf8184b8a5bf5592101571fec3201905a507dac3df4b6270c4d7",
+      "contentHash": "b0dbff08ec12d99775c55cdb5d423ea40e1044bf18c545029861fd11d0da93e7",
       "blockedBy": [
         97,
         98
       ],
-      "syncedAt": "2026-11-13T08:39:39.5562976Z"
+      "syncedAt": "2026-11-13T09:43:18.0114290Z"
     },
     {
       "taskId": "ARP-05",
       "issueNumber": 100,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/100",
-      "contentHash": "3b2662e88d48f156cff0045d551c4405a5705319bb3ea418a62d0bd5c56673eb",
+      "contentHash": "d69170f891fd96724ac13360418abbd1ca4f3aa4e7073911d2d54612f38e32a2",
       "blockedBy": [
         96
       ],
-      "syncedAt": "2026-11-13T08:39:41.6384786Z"
+      "syncedAt": "2026-11-13T09:43:20.9583479Z"
     },
     {
       "taskId": "ARP-06",
       "issueNumber": 101,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/101",
-      "contentHash": "dd944fa99cc7d3ae9c985441328f59b9970f81bbf591d5a454eb26c4faac0952",
+      "contentHash": "f995a40f4b7060945deaab41aaadec995865af355ad3346e8f224786f796211a",
       "blockedBy": [
         96
       ],
-      "syncedAt": "2026-11-13T08:39:43.7925563Z"
+      "syncedAt": "2026-11-13T09:43:24.0812221Z"
     },
     {
       "taskId": "ARP-07",
       "issueNumber": 103,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/103",
-      "contentHash": "23b2b71367fa53da252d4417489dab0a4b2d65125a4cded4a12502dafd8b873d",
+      "contentHash": "52df11406e4dc1afa4a9a81c780fd62f12a45fcb58ccf1561efea4c50593669f",
       "blockedBy": [
         99,
         102
       ],
-      "syncedAt": "2026-11-13T08:39:46.4888871Z"
+      "syncedAt": "2026-11-13T09:43:29.7997535Z"
     },
     {
       "taskId": "ARP-08",
       "issueNumber": 102,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/102",
-      "contentHash": "b44aef28facfec6b37ba48c8afa3879b286b7dfe680aaf25a7554787a6a8caa3",
+      "contentHash": "8fd7fb715b5be5c09d34594686fc57275ef5caaa010d875fe4966ee2127a88c2",
       "blockedBy": [
         99
       ],
-      "syncedAt": "2026-11-13T08:39:48.3958345Z"
+      "syncedAt": "2026-11-13T09:43:27.0557007Z"
     },
     {
       "taskId": "ARP-09",
       "issueNumber": 104,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/104",
-      "contentHash": "a63eb98e2564620138cabbe4dab299b3abfa2ccb80e27249567c3dcd45ac03cd",
+      "contentHash": "0c6b00b6c3f330adc84587a6e143f25abbc6213a3e447f729fe21471c015eaab",
       "blockedBy": [
         99,
         100
       ],
-      "syncedAt": "2026-11-13T08:39:51.0802662Z"
+      "syncedAt": "2026-11-13T09:43:32.4779416Z"
     },
     {
       "taskId": "ARP-10",
       "issueNumber": 105,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/105",
-      "contentHash": "1de28a33c4aabc3e7369d55b80056016eedc910868bd6401b445c0ff78aecebd",
+      "contentHash": "208774fb35c377923785977122d2c8406172accfe39b11711b75be7088a33662",
       "blockedBy": [
         100,
         101,
@@ -107,7 +107,7 @@
         102,
         104
       ],
-      "syncedAt": "2026-11-13T08:39:56.1771001Z"
+      "syncedAt": "2026-11-13T09:43:35.0273469Z"
     }
   ]
 }

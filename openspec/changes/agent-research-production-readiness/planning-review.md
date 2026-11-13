@@ -11,3 +11,11 @@ Drei voneinander unabhängige Subagenten prüften lesend den Entwurf und den rel
 | Conversational UX | Statusdimensionen und erneute Freigabe unklar | Credential-, Probe-, Zweck-, Datenfreigabe- und Zeitplanzustand getrennt, kein Auto-Resend bei Reload oder Timeout. |
 | Quant Research Integrity | Approximation und Discovery-Übernahme fehlten. Eval zählte nur übernommene Modellfehler. | Separates Approximationsgate, ausdrückliche Moduswahl, interaktive Übernahme und Bewertung von Rohfehlern plus unabhängiger Holdout. |
 | Risk/Execution Isolation | Fehlende konkrete Latenz- und Grenzassertionen | Je unter fünf Sekunden für Pause, Kill und Reconciliation, null Brokerorders und abgewiesene SQL-/RPC-/Egress-Wege unter aktiver Last. |
+
+## Refinement am Basisstand 9dbbb6a
+
+| Unabhängiger Review | Befund und Auflösung |
+| --- | --- |
+| A · Provider und Kosten | OpenAI-Standardtier ausdrücklich binden und beim Settlement prüfen. Ursprünglichen Komponententarif erhalten und VERIFIED nur nach vollständigem, begrenztem Settlement aktueller Bindung projizieren. Nachprüfung bestanden. |
+| B · NLP und Quant | Recall und fehlende Antworten präzisiert, Mindestschichtung und drei autorisierte Wiederholungen normativ ergänzt, unvollständige Vergleichspaare gesperrt und neue Baseline mit unabhängiger Bestätigung verlangt. Nachprüfung fachlich bestanden, Szenario E02-S06 anschließend unter das gleichnamige Requirement verschoben. |
+| C · SDD und Testarchitektur | Anforderungen, Szenarien und Paketnachweise vereinheitlicht, CI-Fixtures von Betreiber-Evidenz getrennt, Manifestformat und Moduswechsel konkretisiert. Nachprüfung bestätigt die Korrekturen. Die abschließende Strukturprüfung prüft zusätzlich die Zugehörigkeit von E02-S06. |
