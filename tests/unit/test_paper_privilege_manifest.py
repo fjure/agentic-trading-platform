@@ -29,6 +29,16 @@ def test_agent_heads_preserve_the_exact_paper_acl_boundary():
     quant = manifest("0036_quant_validation_attempts")
     assert manifest("0042_research_companion") == quant
     apf = manifest("0051_quant_started_receipt")
+    assert manifest("0052_quant_prepare_read") == apf
+    assert manifest("0053_quant_prepare_intent") == apf
+    assert manifest("0055_quant_prepare_approval") == manifest("0054_quant_prepare_handoff")
+    assert manifest("0054_quant_prepare_handoff") == apf | {
+        ("function", name, "atl_paper_control_api", "EXECUTE", False)
+        for name in (
+            "agent_research.claim_quant_preparation(uuid)",
+            "agent_research.record_quant_preparation(uuid,uuid,uuid)",
+        )
+    }
     assert quant <= apf
     assert apf == manifest("0048_quant_report_reader")
     assert len(apf - quant) == 5

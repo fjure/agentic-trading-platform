@@ -10,12 +10,18 @@ from threading import Event, Thread
 from uuid import UUID, uuid4
 
 from sqlalchemy import text
+from sqlalchemy.exc import DBAPIError
 
-from packages.agent_research.companion.dialogue import ExpertBinding
+from packages.agent_research.companion.dialogue import Dialogue, ExpertBinding
 from packages.agent_research.companion.ideas import IdeaAction, IdeaLifecycle
 from packages.agent_research.companion.interpretation import InterpretationBoundary
-from packages.agent_research.companion.service import CompanionService
-from packages.agent_research.companion.store import CompanionStore
+from packages.agent_research.companion.service import CompanionService, DialogueCommand
+from packages.agent_research.companion.store import CompanionConflict, CompanionStore
+from packages.agent_research.companion.testability import (
+    MAPPING_VERSION,
+    HypothesisIdentity,
+    ema_crossover_mapping,
+)
 from packages.agent_research.discovery.schedule import DailySchedule, ScheduleStore, tzdata_version
 from packages.agent_research.model_attempts import ModelAttemptStore
 from packages.agent_research.processing import ProcessingStore, ProjectionVault
@@ -23,7 +29,11 @@ from packages.agent_research.reporting.service import ReportDenied, ResearchRepo
 from packages.agent_research.reporting.source import QuantReportSource, SourceIntegrityError
 from packages.agent_research.reporting.store import ReportStore, ReportStoreError
 from packages.agent_research.run_state import RunState
-from packages.agent_research.runs import RunKind, RunStore
+from packages.agent_research.runs import RunConflict, RunKind, RunStore
+from packages.agent_research.tools import ToolCall, ToolJournal
+from packages.backtesting.experiment import SearchSpace
+from packages.backtesting.strategies import CATALOG_VERSION
+from packages.research.models import content_fingerprint
 from packages.research.registry import definitions
 from services.control_api.agent_processing_projection import ProcessingProjection
 from services.llm_gateway.content_policy import safe_result_content
@@ -44,6 +54,7 @@ _LOCAL_ACTIONS = frozenset(
         IdeaAction.REJECT,
         IdeaAction.REVISE,
         IdeaAction.CONFIRM_HYPOTHESIS,
+        IdeaAction.VALIDATE_DRAFT,
     }
 )
 
@@ -80,9 +91,17 @@ def _idea_content(document):
             "assumptions",
             "openQuestions",
             "uncertainties",
-            "interpretation",
         )
     ]
+    proposal = document.get("interpretation")
+    if proposal:
+        prose.extend(proposal.get(field) for field in ("interpretation", "conflicts"))
+        approximation = proposal.get("approximation")
+        if approximation:
+            prose.extend(
+                approximation.get(field)
+                for field in ("original", "substitute", "difference", "limitations")
+            )
     return safe_result_content(prose)
 
 
@@ -174,9 +193,15 @@ def create_agent_research_service(
     local_step = handlers.get(RunKind.DIALOGUE, lambda *_: StepResult(RunState.WAITING_FOR_INPUT))
     if model_step is not None:
         local_step = model_step.run
+    journal = ToolJournal(engine)
 
     def dialogue_step(claim, request, recovered):
         with engine.connect() as connection:
+            preparation = connection.execute(text("""
+                SELECT dialogue_id,dialogue_version,idea_id,idea_version,
+                       template_id,template_version,template_hash
+                FROM agent_research.quant_prepare_intents WHERE run_id=:run
+            """), {"run": claim.run_id}).one_or_none()
             result = connection.execute(
                 text("""
                 SELECT * FROM agent_research.claimed_quant_result(:run,:owner,:fence)
@@ -184,6 +209,10 @@ def create_agent_research_service(
                 {"run": claim.run_id, "owner": claim.owner, "fence": claim.fence},
             ).one_or_none()
         if result is None:
+            if preparation is not None:
+                if request.checkpoint_ref == "QUANT_VALIDATION_READY":
+                    return _complete_quant_preparation(engine, companion, claim, preparation)
+                return _quant_preflight(journal, claim, request.input_ref, preparation)
             return local_step(claim, request, recovered)
         if result.status != "SUCCEEDED":
             return StepResult(RunState.BLOCKED, "QUANT_RESULT_UNAVAILABLE")
@@ -200,6 +229,7 @@ def create_agent_research_service(
     def tick():
         with engine.begin() as connection:
             connection.execute(text("SELECT agent_research.ready_quant_runs()"))
+            connection.execute(text("SELECT agent_research.ready_prepared_quant_runs()"))
         if discovery is not None:
             discovery.tick(schedule_id)
 
@@ -232,6 +262,127 @@ def create_agent_research_service(
             thread.join(timeout=3)
 
     return create_agent_research_relay(auth, control, lifespan=lifespan)
+
+
+def _quant_preflight(journal, claim, input_ref, intent):
+    if input_ref != intent.dialogue_id:
+        return StepResult(RunState.BLOCKED, "QUANT_TEMPLATE_STALE")
+    identifier = str(intent.template_id)
+    binding = (intent.idea_id, intent.idea_version, intent.dialogue_version,
+               identifier, intent.template_version, intent.template_hash)
+
+    def authorize(scope):
+        template = scope.execute(text("""
+            SELECT agent_research.claimed_quant_template(
+                :run,:owner,:fence,:version,:idea_version,:dialogue_version
+            )
+        """), {
+            "run": claim.run_id, "owner": claim.owner, "fence": claim.fence,
+            "version": claim.version, "idea_version": intent.idea_version,
+            "dialogue_version": intent.dialogue_version,
+        }).scalar_one()
+        if template is None or (
+            template["id"], template["version"], template["hash"],
+            template["ideaId"], template["ideaVersion"],
+        ) != (identifier, intent.template_version, intent.template_hash,
+              intent.idea_id, intent.idea_version):
+            raise RunConflict("QUANT_TEMPLATE_STALE")
+        if template["dataContext"] is None:
+            raise RunConflict("QUANT_DATA_RIGHTS_UNVERIFIED")
+        hypothesis, dialogue = scope.execute(text("""
+            SELECT i.document->'hypothesis',d.document
+            FROM agent_research.companion_idea_versions i
+            JOIN agent_research.companion_dialogue_versions d
+              ON d.idea_id=i.idea_id AND d.idea_version=i.version
+            WHERE i.idea_id=:idea AND i.version=:version
+              AND d.dialogue_id=:dialogue AND d.version=:dialogue_version
+        """), {
+            "idea": intent.idea_id, "version": intent.idea_version,
+            "dialogue": intent.dialogue_id, "dialogue_version": intent.dialogue_version,
+        }).one()
+        if not _matches_quant_hypothesis(hypothesis, dialogue, template["parameters"]):
+            raise RunConflict("QUANT_TEMPLATE_MISMATCH")
+
+    try:
+        journal.execute(
+            claim, ToolCall("quant-template", "QUANT_READ", 1, content_fingerprint(binding)),
+            authorize=authorize, operation=lambda _: identifier,
+        )
+    except RunConflict as error:
+        if error.code not in {
+            "QUANT_TEMPLATE_STALE", "QUANT_DATA_RIGHTS_UNVERIFIED", "QUANT_TEMPLATE_MISMATCH",
+        }:
+            raise
+        return StepResult(RunState.BLOCKED, error.code)
+    return StepResult(RunState.WAITING_FOR_INPUT, "QUANT_PREPARATION_READY")
+
+
+def _complete_quant_preparation(engine, companion, claim, intent):
+    with engine.connect() as connection:
+        definition = connection.scalar(text("""
+            SELECT agent_research.claimed_prepared_quant(:run,:owner,:fence,:version)
+        """), {
+            "run": claim.run_id, "owner": claim.owner, "fence": claim.fence,
+            "version": claim.version,
+        })
+    if definition is None:
+        return StepResult(RunState.BLOCKED, "QUANT_VALIDATION_EVIDENCE")
+
+    def prepare(scope):
+        key = content_fingerprint(("prepared-quant-idea-v1", str(claim.run_id)))
+        command = DialogueCommand(
+            "local-operator", intent.idea_id, intent.dialogue_id, intent.idea_version,
+            intent.dialogue_version, key,
+        )
+        try:
+            companion.revise_idea(
+                command, action=IdeaAction.VALIDATE_DRAFT, decision_id=key, scope=scope,
+                changes={
+                    "experimentDraftIds": [str(definition)],
+                    "testability": {
+                        "classification": "EXACTLY_TESTABLE", "catalogVersion": CATALOG_VERSION,
+                        "mappingVersion": MAPPING_VERSION, "reasons": ["EXACT_MAPPING_VERIFIED"],
+                        "options": [], "limitations": [],
+                    },
+                },
+            )
+        except CompanionConflict as error:
+            if error.code not in {"STALE_IDEA_VERSION", "STALE_DIALOGUE_VERSION"}:
+                raise
+            raise RunConflict("QUANT_VALIDATION_STALE") from None
+        try:
+            scope.execute(
+                text("SELECT agent_research.prepare_result_approval(:run)"), {"run": claim.run_id},
+            )
+        except DBAPIError as error:
+            diagnostic = getattr(error.orig, "diag", None)
+            if getattr(diagnostic, "message_primary", None) != "quant approval conflict":
+                raise
+            raise RunConflict("QUANT_VALIDATION_STALE") from None
+
+    return StepResult(RunState.WAITING_FOR_APPROVAL, after_transition=prepare)
+
+
+def _matches_quant_hypothesis(document, dialogue, template):
+    try:
+        hypothesis = HypothesisIdentity.from_document(document)
+        if Dialogue.from_record(dialogue).confirmed != dict(hypothesis.fields()):
+            return False
+        space, = (SearchSpace.from_mapping(item) for item in template["searchSpaces"])
+        if space.candidate_count != 1 or template["symbol"] != hypothesis.market:
+            return False
+        parameters = tuple((key, values[0]) for key, values in space.parameter_values)
+        mapping = ema_crossover_mapping(hypothesis, parameters, template["researchMode"])
+        if mapping is None or (space.strategy_id, space.strategy_version) != (
+            mapping.strategy_id, mapping.strategy_version,
+        ):
+            return False
+        protocol = template["protocol"]
+        start = protocol["folds"][0]["training"]["start"][:10]
+        end = protocol["holdout"]["end"][:10]
+        return hypothesis.observation_window == f"{start}/{end}"
+    except (KeyError, TypeError, ValueError, IndexError):
+        return False
 
 
 def _database_engine():

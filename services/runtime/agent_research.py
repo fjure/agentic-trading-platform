@@ -10,12 +10,14 @@ from packages.agent_research.model_attempts import Attempt, ModelAttemptStore
 from packages.agent_research.registry import AgentPolicyDenied
 from packages.agent_research.run_state import RunState
 from packages.agent_research.runs import Claim, ClaimedInput, RunConflict, RunKind, RunStore
+from packages.persistence.transaction import ScopedConnection
 
 
 @dataclass(frozen=True, slots=True)
 class StepResult:
     target: RunState
     checkpoint_ref: str | None = None
+    after_transition: Callable[[ScopedConnection], None] | None = None
 
 
 Step = Callable[[Claim, ClaimedInput, tuple[Attempt, ...]], StepResult]
@@ -75,8 +77,25 @@ class ResearchSupervisor:
                 raise
             result = StepResult(target)
         try:
-            self.runs.transition(claim, result.target, checkpoint_ref=result.checkpoint_ref)
+            if result.after_transition is None:
+                self.runs.transition(claim, result.target, checkpoint_ref=result.checkpoint_ref)
+            else:
+                with self.runs.engine.begin() as connection:
+                    scope = ScopedConnection(connection)
+                    self.runs.transition(
+                        claim, result.target, checkpoint_ref=result.checkpoint_ref, scope=scope,
+                    )
+                    result.after_transition(scope)
         except RunConflict as error:
+            if error.code == "QUANT_VALIDATION_STALE":
+                try:
+                    self.runs.transition(
+                        claim, RunState.BLOCKED, checkpoint_ref="QUANT_VALIDATION_EVIDENCE",
+                    )
+                except RunConflict as stale:
+                    if stale.code != "LEASE_LOST":
+                        raise
+                return True
             if error.code != "LEASE_LOST":
                 raise
         return True

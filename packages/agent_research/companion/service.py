@@ -257,6 +257,7 @@ class CompanionService:
     def revise_idea(
         self, command: DialogueCommand, *, action: IdeaAction, decision_id: str,
         changes: Mapping | None = None,
+        scope: ScopedConnection | None = None,
     ) -> DialogueRevision:
         if action in {IdeaAction.CREATE, IdeaAction.CONFIRM_HYPOTHESIS}:
             raise CompanionConflict("INVALID_IDEA_TRANSITION")
@@ -279,7 +280,7 @@ class CompanionService:
             )
             return DialogueChange(revised.record(), "IDEA_REVISED", next_idea=successor)
 
-        return self._change(command, "revise-idea", arguments, change)
+        return self._change(command, "revise-idea", arguments, change, scope=scope)
 
     def _change(
         self, command: DialogueCommand, operation: str, arguments: dict,

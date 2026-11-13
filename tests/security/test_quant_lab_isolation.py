@@ -1,5 +1,6 @@
 """Isolated full-size Quant workload under the production worker limits."""
 
+from contextlib import ExitStack, contextmanager
 from decimal import Decimal
 from pathlib import Path
 
@@ -176,6 +177,66 @@ def _prove_denied(engine):
             forbidden.dispose()
 
 
+@contextmanager
+def _research_load(database):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+    from uuid import uuid4
+
+    from sqlalchemy import text
+
+    from packages.agent_research.registry import QUANT_RESEARCH_V1, ToolId
+    from packages.agent_research.run_state import RunState
+    from packages.agent_research.runs import RunKind, RunStore
+    from packages.agent_research.tools import ToolCall, ToolJournal
+
+    engine = _engine("atl_agent_research", database)
+    runs = RunStore(engine)
+    journal = ToolJournal(engine)
+    active, release = Event(), Event()
+    try:
+        run = runs.enqueue(
+            actor="local-operator", key="apf-isolation-research-load", kind=RunKind.DIALOGUE,
+            input_ref="synthetic-isolation-input", trace_id="b" * 32, agent=QUANT_RESEARCH_V1,
+        )
+
+        def authorize(scope):
+            assert scope.execute(text("""
+                SELECT input_ref FROM agent_research.runs
+                WHERE run_id=:run AND actor='local-operator'
+            """), {"run": run}).scalar_one() == "synthetic-isolation-input"
+
+        def operation(_scope):
+            active.set()
+            # Keep the real journal transaction open across the measured safety calls.
+            assert release.wait(timeout=20), "Paper safety calls did not finish under Research load"
+            return "synthetic-isolation-result"
+
+        def work():
+            claim = runs.claim(uuid4())
+            assert claim is not None and claim.run_id == run
+            call = ToolCall("isolation-read", ToolId.RESEARCH_READ, 1, "c" * 64)
+            assert journal.execute(claim, call, authorize=authorize, operation=operation) == (
+                "synthetic-isolation-result"
+            )
+            runs.transition(claim, RunState.COMPLETED)
+
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            pending = pool.submit(work)
+            try:
+                if not active.wait(timeout=5):
+                    pending.result(timeout=5)
+                    raise AssertionError("Research tool transaction did not start")
+                yield pending
+                assert not pending.done(), "Research load ended before the safety checks"
+            finally:
+                release.set()
+            pending.result(timeout=5)
+        assert runs.snapshot(run, actor="local-operator").state is RunState.COMPLETED
+    finally:
+        engine.dispose()
+
+
 def safety():
     from time import monotonic
 
@@ -195,7 +256,7 @@ def safety():
         baseline = _seed(admin, fixture.engines["api"])
         with psycopg.connect(
             dbname=fixture.database, autocommit=True, **fixture.common
-        ) as listener:
+        ) as listener, ExitStack() as loads:
             listener.execute("LISTEN qsl09_active_simulation")
             print("READY", flush=True)
             deadline = monotonic() + 295
@@ -212,6 +273,7 @@ def safety():
             _, _, _, activation = fixture.start()
             assert set(activation) == {"activationId", "expiresAt"}
             assert fixture.api.read_status(fixture.trace)["entryGateOpen"] is True
+            loads.enter_context(_research_load(fixture.database))
 
             def timed(call, *args, **kwargs):
                 started = monotonic()
@@ -255,7 +317,7 @@ def safety():
         assert fixture.receipt.ready and all(method == "GET" for method, _ in fixture.http_calls)
         print(
             f"PASS Paper safety Pause {pause_seconds:.3f}s, Kill {kill_seconds:.3f}s, "
-            f"Reconciliation {reconcile_seconds:.3f}s",
+            f"Reconciliation {reconcile_seconds:.3f}s with overlapping Quant and APF Research",
             flush=True,
         )
     finally:

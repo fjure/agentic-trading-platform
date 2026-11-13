@@ -59,6 +59,32 @@ def test_original_hypothesis_and_version_lineage_remain_separate():
     assert CONTENT["originalText"] not in repr(confirmed)
 
 
+def test_confirmation_persists_server_owned_testability_on_the_new_revision():
+    domain = lifecycle()
+    idea = create(domain)
+    hypothesis = {
+        "statement": "The EMA crossover outperforms the benchmark.",
+        "market": "QQQ",
+        "trigger": "EMA crossover",
+        "signal": "EMA(10) above EMA(30)",
+        "observationWindow": "2024-01-01/2024-12-31",
+        "target": "net return",
+        "measurementHorizon": "entire evaluation window",
+        "benchmark": "buy-hold-v1",
+        "evaluationCriterion": "return greater than benchmark",
+    }
+    changes = {"hypothesis": hypothesis, "assumptions": [], "dialogueId": "dialogue-1"}
+    with pytest.raises(IdeaDenied, match="INVALID_IDEA_CHANGE"):
+        revise(domain, idea, IdeaAction.CONFIRM_HYPOTHESIS, {
+            **changes, "testability": {"classification": "EXACTLY_TESTABLE"},
+        })
+    successor = revise(domain, idea, IdeaAction.CONFIRM_HYPOTHESIS, changes)
+    assert successor.to_document()["testability"]["classification"] == "INSUFFICIENT_DATA"
+    assert successor.to_document()["testability"]["reasons"] == ["DATA_NOT_VERIFIED"]
+    assert successor.to_document()["experimentDraftIds"] == []
+    assert idea.to_document()["testability"] is None
+
+
 def test_agent_publication_requires_authoritative_validation():
     domain = lifecycle(verifies=lambda action, *_: action != IdeaAction.PUBLISH)
     agent_document = json.loads(

@@ -271,6 +271,7 @@ class RunStore:
 
     def transition(
         self, claim: Claim, target: RunState, *, checkpoint_ref: str | None = None,
+        scope=None,
     ) -> None:
         target = RunState(target)
         require_transition(RunState.RUNNING, target)
@@ -280,7 +281,7 @@ class RunStore:
             "id": claim.run_id, "owner": claim.owner, "fence": claim.fence,
             "version": claim.version, "target": target.value, "checkpoint": checkpoint_ref,
         }
-        with self.engine.begin() as connection:
+        with nullcontext(scope) if scope is not None else self.engine.begin() as connection:
             changed = connection.execute(text(f"""
                 UPDATE agent_research.runs SET state=:target, version=version+1,
                     owner=NULL, claimed_at=NULL, lease_until=NULL, active_ms={_ACTIVE_MS},

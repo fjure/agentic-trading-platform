@@ -49,7 +49,7 @@ def relay():
         server.serve_forever()
 
 
-def host():
+def host(*, agent=False):
     with socket.socket() as probe:
         probe.bind(("127.0.0.1", 4221))
     identity = "atl-research-browser-" + uuid4().hex[:20]
@@ -128,26 +128,38 @@ def host():
             "--workdir",
             "/opt/lab",
         ]
-        for source, target in [
+        mounts = [
             (ROOT / "packages", "/opt/lab/packages"),
             (ROOT / "services", "/opt/lab/services"),
             (ROOT / "alembic.ini", "/opt/lab/alembic.ini"),
-            (
-                ROOT / "contracts/schemas/v1/backtesting.schema.json",
-                "/opt/lab/contracts/schemas/v1/backtesting.schema.json",
-            ),
             (ROOT / "apps/dashboard/dist/dashboard/browser", "/opt/lab/dashboard"),
-            (Path(__file__), "/opt/lab/research_browser_support.py"),
-        ]:
+        ]
+        if agent:
+            mounts += [
+                (ROOT / directory, f"/opt/lab/{directory}")
+                for directory in ("tests", "contracts", "scripts")
+            ]
+        else:
+            mounts += [
+                (
+                    ROOT / "contracts/schemas/v1/backtesting.schema.json",
+                    "/opt/lab/contracts/schemas/v1/backtesting.schema.json",
+                ),
+                (Path(__file__), "/opt/lab/research_browser_support.py"),
+            ]
+        for source, target in mounts:
             command += ["--mount", f"type=bind,source={source},target={target},readonly"]
         command += [
             "--entrypoint",
             "python",
             "agentic-trading-lab-research-test:local",
             "-u",
-            "research_browser_support.py",
-            "guest",
         ]
+        command += (
+            ["-m", "tests.e2e.agent_research_browser", "guest"]
+            if agent
+            else ["research_browser_support.py", "guest"]
+        )
         child = subprocess.Popen(
             command,
             stdin=subprocess.PIPE,
@@ -187,37 +199,55 @@ def host():
         env.update(
             RESEARCH_BROWSER_CONTAINER=application,
             RESEARCH_BROWSER_PYTHON=sys.executable,
-            RESEARCH_BROWSER_ACTIVATION=activation,
-            RESEARCH_BROWSER_START=ready["start"],
-            RESEARCH_BROWSER_END=ready["end"],
-            RESEARCH_BROWSER_KNOWLEDGE=ready["knowledge"],
             PLAYWRIGHT_NO_COPY_PROMPT="1",
         )
+        if agent:
+            env["APF_BROWSER_ACTIVATION"] = activation
+            env["APF_BROWSER_QUANT_EXPERT"] = ready["expert"]
+        else:
+            env.update(
+                RESEARCH_BROWSER_ACTIVATION=activation,
+                RESEARCH_BROWSER_START=ready["start"],
+                RESEARCH_BROWSER_END=ready["end"],
+                RESEARCH_BROWSER_KNOWLEDGE=ready["knowledge"],
+            )
+        node = ROOT / ".tooling/contracts/node/node-v22.23.3-win-x64/node.exe"
+        if not node.is_file() and ROOT.parent.name == ".tooling":
+            # Issue worktrees share the checkout's verified contract tools.
+            node = ROOT.parents[1] / node.relative_to(ROOT)
         result = subprocess.run(
             [
-                str(ROOT / ".tooling/contracts/node/node-v22.23.3-win-x64/node.exe"),
+                str(node),
                 str(ROOT / "apps/dashboard/node_modules/@playwright/test/cli.js"),
                 "test",
                 "--config",
-                "playwright.research.config.ts",
+                "playwright.apf.config.ts" if agent else "playwright.research.config.ts",
             ],
             cwd=ROOT,
             env=env,
             capture_output=True,
-            text=True,
+            encoding="utf-8",
             timeout=240,
         )
-        env.pop("RESEARCH_BROWSER_ACTIVATION", None)
+        env.pop("APF_BROWSER_ACTIVATION" if agent else "RESEARCH_BROWSER_ACTIVATION", None)
         public = result.stdout + result.stderr
         for private in (activation, CANARY):
             public = public.replace(private, "[redacted synthetic input]")
-        print(public.strip(), flush=True)
+        encoding = sys.stdout.encoding or "utf-8"
+        public = public.strip().encode(encoding, errors="backslashreplace").decode(encoding)
+        print(public, flush=True)
         if result.returncode:
             raise RuntimeError("real Research browser acceptance failed")
         child.stdin.write("verify\n")
         child.stdin.flush()
         proof = read_line(20)
-        if proof != "PASS SQL: real Research browser, durable states and no orders/provider reads":
+        expected = (
+            "PASS SQL: Agent Research browser, one approved Quant batch and report, "
+            "no broker orders"
+            if agent
+            else "PASS SQL: real Research browser, durable states and no orders/provider reads"
+        )
+        if proof != expected:
             raise RuntimeError("Research browser SQL evidence failed")
         print(proof, flush=True)
         child.wait(timeout=20)

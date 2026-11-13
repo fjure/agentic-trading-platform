@@ -164,6 +164,7 @@ class AgentReadModels:
                     text("""
                 SELECT r.run_id,r.kind,r.state,r.version,r.trace_id,r.request_hash,r.agent_binding,
                   r.created_at,r.updated_at,r.deadline_at,r.steps,r.tool_calls,r.input_ref,
+                  r.checkpoint_ref,
                   (SELECT v.report_id FROM agent_research.report_versions v
                    WHERE v.report_id=r.checkpoint_ref AND v.actor=r.actor LIMIT 1) AS report_id,
                   a.calls,a.unknown,a.reported_input,a.reported_output,a.held_cost,a.confirmed_cost,
@@ -288,6 +289,11 @@ def _run(row):
     if binding["model_binding"] is not None:
         document["modelBinding"] = _camel(binding["model_binding"])
     reason = _REASONS.get(row["state"])
+    if row["state"] == "BLOCKED":
+        reason = {
+            "QUANT_VALIDATION_BUDGET": "BUDGET_EXHAUSTED",
+            "QUANT_VALIDATION_EVIDENCE": "EVIDENCE_NOT_ELIGIBLE",
+        }.get(row.get("checkpoint_ref"), reason)
     if outcome == "OUTCOME_UNKNOWN":
         reason = "PROVIDER_OUTCOME_UNKNOWN"
     if reason is not None:
