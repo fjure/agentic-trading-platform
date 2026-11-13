@@ -7,3 +7,5 @@
 - [ ] Release-CI vollständig grün, einschließlich Browser, Safety, Recovery und Produktionskomposition gegen TLS-Emulator.
 - [ ] Konto-, Provider-, Modell- und Datenrechte vor realem Betrieb separat belegt. Real-Smoke und Evaluation separat autorisiert und mit begrenztem Budget ausgeführt.
 - [ ] Kill, Reconciliation und null Brokerorders unter Researchlast belegt. Kontrollierter Rollback dokumentiert.
+
+- [ ] Smoke-Nachweis enthält Requestbindung, Tarif und belegte Kostenreserve, Zeit- und Outputgrenze, technischen Verbindungsstatus und separat nachvollziehbare Abrechnung. Die Fachfreigabe enthält Mindestabdeckung, drei autorisierte Holdout-Läufe und dokumentierte Regressionsentscheidung.

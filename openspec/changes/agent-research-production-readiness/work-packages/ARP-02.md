@@ -23,3 +23,7 @@ Falsche Ziele, Redirects, Zertifikate, DNS-Antworten und alte Fences blockieren.
 ## Definition of Done und Evidenz
 
 Wire- und Netzisolationsbericht mit Quell-SHA, reproduzierbarem Prüfkommando und Ergebnis. Relevante Specs, Contract-/CI-Prüfungen und Issue-Read-back sind belegt.
+
+## Normative Abnahme
+
+Normative Wire-Nachweise prüfen signierten Einmaldispatch, gesperrtes Ziel, HTTP 429 und abweichende Antwortidentität ohne Fallback.

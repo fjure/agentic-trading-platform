@@ -6,7 +6,7 @@ Saubere Installation, vollständige lokale Kette und Rollback wiederholbar abneh
 
 ## Requirements und Abhängigkeiten
 
-ARP-I01, ARP-I02, ARP-E02, ARP-P06, ARP-P07. Blockiert durch ARP-05, ARP-06, ARP-07, ARP-08, ARP-09.
+ARP-E01, ARP-E02, ARP-I01, ARP-I02, ARP-P06, ARP-P07. Blockiert durch ARP-05, ARP-06, ARP-07, ARP-08, ARP-09.
 
 ## Komponenten
 
@@ -23,3 +23,7 @@ Fehlende reale Betreiberfreigabe belässt die Funktion gesperrt und den Live-Nac
 ## Definition of Done und Evidenz
 
 Readiness-Matrix mit getrenntem Betriebsnachweis mit Quell-SHA, reproduzierbarem Prüfkommando und Ergebnis. Relevante Specs, Contract-/CI-Prüfungen und Issue-Read-back sind belegt.
+
+## Normative Abnahme
+
+Vollständige Offline-Pflichtfälle, getrennten autorisierten technischen Smoke und Fachfreigabe mit vollständigem Holdout und Regression je Bindung abnehmen. Ein fehlender Betreiberlauf bleibt separat offen.

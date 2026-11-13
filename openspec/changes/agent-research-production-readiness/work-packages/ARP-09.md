@@ -6,7 +6,7 @@ Produktionskomposition und deterministische Crash-/Widerrufs-/Lastfälle im Gate
 
 ## Requirements und Abhängigkeiten
 
-ARP-I02, ARP-K02, ARP-P02, ARP-P04. Blockiert durch ARP-04, ARP-05.
+ARP-I02, ARP-K01, ARP-K02, ARP-P02, ARP-P04, ARP-P06. Blockiert durch ARP-04, ARP-05.
 
 ## Komponenten
 
@@ -23,3 +23,7 @@ Doppelversand, Doppelstart, stale Fence und Ausbruchversuche scheitern. Die [Sic
 ## Definition of Done und Evidenz
 
 Isolations-, Last- und Recovery-Bericht mit Quell-SHA, reproduzierbarem Prüfkommando und Ergebnis. Relevante Specs, Contract-/CI-Prüfungen und Issue-Read-back sind belegt.
+
+## Normative Abnahme
+
+Unter aktiver Last und Gatewayfehlern die bestehende Fünf-Sekunden-Grenze, keine Finanzwrites, stale Fences, Replay und Mount-Isolation belegen.

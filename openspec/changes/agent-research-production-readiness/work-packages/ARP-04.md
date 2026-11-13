@@ -6,7 +6,7 @@ Produktive Supervisor-Komposition mit Profilepoch, exakter Preview, proaktivem G
 
 ## Requirements und Abhängigkeiten
 
-ARP-P01, ARP-P03, ARP-P04, ARP-P05, ARP-K02. Blockiert durch ARP-02, ARP-03.
+ARP-K02, ARP-P01, ARP-P02, ARP-P03, ARP-P04, ARP-P05, ARP-P06. Blockiert durch ARP-02, ARP-03.
 
 ## Komponenten
 
@@ -23,3 +23,7 @@ Parallele Überschreitung, unknown, alte Rechte, Doppelversand und unzulässige 
 ## Definition of Done und Evidenz
 
 PostgreSQL- und Race-Evidenz mit Quell-SHA, reproduzierbarem Prüfkommando und Ergebnis. Relevante Specs, Contract-/CI-Prüfungen und Issue-Read-back sind belegt.
+
+## Normative Abnahme
+
+Tarif- und Nachweisrevisionen an Preview und Attempt binden. Atomare Probe-, Provider-, Tages- und globale Limits, UTC-Wechsel, unvollständige Usage und Überlauf in PostgreSQL prüfen.
