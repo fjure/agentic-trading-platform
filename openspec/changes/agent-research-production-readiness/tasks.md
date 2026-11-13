@@ -10,7 +10,7 @@
 
 ## 3. BYOK und widerrufbare Generationen
 
-- [ ] 3.1 [ARP-03](work-packages/ARP-03.md) Privaten Research-Setup-Pfad und exklusiven Credential-Lifecycle integrieren. Prüfung: Flüchtige Eingabe, Rotation und Generation im Produktprofil belegen.
+- [x] 3.1 [ARP-03](work-packages/ARP-03.md) Privaten Research-Setup-Pfad und exklusiven Credential-Lifecycle integrieren. Prüfung: Flüchtige Eingabe, Rotation und Generation im Produktprofil belegen.
 
 ## 4. Profile, Freigaben und Kosten
 

@@ -17,6 +17,7 @@ from .common import write_status
 
 ACTIVATION_SOCKET = Path("/run/control/api-activation.sock")
 STATIC_ROOT = Path("/opt/lab/dashboard")
+RESEARCH_SETUP_SOCKET = "/run/research-setup/setup.sock"
 _HOP = {
     "connection",
     "keep-alive",
@@ -46,7 +47,7 @@ def static_path(root: Path, raw_path: str) -> Path:
     return result
 
 
-def create_bridge(config, root=STATIC_ROOT):
+def create_bridge(config, root=STATIC_ROOT, *, auth=None):
     import httpx
     from fastapi import FastAPI
     from starlette.responses import FileResponse, Response, StreamingResponse
@@ -78,6 +79,10 @@ def create_bridge(config, root=STATIC_ROOT):
         "/{path:path}", methods=["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
     )
     async def frontend(request: Request, path: str):
+        if path == "api/v1/integrations/research-setup" or path.startswith(
+            "api/v1/integrations/research-setup/"
+        ):
+            return await forward_research_setup(request, auth)
         if path.startswith("api/") or path in {"health", "ready"}:
             # Fixed origin and fixed literal prefix. No URL, redirects, proxy
             # discovery, X-Forwarded rewriting or arbitrary upstream selection.
@@ -146,6 +151,80 @@ def create_bridge(config, root=STATIC_ROOT):
         )
 
     return app
+
+
+async def forward_research_setup(request: Request, auth):
+    """Stream only the fixed setup routes to a separate process over its socket."""
+    import asyncio
+    import re
+
+    import httpx
+    from starlette.responses import Response
+
+    from services.control_api.agent_research_routes import agent_research_problem
+    from services.control_api.auth import AuthDenied
+    from services.setup.research_ingress import MAX_BODY, SETUP_ROUTE
+
+    raw_path = request.scope["raw_path"]
+    response_headers = {"Cache-Control": "no-store"}
+
+    def problem(status, code):
+        return agent_research_problem(status, code, None)
+
+    match = SETUP_ROUTE.fullmatch(raw_path)
+    if (
+        match is None
+        or request.scope["query_string"]
+        or request.method not in ({"POST"} if match.group(1) else {"GET", "PUT"})
+    ):
+        return Response(status_code=404, headers=response_headers)
+    sizes = request.headers.getlist("content-length")
+    if sizes and (
+        len(sizes) != 1 or not re.fullmatch(r"[0-9]{1,5}", sizes[0]) or int(sizes[0]) > MAX_BODY
+    ):
+        return Response(status_code=413, headers=response_headers)
+    if auth is None:
+        return problem(503, "PROVIDER_UNAVAILABLE")
+    cookies = request.headers.getlist("cookie")
+    if len(cookies) != 1 or sum(
+        part.partition("=")[0].strip() == auth.cookie_name for part in cookies[0].split(";")
+    ) != 1:
+        return problem(401, "SESSION_REQUIRED")
+    try:
+        auth.authenticate(request.cookies.get(auth.cookie_name, ""))
+    except AuthDenied:
+        return problem(401, "SESSION_REQUIRED")
+
+    async def bounded_body():
+        length = 0
+        async for chunk in request.stream():
+            length += len(chunk)
+            if length > MAX_BODY:
+                raise ValueError("setup body too large")
+            yield chunk
+
+    forwarded = {"host", "origin", "content-type", "x-research-setup-grant"}
+    try:
+        async with (
+            asyncio.timeout(7),
+            httpx.AsyncClient(
+                transport=httpx.AsyncHTTPTransport(uds=RESEARCH_SETUP_SOCKET, retries=0),
+                trust_env=False, follow_redirects=False, timeout=5,
+            ) as client,
+        ):
+            upstream = await client.request(
+                request.method, "http://research-setup" + raw_path.decode("ascii"),
+                headers=[(k, v) for k, v in request.headers.raw if k.decode("ascii") in forwarded],
+                content=bounded_body(),
+            )
+    except ValueError:
+        return Response(status_code=413, headers=response_headers)
+    except (TimeoutError, httpx.HTTPError):
+        return problem(503, "PROVIDER_UNAVAILABLE")
+    return Response(
+        upstream.content, status_code=upstream.status_code, headers=response_headers,
+        media_type=upstream.headers.get("content-type"),
+    )
 
 
 def _private_dir(path):
@@ -314,7 +393,7 @@ def run_api(config, ledger, telemetry=None):
     )
     Thread(target=private.run, daemon=True).start()
     uvicorn.run(
-        create_bridge(config),
+        create_bridge(config, auth=auth),
         host="0.0.0.0",
         port=8000,
         access_log=False,

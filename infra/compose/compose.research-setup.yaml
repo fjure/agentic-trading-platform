@@ -1,0 +1,85 @@
+# Optional local BYOK boundary. Apply with compose.yaml.
+services:
+  research-setup-volumes:
+    profiles: [research-gateway, research-provider-setup]
+    build:
+      context: ../..
+      dockerfile: infra/containers/Dockerfile
+      args:
+        SOURCE_REVISION: ${ATL_SOURCE_REVISION:-}
+    command:
+      - python
+      - -c
+      - |
+        import os
+        from pathlib import Path
+        import stat
+
+        for name, group in (("research-credentials", 10002), ("research-setup", 10001)):
+            path = Path("/run") / name
+            metadata = path.lstat()
+            if not stat.S_ISDIR(metadata.st_mode):
+                raise PermissionError("RESEARCH_SETUP_VOLUME_UNAVAILABLE")
+            if (metadata.st_uid, metadata.st_gid, stat.S_IMODE(metadata.st_mode)) != (10004, group, 0o2750):
+                if (metadata.st_uid, metadata.st_gid) != (0, 0) or any(path.iterdir()):
+                    raise PermissionError("RESEARCH_SETUP_VOLUME_UNAVAILABLE")
+                os.chown(path, 10004, group, follow_symlinks=False)
+                os.chmod(path, 0o2750, follow_symlinks=False)
+            if name == "research-setup":
+                private = path / "private"
+                try:
+                    private.mkdir(mode=0o700)
+                except FileExistsError:
+                    metadata = private.lstat()
+                    if not stat.S_ISDIR(metadata.st_mode) or (metadata.st_uid, stat.S_IMODE(metadata.st_mode)) != (10004, 0o700):
+                        raise PermissionError("RESEARCH_SETUP_VOLUME_UNAVAILABLE") from None
+                else:
+                    os.chown(private, 10004, 10002, follow_symlinks=False)
+                    os.chmod(private, 0o700, follow_symlinks=False)
+    user: "0:0"
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, FOWNER, FSETID, DAC_OVERRIDE]
+    security_opt: ["no-new-privileges:true"]
+    restart: "no"
+    volumes:
+      - research_credentials:/run/research-credentials
+      - research_setup_socket:/run/research-setup
+  research-setup:
+    profiles: [research-provider-setup]
+    build:
+      context: ../..
+      dockerfile: infra/containers/Dockerfile
+      args:
+        SOURCE_REVISION: ${ATL_SOURCE_REVISION:-}
+    command: [python, -m, services.setup.research_app]
+    user: "10004:10002"
+    group_add: ["10001"]
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    init: true
+    restart: "no"
+    mem_limit: 128m
+    pids_limit: 64
+    depends_on:
+      research-setup-volumes:
+        condition: service_completed_successfully
+    volumes:
+      - research_credentials:/run/research-credentials
+      - research_setup_socket:/run/research-setup
+  control-api:
+    volumes:
+      - research_setup_socket:/run/research-setup:ro
+  research-llm-gateway:
+    depends_on:
+      research-setup-volumes:
+        condition: service_completed_successfully
+    volumes:
+      - research_credentials:/run/research-credentials:ro
+
+volumes:
+  research_credentials:
+  research_setup_socket:
