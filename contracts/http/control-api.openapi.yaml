@@ -10079,6 +10079,115 @@ paths:
           $ref: '#/components/responses/AgentProcessing429'
         '503':
           $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/integrations/research-setup/providers/{provider}:
+    parameters:
+    - name: provider
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/AgentProviderId'
+    get:
+      tags: [Agent provider setup]
+      operationId: getResearchSetupCredential
+      summary: Get redacted local research credential status
+      responses:
+        '200':
+          $ref: '#/components/responses/ResearchSetupCredentialStatus'
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+    put:
+      tags: [Agent provider setup]
+      operationId: saveResearchSetupCredential
+      summary: Save a research credential through the separate local setup service
+      parameters:
+      - $ref: '#/components/parameters/ResearchSetupGrant'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCredentialSaveRequestV1'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResearchSetupCredentialStatus'
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/integrations/research-setup/providers/{provider}/rotate:
+    parameters:
+    - name: provider
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/AgentProviderId'
+    post:
+      tags: [Agent provider setup]
+      operationId: rotateResearchSetupCredential
+      summary: Rotate a research credential through the separate local setup service
+      parameters:
+      - $ref: '#/components/parameters/ResearchSetupGrant'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCredentialRotateRequestV1'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResearchSetupCredentialStatus'
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/integrations/research-setup/providers/{provider}/revoke:
+    parameters:
+    - name: provider
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/AgentProviderId'
+    post:
+      tags: [Agent provider setup]
+      operationId: revokeResearchSetupCredential
+      summary: Revoke a research credential through the separate local setup service
+      parameters:
+      - $ref: '#/components/parameters/ResearchSetupGrant'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCredentialRevokeRequestV1'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResearchSetupCredentialStatus'
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
   /api/v1/integrations/research-providers/{provider}:
     put:
       tags:
@@ -10549,6 +10658,14 @@ components:
         runtime must provide explicit local authentication, Origin checks, and CSRF protection for writes; never
         place tokens in URLs or SSE cursors.
   parameters:
+    ResearchSetupGrant:
+      name: X-Research-Setup-Grant
+      in: header
+      required: true
+      description: Single-use local reauthentication grant bound to provider and mutation.
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9_-]{43}$'
     Traceparent:
       name: traceparent
       in: header
@@ -10604,6 +10721,24 @@ components:
         maxLength: 128
         pattern: ^[A-Za-z0-9._:-]+$
   responses:
+    ResearchSetupCredentialStatus:
+      description: Redacted credential status and generation
+      headers:
+        Cache-Control:
+          required: true
+          schema:
+            type: string
+            enum: [no-store]
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgentCredentialStatusV1'
+          example:
+            credentialVersion: 2
+            credentialGeneration: 1
+            state: STORED
+            providerRevocationState: NOT_CONFIRMED
+            updatedAt: '2026-11-13T11:00:00Z'
     AgentProcessing401:
       description: SESSION_REQUIRED
       content:

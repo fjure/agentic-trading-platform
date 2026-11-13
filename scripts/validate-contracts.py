@@ -156,8 +156,11 @@ def main() -> None:
                     "/api/v1/research/agent/dialogues/{id}/turns/{turnId}/processing-previews"
                 ):
                     key = "AgentPreviewIdempotencyKey"
+                if path.startswith("/api/v1/integrations/research-setup/providers/"):
+                    # This authority is deliberately single-use, including on lost replies.
+                    key = "ResearchSetupGrant"
                 if f"#/components/parameters/{key}" not in refs:
-                    fail(f"missing Idempotency-Key on {method.upper()} {path}")
+                    fail(f"missing {key} on {method.upper()} {path}")
             if path == "/api/v1/risk-policy" and method == "put":
                 refs = [p.get("$ref", "") for p in operation.get("parameters", [])]
                 if "#/components/parameters/IfMatch" not in refs:

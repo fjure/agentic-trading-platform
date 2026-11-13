@@ -39,6 +39,14 @@ export interface AgentProviderSetupServiceInterface {
     activateAgentProviderCredential(provider: AgentProviderId, idempotencyKey: string, agentCredentialActivateRequestV1: AgentCredentialActivateRequestV1, extraHttpRequestParams?: any): Observable<AgentCredentialStatusV1>;
 
     /**
+     * Get redacted local research credential status
+     * 
+     * @endpoint get /api/v1/integrations/research-setup/providers/{provider}
+     * @param provider 
+     */
+    getResearchSetupCredential(provider: AgentProviderId, extraHttpRequestParams?: any): Observable<AgentCredentialStatusV1>;
+
+    /**
      * Revoke local use of a provider credential generation
      * Further local use is denied. Revocation does not assert that the provider revoked the remote credential. Requires a current same-origin operator session and JSON CSRF boundary. Identical authorized retries return the stored semantic result, while changed payloads under the same key conflict.
      * @endpoint post /api/v1/integrations/research-providers/{provider}/revoke
@@ -47,6 +55,16 @@ export interface AgentProviderSetupServiceInterface {
      * @param agentCredentialRevokeRequestV1 
      */
     revokeAgentProviderCredential(provider: AgentProviderId, idempotencyKey: string, agentCredentialRevokeRequestV1: AgentCredentialRevokeRequestV1, extraHttpRequestParams?: any): Observable<AgentCredentialStatusV1>;
+
+    /**
+     * Revoke a research credential through the separate local setup service
+     * 
+     * @endpoint post /api/v1/integrations/research-setup/providers/{provider}/revoke
+     * @param xResearchSetupGrant Single-use local reauthentication grant bound to provider and mutation.
+     * @param provider 
+     * @param agentCredentialRevokeRequestV1 
+     */
+    revokeResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialRevokeRequestV1: AgentCredentialRevokeRequestV1, extraHttpRequestParams?: any): Observable<AgentCredentialStatusV1>;
 
     /**
      * Store a replacement provider credential generation
@@ -59,6 +77,16 @@ export interface AgentProviderSetupServiceInterface {
     rotateAgentProviderCredential(provider: AgentProviderId, idempotencyKey: string, agentCredentialRotateRequestV1: AgentCredentialRotateRequestV1, extraHttpRequestParams?: any): Observable<AgentCredentialStatusV1>;
 
     /**
+     * Rotate a research credential through the separate local setup service
+     * 
+     * @endpoint post /api/v1/integrations/research-setup/providers/{provider}/rotate
+     * @param xResearchSetupGrant Single-use local reauthentication grant bound to provider and mutation.
+     * @param provider 
+     * @param agentCredentialRotateRequestV1 
+     */
+    rotateResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialRotateRequestV1: AgentCredentialRotateRequestV1, extraHttpRequestParams?: any): Observable<AgentCredentialStatusV1>;
+
+    /**
      * Store a new provider credential without verification
      * Requires separate setup and storage authorization. Saving grants no probe or research egress. Requires a current same-origin operator session and JSON CSRF boundary. Identical authorized retries return the stored semantic result, while changed payloads under the same key conflict.
      * @endpoint put /api/v1/integrations/research-providers/{provider}
@@ -67,5 +95,15 @@ export interface AgentProviderSetupServiceInterface {
      * @param agentCredentialSaveRequestV1 
      */
     saveAgentProviderCredential(provider: AgentProviderId, idempotencyKey: string, agentCredentialSaveRequestV1: AgentCredentialSaveRequestV1, extraHttpRequestParams?: any): Observable<AgentCredentialStatusV1>;
+
+    /**
+     * Save a research credential through the separate local setup service
+     * 
+     * @endpoint put /api/v1/integrations/research-setup/providers/{provider}
+     * @param xResearchSetupGrant Single-use local reauthentication grant bound to provider and mutation.
+     * @param provider 
+     * @param agentCredentialSaveRequestV1 
+     */
+    saveResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialSaveRequestV1: AgentCredentialSaveRequestV1, extraHttpRequestParams?: any): Observable<AgentCredentialStatusV1>;
 
 }

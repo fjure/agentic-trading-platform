@@ -135,7 +135,10 @@ def test_quant_approval_accepts_only_existing_versioned_binding():
 def test_provider_credentials_are_write_only_and_setup_scoped():
     schemas = OAS["components"]["schemas"]
     writes = {"AgentCredentialSaveRequestV1", "AgentCredentialRotateRequestV1"}
-    scope = "/api/v1/integrations/research-providers/{provider}"
+    scopes = {
+        "/api/v1/integrations/research-providers/{provider}",
+        "/api/v1/integrations/research-setup/providers/{provider}",
+    }
     seen = set()
     for path, item in OAS["paths"].items():
         for method in ("post", "put"):
@@ -145,7 +148,7 @@ def test_provider_credentials_are_write_only_and_setup_scoped():
             if name not in writes:
                 continue
             seen.add(name)
-            assert path == scope or path.startswith(scope + "/")
+            assert path in scopes | {scope + "/rotate" for scope in scopes}
             assert op["tags"] == ["Agent provider setup"]
             assert schemas[name]["properties"]["credential"]["writeOnly"] is True
             assert "example" not in request and "examples" not in request

@@ -132,6 +132,65 @@ export class AgentProviderSetupService extends BaseService implements AgentProvi
     }
 
     /**
+     * Get redacted local research credential status
+     * @endpoint get /api/v1/integrations/research-setup/providers/{provider}
+     * @param provider 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getResearchSetupCredential(provider: AgentProviderId, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<AgentCredentialStatusV1>;
+    public getResearchSetupCredential(provider: AgentProviderId, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<AgentCredentialStatusV1>>;
+    public getResearchSetupCredential(provider: AgentProviderId, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<AgentCredentialStatusV1>>;
+    public getResearchSetupCredential(provider: AgentProviderId, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (provider === null || provider === undefined) {
+            throw new Error('Required parameter provider was null or undefined when calling getResearchSetupCredential.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/integrations/research-setup/providers/${this.configuration.encodeParam({name: "provider", value: provider, in: "path", style: "simple", explode: false, dataType: "AgentProviderId", dataFormat: undefined})}`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<AgentCredentialStatusV1>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
      * Revoke local use of a provider credential generation
      * Further local use is denied. Revocation does not assert that the provider revoked the remote credential. Requires a current same-origin operator session and JSON CSRF boundary. Identical authorized retries return the stored semantic result, while changed payloads under the same key conflict.
      * @endpoint post /api/v1/integrations/research-providers/{provider}/revoke
@@ -197,6 +256,86 @@ export class AgentProviderSetupService extends BaseService implements AgentProvi
         }
 
         let localVarPath = `/api/v1/integrations/research-providers/${this.configuration.encodeParam({name: "provider", value: provider, in: "path", style: "simple", explode: false, dataType: "AgentProviderId", dataFormat: undefined})}/revoke`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<AgentCredentialStatusV1>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: agentCredentialRevokeRequestV1,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Revoke a research credential through the separate local setup service
+     * @endpoint post /api/v1/integrations/research-setup/providers/{provider}/revoke
+     * @param xResearchSetupGrant Single-use local reauthentication grant bound to provider and mutation.
+     * @param provider 
+     * @param agentCredentialRevokeRequestV1 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public revokeResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialRevokeRequestV1: AgentCredentialRevokeRequestV1, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<AgentCredentialStatusV1>;
+    public revokeResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialRevokeRequestV1: AgentCredentialRevokeRequestV1, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<AgentCredentialStatusV1>>;
+    public revokeResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialRevokeRequestV1: AgentCredentialRevokeRequestV1, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<AgentCredentialStatusV1>>;
+    public revokeResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialRevokeRequestV1: AgentCredentialRevokeRequestV1, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (xResearchSetupGrant === null || xResearchSetupGrant === undefined) {
+            throw new Error('Required parameter xResearchSetupGrant was null or undefined when calling revokeResearchSetupCredential.');
+        }
+        if (provider === null || provider === undefined) {
+            throw new Error('Required parameter provider was null or undefined when calling revokeResearchSetupCredential.');
+        }
+        if (agentCredentialRevokeRequestV1 === null || agentCredentialRevokeRequestV1 === undefined) {
+            throw new Error('Required parameter agentCredentialRevokeRequestV1 was null or undefined when calling revokeResearchSetupCredential.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (xResearchSetupGrant !== undefined && xResearchSetupGrant !== null) {
+            localVarHeaders = localVarHeaders.set('X-Research-Setup-Grant', String(xResearchSetupGrant));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/integrations/research-setup/providers/${this.configuration.encodeParam({name: "provider", value: provider, in: "path", style: "simple", explode: false, dataType: "AgentProviderId", dataFormat: undefined})}/revoke`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<AgentCredentialStatusV1>('post', `${basePath}${localVarPath}`,
             {
@@ -294,6 +433,86 @@ export class AgentProviderSetupService extends BaseService implements AgentProvi
     }
 
     /**
+     * Rotate a research credential through the separate local setup service
+     * @endpoint post /api/v1/integrations/research-setup/providers/{provider}/rotate
+     * @param xResearchSetupGrant Single-use local reauthentication grant bound to provider and mutation.
+     * @param provider 
+     * @param agentCredentialRotateRequestV1 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public rotateResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialRotateRequestV1: AgentCredentialRotateRequestV1, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<AgentCredentialStatusV1>;
+    public rotateResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialRotateRequestV1: AgentCredentialRotateRequestV1, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<AgentCredentialStatusV1>>;
+    public rotateResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialRotateRequestV1: AgentCredentialRotateRequestV1, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<AgentCredentialStatusV1>>;
+    public rotateResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialRotateRequestV1: AgentCredentialRotateRequestV1, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (xResearchSetupGrant === null || xResearchSetupGrant === undefined) {
+            throw new Error('Required parameter xResearchSetupGrant was null or undefined when calling rotateResearchSetupCredential.');
+        }
+        if (provider === null || provider === undefined) {
+            throw new Error('Required parameter provider was null or undefined when calling rotateResearchSetupCredential.');
+        }
+        if (agentCredentialRotateRequestV1 === null || agentCredentialRotateRequestV1 === undefined) {
+            throw new Error('Required parameter agentCredentialRotateRequestV1 was null or undefined when calling rotateResearchSetupCredential.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (xResearchSetupGrant !== undefined && xResearchSetupGrant !== null) {
+            localVarHeaders = localVarHeaders.set('X-Research-Setup-Grant', String(xResearchSetupGrant));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/integrations/research-setup/providers/${this.configuration.encodeParam({name: "provider", value: provider, in: "path", style: "simple", explode: false, dataType: "AgentProviderId", dataFormat: undefined})}/rotate`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<AgentCredentialStatusV1>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: agentCredentialRotateRequestV1,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
      * Store a new provider credential without verification
      * Requires separate setup and storage authorization. Saving grants no probe or research egress. Requires a current same-origin operator session and JSON CSRF boundary. Identical authorized retries return the stored semantic result, while changed payloads under the same key conflict.
      * @endpoint put /api/v1/integrations/research-providers/{provider}
@@ -359,6 +578,86 @@ export class AgentProviderSetupService extends BaseService implements AgentProvi
         }
 
         let localVarPath = `/api/v1/integrations/research-providers/${this.configuration.encodeParam({name: "provider", value: provider, in: "path", style: "simple", explode: false, dataType: "AgentProviderId", dataFormat: undefined})}`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<AgentCredentialStatusV1>('put', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: agentCredentialSaveRequestV1,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Save a research credential through the separate local setup service
+     * @endpoint put /api/v1/integrations/research-setup/providers/{provider}
+     * @param xResearchSetupGrant Single-use local reauthentication grant bound to provider and mutation.
+     * @param provider 
+     * @param agentCredentialSaveRequestV1 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public saveResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialSaveRequestV1: AgentCredentialSaveRequestV1, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<AgentCredentialStatusV1>;
+    public saveResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialSaveRequestV1: AgentCredentialSaveRequestV1, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<AgentCredentialStatusV1>>;
+    public saveResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialSaveRequestV1: AgentCredentialSaveRequestV1, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<AgentCredentialStatusV1>>;
+    public saveResearchSetupCredential(xResearchSetupGrant: string, provider: AgentProviderId, agentCredentialSaveRequestV1: AgentCredentialSaveRequestV1, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (xResearchSetupGrant === null || xResearchSetupGrant === undefined) {
+            throw new Error('Required parameter xResearchSetupGrant was null or undefined when calling saveResearchSetupCredential.');
+        }
+        if (provider === null || provider === undefined) {
+            throw new Error('Required parameter provider was null or undefined when calling saveResearchSetupCredential.');
+        }
+        if (agentCredentialSaveRequestV1 === null || agentCredentialSaveRequestV1 === undefined) {
+            throw new Error('Required parameter agentCredentialSaveRequestV1 was null or undefined when calling saveResearchSetupCredential.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (xResearchSetupGrant !== undefined && xResearchSetupGrant !== null) {
+            localVarHeaders = localVarHeaders.set('X-Research-Setup-Grant', String(xResearchSetupGrant));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/integrations/research-setup/providers/${this.configuration.encodeParam({name: "provider", value: provider, in: "path", style: "simple", explode: false, dataType: "AgentProviderId", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<AgentCredentialStatusV1>('put', `${basePath}${localVarPath}`,
             {

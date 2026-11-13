@@ -466,6 +466,8 @@ def register_agent_research_routes(
                 params, query = validate_arguments(
                     operation, request.path_params, request.query_params.multi_items()
                 )
+                if operation.setup and invoke is None:
+                    raise AgentResearchError(503, "PROVIDER_UNAVAILABLE")
                 key, payload = None, None
                 if operation.request is not None:
                     content_types = request.headers.getlist("content-type")

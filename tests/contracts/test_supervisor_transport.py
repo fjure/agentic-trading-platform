@@ -29,6 +29,7 @@ def test_all_runtime_operations_match_canonical_contract():
     expected = {
         (path, method, operation["operationId"])
         for path, methods in OAS["paths"].items()
+        if not path.startswith("/api/v1/integrations/research-setup/providers/")
         for method, operation in methods.items()
         if operation["operationId"] not in pending_operations
     }
