@@ -6,16 +6,19 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import Barrier
+from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
+from sqlalchemy.exc import DBAPIError
 
 from packages.agent_research.quant_approval import ApprovalBinding
 from packages.agent_research.registry import QUANT_RESEARCH_V1
 from packages.agent_research.run_state import RunState
 from packages.agent_research.runs import RunKind, RunStore
+from packages.agent_research.tools import ToolJournal
 from packages.backtesting.experiment_storage import ExperimentStorage
 from packages.backtesting.jobs import BacktestError
 from tests.integration.test_backtest_jobs import role_engine
@@ -355,9 +358,240 @@ def guest():
         _assert_admission(
             owner, RunStore(engines[1]), *(ExperimentStorage(engine) for engine in engines[2:]),
         )
+        with owner.begin() as connection:
+            config.attributes["connection"] = connection
+            command.upgrade(config, "0054_quant_prepare_handoff")
+        _assert_claimed_template(owner, engines[1], ExperimentStorage(engines[2]))
     finally:
         for engine in reversed(engines):
             engine.dispose()
+
+
+def _assert_claimed_template(owner, research, quant):
+    from packages.agent_research.companion.dialogue import Confirmation, Dialogue, ExpertBinding
+    from packages.agent_research.companion.ideas import IdeaLifecycle
+    from packages.agent_research.companion.interpretation import InterpretationBoundary
+    from packages.agent_research.companion.service import CompanionService
+    from packages.agent_research.companion.store import CompanionStore
+    from packages.agent_research.companion.testability import (
+        HypothesisIdentity,
+        preliminary_testability,
+    )
+    from services.control_api.quant_lab_service import QuantLabService
+    from services.runtime.agent_control import ResearchControl
+    from services.runtime.agent_service import _matches_quant_hypothesis, _quant_preflight
+    from services.runtime.quant_preparation import prepare_next_quant
+
+    request, candidates = fixture()
+    params = {"fast": 10, "slow": 30}
+    request["searchSpaces"][0]["parameterValues"] = {key: [value] for key, value in params.items()}
+    draft = quant.create_definition(request, [
+        item for item in candidates
+        if item["role"] != "SEARCH" or item["configuration"]["parameters"] == params
+    ])
+    hypothesis = {
+        "statement": "EMA crossover return compared to buy and hold",
+        "market": "SPY", "trigger": "EMA crossover", "signal": "EMA(10) above EMA(30)",
+        "observationWindow": "2026-01-05/2026-02-24", "target": "net return",
+        "measurementHorizon": "entire evaluation window", "benchmark": "buy-hold-v1",
+        "evaluationCriterion": "return greater than benchmark",
+    }
+    identity = HypothesisIdentity.from_document(hypothesis)
+    idea = {
+        "id": "template-idea", "version": 1, "previousVersion": None, "status": "PROPOSED",
+        "origin": "USER", "initiatorId": _OPERATOR, "title": "EMA research",
+        "description": "Compare EMA crossover against buy and hold.",
+        "originalText": "Compare EMA crossover against buy and hold.",
+        "createdAt": "2024-01-01T00:00:00Z", "dialogueId": "template-dialogue",
+        "hypothesis": hypothesis, "openQuestions": [], "assumptions": [], "uncertainties": [],
+        "instrumentIds": [], "evidence": [], "testability": preliminary_testability(identity),
+        "experimentDraftIds": [], "experimentIds": [], "relatedIdeaIds": [],
+    }
+    with owner.begin() as connection:
+        connection.execute(text("""
+            UPDATE research.source_status SET license_status='CONFIRMED' WHERE singleton
+        """))
+        source = connection.execute(text("""
+            SELECT q.definition_id,q.definition_version,q.fingerprint,q.body
+            FROM backtest.experiment_definitions q
+            WHERE q.definition_id=:id
+        """), {"id": draft["definition_id"]}).one()
+        binding = {
+            "definition_id": source.definition_id.hex.upper(),
+            "definition_version": source.definition_version,
+            "definition_hash": source.fingerprint,
+        }
+        connection.execute(text("""
+            INSERT INTO agent_research.companion_ideas(idea_id,actor,command_key,command_hash)
+            VALUES ('template-idea',:actor,:key,:hash)
+        """), {"actor": _OPERATOR, "key": "8" * 64, "hash": "9" * 64})
+        connection.execute(text("""
+            INSERT INTO agent_research.companion_idea_versions(idea_id,version,document)
+            VALUES ('template-idea',1,CAST(:document AS jsonb))
+        """), {"document": json.dumps(idea)})
+        state = Dialogue(
+            "template-dialogue", 1, expert=ExpertBinding(**binding),
+            confirmed_fields=tuple(
+                (field, Confirmation(value, "review-decision", 1))
+                for field, value in identity.fields()
+            ),
+        )
+        connection.execute(text("""
+            INSERT INTO agent_research.companion_dialogues(dialogue_id,idea_id)
+            VALUES ('template-dialogue','template-idea')
+        """))
+        connection.execute(text("""
+            INSERT INTO agent_research.companion_dialogue_versions
+              (dialogue_id,idea_id,version,idea_version,document)
+            VALUES ('template-dialogue','template-idea',1,1,CAST(:document AS jsonb))
+        """), {"document": json.dumps(state.record())})
+    contract = Path("/opt/lab/contracts/schemas/v1/agent-research.schema.json")
+    ideas = CompanionStore(research, command_key=bytes(range(32)))
+    companion = CompanionService(
+        ideas, IdeaLifecycle(contract, permits=lambda _: True, verifies=lambda *_: True),
+        InterpretationBoundary(contract, permits=lambda _: True),
+        permits_local_text=lambda _: True,
+    )
+    runs = RunStore(research)
+    control = ResearchControl(
+        research, key=bytes(range(32)), companion=companion, ideas=ideas, runs=runs,
+        schedules=None, reports=None, processing=None, schedule_id="daily-research",
+    )
+    review = (
+        "reviseAgentIdea", {"id": "template-idea"}, {}, {"action": "REVIEW", "expectedVersion": 1},
+        _OPERATOR, "review-quant-template", _TRACE, "test-review",
+    )
+    with owner.begin() as connection:
+        connection.exec_driver_sql("""
+            CREATE FUNCTION agent_research.test_intent_rollback() RETURNS trigger
+            LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic intent failure'; END $$;
+            CREATE TRIGGER test_intent_rollback BEFORE INSERT
+            ON agent_research.quant_prepare_intents FOR EACH ROW
+            EXECUTE FUNCTION agent_research.test_intent_rollback();
+        """)
+    with pytest.raises(DBAPIError):
+        control._execute(*review)
+    assert ideas.read_idea(_OPERATOR, "template-idea")["version"] == 1
+    with owner.begin() as connection:
+        connection.exec_driver_sql("""
+            DROP TRIGGER test_intent_rollback ON agent_research.quant_prepare_intents;
+            DROP FUNCTION agent_research.test_intent_rollback();
+        """)
+    status, reviewed = control._execute(*review)
+    assert status == 201 and reviewed["version"] == 2 and reviewed["status"] == "REVIEWED"
+    assert control._execute(*review) == (status, reviewed)
+    with research.begin() as connection:
+        intent = connection.execute(text("""
+            SELECT * FROM agent_research.quant_prepare_intents WHERE idea_id='template-idea'
+        """)).one()
+    assert (intent.dialogue_version, intent.idea_version, intent.template_id,
+            intent.template_version, intent.template_hash) == (
+        2, 2, source.definition_id, source.definition_version, source.fingerprint,
+    )
+    run_id = intent.run_id
+    claim = runs.claim(uuid4())
+    assert claim is not None and claim.run_id == run_id
+    query = text("""
+        SELECT agent_research.claimed_quant_template(:run,:owner,:fence,:version,:idea,:dialogue)
+    """)
+    values = {
+        "run": run_id, "owner": claim.owner, "fence": claim.fence, "version": claim.version,
+        "idea": 2, "dialogue": 2,
+    }
+    parameters = {name: value for name, value in source.body.items() if name != "hypothesis"}
+    assert _matches_quant_hypothesis(hypothesis, state.record(), parameters)
+    assert not _matches_quant_hypothesis(
+        hypothesis, state.record(), parameters | {"searchSpaces": fixture()[0]["searchSpaces"]},
+    )
+    assert not _matches_quant_hypothesis(
+        hypothesis, state.record(), parameters | {"symbol": "QQQ"},
+    )
+    assert not _matches_quant_hypothesis(
+        hypothesis, state.record() | {"confirmed_fields": []}, parameters,
+    )
+    protocol = parameters["protocol"]
+    shifted = protocol | {"holdout": protocol["holdout"] | {"end": "2026-02-23T21:00:00Z"}}
+    assert not _matches_quant_hypothesis(
+        hypothesis, state.record(), parameters | {"protocol": shifted},
+    )
+    with owner.connect() as connection:
+        context = connection.scalar(text("""
+            SELECT backtest.agent_validation_context(version)
+            FROM research.version_state WHERE singleton
+        """))
+    assert context is not None
+    expected = {
+        "id": str(source.definition_id), "version": source.definition_version,
+        "hash": source.fingerprint, "ideaId": "template-idea", "ideaVersion": 2,
+        "parameters": parameters,
+        "dataContext": context,
+    }
+
+    journal = ToolJournal(research)
+    result = _quant_preflight(journal, claim, "template-dialogue", intent)
+    assert result.target is RunState.WAITING_FOR_INPUT
+    assert result.checkpoint_ref == "QUANT_PREPARATION_READY"
+    with research.connect() as connection:
+        assert connection.scalar(query, values) == expected
+        assert connection.scalar(query, values | {"fence": claim.fence + 1}) is None
+        assert connection.scalar(query, values | {"owner": uuid4()}) is None
+        assert connection.scalar(query, values | {"version": claim.version + 1}) is None
+        assert connection.scalar(query, values | {"idea": 3}) is None
+        assert connection.scalar(query, values | {"dialogue": 3}) is None
+    with owner.begin() as connection:
+        connection.execute(text("""
+            UPDATE research.source_status SET license_status='BLOCKED' WHERE singleton
+        """))
+    result = _quant_preflight(journal, claim, "template-dialogue", intent)
+    assert result.target is RunState.BLOCKED
+    assert result.checkpoint_ref == "QUANT_DATA_RIGHTS_UNVERIFIED"
+    with owner.begin() as connection:
+        connection.execute(text("""
+            UPDATE research.source_status SET license_status='CONFIRMED' WHERE singleton
+        """))
+    lab = QuantLabService(quant.engine, code_version=_CODE)
+    assert prepare_next_quant(lab) is False
+    ready = _quant_preflight(journal, claim, "template-dialogue", intent)
+    runs.transition(claim, ready.target, checkpoint_ref=ready.checkpoint_ref)
+    failure = BacktestError(503, "UNAVAILABLE")
+    with patch.object(lab, "validate_agent_experiment", side_effect=failure):
+        assert prepare_next_quant(lab) is True
+    assert prepare_next_quant(lab) is False
+    with owner.begin() as connection:
+        assert connection.scalar(text("""
+            SELECT count(*) FROM backtest.experiment_agent_provenance WHERE run_id=:run
+        """), {"run": run_id}) == 0
+        connection.execute(text("""
+            UPDATE agent_research.quant_prepare_results
+            SET retry_after=clock_timestamp()-interval '1 second'
+            WHERE run_id=:run AND retry_after IS NOT NULL
+        """), {"run": run_id})
+    barrier = Barrier(2)
+
+    def prepare(_):
+        barrier.wait(timeout=5)
+        return prepare_next_quant(lab)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        assert sorted(pool.map(prepare, range(2))) == [False, True]
+    assert prepare_next_quant(lab) is False
+    (_, projected), = control.read.runs(_OPERATOR, None, 1, run_id=run_id)
+    assert projected["state"] == "BLOCKED" and projected["reasonCode"] == "EVIDENCE_NOT_ELIGIBLE"
+    with owner.connect() as connection:
+        definition, validation, valid, reasons = connection.execute(text("""
+            SELECT p.definition_id,p.validation_id,v.valid,v.body->'reasons'
+            FROM agent_research.quant_prepare_results p
+            JOIN backtest.experiment_validation_requests v USING(definition_id,validation_id)
+            WHERE p.run_id=:run
+        """), {"run": run_id}).one()
+        assert definition != source.definition_id and validation is not None and valid is False
+        assert reasons == ["MISSING_CALENDAR"]
+        assert connection.scalar(text("""
+            SELECT count(*) FROM agent_research.quant_approvals WHERE run_id=:run
+        """), {"run": run_id}) == 0
+        assert connection.scalar(text("""
+            SELECT count(*) FROM agent_research.run_events WHERE run_id=:run AND state='BLOCKED'
+        """), {"run": run_id}) == 1
 
 
 if __name__ == "__main__":

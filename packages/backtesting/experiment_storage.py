@@ -22,6 +22,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from packages.backtesting.jobs import BacktestError, encoded
+from packages.persistence.transaction import ScopedConnection
 from packages.research.models import content_fingerprint
 
 VERSION = "quant-experiment-v1"
@@ -177,21 +178,32 @@ class ExperimentStorage:
     def __init__(self, engine):
         self.engine = engine
 
+    @staticmethod
+    def _bind_versions(connection):
+        connection.execute(
+            text(
+                "SELECT set_config('backtest.quant_version',:version,true),"
+                "set_config('backtest.exposure_version',:exposure,true)"
+            ),
+            {"version": VERSION, "exposure": EXPOSURE_VERSION},
+        )
+
     @contextmanager
-    def transaction(self, lease=None):
+    def transaction(self, lease=None, *, scope: ScopedConnection | None = None):
+        """Reuse a writable scope without taking over its lifetime or timeouts."""
         failure = None
         try:
+            if scope is not None:
+                if type(scope) is not ScopedConnection or lease is not None:
+                    raise ValueError("a writable caller-owned transaction is required")
+                self._bind_versions(scope)
+                yield scope
+                return
             with self.engine.begin() as connection:
                 connection.execute(text("SET LOCAL statement_timeout='2s'"))
                 connection.execute(text("SET LOCAL lock_timeout='1s'"))
                 connection.execute(text("SET LOCAL TIME ZONE 'UTC'"))
-                connection.execute(
-                    text(
-                        "SELECT set_config('backtest.quant_version',:version,true),"
-                        "set_config('backtest.exposure_version',:exposure,true)"
-                    ),
-                    {"version": VERSION, "exposure": EXPOSURE_VERSION},
-                )
+                self._bind_versions(connection)
                 if lease is not None:
                     connection.execute(
                         text(
@@ -240,6 +252,7 @@ class ExperimentStorage:
     def create_definition(
         self, definition, candidates, *, actor="local-operator", identifier=None,
         agent_origin: tuple[UUID, str, int] | None = None,
+        scope: ScopedConnection | None = None,
     ):
         """Candidates are validated QSL domain configurations with explicit roles.
 
@@ -248,7 +261,9 @@ class ExperimentStorage:
         """
         identifier = identifier or uuid4()
         _validator("QuantLabExperimentCreateRequest").validate(definition)
-        with self.transaction() as connection:
+        if scope is not None and agent_origin is None:
+            raise ValueError("a caller-owned draft requires agent provenance")
+        with self.transaction(scope=scope) as connection:
             predecessor = (
                 self._definition(connection, UUID(definition["predecessorDefinitionId"]))
                 if definition.get("predecessorDefinitionId")
@@ -366,8 +381,8 @@ class ExperimentStorage:
             raise BacktestError(404, "NOT_FOUND")
         return dict(row)
 
-    def definition(self, identifier):
-        with self.transaction() as connection:
+    def definition(self, identifier, *, scope: ScopedConnection | None = None):
+        with self.transaction(scope=scope) as connection:
             return self._definition(connection, identifier)
 
     def source_receipt(self, batch_id):
@@ -403,9 +418,11 @@ class ExperimentStorage:
                 .one()
             )
 
-    def record_validation_request(self, identifier, key, validation, *, valid):
+    def record_validation_request(
+        self, identifier, key, validation, *, valid, scope: ScopedConnection | None = None,
+    ):
         key_hash = sha256(key.encode("ascii")).hexdigest()
-        with self.transaction() as connection:
+        with self.transaction(scope=scope) as connection:
             connection.execute(
                 text(
                     "SELECT backtest.record_experiment_validation_request("
@@ -435,8 +452,8 @@ class ExperimentStorage:
         )
         return dict(row) if row is not None else None
 
-    def validation_request(self, identifier, key):
-        with self.transaction() as connection:
+    def validation_request(self, identifier, key, *, scope: ScopedConnection | None = None):
+        with self.transaction(scope=scope) as connection:
             return self._validation_request(
                 connection, identifier, key_hash=sha256(key.encode("ascii")).hexdigest()
             )

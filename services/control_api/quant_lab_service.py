@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from contextlib import nullcontext
 from dataclasses import asdict
 from datetime import UTC, datetime, timedelta
 from itertools import combinations
@@ -57,6 +58,7 @@ from packages.backtesting.strategies import (
     resolve_strategy,
 )
 from packages.domain.models import utc_string
+from packages.persistence.transaction import ScopedConnection
 from packages.research.calendar import expected_windows
 from packages.research.evidence_storage import EvidenceBudgetExceeded, read_trust_snapshot
 from packages.research.models import BarInterval, content_fingerprint
@@ -312,6 +314,38 @@ def estimate_budget(connection, definition, domain, snapshot):
     return body, starts
 
 
+def _agent_data_reason(connection, domain, snapshot, context, deadline):
+    from services.worker.quant_lab_data import MAX_ROWS, QuantTrustCap, read_quant_phase_inputs
+
+    def checkpoint():
+        if datetime.now(UTC) >= deadline:
+            raise BacktestBudgetExceeded("quant preparation deadline reached")
+
+    trust = connection.execute(text("""
+        SELECT version,policy_version,(
+          SELECT count(*) FROM (
+            SELECT version FROM research.trust_decisions
+            WHERE version<=:version LIMIT :limit
+          ) bounded
+        ) AS decisions
+        FROM research.trust_version_state WHERE singleton
+    """), {"version": context["trustVersion"], "limit": MAX_ROWS + 1}).one()
+    if trust.version != context["trustVersion"]:
+        raise BacktestError(409, "APPROVAL_STALE")
+    cap = QuantTrustCap(trust.version, trust.policy_version, trust.decisions)
+    try:
+        checkpoint()
+        read_quant_phase_inputs(
+            lambda: nullcontext(connection), domain, snapshot, cap, checkpoint, checkpoint,
+        )
+        checkpoint()
+    except (BacktestBudgetExceeded, EvidenceBudgetExceeded):
+        return "BUDGET_EXCEEDED"
+    except BacktestBlocked:
+        return "RELIABILITY_BLOCKED"
+    return None
+
+
 def _one(connection, query, parameters):
     row = connection.execute(text(query), parameters).mappings().one_or_none()
     if row is None:
@@ -448,6 +482,7 @@ class QuantLabService:
 
     def create_experiment(
         self, payload, *, actor, key, trace, scope="creation", _agent_origin=None,
+        _transaction: ScopedConnection | None = None,
     ):
         self._write(actor, key, trace)
         domain = _invalid_definition(payload)
@@ -471,14 +506,20 @@ class QuantLabService:
         identifier = uuid5(NAMESPACE_URL, f"quant-lab-v1:{namespace}:{actor}:{key}")
         origin = {} if _agent_origin is None else {"agent_origin": _agent_origin}
         row = self.storage.create_definition(
-            payload, candidates, actor=actor, identifier=identifier, **origin,
+            payload, candidates, actor=actor, identifier=identifier, scope=_transaction, **origin,
         )
-        return self._definition_wire(row, {}, scope=scope, force_draft=True)
+        return self._definition_wire(
+            row, {}, scope=scope, force_draft=True, connection=_transaction,
+        )
 
-    def create_agent_experiment(self, payload, *, actor, key, trace, run_id, idea_id, idea_version):
+    def create_agent_experiment(
+        self, payload, *, actor, key, trace, run_id, idea_id, idea_version,
+        transaction: ScopedConnection | None = None,
+    ):
         return self.create_experiment(
             payload, actor=actor, key=key, trace=trace,
             _agent_origin=(identity(run_id), idea_id, idea_version),
+            _transaction=transaction,
         )
 
     @staticmethod
@@ -491,19 +532,21 @@ class QuantLabService:
 
     def validate_experiment(
         self, id, payload, *, actor, key, trace, scope="validation", _agent_preflight=False,
+        _transaction: ScopedConnection | None = None,
+        _input_deadline: datetime | None = None,
     ):
         self._write(actor, key, trace)
         identifier = identity(id)
-        definition = self.storage.definition(identifier)
+        definition = self.storage.definition(identifier, scope=_transaction)
         self._version(definition, payload)
-        saved = self.storage.validation_request(identifier, key)
+        saved = self.storage.validation_request(identifier, key, scope=_transaction)
         if saved is None:
             domain = definition_domain(
                 definition["body"],
                 definition_version=definition["definition_version"],
-                predecessor_hash=self._predecessor_hash(definition),
+                predecessor_hash=self._predecessor_hash(definition, transaction=_transaction),
             )
-            with self.storage.transaction() as connection:
+            with self.storage.transaction(scope=_transaction) as connection:
                 snapshot = DatasetPort().snapshot(connection)
                 body, starts = estimate_budget(connection, definition, domain, snapshot)
                 if _agent_preflight:
@@ -514,6 +557,14 @@ class QuantLabService:
                     if context is None:
                         raise BacktestError(409, "APPROVAL_STALE")
                     body["agentValidationContext"] = context
+                    if _input_deadline is not None and not body["reasons"]:
+                        reason = _agent_data_reason(
+                            connection, domain, snapshot, context, _input_deadline,
+                        )
+                        if reason is None:
+                            body["agentDataVerified"] = True
+                        else:
+                            body["reasons"].append(reason)
                 body["validatedAt"] = utc_string(snapshot.at)
                 receipt = dict(history_bound(connection))
                 body["registryWatermark"] = receipt["mark"]
@@ -522,7 +573,7 @@ class QuantLabService:
                     connection, definition, phase_bar_starts=starts, **receipt
                 )
             saved = self.storage.record_validation_request(
-                identifier, key, body, valid=not body["reasons"]
+                identifier, key, body, valid=not body["reasons"], scope=_transaction,
             )
         result = self._validation_wire(definition, saved)
         history = result["researchHistory"]
@@ -540,14 +591,21 @@ class QuantLabService:
             )
         return result
 
-    def validate_agent_experiment(self, id, payload, *, actor, key, trace, scope="validation"):
+    def validate_agent_experiment(
+        self, id, payload, *, actor, key, trace, scope="validation",
+        transaction: ScopedConnection | None = None,
+        input_deadline: datetime | None = None,
+    ):
         return self.validate_experiment(
             id, payload, actor=actor, key=key, trace=trace, scope=scope, _agent_preflight=True,
+            _transaction=transaction, _input_deadline=input_deadline,
         )
 
-    def _predecessor_hash(self, definition):
+    def _predecessor_hash(self, definition, *, transaction=None):
         predecessor = definition["predecessor_id"]
-        return self.storage.definition(predecessor)["fingerprint"] if predecessor else None
+        if predecessor is None:
+            return None
+        return self.storage.definition(predecessor, scope=transaction)["fingerprint"]
 
     @staticmethod
     def _validation_wire(definition, validation):

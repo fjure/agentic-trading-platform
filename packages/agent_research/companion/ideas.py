@@ -9,6 +9,8 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator
 
+from .testability import HypothesisIdentity, preliminary_testability
+
 
 class IdeaStatus(StrEnum):
     DISCOVERED = "DISCOVERED"
@@ -219,6 +221,12 @@ class IdeaLifecycle:
 
     def _accept(self, action: IdeaAction, prior: dict | None, data: dict) -> IdeaVersion:
         version = self._freeze(data)
+        if action is IdeaAction.CONFIRM_HYPOTHESIS:
+            hypothesis = HypothesisIdentity.from_document(data["hypothesis"])
+            assessment = preliminary_testability(hypothesis)
+            if assessment is not None:
+                data["testability"] = assessment
+                version = self._freeze(data)
         classification = (data["testability"] or {}).get("classification")
         if action is IdeaAction.VALIDATE_DRAFT and (
             not data["experimentDraftIds"]

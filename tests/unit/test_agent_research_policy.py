@@ -13,6 +13,20 @@ from packages.agent_research.registry import AgentPolicyDenied, ModelBinding, To
 from packages.agent_research.run_state import InvalidRunTransition, RunState, require_transition
 from packages.agent_research.runs import Claim, ClaimedInput, RunConflict, RunKind, RunStore
 from services.runtime.agent_research import ResearchSupervisor, StepResult
+from services.runtime.agent_service import _idea_content
+
+
+def test_idea_privacy_checks_prose_and_leaves_validated_opaque_bindings_intact():
+    proposal = {
+        "proposalId": "1" * 64,
+        "proposalHash": "2" * 64,
+        "interpretation": {"hypothesis": {"statement": "A synthetic research question."}},
+        "conflicts": [],
+    }
+    assert _idea_content({"interpretation": proposal})
+    assert not _idea_content({"interpretation": proposal | {
+        "approximation": {"difference": "contact@example.invalid"},
+    }})
 
 
 def _attempts():

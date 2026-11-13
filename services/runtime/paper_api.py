@@ -230,12 +230,13 @@ def run_private_paper_api(engine):
         configured_service,
     )
 
+    quant_lab = configured_quant_lab_service(research_engine)
     application = create_private_paper_app(
         commands, research=ResearchService(research_engine),
         backtesting=configured_service(research_engine),
         readiness=configured_readiness_service(research_engine),
         collection=CollectionPlanService(research_engine),
-        quant_lab=configured_quant_lab_service(research_engine),
+        quant_lab=quant_lab,
     )
 
     def health_loop():
@@ -255,6 +256,22 @@ def run_private_paper_api(engine):
             time.sleep(5)
 
     threading.Thread(target=health_loop, daemon=True).start()
+    stop_preparation = threading.Event()
+    preparation = None
+    if quant_lab is not None:
+        from services.runtime.quant_preparation import prepare_next_quant
+
+        def preparation_loop():
+            while not stop_preparation.is_set():
+                try:
+                    prepare_next_quant(quant_lab)
+                except Exception:
+                    # The transaction rolls back and the durable handoff can be retried.
+                    pass
+                stop_preparation.wait(5)
+
+        preparation = threading.Thread(target=preparation_loop, daemon=True)
+        preparation.start()
     try:
         uvicorn.run(
             application,
@@ -265,4 +282,7 @@ def run_private_paper_api(engine):
             proxy_headers=False,
         )
     finally:
+        stop_preparation.set()
+        if preparation is not None:
+            preparation.join(timeout=5)
         research_engine.dispose()

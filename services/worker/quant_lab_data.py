@@ -48,15 +48,79 @@ class QuantInputs:
     license_status: str
 
 
+@dataclass(frozen=True)
+class QuantPhaseInputs:
+    phases: tuple
+    calendars: tuple
+    evidence: tuple
+    rows: tuple
+    raw_quality: tuple
+    proofs: tuple
+    trust: object
+
+
+@dataclass(frozen=True)
+class QuantTrustCap:
+    version: int
+    policy_version: str
+    decision_count: int
+
+
 def load_quant_inputs(storage, lease, definition, receipt, checkpoint, deadline):
     """Fetch one pinned DB cap. Resolve/materialize all chronological phases outside SQL."""
+    snapshot = Snapshot(lease.row["snapshot_version"], lease.row["snapshot_at"])
+    license_status = receipt["license_body"]["status"]
+    if license_status in ("DENIED", "BLOCKED"):
+        raise BacktestBlocked("LICENSE_DENIED")
+    trust = receipt["trust_body"]
+    cap = QuantTrustCap(trust["version"], trust["policyVersion"], len(trust["decisions"]))
+    inputs = read_quant_phase_inputs(
+        storage.transaction, definition, snapshot, cap, checkpoint, deadline,
+    )
+    strict = definition.research_mode == "STRICT_PIT"
+    manifest = QuantExperimentManifest.from_phase_datasets(
+        definition,
+        inputs.phases,
+        snapshot,
+        code_version=lease.row["code_version"],
+        trust_fingerprint=receipt["trust_fingerprint"],
+        license_receipt_fingerprint=receipt["license_fingerprint"],
+        quality_revisions=(
+            tuple(str(r["evidence_id"]) for r in inputs.evidence if r["kind"] == "QUALITY")
+            + tuple(str(r["observation_id"]) for r in inputs.raw_quality)
+        ) if not strict else (),
+        coverage_revisions=tuple(
+            str(r["evidence_id"]) for r in inputs.evidence if r["kind"] == "CORPORATE_ACTION"
+        ) if not strict else (),
+    )
+    references = _references(
+        manifest, inputs.rows, inputs.calendars, inputs.raw_quality, inputs.proofs, inputs.evidence,
+    )
+    phase_calendars = tuple(
+        schedule_windows(
+            inputs.calendars,
+            p.binding.window.start,
+            p.binding.window.end,
+            p.dataset.steps[0].knowledge_at,
+            snapshot,
+        )[0]
+        if strict
+        else restore_retrospective_calendar(
+            inputs.calendars, p.dataset.calendar_references, snapshot, inputs.trust
+        )[0]
+        for p in inputs.phases
+    )
+    return QuantInputs(manifest, inputs.phases, phase_calendars, references, license_status)
+
+
+def read_quant_phase_inputs(transaction, definition, snapshot, trust_cap, checkpoint, deadline):
+    """Materialize all required phases from the given data and trust snapshot."""
     from services.worker.retrospective_backtesting import (
         managed_calendars,
         restore_trust,
         snapshot_trust,
     )
 
-    snapshot = Snapshot(lease.row["snapshot_version"], lease.row["snapshot_at"])
     strict = definition.research_mode == "STRICT_PIT"
     end = definition.protocol.holdout.end
     params = dict(
@@ -66,11 +130,7 @@ def load_quant_inputs(storage, lease, definition, receipt, checkpoint, deadline)
         earliest=end - timedelta(days=366),
         end=end,
     )
-    accepted_trust = receipt["trust_body"]
-    license_status = receipt["license_body"]["status"]
-    if license_status in ("DENIED", "BLOCKED"):
-        raise BacktestBlocked("LICENSE_DENIED")
-    with storage.transaction() as connection:
+    with transaction() as connection:
         calendars = (
             read_schedule_rows(connection, snapshot)
             if strict
@@ -88,14 +148,14 @@ def load_quant_inputs(storage, lease, definition, receipt, checkpoint, deadline)
             "kind='CALENDAR') AND (kind='CALENDAR' OR (start_at<:end AND end_at>:earliest)) "
             "AND commit_version<=:version AND ingested_at<=:at ORDER BY commit_version,evidence_id",
             params,
-            MAX_ROWS - len(calendars) - len(accepted_trust["decisions"]),
+            MAX_ROWS - len(calendars) - trust_cap.decision_count,
         )
         if not strict:
             state = snapshot_trust(
                 connection,
                 dict(
-                    trust_version=accepted_trust["version"],
-                    trust_policy_version=accepted_trust["policyVersion"],
+                    trust_version=trust_cap.version,
+                    trust_policy_version=trust_cap.policy_version,
                     snapshot_at=snapshot.at,
                 ),
                 evidence,
@@ -114,7 +174,7 @@ def load_quant_inputs(storage, lease, definition, receipt, checkpoint, deadline)
         for _, _, _, window in definition.protocol.phases
     )
     params["start"] = max(params["earliest"], min(starts))
-    with storage.transaction() as connection:
+    with transaction() as connection:
         if strict:
             trust = TrustSnapshot.from_mapping(
                 read_trust_snapshot(connection, snapshot.at, snapshot.version)
@@ -151,10 +211,9 @@ def load_quant_inputs(storage, lease, definition, receipt, checkpoint, deadline)
                         evidence,
                         quality if strict else raw_quality,
                         proofs,
-                        accepted_trust["decisions"],
                     ),
                 )
-            ),
+            ) - trust_cap.decision_count,
         )
     bars = tuple(bar_from_row(row) for row in rows)
     if strict:
@@ -199,41 +258,7 @@ def load_quant_inputs(storage, lease, definition, receipt, checkpoint, deadline)
             trust_context=trust,
             checkpoint=checkpoint,
         )
-    manifest = QuantExperimentManifest.from_phase_datasets(
-        definition,
-        phases,
-        snapshot,
-        code_version=lease.row["code_version"],
-        trust_fingerprint=receipt["trust_fingerprint"],
-        license_receipt_fingerprint=receipt["license_fingerprint"],
-        quality_revisions=(
-            tuple(str(r["evidence_id"]) for r in evidence if r["kind"] == "QUALITY")
-            + tuple(str(r["observation_id"]) for r in raw_quality)
-        )
-        if not strict
-        else (),
-        coverage_revisions=tuple(
-            str(r["evidence_id"]) for r in evidence if r["kind"] == "CORPORATE_ACTION"
-        )
-        if not strict
-        else (),
-    )
-    references = _references(manifest, rows, calendars, raw_quality, proofs, evidence)
-    phase_calendars = tuple(
-        schedule_windows(
-            calendars,
-            p.binding.window.start,
-            p.binding.window.end,
-            p.dataset.steps[0].knowledge_at,
-            snapshot,
-        )[0]
-        if strict
-        else restore_retrospective_calendar(
-            calendars, p.dataset.calendar_references, snapshot, trust
-        )[0]
-        for p in phases
-    )
-    return QuantInputs(manifest, phases, phase_calendars, references, license_status)
+    return QuantPhaseInputs(phases, calendars, evidence, rows, raw_quality, proofs, trust)
 
 
 def _references(manifest, rows, calendars, quality, proofs, evidence):

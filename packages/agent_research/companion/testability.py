@@ -1,5 +1,6 @@
 """Deterministic assessment of confirmed hypotheses using trusted Quant bindings."""
 
+import re
 import unicodedata
 from dataclasses import dataclass
 from datetime import date
@@ -7,7 +8,12 @@ from enum import StrEnum
 
 from packages.backtesting.experiment import PROTOCOL_VERSION
 from packages.backtesting.models import fingerprint
-from packages.backtesting.strategies import CATALOG_VERSION, canonical_parameters, resolve_strategy
+from packages.backtesting.strategies import (
+    CATALOG_VERSION,
+    RESEARCH_MODES,
+    canonical_parameters,
+    resolve_strategy,
+)
 
 SIGNATURE_VERSION = "agent-hypothesis-signature-v1"
 MAPPING_VERSION = "agent-testability-mapping-v1"
@@ -239,6 +245,34 @@ def _data_reasons(mapping: StrategyMapping, data: DataSuitability | None) -> tup
         ),
     )
     return tuple(reason for passed, reason in checks if not passed)
+
+
+def preliminary_testability(hypothesis: HypothesisIdentity) -> dict | None:
+    """Project catalog fit without treating unverified data as suitable."""
+    if hypothesis_signature(hypothesis) is None:
+        return None
+    mapping = None
+    signal = re.fullmatch(r"EMA\(([0-9]{1,3})\) above EMA\(([0-9]{1,3})\)", hypothesis.signal or "")
+    if signal is not None:
+        parameters = (("fast", int(signal[1])), ("slow", int(signal[2])))
+        for mode in RESEARCH_MODES:
+            mapping = ema_crossover_mapping(hypothesis, parameters, mode)
+            if mapping is not None:
+                break
+    assessment = assess_testability(
+        hypothesis,
+        research_mode=mapping.research_mode if mapping is not None else RESEARCH_MODES[0],
+        in_scope=True,
+        mapping=mapping,
+    )
+    return {
+        "classification": assessment.classification,
+        "catalogVersion": CATALOG_VERSION,
+        "mappingVersion": MAPPING_VERSION,
+        "reasons": list(assessment.reasons),
+        "limitations": list(assessment.limitations),
+        "options": list(assessment.options),
+    }
 
 
 def assess_testability(

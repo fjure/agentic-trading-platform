@@ -59,6 +59,9 @@
           @if (advanced()) {
             <p>Katalogversion {{ assessment.catalogVersion }} · Abbildungsversion {{ assessment.mappingVersion }}</p>
           }
+          @if (idea.status === 'PROPOSED' && dialogue()?.expertExperiment && assessment.reasons.includes('DATA_NOT_VERIFIED')) {
+            <button mat-stroked-button type="button" (click)="prepareQuant()" [disabled]="busy()">Quant-Entwurf prüfen lassen</button>
+          }
         }
         @if (idea.experimentDraftIds.length) {
           <h4>Experimententwürfe</h4>

@@ -12,11 +12,14 @@ from packages.agent_research.companion.dialogue import Dialogue, DialogueError, 
 from packages.agent_research.companion.ideas import IdeaAction, IdeaDenied
 from packages.agent_research.companion.service import DialogueCommand
 from packages.agent_research.companion.store import CompanionConflict
+from packages.agent_research.companion.testability import Classification, HypothesisIdentity, Reason
 from packages.agent_research.discovery.schedule import DailySchedule, ScheduleDenied, tzdata_version
+from packages.agent_research.registry import QUANT_RESEARCH_V1, require_agent
 from packages.agent_research.run_state import InvalidRunTransition
-from packages.agent_research.runs import RunConflict
+from packages.agent_research.runs import RunConflict, RunKind
 from packages.backtesting.jobs import BacktestError
 from packages.domain.models import utc_string
+from packages.persistence.transaction import ScopedConnection
 from services.control_api.agent_research_routes import AgentResearchError
 from services.llm_gateway.content_policy import safe_result_content
 
@@ -143,12 +146,14 @@ class ResearchControl:
                 for field in ("title", "description", "hypothesis")
                 if field in payload
             }
-            result = self.companion.revise_idea(
-                command,
-                action=action,
-                decision_id=self._hash(name, actor, key),
-                changes=changes,
-            )
+            with self.engine.begin() as connection:
+                transaction = ScopedConnection(connection)
+                result = self.companion.revise_idea(
+                    command, action=action, decision_id=self._hash(name, actor, key),
+                    changes=changes, scope=transaction,
+                )
+                if action is IdeaAction.REVIEW:
+                    self._record_quant_intent(transaction, actor, trace, identifier, result)
             return 201, self.ideas.read_idea(actor, identifier, result.idea_version)
         if name in {
             "createAgentDialogue",
@@ -225,6 +230,59 @@ class ResearchControl:
         if action is None:
             raise AgentResearchError(503, "PROVIDER_UNAVAILABLE")
         return action(params, query, payload, actor=actor, key=key, trace=trace, scope=scope)
+
+    def _record_quant_intent(self, transaction, actor, trace, idea_id, revision):
+        dialogue = Dialogue.from_record(revision.document)
+        if dialogue.expert is None:
+            return
+        idea = transaction.execute(text("""
+            SELECT i.document FROM agent_research.companion_idea_versions i
+            WHERE i.idea_id=:idea AND i.version=:version
+              AND i.document->>'status'='REVIEWED'
+              AND NOT EXISTS (
+                SELECT FROM agent_research.companion_idea_versions newer
+                WHERE newer.idea_id=i.idea_id AND newer.version>i.version
+              )
+              AND :dialogue_version=(
+                SELECT max(version) FROM agent_research.companion_dialogue_versions
+                WHERE dialogue_id=:dialogue AND idea_id=i.idea_id
+              )
+        """), {
+            "idea": idea_id, "version": revision.idea_version,
+            "dialogue": dialogue.dialogue_id, "dialogue_version": revision.version,
+        }).scalar_one_or_none()
+        if idea is None:
+            return
+        assessment = idea.get("testability") or {}
+        hypothesis = idea.get("hypothesis")
+        if (
+            assessment.get("classification") != Classification.INSUFFICIENT_DATA
+            or assessment.get("reasons") != [Reason.DATA_NOT_VERIFIED]
+            or hypothesis is None
+            or dialogue.confirmed != dict(HypothesisIdentity.from_document(hypothesis).fields())
+        ):
+            return
+        template = dialogue.expert
+        agent = require_agent(
+            QUANT_RESEARCH_V1.agent_id, QUANT_RESEARCH_V1.version, QUANT_RESEARCH_V1.policy_version,
+        )
+        run_id = self.runs.enqueue_in_transaction(
+            transaction, actor=actor, key=self._hash("quant-prepare", actor, idea_id,
+                                                     revision.idea_version),
+            kind=RunKind.DIALOGUE, input_ref=dialogue.dialogue_id, trace_id=trace, agent=agent,
+        )
+        transaction.execute(text("""
+            INSERT INTO agent_research.quant_prepare_intents
+              (run_id,dialogue_id,dialogue_version,idea_id,idea_version,template_id,template_version,
+               template_hash)
+            VALUES (:run,:dialogue,:dialogue_version,:idea,:idea_version,:template,:version,:hash)
+            ON CONFLICT (idea_id,idea_version) DO NOTHING
+        """), {
+            "run": run_id, "dialogue": dialogue.dialogue_id, "dialogue_version": revision.version,
+            "idea": idea_id, "idea_version": revision.idea_version,
+            "template": UUID(template.definition_id), "version": template.definition_version,
+            "hash": template.definition_hash,
+        })
 
     @staticmethod
     def _run_id(identifier):

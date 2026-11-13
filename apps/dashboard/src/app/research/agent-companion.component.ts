@@ -464,6 +464,19 @@ export class AgentCompanionComponent implements OnInit {
     });
   }
 
+  async prepareQuant(): Promise<void> {
+    const idea = this.selected();
+    if (!idea || idea.status !== 'PROPOSED' || !this.dialogue()?.expertExperiment ||
+      !idea.testability?.reasons.includes('DATA_NOT_VERIFIED')) return;
+    const payload = { action: 'REVIEW' as const, expectedVersion: idea.version };
+    await this.perform(async () => {
+      await firstValueFrom(this.api.reviseAgentIdea(idea.id, this.keyFor([idea.id, payload]), payload)
+        .pipe(takeUntilDestroyed(this.destroy)));
+      this.turnKey = null;
+      await this.loadIdea(idea.id);
+    });
+  }
+
   private async saveTurn(dialogue: AgentDialogueV1, payload: AgentCreateDialogueTurnV1): Promise<void> {
     await this.perform(async () => {
       await firstValueFrom(this.api.createAgentDialogueTurn(dialogue.id, this.keyFor([dialogue.id, payload]), payload)

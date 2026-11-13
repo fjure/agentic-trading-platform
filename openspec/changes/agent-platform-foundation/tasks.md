@@ -40,4 +40,4 @@ Jede Checkbox bezeichnet ein Issue. Akzeptanz, Dateizuständigkeit und Prüfunge
 
 ## 10. Zusammenhängende Researchabnahme durchführen
 
-- [ ] 10.1 [APF-10 Zusammenhängende Researchabnahme durchführen](work-packages/APF-10.md) · abhängig von APF-09.
+- [x] 10.1 [APF-10 Zusammenhängende Researchabnahme durchführen](work-packages/APF-10.md) · abhängig von APF-09.

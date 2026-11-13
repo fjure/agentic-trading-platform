@@ -13,6 +13,7 @@ from packages.agent_research.companion.testability import (
     assess_testability,
     ema_crossover_mapping,
     hypothesis_signature,
+    preliminary_testability,
 )
 from packages.backtesting.experiment import PROTOCOL_VERSION
 from packages.backtesting.strategies import CATALOG_VERSION, resolve_strategy
@@ -74,6 +75,20 @@ def test_incomplete_hypothesis_has_no_identity_or_testability():
     assert result.classification is None
     assert result.reasons == (Reason.CLARIFICATION_REQUIRED,)
     assert result.missing_fields == ("TARGET", "MEASUREMENT_HORIZON")
+
+
+def test_confirmation_projects_only_catalog_fit_until_data_is_verified():
+    assert preliminary_testability(replace(HYPOTHESIS, target=None)) is None
+    expected = preliminary_testability(HYPOTHESIS)
+    assert expected["classification"] == Classification.INSUFFICIENT_DATA
+    assert expected["reasons"] == [Reason.DATA_NOT_VERIFIED]
+    for unmatched in (
+        replace(HYPOTHESIS, trigger="negative earnings surprise"),
+        replace(HYPOTHESIS, signal="EMA(30) above EMA(10)"),
+    ):
+        assessment = preliminary_testability(unmatched)
+        assert assessment["classification"] == Classification.REQUIRES_NEW_STRATEGY
+        assert assessment["reasons"] == [Reason.NO_EXACT_MAPPING]
 
 
 def test_exact_requires_current_catalog_parameters_and_data_binding():

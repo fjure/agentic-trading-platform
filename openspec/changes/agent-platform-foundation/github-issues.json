@@ -182,11 +182,11 @@
       "number": 95,
       "databaseId": 6269617689,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/95",
-      "contentHash": "e3525bbab08b0512ce2c3c645cecf2a721770e9be6a48b9f02f9966bfe4d5e05",
+      "contentHash": "faec0f5556f28a73a44be329e1f97a056206c7ddcee39e7cf533e3e3dffff1f4",
       "dependencies": [
         "APF-09"
       ],
-      "syncedAt": "2026-11-08T09:59:46.9741856+00:00",
+      "syncedAt": "2026-11-13T00:08:34Z",
       "blockedBy": [
         94
       ],
