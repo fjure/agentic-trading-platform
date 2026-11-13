@@ -46,12 +46,32 @@ services:
     tmpfs: [/tmp]
     init: true
     restart: "no"
-    networks: [research_gateway_rpc]
+    networks: [research_gateway_rpc, research_provider_egress_rpc]
     healthcheck:
       test: [CMD, python, -c, "import json, urllib.request; response = urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2); raise SystemExit(json.load(response).get('state') != 'DISABLED')"]
       interval: 5s
       timeout: 3s
       retries: 5
+  research-provider-egress:
+    profiles: [research-provider]
+    build:
+      context: ../..
+      dockerfile: infra/containers/Dockerfile
+      args:
+        SOURCE_REVISION: ${ATL_SOURCE_REVISION:-}
+    command: [python, -m, services.runtime.egress, research-provider-egress]
+    user: "10003:10003"
+    environment:
+      ATL_RESEARCH_EGRESS_ENABLED: "0"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: [/tmp]
+    init: true
+    restart: "no"
+    mem_limit: 128m
+    pids_limit: 64
+    networks: [research_provider_egress_rpc, research_provider_outbound]
   postgres:
     init: true
     image: postgres:18.6-trixie@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336
@@ -267,6 +287,9 @@ services:
 networks:
   research_gateway_rpc:
     internal: true
+  research_provider_egress_rpc:
+    internal: true
+  research_provider_outbound: {}
   backtest_db:
     internal: true
   local:

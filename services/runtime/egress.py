@@ -4,14 +4,18 @@ from __future__ import annotations
 
 import asyncio
 import ipaddress
+import os
 import socket
 import sys
 from dataclasses import dataclass
 
+RESEARCH_PROVIDER_HOSTS = frozenset({"api.openai.com", "api.anthropic.com"})
+RESEARCH_EGRESS_ROLE = "research-provider-egress"
 DESTINATIONS = {
     "execution": frozenset({"paper-api.alpaca.markets", "data.alpaca.markets"}),
     "worker": frozenset({"api.typesafe.ai"}),
-    "research-gateway": frozenset({"api.openai.com", "api.anthropic.com"}),
+    "research-gateway": RESEARCH_PROVIDER_HOSTS,
+    RESEARCH_EGRESS_ROLE: RESEARCH_PROVIDER_HOSTS,
 }
 MAX_HEADER = 8192
 MAX_HELLO = 16384
@@ -81,7 +85,7 @@ def destination(header: bytes, role: str) -> str:
             name, value = line.split(":", 1)
             name = name.lower()
             allowed = {"host", "proxy-connection"}
-            if role == "research-gateway":
+            if role in {"research-gateway", RESEARCH_EGRESS_ROLE}:
                 allowed.add("accept")
             if name in seen or name not in allowed:
                 raise EgressDenied("egress denied")
@@ -107,7 +111,9 @@ class MockRoute:
 
 
 class ConnectProxy:
-    def __init__(self, role: str, *, mock_route: MockRoute | None = None):
+    def __init__(
+        self, role: str, *, mock_route: MockRoute | None = None, research_enabled: bool = False,
+    ):
         if role not in DESTINATIONS:
             raise EgressDenied("egress denied")
         if mock_route is not None and mock_route.host not in DESTINATIONS[role]:
@@ -116,11 +122,18 @@ class ConnectProxy:
             mock_route is None or mock_route.address != "127.0.0.1"
         ):
             raise EgressDenied("egress denied")
+        if role == RESEARCH_EGRESS_ROLE and mock_route is not None:
+            raise EgressDenied("egress denied")
         self.role = role
         self.mock_route = mock_route
+        self.research_enabled = research_enabled is True
         self.slots = asyncio.Semaphore(32)
 
     async def resolve(self, host: str) -> tuple[str, int]:
+        if host not in DESTINATIONS[self.role] or (
+            self.role == RESEARCH_EGRESS_ROLE and not self.research_enabled
+        ):
+            raise EgressDenied("egress denied")
         if self.mock_route is not None and host == self.mock_route.host:
             return self.mock_route.address, self.mock_route.port
         if self.role == "research-gateway":
@@ -128,14 +141,16 @@ class ConnectProxy:
         answers = await asyncio.get_running_loop().getaddrinfo(
             host, 443, type=socket.SOCK_STREAM
         )
-        addresses = [ipaddress.ip_address(a[4][0]) for a in answers]
+        addresses = [ipaddress.ip_address(answer[4][0]) for answer in answers]
         if not addresses or any(
             not address.is_global or address.is_multicast or address.is_reserved
+            or getattr(address, "scope_id", None) is not None
+            or getattr(address, "ipv4_mapped", None) is not None
             for address in addresses
         ):
             raise EgressDenied("egress denied")
         # Connect the validated numeric address, never resolve the name a second time.
-        return answers[0][4][0], 443
+        return str(addresses[0]), 443
 
     async def handle(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         upstream = None
@@ -195,7 +210,12 @@ class ConnectProxy:
 
 
 async def serve(role: str) -> None:
-    proxy = ConnectProxy(role)
+    proxy = ConnectProxy(
+        role,
+        research_enabled=(
+            role == RESEARCH_EGRESS_ROLE and os.environ.get("ATL_RESEARCH_EGRESS_ENABLED") == "1"
+        ),
+    )
     server = await asyncio.start_server(proxy.handle, "0.0.0.0", 8080, limit=MAX_HEADER)
     async with server:
         await server.serve_forever()

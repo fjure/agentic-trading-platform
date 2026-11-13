@@ -1,5 +1,6 @@
 """Private LLM gateway ASGI process. The default deployment has no dispatch authority."""
 
+from contextlib import asynccontextmanager
 from dataclasses import asdict
 
 import httpx
@@ -7,11 +8,13 @@ from fastapi import FastAPI, Request, Response
 from starlette.concurrency import run_in_threadpool
 
 from .content_policy import safe_result_content
-from .offline_gateway import DispatchRequest, OfflineGateway
+from .dispatch_journal import DispatchJournal
+from .offline_gateway import DispatchRequest, OfflineGateway, ProviderGateway
 from .provider_wire import ProviderResult, ResultState, Usage
 from .supervisor_rpc import (
     SIGNATURE,
     AdmissionAuthentication,
+    AdmissionClient,
     _decode,
     _encode,
     _matches_signature,
@@ -23,6 +26,36 @@ from .supervisor_rpc import (
 
 DISPATCH_PATH = "/private/v1/research/dispatch"
 _MAX_RESULT = 262144
+_SUPERVISOR_ORIGIN = "http://research-supervisor:8013"
+
+
+def create_provider_gateway_app(
+    *, journal_path, auth: AdmissionAuthentication, credentials, capabilities,
+) -> FastAPI:
+    """Compose fixed provider I/O with the private supervisor admission port."""
+    journal = DispatchJournal(journal_path)
+    admission_http = httpx.Client(
+        base_url=_SUPERVISOR_ORIGIN, timeout=3, trust_env=False, follow_redirects=False,
+    )
+    try:
+        gateway = ProviderGateway(
+            journal, AdmissionClient(admission_http, auth).authorize,
+            credentials=credentials, capabilities=capabilities,
+        )
+        app = create_gateway_app(gateway, auth)
+    except BaseException:
+        admission_http.close()
+        raise
+
+    @asynccontextmanager
+    async def lifespan(_app):
+        try:
+            yield
+        finally:
+            admission_http.close()
+
+    app.router.lifespan_context = lifespan
+    return app
 
 
 def create_gateway_app(
@@ -37,6 +70,8 @@ def create_gateway_app(
 
     @app.get("/health")
     async def health():
+        if isinstance(gateway, ProviderGateway):
+            return {"state": "PROVIDER_READY"}
         return {"state": "OFFLINE_READY" if gateway is not None else "DISABLED"}
 
     @app.post(DISPATCH_PATH)

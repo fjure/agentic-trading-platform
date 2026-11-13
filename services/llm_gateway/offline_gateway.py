@@ -17,7 +17,7 @@ from services.setup.llm_credentials import (
 
 from .content_policy import valid_projection
 from .dispatch_journal import DispatchJournal, DispatchOutcome, JournalDenied
-from .provider_http import Capability, OfflineProviderHttp
+from .provider_http import Capability, OfflineProviderHttp, ProviderHttp
 from .provider_wire import Provider, ProviderResult, ResultState
 
 _HASH = re.compile(r"[0-9a-f]{64}")
@@ -132,20 +132,19 @@ class OfflineGateway:
             authorized.capability,
             timeout_seconds=min(authorized.capability.timeout_seconds, remaining),
         )
-        result = self._transport.send(
-            capability, authorized.projection, cancelled=stopped,
-            synthetic_credential=credential,
-        )
+        result = self._send(capability, authorized.projection, stopped, credential)
         if stopped():
             result = ProviderResult(ResultState.DISPATCH_CANCELLED)
         elif result.usage is None and result.state in {
             ResultState.ACCEPTED, ResultState.INCOMPLETE, ResultState.INVALID_OUTPUT,
-            ResultState.MODEL_MISMATCH, ResultState.REFUSED,
+            ResultState.REFUSED,
         }:
             result = ProviderResult(ResultState.OUTCOME_UNKNOWN)
         if result.state is ResultState.ACCEPTED:
             outcome = DispatchOutcome.COMPLETED
-        elif result.state in {ResultState.OUTCOME_UNKNOWN, ResultState.DISPATCH_CANCELLED}:
+        elif result.state in {ResultState.OUTCOME_UNKNOWN, ResultState.DISPATCH_CANCELLED} or (
+            result.state is ResultState.MODEL_MISMATCH and result.usage is None
+        ):
             outcome = DispatchOutcome.OUTCOME_UNKNOWN
         elif result.state is ResultState.CAPABILITY_MISMATCH:
             outcome = DispatchOutcome.UNSENT
@@ -156,6 +155,11 @@ class OfflineGateway:
         except JournalDenied:
             return ProviderResult(ResultState.OUTCOME_UNKNOWN)
         return result
+
+    def _send(self, capability, projection, stopped, credential):
+        return self._transport.send(
+            capability, projection, cancelled=stopped, synthetic_credential=credential,
+        )
 
     def _finish(
         self, request: DispatchRequest, outcome: DispatchOutcome, state: ResultState,
@@ -189,4 +193,20 @@ class OfflineGateway:
             and type(authorized.projection) is bytes
             and compare_digest(sha256(authorized.projection).hexdigest(), request.projection_sha256)
             and valid_projection(authorized.projection)
+        )
+
+
+class ProviderGateway(OfflineGateway):
+    """Reuse journal and cancellation while fixing the real provider transport."""
+
+    def __init__(self, journal, authorize, *, credentials, capabilities):
+        if not capabilities or type(journal) is not DispatchJournal:
+            raise ValueError("incomplete provider gateway composition")
+        super().__init__(
+            journal, ProviderHttp(), authorize, credentials=credentials, capabilities=capabilities,
+        )
+
+    def _send(self, capability, projection, stopped, credential):
+        return self._transport.send(
+            capability, projection, cancelled=stopped, credential=credential,
         )

@@ -7,6 +7,7 @@ import ssl
 import pytest
 
 from services.runtime.egress import (
+    RESEARCH_EGRESS_ROLE,
     ConnectProxy,
     EgressDenied,
     MockRoute,
@@ -74,6 +75,51 @@ def test_separate_role_allowlists():
     assert destination(b"CONNECT api.typesafe.ai:443 HTTP/1.1\r\n\r\n", "worker")
     with pytest.raises(EgressDenied):
         destination(b"CONNECT data.alpaca.markets:443 HTTP/1.1\r\n\r\n", "worker")
+
+
+def test_research_egress_default_denies_before_resolution(monkeypatch):
+    async def scenario():
+        async def unexpected_resolution(*args, **kwargs):
+            pytest.fail("disabled research egress performed DNS resolution")
+
+        monkeypatch.setattr(asyncio.get_running_loop(), "getaddrinfo", unexpected_resolution)
+        with pytest.raises(EgressDenied):
+            await ConnectProxy(RESEARCH_EGRESS_ROLE).resolve("api.openai.com")
+        with pytest.raises(EgressDenied):
+            await ConnectProxy(RESEARCH_EGRESS_ROLE, research_enabled=True).resolve(
+                "paper-api.alpaca.markets"
+            )
+        with pytest.raises(EgressDenied):
+            ConnectProxy(
+                RESEARCH_EGRESS_ROLE, research_enabled=True,
+                mock_route=MockRoute("api.openai.com", "127.0.0.1", 443),
+            )
+
+    asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("host", ["api.openai.com", "api.anthropic.com"])
+def test_research_egress_pins_only_public_provider_answers(monkeypatch, host):
+    async def scenario():
+        def answer(family, address):
+            return (family, socket.SOCK_STREAM, 6, "", (address, 443))
+
+        records = [answer(socket.AF_INET, "8.8.8.8"), answer(socket.AF_INET6, "2606:4700::1111")]
+        lookups = []
+
+        async def answers(name, port, **kwargs):
+            lookups.append((name, port))
+            return records
+
+        monkeypatch.setattr(asyncio.get_running_loop(), "getaddrinfo", answers)
+        proxy = ConnectProxy(RESEARCH_EGRESS_ROLE, research_enabled=True)
+        assert await proxy.resolve(host) == ("8.8.8.8", 443)
+        assert lookups == [(host, 443)]
+        records.append(answer(socket.AF_INET6, "::1"))
+        with pytest.raises(EgressDenied):
+            await proxy.resolve(host)
+
+    asyncio.run(scenario())
 
 
 @pytest.mark.parametrize("address", ["127.0.0.1", "10.0.0.1", "169.254.169.254", "::1"])
