@@ -21,6 +21,7 @@ from services.control_api.retrospective_dto import FORMATS
 
 BASE = "/api/v1/research/agent"
 SETUP = "/api/v1/integrations/research-providers"
+PROVIDER_READINESS = "/api/v1/integrations/research-provider-readiness"
 PAGED = ("cursor", "limit")
 SCOPE = re.compile(r"[0-9a-f]{64}")
 TRACE = re.compile(r"[0-9a-f]{32}")
@@ -276,8 +277,26 @@ def _validator(component):
     )
 
 
+@cache
+def _disabled_provider_readiness():
+    path = Path(__file__).resolve().parents[2] / "config/research/provider-catalog-v1.json"
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if (
+        not _validator("ResearchProviderReadinessV1").is_valid(value)
+        or value["state"] != "DISABLED"
+        or any(
+            item["evidenceState"] != "INCOMPLETE" or not item["blockingReasons"]
+            for item in value["candidates"]
+        )
+    ):
+        raise ValueError("invalid disabled research provider catalog")
+    return value
+
+
 def agent_research_path(path: str) -> bool:
-    return any(path == base or path.startswith(base + "/") for base in (BASE, SETUP))
+    return path == PROVIDER_READINESS or any(
+        path == base or path.startswith(base + "/") for base in (BASE, SETUP)
+    )
 
 
 def validate_arguments(operation, params, query):
@@ -494,3 +513,24 @@ def register_agent_research_routes(
             methods=[operation.method],
             operation_id=operation.operation_id,
         )
+
+    async def provider_readiness(request: Request):
+        trace = request.state.trace_id
+        if request.state.actor_id != "local-operator" or not SCOPE.fullmatch(
+            scope_reader(request) or ""
+        ):
+            return agent_research_problem(403, "REQUEST_FORBIDDEN", trace)
+        if request.scope["query_string"]:
+            return agent_research_problem(422, "INVALID_REQUEST", trace)
+        try:
+            value = _disabled_provider_readiness()
+        except (OSError, ValueError):
+            return agent_research_problem(503, "PROVIDER_UNAVAILABLE", trace)
+        return JSONResponse(value, headers={"Cache-Control": "no-store"})
+
+    app.add_api_route(
+        PROVIDER_READINESS,
+        provider_readiness,
+        methods=["GET"],
+        operation_id="getResearchProviderReadiness",
+    )

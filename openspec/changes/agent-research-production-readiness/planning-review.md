@@ -19,3 +19,7 @@ Drei voneinander unabhängige Subagenten prüften lesend den Entwurf und den rel
 | A · Provider und Kosten | OpenAI-Standardtier ausdrücklich binden und beim Settlement prüfen. Ursprünglichen Komponententarif erhalten und VERIFIED nur nach vollständigem, begrenztem Settlement aktueller Bindung projizieren. Nachprüfung bestanden. |
 | B · NLP und Quant | Recall und fehlende Antworten präzisiert, Mindestschichtung und drei autorisierte Wiederholungen normativ ergänzt, unvollständige Vergleichspaare gesperrt und neue Baseline mit unabhängiger Bestätigung verlangt. Nachprüfung fachlich bestanden, Szenario E02-S06 anschließend unter das gleichnamige Requirement verschoben. |
 | C · SDD und Testarchitektur | Anforderungen, Szenarien und Paketnachweise vereinheitlicht, CI-Fixtures von Betreiber-Evidenz getrennt, Manifestformat und Moduswechsel konkretisiert. Nachprüfung bestätigt die Korrekturen. Die abschließende Strukturprüfung prüft zusätzlich die Zugehörigkeit von E02-S06. |
+
+## ARP-01 · Präzisierung im Apply
+
+Der unabhängige Quellenreview fand für GPT-6 Luna offene Belege zur vollständigen abrechenbaren Eingabegrenze und zu erreichbaren Abrechnungstiers. Auf Betreiberentscheidung darf ein solcher Kandidat sichtbar und gesperrt bleiben. Vollständige Evidenz bleibt am Aktivierungs- und Sendepunkt erforderlich. Die technischen Nachweise und offenen Punkte stehen im [ARP-01-Vorprüfungsbericht](../../../docs/evidence/arp-01-preflight.md).

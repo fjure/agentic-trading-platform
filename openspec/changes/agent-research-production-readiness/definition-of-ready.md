@@ -1,5 +1,7 @@
 # Definition of Ready
 
+Offene Anbieternachweise dürfen als gesperrte Katalogkandidaten in Apply eingehen. Aktivierung und realer Versand setzen die vollständige Evidenz der konkreten Modellbindung voraus.
+
 - Verifizierter Remote-Basisstand, APF-Abnahme und sichtbare Offlinegrenzen sind in [Discovery](discovery.md) dokumentiert.
 - Produktions-Wire, Default-Deny, Setup, Isolation, Freigaben, Budget und Unknown Outcomes sind in [Design](design.md) und den Deltas spezifiziert.
 - Verschiedene Nachweise für Offline-CI, unabhängige NLP-Evaluation und ausdrücklich autorisierten synthetischen Real-Smoke stehen in [Teststrategie](test-strategy.md) und [Betriebsrunbook](operator-runbook.md).

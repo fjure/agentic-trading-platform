@@ -26,4 +26,6 @@ Vertragsbericht und Compose-Topologie mit Quell-SHA, reproduzierbarem Prüfkomma
 
 ## Normative Abnahme
 
-Die Anbieterquellen belegen Modell- und API-Version, vollständige abrechenbare Obergrenze sowie die aktuelle Tarifrevision. Die Beispielrechnungen sind Katalogevidenz.
+Die Vertrags- und Deploymentbasis startet gesperrt. Der Katalog zeigt Evidenzstatus und Sperrgründe getrennt von Probe, Zweckaktivierung und Widerruf. Fehlende Modell-, API-, Tarif- oder Kostenbelege sperren Aktivierung und externen Versand einschließlich Smoke. Ein gesperrter Kandidat ist mit der technischen Plattformabnahme vereinbar. Eine belegte vollständige Kostenobergrenze bleibt Voraussetzung für jede reale Sendeberechtigung.
+
+Die Abnahme prüft unvollständige Kandidaten, ungeklärte Abrechnungstiers und den gesperrten Erststart. ARP-04 und ARP-08 prüfen den Entzug nach Evidenzverlust und das vollständige synthetische Settlement. ARP-07 prüft die Dashboarddarstellung des gesperrten Erststarts.

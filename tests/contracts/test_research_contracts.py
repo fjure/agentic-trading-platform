@@ -66,7 +66,11 @@ def test_every_research_component_is_mirrored_without_drift():
         return value
 
     for name, schema in OAS["components"]["schemas"].items():
-        if name.startswith("Research") and name != "ResearchHypothesisInterpretationV1":
+        if name.startswith("Research") and name not in {
+            "ResearchHypothesisInterpretationV1",
+            "ResearchProviderReadinessV1",
+            "ResearchProviderCandidateV1",
+        }:
             assert MIRROR["$defs"][name] == rewrite(schema)
 
 

@@ -175,9 +175,73 @@ def guest():
         assert history.exact_repetitions == (("earlier", 1),)
         assert history.exposure["reuseStatus"] == "NO_REGISTERED_PRIOR_USE"
         assert history.exposure["externalKnowledgeStatus"] == "EXTERNAL_KNOWLEDGE_UNKNOWN"
+        check_disabled_provider_installation(worker)
     finally:
         owner.dispose()
         worker.dispose()
+
+
+def check_disabled_provider_installation(engine):
+    from unittest.mock import patch
+
+    from fastapi.testclient import TestClient
+
+    from services.control_api.app import create_app
+    from services.control_api.auth import LocalAuth
+    from services.control_api.research_client import AgentResearchClient
+    from services.runtime import agent_research_relay as relay
+    from services.runtime.agent_service import create_agent_research_service
+    from tests.e2e.agent_research_browser import serve
+
+    origin = "http://127.0.0.1:8000"
+    auth = LocalAuth(origin)
+    relay_key = bytes(range(32))
+    control = create_app(
+        auth=auth, agent_research=AgentResearchClient(relay.AgentRelayAuthentication(relay_key)),
+    )
+    supervisor = create_agent_research_service(
+        engine, relay_key=relay_key, command_key=bytes(reversed(range(32))),
+    )
+    base = "/api/v1/research/agent"
+    with (
+        patch.object(relay, "RELAY_URL", "http://127.0.0.1:8013" + relay.RELAY_PATH),
+        serve(supervisor, 8013),
+        TestClient(control, base_url=origin, client=("127.0.0.1", 42000)) as http,
+    ):
+        def post(path, key, payload):
+            return http.post(
+                path, headers={"Origin": origin, "Idempotency-Key": key}, json=payload,
+            )
+
+        assert post("/api/v1/session", "arp01-session-0001", {
+            "activationCode": auth.issue_activation_code(),
+        }).status_code == 204
+        status = http.get("/api/v1/integrations/research-provider-readiness")
+        assert status.status_code == 200 and status.json()["state"] == "DISABLED"
+        candidates = status.json()["candidates"]
+        assert candidates and all(item["blockingReasons"] for item in candidates)
+        idea = post(base + "/ideas", "arp01-create-idea-0001", {
+            "title": "Quartalszahlen", "originalText": "Erholen sich Aktien nach Quartalszahlen?",
+        })
+        assert idea.status_code == 201, idea.json().get("code")
+        dialogue = base + "/dialogues/" + idea.json()["dialogueId"]
+        turn = post(dialogue + "/turns", "arp01-local-question-0001", {
+            "kind": "FREE_TEXT_RESEARCH",
+            "expectedIdeaVersion": 1,
+            "expectedDialogueVersion": 1,
+            "text": "Erholen sich Aktien nach Quartalszahlen?",
+        })
+        assert turn.status_code == 202, turn.json().get("code")
+        question = turn.json()["localQuestions"][0]
+        answer = post(dialogue + "/turns", "arp01-local-answer-0001", {
+            "kind": "LOCAL_STRUCTURED_ANSWER",
+            "expectedIdeaVersion": turn.json()["ideaVersion"],
+            "expectedDialogueVersion": turn.json()["dialogueVersion"],
+            "questionId": question["id"],
+            "field": question["field"],
+            "value": "Technologieaktien",
+        })
+        assert answer.status_code == 202, answer.json().get("code")
 
 
 if __name__ == "__main__":

@@ -6871,6 +6871,74 @@
           "$ref": "#/$defs/TraceId"
         }
       }
+    },
+    "ResearchProviderReadinessV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "candidates"
+      ],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "DISABLED",
+            "OFFLINE",
+            "READY",
+            "DEGRADED"
+          ]
+        },
+        "candidates": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/ResearchProviderCandidateV1"
+          }
+        }
+      }
+    },
+    "ResearchProviderCandidateV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "modelId",
+        "evidenceState",
+        "blockingReasons"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": [
+            "OPENAI",
+            "ANTHROPIC"
+          ]
+        },
+        "modelId": {
+          "$ref": "#/$defs/AgentOpaqueId"
+        },
+        "evidenceState": {
+          "type": "string",
+          "enum": [
+            "INCOMPLETE",
+            "COST_BINDING_VERIFIED"
+          ]
+        },
+        "blockingReasons": {
+          "type": "array",
+          "description": "At least one reason is required for an incomplete evidence binding.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "MODEL_BINDING_UNVERIFIED",
+              "BILLABLE_INPUT_LIMIT_UNVERIFIED",
+              "BILLING_TIERS_UNVERIFIED",
+              "TARIFF_UNVERIFIED"
+            ]
+          }
+        }
+      }
     }
   }
 }

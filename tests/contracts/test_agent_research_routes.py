@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from services.control_api.agent_research_routes import (
     OPERATIONS,
+    PROVIDER_READINESS,
     AgentResearchError,
     problem_value,
     validate_payload,
@@ -71,6 +72,60 @@ def check_problem(response, status, code):
     assert response.headers["cache-control"] == "no-store"
     assert response.headers["traceparent"].split("-")[1] == response.json()["traceId"]
     assert set(response.json()) == {"type", "title", "status", "code", "traceId"}
+
+
+def test_provider_readiness_is_redacted_and_independent_of_research_relay():
+    auth = LocalAuth(clock=lambda: datetime(2026, 11, 13, tzinfo=UTC))
+
+    def unexpected_dispatch(*args, **kwargs):
+        pytest.fail("readiness must not dispatch to the research relay")
+
+    http = client(auth, unexpected_dispatch)
+    check_problem(http.get(PROVIDER_READINESS), 401, "SESSION_REQUIRED")
+    activate(http, auth, KEY)
+    response = http.get(PROVIDER_READINESS)
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+    status = response.json()
+    assert status["state"] == "DISABLED"
+    luna = next(item for item in status["candidates"] if item["modelId"] == "gpt-6-luna")
+    assert luna["evidenceState"] == "INCOMPLETE"
+    assert set(luna["blockingReasons"]) == {
+        "BILLABLE_INPUT_LIMIT_UNVERIFIED",
+        "BILLING_TIERS_UNVERIFIED",
+    }
+    check_problem(http.get(PROVIDER_READINESS + "?model=other"), 422, "INVALID_REQUEST")
+
+
+def test_default_installation_refuses_probe_and_activation():
+    auth = LocalAuth(clock=lambda: datetime(2026, 11, 13, tzinfo=UTC))
+    http = client(auth)
+    activate(http, auth, KEY)
+    check_problem(
+        http.post(
+            "/api/v1/research/agent/providers/OPENAI/probe",
+            headers=WRITE_HEADERS,
+            json=operation_example("probeAgentProvider"),
+        ),
+        503,
+        "PROVIDER_UNAVAILABLE",
+    )
+    check_problem(
+        http.post(
+            SETUP + "/activate",
+            headers=WRITE_HEADERS,
+            json={
+                "expectedCredentialVersion": 1,
+                "profileId": "profile-001",
+                "profileGeneration": 1,
+                "modelGeneration": 1,
+                "credentialGeneration": 1,
+                "verifiedProbeId": "probe-001",
+            },
+        ),
+        503,
+        "PROVIDER_UNAVAILABLE",
+    )
 
 
 def test_wire_registry_and_mounted_routes_match_openapi():

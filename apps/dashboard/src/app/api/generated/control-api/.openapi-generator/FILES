@@ -461,6 +461,8 @@ model/researchMacroContent.ts
 model/researchMetric.ts
 model/researchNewsContent.ts
 model/researchProblem.ts
+model/researchProviderCandidateV1.ts
+model/researchProviderReadinessV1.ts
 model/researchQuality.ts
 model/researchSnapshot.ts
 model/researchSource.ts

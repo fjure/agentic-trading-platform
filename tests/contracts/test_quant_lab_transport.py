@@ -173,7 +173,9 @@ def test_contract_stage_does_not_fabricate_runtime_routes():
 
 
 def test_existing_legacy_http_paths_are_unchanged():
-    new_paths = {path for path, _, _ in D7.values()}
+    new_paths = {path for path, _, _ in D7.values()} | {
+        "/api/v1/integrations/research-provider-readiness"
+    }
     apf_prefixes = ("/api/v1/research/agent/", "/api/v1/integrations/research-providers/")
     legacy = {
         path: item for path, item in OAS["paths"].items()

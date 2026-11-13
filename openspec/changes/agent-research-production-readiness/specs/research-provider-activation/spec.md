@@ -17,6 +17,13 @@ Die Installation MUST den realen Modellpfad gesperrt starten. Ein versioniertes 
 - **THEN** kein externer Request erfolgt; ein neues Modell braucht eine neue Bindung
 - **AND** der Nachweis ist [ARP-01](../../work-packages/ARP-01.md), [ARP-04](../../work-packages/ARP-04.md) zugeordnet
 
+#### Scenario: ARP-P01-S02 – Katalogkandidat mit lückenhafter Evidenz
+
+- **GIVEN** ein Katalogkandidat mit fehlender Modell-, API-, Tarif- oder Kostenevidenz
+- **WHEN** der Betreiber den Status abruft oder eine Aktivierung oder Probe anfordert
+- **THEN** der Katalog MUST den offenen Evidenzstatus und den Sperrgrund zeigen; Aktivierung, Reservierung auf unbelegter Grundlage und externer Versand MUST gesperrt bleiben
+- **AND** ein gesperrter Kandidat ist mit der technischen Offline-Abnahme vereinbar; der Nachweis ist [ARP-01](../../work-packages/ARP-01.md), [ARP-04](../../work-packages/ARP-04.md), [ARP-08](../../work-packages/ARP-08.md) zugeordnet
+
 ### Requirement: ARP-P02 Autorisierter Transport
 
 Der Gateway MUST ausschließlich signierte, einmalig nutzbare, aktuell gefencte und reservierte Aufträge an fest zugelassene HTTPS-Ziele senden. Redirects, frei konfigurierbare Ziele, Umgebungsproxys und Providerwechsel MUST gesperrt sein.

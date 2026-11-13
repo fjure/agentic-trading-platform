@@ -13,3 +13,7 @@
 - Strict Validation, Whitespace-Prüfung und Strukturprüfung bestanden. Vier Deltas enthalten 13 Requirements und 42 eindeutige Szenarien mit passender Requirement-Zuordnung. Zehn Implementierungscheckboxen bleiben offen.
 - GitHub MCP für Einzelabfragen und Duplikatsuche verwendet. PATCH #102 erhielt HTTP 403. Die autorisierte GH CLI aktualisierte nur die verwalteten Blöcke in #96–#105 und bestätigte Status, Labels, Inhalt sowie alle 16 unveränderten nativen Kanten in beiden Richtungen.
 - Drei unabhängige Reviews mit Nachprüfung. Die beobachteten Anbieter- und Kostenbeispiele sind dokumentationsgestützt. In diesem Refinement wurden keine Provider- oder Anwendungsläufe ausgeführt.
+
+## ARP-01 · Präzisierung im Apply
+
+Strict Validation nach der Präzisierung bestanden. Issue #96 wurde über die autorisierte GH CLI aktualisiert und zurückgelesen. Titel, Labels, offener Zustand und die vier ausgehenden Abhängigkeiten von #96 blieben erhalten. Der Katalogstatus ist ein technischer Nachweis. Die Abnahme jeder realen Modellbindung setzt weiterhin ihre vollständige Anbieter- und Kostenevidenz voraus.

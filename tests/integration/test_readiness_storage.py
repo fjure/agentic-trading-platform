@@ -65,7 +65,7 @@ def host(module="tests.integration.test_readiness_storage"):
             "--entrypoint",
             "python",
         ]
-        for directory in ("packages", "services", "tests", "contracts"):
+        for directory in ("packages", "services", "tests", "contracts", "config"):
             command += [
                 "--mount",
                 f"type=bind,source={root / directory},target=/opt/lab/{directory},readonly",

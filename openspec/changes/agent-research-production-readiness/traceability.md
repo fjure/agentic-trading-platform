@@ -16,6 +16,7 @@
 ## Normative Szenario- und Paketzuordnung
 
 - `ARP-P01-S01` Gesperrter Neustart → [ARP-01](work-packages/ARP-01.md), [ARP-04](work-packages/ARP-04.md)
+- `ARP-P01-S02` Katalogkandidat mit lückenhafter Evidenz → [ARP-01](work-packages/ARP-01.md), [ARP-04](work-packages/ARP-04.md), [ARP-08](work-packages/ARP-08.md)
 - `ARP-P02-S01` Gebundener Dispatch → [ARP-02](work-packages/ARP-02.md), [ARP-04](work-packages/ARP-04.md)
 - `ARP-P02-S02` Ungültiger Auftrag oder Ziel → [ARP-02](work-packages/ARP-02.md), [ARP-09](work-packages/ARP-09.md)
 - `ARP-P02-S03` Abweichende Antwortidentität → [ARP-02](work-packages/ARP-02.md)

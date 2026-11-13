@@ -1,0 +1,20 @@
+{
+  "state": "DISABLED",
+  "candidates": [
+    {
+      "provider": "OPENAI",
+      "modelId": "gpt-6-luna",
+      "evidenceState": "INCOMPLETE",
+      "blockingReasons": [
+        "BILLABLE_INPUT_LIMIT_UNVERIFIED",
+        "BILLING_TIERS_UNVERIFIED"
+      ]
+    },
+    {
+      "provider": "ANTHROPIC",
+      "modelId": "claude-haiku-5-5",
+      "evidenceState": "INCOMPLETE",
+      "blockingReasons": ["MODEL_BINDING_UNVERIFIED"]
+    }
+  ]
+}

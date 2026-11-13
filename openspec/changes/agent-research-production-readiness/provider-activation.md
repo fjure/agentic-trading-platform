@@ -36,7 +36,7 @@ Der reale Gateway-Einstieg injiziert getrennte versionierte Purpose-RPCs für Di
 
 ## Machbarkeitsrechnung für den Smoke-Deckel
 
-Planungsbeispiele aus den offiziellen Modell- und Preisseiten, Stand 13.11.2026. Sie sind Katalogkandidaten. Modell-IDs werden nicht im Transport fest verdrahtet.
+Planungsbeispiele aus den offiziellen Modell- und Preisseiten, Stand 13.11.2026. GPT-6 Luna bleibt als Kandidat wegen ungeklärter vollständiger abrechenbarer Inputgrenze und erreichbarer Abrechnungstiers gesperrt. Bei Claude Haiku 5.5 setzt die Beispielrechnung globales Standardrouting und den Ausschluss des Ein-Stunden-Cache-Write voraus. Die Betriebsberechtigung setzt einen Nachweis für die konkrete Bindung voraus. Modell-IDs werden nicht im Transport fest verdrahtet.
 
 | Kandidat | Konservative Vollfensterreserve bei maximal 256 Output-Tokens |
 | --- | --- |

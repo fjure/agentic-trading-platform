@@ -125,7 +125,9 @@ def test_legacy_components_and_standalone_contracts_remain_frozen():
     legacy = {
         name: schema for name, schema in OAS["components"]["schemas"].items()
         if name == "AgentRun" or not name.startswith(("QuantLab", "Agent", "Processing",
-                                                      "ResearchHypothesisInterpretationV1"))
+                                                      "ResearchHypothesisInterpretationV1",
+                                                      "ResearchProviderReadinessV1",
+                                                      "ResearchProviderCandidateV1"))
     }
     assert canonical_digest(legacy) == (
         "d309096c85f6c9bcd166bac03d6b3ab8829627fe8a25d93cccf104ab77f88918"
