@@ -1,7 +1,7 @@
 name: Contracts
 on:
   push:
-    branches: [main]
+    branches: [main, 'codex/ptv-96-arp-contracts']
   pull_request:
 permissions:
   contents: read
@@ -41,7 +41,13 @@ jobs:
         env:
           CONTRACT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          if ($env:CONTRACT_BASE_SHA -match '^[0]{40}$') {
+          if ($env:GITHUB_REF -eq 'refs/heads/codex/ptv-96-arp-contracts') {
+            $base = git merge-base HEAD refs/remotes/origin/main
+            if ($LASTEXITCODE -ne 0 -or $base -notmatch '^[0-9a-f]{40}$') {
+              throw 'Missing trustworthy main merge base'
+            }
+            ./.venv/Scripts/python.exe scripts/check-contract-breaking.py --base-ref $base
+          } elseif ($env:CONTRACT_BASE_SHA -match '^[0]{40}$') {
             ./.venv/Scripts/python.exe scripts/check-contract-breaking.py --initial-contract
           } elseif ($env:CONTRACT_BASE_SHA -match '^[0-9a-f]{40}$') {
             ./.venv/Scripts/python.exe scripts/check-contract-breaking.py --base-ref $env:CONTRACT_BASE_SHA

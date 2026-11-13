@@ -49,6 +49,7 @@ import { ProcessingDecisionV1 } from '../model/models';
 import { ProcessingPreviewRequestV1 } from '../model/models';
 import { ProcessingPreviewV1 } from '../model/models';
 import { ProcessingStatusV1 } from '../model/models';
+import { ResearchProviderReadinessV1 } from '../model/models';
 
 
 import { Configuration }                                     from '../configuration';
@@ -216,6 +217,13 @@ export interface AgentResearchServiceInterface {
      * @endpoint get /api/v1/research/agent/schedule
      */
     getAgentSchedule(extraHttpRequestParams?: any): Observable<AgentScheduleV1>;
+
+    /**
+     * Get research provider readiness and catalog evidence
+     * 
+     * @endpoint get /api/v1/integrations/research-provider-readiness
+     */
+    getResearchProviderReadiness(extraHttpRequestParams?: any): Observable<ResearchProviderReadinessV1>;
 
     /**
      * List visible research ideas

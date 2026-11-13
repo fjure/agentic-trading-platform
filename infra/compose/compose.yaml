@@ -48,7 +48,7 @@ services:
     restart: "no"
     networks: [research_gateway_rpc]
     healthcheck:
-      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2).close()"]
+      test: [CMD, python, -c, "import json, urllib.request; response = urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2); raise SystemExit(json.load(response).get('state') != 'DISABLED')"]
       interval: 5s
       timeout: 3s
       retries: 5

@@ -9916,6 +9916,40 @@ paths:
           $ref: '#/components/responses/AgentProcessing429'
         '503':
           $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/integrations/research-provider-readiness:
+    get:
+      tags:
+      - Agent research
+      operationId: getResearchProviderReadiness
+      summary: Get research provider readiness and catalog evidence
+      responses:
+        '200':
+          description: Redacted provider readiness
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchProviderReadinessV1'
+              example:
+                state: DISABLED
+                candidates:
+                - provider: OPENAI
+                  modelId: gpt-6-luna
+                  evidenceState: INCOMPLETE
+                  blockingReasons: [BILLABLE_INPUT_LIMIT_UNVERIFIED, BILLING_TIERS_UNVERIFIED]
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
   /api/v1/research/agent/providers:
     get:
       tags:
@@ -12663,6 +12697,38 @@ components:
           maxItems: 200
         nextCursor:
           $ref: '#/components/schemas/Cursor'
+    ResearchProviderReadinessV1:
+      type: object
+      additionalProperties: false
+      required: [state, candidates]
+      properties:
+        state:
+          type: string
+          enum: [DISABLED, OFFLINE, READY, DEGRADED]
+        candidates:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ResearchProviderCandidateV1'
+    ResearchProviderCandidateV1:
+      type: object
+      additionalProperties: false
+      required: [provider, modelId, evidenceState, blockingReasons]
+      properties:
+        provider:
+          type: string
+          enum: [OPENAI, ANTHROPIC]
+        modelId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        evidenceState:
+          type: string
+          enum: [INCOMPLETE, COST_BINDING_VERIFIED]
+        blockingReasons:
+          type: array
+          description: At least one reason is required for an incomplete evidence binding.
+          items:
+            type: string
+            enum: [MODEL_BINDING_UNVERIFIED, BILLABLE_INPUT_LIMIT_UNVERIFIED, BILLING_TIERS_UNVERIFIED, TARIFF_UNVERIFIED]
     AgentProviderPageV1:
       type: object
       description: The opaque cursor continues the same stable ordering. An absent cursor means the last page.

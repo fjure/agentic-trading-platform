@@ -426,6 +426,8 @@ export * from './researchMacroContent';
 export * from './researchMetric';
 export * from './researchNewsContent';
 export * from './researchProblem';
+export * from './researchProviderCandidateV1';
+export * from './researchProviderReadinessV1';
 export * from './researchQuality';
 export * from './researchSnapshot';
 export * from './researchSource';

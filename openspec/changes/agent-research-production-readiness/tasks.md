@@ -2,7 +2,7 @@
 
 ## 1. Produktionsvertrag und Deploymentbasis
 
-- [ ] 1.1 [ARP-01](work-packages/ARP-01.md) Additive Status-, Setup-, Probe- und Aktivierungsverträge sowie gesperrte Compose-Topologie ausliefern. Prüfung: Schema, generierter Client und gesperrter Start aus versionierter Installation.
+- [ ] 1.1 [ARP-01](work-packages/ARP-01.md) Additive Status-, Setup-, Probe- und Aktivierungsverträge sowie gesperrte Compose-Topologie ausliefern. Schema, generierten Client, gesperrten Start und Sperrgründe bei unvollständiger Katalogevidenz prüfen.
 
 ## 2. Gatewaytransport und Egress
 
