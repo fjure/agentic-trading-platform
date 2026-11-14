@@ -21,7 +21,7 @@ def kernel_oom_detected(docker, container):
             return True
         events = docker(
             "events", "--since", details["State"]["StartedAt"],
-            "--until", str(time.time_ns() // 1_000_000_000),
+            "--until", str(time.time_ns() / 1_000_000_000),
             "--filter", f"container={details['Id']}", "--filter", "event=oom",
             "--format", "{{json .}}", timeout=5,
         )
