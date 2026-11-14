@@ -18,7 +18,7 @@
 
 ## 5. Verbindliche APF-Integration-CI
 
-- [ ] 5.1 [ARP-05](work-packages/ARP-05.md) Fast-, DB- und Browser-Gates mit versionierten Manifesten automatisieren. Prüfung: Sauberer PR- und Release-Lauf erzeugt vollständige Ergebnisse.
+- [x] 5.1 [ARP-05](work-packages/ARP-05.md) Fast-, DB- und Browser-Gates mit versionierten Manifesten automatisieren. Prüfung: Sauberer PR- und Release-Lauf erzeugt vollständige Ergebnisse.
 
 ## 6. NLP-Katalog und Auswertung
 
