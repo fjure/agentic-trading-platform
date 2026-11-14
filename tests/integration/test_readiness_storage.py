@@ -1,6 +1,7 @@
 """RDR-03: echte isolierte PostgreSQL-Migration, Atomarität, ACLs und Restore."""
 
 import json
+import os
 import secrets
 import subprocess
 import sys
@@ -25,7 +26,12 @@ TABLES = (
 
 
 def host(module="tests.integration.test_readiness_storage"):
-    from tests.integration.ledger_support import GROUPS, PSQL, _admin, _runtime_privileges
+    from tests.integration.ledger_support import (
+        GROUPS,
+        _admin,
+        _runtime_privileges,
+        postgres_command,
+    )
 
     root = Path(__file__).resolve().parents[2]
     name = "atl_rdr_" + uuid4().hex[:20]
@@ -52,7 +58,7 @@ def host(module="tests.integration.test_readiness_storage"):
             "--rm",
             "-i",
             "--network",
-            "agentic-trading-lab-dev_local",
+            os.environ.get("ATL_RESEARCH_TEST_NETWORK", "agentic-trading-lab-dev_local"),
             "--read-only",
             "--cap-drop",
             "ALL",
@@ -73,7 +79,7 @@ def host(module="tests.integration.test_readiness_storage"):
         command += [
             "--mount",
             f"type=bind,source={root / 'alembic.ini'},target=/opt/lab/alembic.ini,readonly",
-            "agentic-trading-lab-research-test:local",
+            os.environ.get("ATL_RESEARCH_TEST_IMAGE", "agentic-trading-lab-research-test:local"),
             "-m",
             module,
             "guest",
@@ -87,7 +93,7 @@ def host(module="tests.integration.test_readiness_storage"):
         if result.returncode:
             raise RuntimeError("readiness PostgreSQL guest failed: " + result.stdout.strip()[:600])
         dumped = subprocess.run(
-            [*PSQL[:11], "pg_dump", "-U", "lab_migration", "-d", name, "--no-owner"],
+            [*postgres_command(), "pg_dump", "-U", "lab_migration", "-d", name, "--no-owner"],
             capture_output=True,
             text=True,
             check=False,

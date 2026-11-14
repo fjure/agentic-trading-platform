@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "packageId": "ARP-05",
+  "suite": "arp-fast",
+  "gate": "fast",
+  "mode": "offline",
+  "artifact": "research-fast",
+  "cases": [
+    {
+      "id": "ARP-FAST-CONTRACT-PROJECTION",
+      "class": "tests.contracts.test_agent_research_contract",
+      "name": "test_apf_standalone_definitions_match_openapi"
+    },
+    {
+      "id": "ARP-FAST-CONTRACT-ISOLATION",
+      "class": "tests.contracts.test_agent_research_contract",
+      "name": "test_hypothesis_confirmation_cannot_dispatch_or_start"
+    },
+    {
+      "id": "ARP-FAST-DISCOVERY-GRANT",
+      "class": "tests.unit.test_provider_discovery_dispatch",
+      "name": "test_discovery_grant_is_exact_and_consumed_once"
+    },
+    {
+      "id": "ARP-FAST-CREDENTIAL-AUTH",
+      "class": "tests.security.test_provider_credential_authority",
+      "name": "test_metadata_only_channel_authenticates_both_sides"
+    },
+    {
+      "id": "ARP-FAST-CREDENTIAL-BLOCK",
+      "class": "tests.security.test_provider_credential_authority",
+      "name": "test_setup_waits_for_durable_block_before_mutating"
+    },
+    {
+      "id": "ARP-FAST-OPENAI-TLS",
+      "class": "tests.unit.test_llm_tls_socket",
+      "name": "test_fixed_provider_protocol_crosses_local_connect_and_verified_tls[OPENAI-api.openai.com-/v1/responses-input]"
+    },
+    {
+      "id": "ARP-FAST-ANTHROPIC-TLS",
+      "class": "tests.unit.test_llm_tls_socket",
+      "name": "test_fixed_provider_protocol_crosses_local_connect_and_verified_tls[ANTHROPIC-api.anthropic.com-/v1/messages-messages]"
+    },
+    {
+      "id": "ARP-FAST-FIXED-EGRESS",
+      "class": "tests.unit.test_llm_tls_socket",
+      "name": "test_research_proxy_cannot_start_without_explicit_loopback_double"
+    },
+    {
+      "id": "ARP-FAST-SCOPES",
+      "class": "tests.unit.test_agent_research_budget",
+      "name": "test_admission_checks_every_scope_and_carries_open_reservations"
+    },
+    {
+      "id": "ARP-FAST-UNKNOWN-HOLD",
+      "class": "tests.unit.test_agent_research_budget",
+      "name": "test_unknown_attempt_retains_holds_and_unsent_retains_attempt_counter"
+    },
+    {
+      "id": "ARP-FAST-PROVIDER-TIMEOUT",
+      "class": "tests.unit.test_llm_provider_http",
+      "name": "test_timeout_and_non_double_transport_fail_closed"
+    }
+  ]
+}

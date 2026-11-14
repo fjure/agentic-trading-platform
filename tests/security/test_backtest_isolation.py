@@ -1,6 +1,7 @@
 """Actual constrained worker container, internal network and fixed PostgreSQL identity."""
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -9,6 +10,27 @@ from pathlib import Path
 from uuid import uuid4
 
 MARKER = "PASS backtest actual container/CPU/memory/mounts/internal-network/SQL-role/no-provider"
+
+
+def kernel_oom_detected(docker, container):
+    """Exit and kernel OOM notifications may reach Docker in either order."""
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline:
+        details = json.loads(docker("inspect", container, timeout=5))[0]
+        if details["State"]["OOMKilled"]:
+            return True
+        events = docker(
+            "events", "--since", details["State"]["StartedAt"],
+            "--until", str(time.time_ns() / 1_000_000_000),
+            "--filter", f"container={details['Id']}", "--filter", "event=oom",
+            "--format", "{{json .}}", timeout=5,
+        )
+        for line in events.splitlines():
+            event = json.loads(line)
+            if event["Action"] == "oom" and event["Actor"]["ID"] == details["Id"]:
+                return True
+        time.sleep(0.1)
+    return False
 
 
 def isolated_worker_host(
@@ -140,7 +162,9 @@ def isolated_worker_host(
                 "--entrypoint",
                 "python",
             ]
-            image = "agentic-trading-lab-research-test:local"
+            image = os.environ.get(
+                "ATL_RESEARCH_TEST_IMAGE", "agentic-trading-lab-research-test:local",
+            )
             if safety:
                 # Only the separate test provisioner owns its synthetic key files.
                 docker(
@@ -217,8 +241,7 @@ def isolated_worker_host(
                     )
                     created.append(("container", victim))
                     assert docker("wait", victim) == "137", docker("logs", victim)
-                    state = json.loads(docker("inspect", victim))[0]["State"]
-                    assert state["OOMKilled"] is True
+                    assert kernel_oom_detected(docker, victim), "No kernel OOM evidence"
                     assert docker("logs", victim) == "ACTIVE_QUANT_OOM"
                     assert docker(
                         "run", "--rm", "--network", admin_net, *common, image,

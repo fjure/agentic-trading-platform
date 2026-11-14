@@ -36,7 +36,7 @@ def test_arp_model_attempts_actual_postgresql():
 
     groups, tables = ledger_support.GROUPS, harness.TABLES
     try:
-        ledger_support.GROUPS = (*groups, WORKER_ROLE)
+        ledger_support.GROUPS = (*groups, WORKER_ROLE, "atl_agent_quant_admission")
         harness.TABLES = (*tables, "agent_research.model_attempts")
         assert harness.host("tests.integration.test_arp_model_attempts") == PROOF + "/restore"
     finally:
@@ -303,7 +303,10 @@ if __name__ == "__main__":
         import traceback
 
         frames = traceback.extract_tb(error.__traceback__)
-        own = [frame for frame in frames if frame.filename.startswith("/opt/lab/")]
+        own = [
+            frame for frame in frames
+            if frame.filename.startswith("/opt/lab/") and "/site-packages/" not in frame.filename
+        ]
         where = ",".join(f"{Path(frame.filename).name}:{frame.lineno}" for frame in own[-4:])
         state = getattr(getattr(error, "orig", None), "sqlstate", None)
         print(f"FAIL {type(error).__name__} {state or '-'} {where}")

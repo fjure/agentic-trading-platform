@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "packageId": "ARP-05",
+  "suite": "arp-db",
+  "gate": "db",
+  "mode": "offline",
+  "artifact": "research-db",
+  "cases": [
+    {
+      "id": "ARP-DB-AGENT-RUNTIME",
+      "class": "tests.integration.test_agent_research_runtime",
+      "name": "test_agent_research_runtime_actual_postgresql"
+    },
+    {
+      "id": "ARP-DB-LEDGER",
+      "class": "tests.integration.test_arp_model_attempts",
+      "name": "test_arp_model_attempts_actual_postgresql"
+    },
+    {
+      "id": "ARP-DB-DISCOVERY",
+      "class": "tests.recovery.test_discovery_runtime",
+      "name": "test_discovery_runtime_actual_postgresql"
+    },
+    {
+      "id": "ARP-DB-PROBE",
+      "class": "tests.integration.test_llm_provider_probe",
+      "name": "test_probe_uses_existing_ledger_and_honors_shared_caps"
+    },
+    {
+      "id": "ARP-DB-COMPANION",
+      "class": "tests.integration.test_companion_runtime",
+      "name": "test_companion_history_and_dialogue_in_postgresql"
+    },
+    {
+      "id": "ARP-DB-QUANT-RECOVERY",
+      "class": "tests.recovery.test_quant_lab_execution",
+      "name": "test_quant_lab_execution_restart_actual_postgresql"
+    },
+    {
+      "id": "ARP-DB-QUANT-ISOLATION",
+      "class": "tests.security.test_quant_lab_isolation",
+      "name": "test_actual_constrained_quant_worker_and_mixed_queue"
+    },
+    {
+      "id": "ARP-DB-NETWORK-SMOKE",
+      "class": "tests.integration.test_research_network_smoke",
+      "name": "test_research_gateway_private_network_smoke"
+    }
+  ]
+}

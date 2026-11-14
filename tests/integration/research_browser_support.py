@@ -49,7 +49,10 @@ def relay():
         server.serve_forever()
 
 
-def host(*, agent=False):
+def host(
+    *, agent=False, node=None, junitxml=None, postgres_image="postgres:18.6-trixie",
+    test_image="agentic-trading-lab-research-test:local",
+):
     with socket.socket() as probe:
         probe.bind(("127.0.0.1", 4221))
     identity = "atl-research-browser-" + uuid4().hex[:20]
@@ -94,12 +97,16 @@ def host(*, agent=False):
             "POSTGRES_DB=lab",
             "--env",
             "POSTGRES_HOST_AUTH_METHOD=trust",
-            "postgres:18.6-trixie",
+            postgres_image,
         )
         created.append(("container", postgres))
-        for _ in range(60):
+        deadline = time.monotonic() + 30
+        while time.monotonic() < deadline:
             ready = subprocess.run(
-                ["docker", "exec", postgres, "pg_isready", "-U", "lab_migration", "-d", "lab"],
+                [
+                    "docker", "exec", postgres, "pg_isready", "-h", "127.0.0.1",
+                    "-U", "lab_migration", "-d", "lab",
+                ],
                 capture_output=True,
                 timeout=5,
             )
@@ -152,7 +159,7 @@ def host(*, agent=False):
         command += [
             "--entrypoint",
             "python",
-            "agentic-trading-lab-research-test:local",
+            test_image,
             "-u",
         ]
         command += (
@@ -211,18 +218,23 @@ def host(*, agent=False):
                 RESEARCH_BROWSER_END=ready["end"],
                 RESEARCH_BROWSER_KNOWLEDGE=ready["knowledge"],
             )
-        node = ROOT / ".tooling/contracts/node/node-v22.23.3-win-x64/node.exe"
-        if not node.is_file() and ROOT.parent.name == ".tooling":
-            # Issue worktrees share the checkout's verified contract tools.
-            node = ROOT.parents[1] / node.relative_to(ROOT)
+        if node is None:
+            node = ROOT / ".tooling/contracts/node/node-v22.23.3-win-x64/node.exe"
+            if not node.is_file() and ROOT.parent.name == ".tooling":
+                # Issue worktrees share the checkout's verified contract tools.
+                node = ROOT.parents[1] / node.relative_to(ROOT)
+        playwright = [
+            str(node),
+            str(ROOT / "apps/dashboard/node_modules/@playwright/test/cli.js"),
+            "test",
+            "--config",
+            "playwright.apf.config.ts" if agent else "playwright.research.config.ts",
+        ]
+        if junitxml is not None:
+            env["PLAYWRIGHT_JUNIT_OUTPUT_FILE"] = str(junitxml)
+            playwright.append("--reporter=junit")
         result = subprocess.run(
-            [
-                str(node),
-                str(ROOT / "apps/dashboard/node_modules/@playwright/test/cli.js"),
-                "test",
-                "--config",
-                "playwright.apf.config.ts" if agent else "playwright.research.config.ts",
-            ],
+            playwright,
             cwd=ROOT,
             env=env,
             capture_output=True,

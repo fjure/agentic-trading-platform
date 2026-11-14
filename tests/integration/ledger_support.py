@@ -7,6 +7,7 @@ passed on a command line, or printed. Only UUID-named database/login are changed
 from __future__ import annotations
 
 import json
+import os
 import secrets
 import subprocess
 import sys
@@ -36,12 +37,20 @@ PSQL = [
     "-d",
     "lab",
 ]
+def postgres_command() -> list[str]:
+    """Use the isolated CI container when the test runner provisions one."""
+    container = os.environ.get("ATL_RESEARCH_TEST_POSTGRES")
+    if container:
+        return ["docker", "exec", "-i", "--user", "postgres", container]
+    return PSQL[:11]
+
+
 GROUPS = ("atl_worker", "atl_execution", "atl_control_api", "atl_watchdog", "atl_backtest_worker")
 
 
 def _admin(sql: str, *, database: str = "lab", restore_diagnostic: bool = False) -> str:
     __tracebackhide__ = True
-    command_line = [*PSQL[:-1], database]
+    command_line = [*postgres_command(), *PSQL[11:-1], database]
     completed = subprocess.run(command_line, input=sql, text=True, capture_output=True, check=False)
     if completed.returncode:
         if restore_diagnostic:
