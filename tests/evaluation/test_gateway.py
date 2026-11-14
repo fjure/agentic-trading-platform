@@ -46,7 +46,8 @@ def test_gateway_only_dispatches_matching_supervisor_projection():
     gateway = Mock()
     gateway.dispatch.return_value = ProviderResult(ResultState.OUTCOME_UNKNOWN)
     settle = Mock(return_value=None)
-    supervisor = GatewaySupervisor(gateway, Mock(), prepare, settle)
+    store = Mock()
+    supervisor = GatewaySupervisor(gateway, store, prepare, settle)
     with pytest.raises(ValueError, match="EVALUATION_DISPATCH_BINDING_MISMATCH"):
         supervisor.execute(approval, 1, case)
     gateway.dispatch.assert_not_called()
@@ -58,3 +59,4 @@ def test_gateway_only_dispatches_matching_supervisor_projection():
     assert supervisor.execute(approval, 1, case).status == "timeout"
     gateway.dispatch.assert_called_once_with(request)
     settle.assert_called_once()
+    store.settle.assert_called_once_with(approval, 1, case.case_id, "timeout", None, None)

@@ -55,6 +55,21 @@
       "id": "ARP-EVAL-RELEASE-REPETITIONS",
       "class": "tests.evaluation.test_release",
       "name": "test_release_requires_every_authorized_model_repetition"
+    },
+    {
+      "id": "ARP-EVAL-CUSTODY",
+      "class": "tests.evaluation.test_custody",
+      "name": "test_custody_requires_independent_key_and_exact_binding"
+    },
+    {
+      "id": "ARP-EVAL-OPERATOR-STORE",
+      "class": "tests.evaluation.test_operator_store",
+      "name": "test_operator_store_is_durable_private_and_non_replayable"
+    },
+    {
+      "id": "ARP-EVAL-OPERATOR-OVERRUN",
+      "class": "tests.evaluation.test_operator_store",
+      "name": "test_operator_admission_stops_on_expiry_or_recorded_overrun"
     }
   ]
 }

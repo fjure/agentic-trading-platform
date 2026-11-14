@@ -18,6 +18,7 @@ from services.llm_gateway.offline_gateway import DispatchRequest
 from services.llm_gateway.provider_wire import ProviderResult, ResultState
 
 from .harness import Approval, AttemptOutcome, EvaluationInput
+from .operator_store import OperatorStore
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,18 +33,21 @@ class GatewaySupervisor:
     def __init__(
         self,
         gateway: GatewayDispatchClient,
-        consume: Callable[[Approval, tuple[str, ...]], bool],
+        store: OperatorStore,
         prepare: Callable[[Approval, int, EvaluationInput], PreparedCase],
         settle: Callable[[Approval, int, str, DispatchRequest, ProviderResult], Decimal | None],
     ):
         self._gateway = gateway
-        self.consume = consume
+        self._store = store
+        self.consume = store.consume
         self._prepare = prepare
         self._settle = settle
 
     def execute(
         self, approval: Approval, repetition: int, case: EvaluationInput,
     ) -> AttemptOutcome:
+        if not self._store.reserve(approval, repetition, case.case_id):
+            raise ValueError("EVALUATION_RESERVATION_DENIED")
         prepared = self._prepare(approval, repetition, case)
         request, projection = prepared.request, prepared.approved_projection
         expected_model = (approval.binding.profile, approval.binding.model)
@@ -57,6 +61,8 @@ class GatewaySupervisor:
             or sha256(projection).hexdigest() != request.projection_sha256
         ):
             raise ValueError("EVALUATION_DISPATCH_BINDING_MISMATCH")
+        if not self._store.authorize(approval, repetition, case.case_id):
+            raise ValueError("EVALUATION_RESERVATION_DENIED")
         result = self._gateway.dispatch(request)
         cost = self._settle(approval, repetition, case.case_id, request, result)
         status = {
@@ -64,4 +70,6 @@ class GatewaySupervisor:
             ResultState.REFUSED: "refused",
             ResultState.OUTCOME_UNKNOWN: "timeout",
         }.get(result.state, "provider_blocked")
-        return AttemptOutcome(status, cost if result.usage is not None else None)
+        cost = cost if result.usage is not None else None
+        self._store.settle(approval, repetition, case.case_id, status, cost, result.output)
+        return AttemptOutcome(status, cost)
