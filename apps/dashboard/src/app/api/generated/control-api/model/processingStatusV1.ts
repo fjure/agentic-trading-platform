@@ -20,6 +20,7 @@ export interface ProcessingStatusV1 {
     state: AgentProcessingState;
     delivery: ProcessingStatusV1.DeliveryEnum;
     reasonCode?: AgentProcessingReason;
+    providerOutcome?: ProcessingStatusV1.ProviderOutcomeEnum;
     receipt?: AgentProcessingReceiptV1;
     proposalId?: string;
     costState: ProcessingStatusV1.CostStateEnum;
@@ -35,6 +36,10 @@ export namespace ProcessingStatusV1 {
         Sent: 'SENT',
     } as const;
     export type DeliveryEnum = typeof DeliveryEnum[keyof typeof DeliveryEnum];
+    export const ProviderOutcomeEnum = {
+        ProviderOutcomeUnknown: 'PROVIDER_OUTCOME_UNKNOWN',
+    } as const;
+    export type ProviderOutcomeEnum = typeof ProviderOutcomeEnum[keyof typeof ProviderOutcomeEnum];
     export const CostStateEnum = {
         NotIncurred: 'NOT_INCURRED',
         Known: 'KNOWN',

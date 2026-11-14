@@ -24,7 +24,6 @@ export const AgentProcessingReason = {
     InvalidRequest: 'INVALID_REQUEST',
     BudgetExhausted: 'BUDGET_EXHAUSTED',
     ProviderUnavailable: 'PROVIDER_UNAVAILABLE',
-    ProviderOutcomeUnknown: 'PROVIDER_OUTCOME_UNKNOWN',
 } as const;
 export type AgentProcessingReason = typeof AgentProcessingReason[keyof typeof AgentProcessingReason];
 
