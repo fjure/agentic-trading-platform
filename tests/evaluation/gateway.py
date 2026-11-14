@@ -5,6 +5,7 @@ adapter carries only opaque attempt commitments to the gateway and never reads
 provider credentials or creates admission authority of its own.
 """
 
+import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -23,6 +24,8 @@ from .harness import Approval, AttemptOutcome, EvaluationInput
 class PreparedCase:
     request: DispatchRequest
     approved_projection: bytes
+    case_id: str
+    repetition: int
 
 
 class GatewaySupervisor:
@@ -45,10 +48,12 @@ class GatewaySupervisor:
         request, projection = prepared.request, prepared.approved_projection
         expected_model = (approval.binding.profile, approval.binding.model)
         if (
-            request.purpose != "DIALOGUE"
+            (prepared.case_id, prepared.repetition) != (case.case_id, repetition)
+            or request.purpose != "DIALOGUE"
             or (request.profile_id, request.model) != expected_model
             or not datetime.now(UTC) < request.expires_at <= approval.expires_at
             or not valid_projection(projection)
+            or json.loads(projection)["excerpt"] != case.text
             or sha256(projection).hexdigest() != request.projection_sha256
         ):
             raise ValueError("EVALUATION_DISPATCH_BINDING_MISMATCH")
