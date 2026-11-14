@@ -27,7 +27,17 @@ def load_catalog(
     manifest_path: Path, development_path: Path, holdout_path: Path | None = None, *,
     expected_manifest: str | None = None, expected_holdout: str | None = None,
 ):
-    raw = manifest_path.read_bytes()
+    return decode_catalog(
+        manifest_path.read_bytes(), development_path.read_bytes(),
+        holdout_path.read_bytes() if holdout_path is not None else None,
+        expected_manifest=expected_manifest, expected_holdout=expected_holdout,
+    )
+
+
+def decode_catalog(
+    raw: bytes, development_raw: bytes, holdout_raw: bytes | None, *,
+    expected_manifest: str | None = None, expected_holdout: str | None = None,
+):
     if expected_manifest is not None and sha256(raw).hexdigest() != expected_manifest:
         raise ValueError("EVALUATION_DATASET_HASH")
     manifest = _parse_json(raw)
@@ -54,8 +64,7 @@ def load_catalog(
             if sum(value["group"] == group for value in index.values()) < 6:
                 raise ValueError("EVALUATION_SPLIT_COVERAGE")
 
-    def verified(split, path):
-        raw = path.read_bytes()
+    def verified(split, raw):
         if sha256(raw).hexdigest() != manifest[split + "Sha256"]:
             raise ValueError("EVALUATION_DATASET_HASH")
         document = _parse_json(raw)
@@ -76,16 +85,19 @@ def load_catalog(
             raise ValueError("EVALUATION_DATASET_MISMATCH")
         return rows
 
-    development = verified("development", development_path)
-    holdout = verified("holdout", holdout_path) if holdout_path is not None else []
+    development = verified("development", development_raw)
+    holdout = verified("holdout", holdout_raw) if holdout_raw is not None else []
     return development, holdout
 
 
 def read_verified_holdout(manifest: Path, holdout: Path, manifest_hash, holdout_hash) -> list[dict]:
     from .scorer import coverage_gaps
 
+    development_file = manifest.with_name("development.v1.json")
+    if not development_file.is_file():
+        development_file = FIXTURES / "development.v1.json"
     development, selected = load_catalog(
-        manifest, manifest.with_name("development.v1.json"), holdout,
+        manifest, development_file, holdout,
         expected_manifest=manifest_hash, expected_holdout=holdout_hash,
     )
     if coverage_gaps(development + selected):

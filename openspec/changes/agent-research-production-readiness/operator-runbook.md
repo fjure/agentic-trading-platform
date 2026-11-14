@@ -15,3 +15,11 @@ Das optionale Overlay `infra/compose/compose.research-setup.yaml` stellt den sep
 Der Betreiber fordert im privaten interaktiven Terminal vor jeder Mutation einen einmaligen Grant an. Dazu führt er im Setup-Container `python -m services.setup.research_app activate OPENAI save` aus. Provider und Aktion müssen der Mutation entsprechen. Unterstützte Aktionen sind `save`, `rotate` und `revoke`. Der Browser sendet den Grant ausschließlich als `X-Research-Setup-Grant` auf dem lokalen Same-Origin-Pfad. Bei einer verlorenen Antwort ruft der Betreiber den redigierten Status ab und fordert für eine neue Mutation einen neuen Grant an.
 
 Der versionierte Pfad beginnt mit `/api/v1/integrations/research-setup/providers/`. Setup antwortet mit Status und Generation. Eine gespeicherte oder rotierte Generation ist zunächst inaktiv. Die spätere Supervisor-Komposition bindet den Metadatenhash und serialisiert den Versand mit Widerruf.
+
+# Modellgebundene Research-Evaluation
+
+1. Zwei isolierte KI-Prüfschritte mit versioniertem Profil und Prompt betreiben. Ausschließlich synthetische Fälle und gebundene Quant- und Backtestingverträge bereitstellen. Ungeklärte kritische Fälle aussondern.
+2. Den Custodian unter getrennter Identität mit verschlüsselter Ablage und unabhängig bestätigtem Schlüssel-Pin provisionieren. Backup und Restore auf verhinderte Wiederverwendung verbrauchter Freigaben und widerrufener Schlüssel prüfen.
+3. Zielmodell, Prompt, Schema, Scorer und Datensatzrevision vor Öffnung extern nachvollziehbar registrieren. Attestation, Registrierungsreferenz und Betreiberentscheidung verifizieren.
+4. Den Holdout einmal für die gesondert autorisierte Evaluation freigeben. C:\Users\Domenik\Documents\atp ist der spätere Übergabeort. Originale und privater Signaturschlüssel verbleiben in der geschützten Verwahrung.
+5. Widerrufene Pins sperren, Rotation separat bestätigen und Restore ohne Reaktivierung prüfen. Nur redigierte Prüfergebnisse und Metadaten in Git, Logs und CI übernehmen.

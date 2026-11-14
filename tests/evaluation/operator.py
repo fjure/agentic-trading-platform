@@ -2,6 +2,8 @@
 
 import argparse
 import json
+import os
+import stat
 from datetime import datetime
 from decimal import Decimal
 from importlib import import_module
@@ -14,6 +16,18 @@ from .catalog import FIXTURES, _read_json, read_verified_holdout
 from .custody import verify_custody
 from .harness import Approval, RunBinding, run_holdout
 from .operator_store import OperatorStore
+
+
+def _owner_file(path: Path) -> Path:
+    info = path.lstat()
+    if (
+        not stat.S_ISREG(info.st_mode)
+        or info.st_uid != os.geteuid()
+        or info.st_nlink != 1
+        or info.st_mode & 0o077
+    ):
+        raise ValueError("EVALUATION_PRIVATE_FILE_REQUIRED")
+    return path
 
 
 def _approval(path: Path) -> Approval:
@@ -60,7 +74,7 @@ def main() -> int:
     if args.command == "purge":
         print(store.purge_expired())
         return 0
-    approval = _approval(private / "approval.json")
+    approval = _approval(_owner_file(private / "approval.json"))
     binding = approval.binding
     if args.command == "status":
         print(json.dumps(store.states(approval), sort_keys=True))
@@ -76,7 +90,12 @@ def main() -> int:
         binding,
         args.inputs / "reviewer-attestation.json",
         args.inputs / "reviewer-attestation.sig",
-        Ed25519PublicKey.from_public_bytes((private / "reviewer.pub").read_bytes()),
+        Ed25519PublicKey.from_public_bytes(_owner_file(private / "reviewer.pub").read_bytes()),
+        registrar_key=Ed25519PublicKey.from_public_bytes(
+            _owner_file(private / "registrar.pub").read_bytes(),
+        ),
+        registration_path=args.inputs / "registration.json",
+        registration_signature=args.inputs / "registration.sig",
     )
     if args.command == "register":
         cases = read_verified_holdout(
@@ -87,7 +106,7 @@ def main() -> int:
         )
         store.register(approval, tuple(case["caseId"] for case in cases if not case["offlineOnly"]))
         return 0
-    deployment = _read_json(private / "deployment.json")
+    deployment = _read_json(_owner_file(private / "deployment.json"))
     supervisor = import_module(deployment["supervisorModule"]).evaluation_supervisor(
         store, approval
     )

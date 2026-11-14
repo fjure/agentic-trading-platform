@@ -20,7 +20,8 @@ _HASH = re.compile(r"[a-f0-9]{64}")
 _DATABASE = "evaluation.sqlite"
 _STATUSES = ("answered", "refused", "timeout", "provider_blocked")
 _RETENTION = timedelta(days=7)
-_MAX_UNITS = 10**15
+_MAX_UNITS = 10**38 - 1
+_MAX_COST = Decimal("99999999999999999999.999999999999999999")
 _MAX_RAW_BYTES = 256 * 1024
 
 
@@ -39,10 +40,13 @@ def _time(value: datetime) -> str:
 
 
 def _units(value: Decimal) -> int:
-    if not isinstance(value, Decimal) or not value.is_finite() or not 0 <= value <= 1000:
+    if (
+        not isinstance(value, Decimal) or not value.is_finite()
+        or not 0 <= value <= _MAX_COST or value.as_tuple().exponent < -18
+    ):
         raise OperatorStoreDenied("EVALUATION_COST_INVALID")
     numerator, denominator = value.as_integer_ratio()
-    units, remainder = divmod(numerator * 10**12, denominator)
+    units, remainder = divmod(numerator * 10**18, denominator)
     if remainder or units > _MAX_UNITS:
         raise OperatorStoreDenied("EVALUATION_COST_INVALID")
     return units
@@ -111,7 +115,7 @@ class OperatorStore:
                     CREATE TABLE attempts (
                       approval TEXT NOT NULL REFERENCES approvals(id), repetition INTEGER NOT NULL,
                       case_id TEXT NOT NULL, status TEXT NOT NULL,
-                      cost INTEGER NOT NULL CHECK(cost >= 0), raw BLOB, raw_expires TEXT,
+                      cost TEXT NOT NULL, raw BLOB, raw_expires TEXT,
                       PRIMARY KEY (approval, repetition, case_id)
                     ) STRICT;
                     PRAGMA user_version=1;
@@ -206,23 +210,24 @@ class OperatorStore:
                 or _time(approval.expires_at) <= _time(_now())
             ):
                 return False
-            used, cost, highest = connection.execute(
-                "SELECT COUNT(*),COALESCE(SUM(cost),0),COALESCE(MAX(cost),0) "
-                "FROM attempts WHERE approval=?",
-                (approval.id,),
-            ).fetchone()
+            costs = self._costs(connection, approval.id)
             bound = _units(approval.cost_bound)
             if (
-                used >= approval.max_calls or highest > bound
-                or cost + bound > _units(approval.max_cost)
+                len(costs) >= approval.max_calls or max(costs, default=0) > bound
+                or sum(costs) + bound > _units(approval.max_cost)
             ):
                 return False
             inserted = connection.execute(
                 "INSERT OR IGNORE INTO attempts(approval,repetition,case_id,status,cost) "
                 "VALUES(?,?,?,'reserved',?)",
-                (approval.id, repetition, case_id, bound),
+                (approval.id, repetition, case_id, str(bound)),
             )
             return inserted.rowcount == 1
+
+    @staticmethod
+    def _costs(connection: sqlite3.Connection, approval_id: str) -> list[int]:
+        rows = connection.execute("SELECT cost FROM attempts WHERE approval=?", (approval_id,))
+        return [int(cost) for (cost,) in rows]
 
     def authorize(self, approval: Approval, repetition: int, case_id: str) -> bool:
         """Consume the stored I/O reservation once at gateway admission."""
@@ -230,15 +235,17 @@ class OperatorStore:
         if type(repetition) is not int or repetition not in REPETITIONS:
             return False
         with self._connect() as connection:
-            if _time(approval.expires_at) <= _time(_now()):
+            highest = max(self._costs(connection, approval.id), default=0)
+            if (
+                _time(approval.expires_at) <= _time(_now())
+                or highest > _units(approval.cost_bound)
+            ):
                 return False
             authorized = connection.execute(
                 "UPDATE attempts SET status='authorized' "
                 "WHERE approval=? AND repetition=? AND case_id=? AND status='reserved' "
-                "AND EXISTS(SELECT 1 FROM approvals WHERE id=? AND binding=? AND consumed=1) "
-                "AND NOT EXISTS(SELECT 1 FROM attempts WHERE approval=? AND cost>?)",
-                (approval.id, repetition, case_id, approval.id, grant, approval.id,
-                 _units(approval.cost_bound)),
+                "AND EXISTS(SELECT 1 FROM approvals WHERE id=? AND binding=? AND consumed=1)",
+                (approval.id, repetition, case_id, approval.id, grant),
             )
             return authorized.rowcount == 1
 
@@ -271,8 +278,8 @@ class OperatorStore:
                 "('timeout','provider_blocked') AND ? IS NULL AND ?=?)) "
                 "AND EXISTS(SELECT 1 FROM approvals WHERE id=? AND binding=? AND consumed=1)",
                 (
-                    status, cost, encoded, expiry, approval.id, repetition, case_id,
-                    status, encoded, cost, bound, approval.id, grant,
+                    status, str(cost), encoded, expiry, approval.id, repetition, case_id,
+                    status, encoded, str(cost), str(bound), approval.id, grant,
                 ),
             )
             if updated.rowcount != 1:

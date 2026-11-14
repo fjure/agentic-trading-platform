@@ -9,3 +9,6 @@
 - [ ] Kill, Reconciliation und null Brokerorders unter Researchlast belegt. Kontrollierter Rollback dokumentiert.
 
 - [ ] Smoke-Nachweis enthält Requestbindung, Tarif und belegte Kostenreserve, Zeit- und Outputgrenze, technischen Verbindungsstatus und separat nachvollziehbare Abrechnung. Die Fachfreigabe enthält Mindestabdeckung, drei autorisierte Holdout-Läufe und dokumentierte Regressionsentscheidung.
+
+- [ ] Tatsächliche KI-Reviewläufe haben belegte Trennung, Modell-, Provider- und Prompt-Provenienz. Referenzentscheidung und Einschränkungen sind dokumentiert. Offline-Doubles zählen für die technische Abnahme.
+- [ ] Custodian-Identität, Dateirechte, Verschlüsselung, Backup und Restore sind betrieblich geprüft. Registrierungsanker, unabhängig gepinnter Ed25519-Schlüssel, Rotation, Widerruf und einmalige Öffnung nach Betreiberentscheidung sind nachgewiesen.

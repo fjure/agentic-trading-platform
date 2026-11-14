@@ -6,7 +6,7 @@ Saubere Installation, vollständige lokale Kette und Rollback wiederholbar abneh
 
 ## Requirements und Abhängigkeiten
 
-ARP-E01, ARP-E02, ARP-I01, ARP-I02, ARP-P06, ARP-P07. Blockiert durch ARP-05, ARP-06, ARP-07, ARP-08, ARP-09.
+ARP-E01, ARP-E02, ARP-E03, ARP-I01, ARP-I02, ARP-P06, ARP-P07. Blockiert durch ARP-05, ARP-06, ARP-07, ARP-08, ARP-09.
 
 ## Komponenten
 
@@ -26,4 +26,4 @@ Readiness-Matrix mit getrenntem Betriebsnachweis mit Quell-SHA, reproduzierbarem
 
 ## Normative Abnahme
 
-Vollständige Offline-Pflichtfälle, getrennten autorisierten technischen Smoke und Fachfreigabe mit vollständigem Holdout und Regression je Bindung abnehmen. Ein fehlender Betreiberlauf bleibt separat offen.
+Vollständige Offline-Pflichtfälle, getrennten autorisierten technischen Smoke und Fachfreigabe mit belegtem getrenntem KI-Review, registrierter Custodian-Freigabe, vollständigem Holdout und Regression je Bindung abnehmen. Ein fehlender Betreiberlauf bleibt separat offen.

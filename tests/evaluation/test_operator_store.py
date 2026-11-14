@@ -50,11 +50,12 @@ def _store_lifecycle(tmp_path):
             lambda _: OperatorStore(directory).reserve(approval, 1, "DE-01"), range(2),
         )
         assert sorted(results) == [False, True]
+    cost = Decimal("0.050000000000000001")
     with pytest.raises(OperatorStoreDenied, match="EVALUATION_ATTEMPT_UNAVAILABLE"):
-        store.settle(approval, 1, "DE-01", "answered", Decimal("0.05"), {"fixture": "answer"})
+        store.settle(approval, 1, "DE-01", "answered", cost, {"fixture": "answer"})
     assert store.authorize(approval, 1, "DE-01")
     assert not store.authorize(approval, 1, "DE-01")
-    store.settle(approval, 1, "DE-01", "answered", Decimal("0.05"), {"fixture": "answer"})
+    store.settle(approval, 1, "DE-01", "answered", cost, {"fixture": "answer"})
     restored = OperatorStore(directory)
     assert restored.states(approval) == {1: {"DE-01": "answered"}}
     assert restored.raw_result(approval, 1, "DE-01") == {"fixture": "answer"}
@@ -65,7 +66,7 @@ def _store_lifecycle(tmp_path):
     with sqlite3.connect(directory / "evaluation.sqlite") as connection:
         assert connection.execute(
             "SELECT cost FROM attempts WHERE case_id='DE-02'",
-        ).fetchone() == (100_000_000_000,)
+        ).fetchone() == ("100000000000000000",)
         connection.execute(
             "UPDATE attempts SET raw_expires='2000-01-01' WHERE raw IS NOT NULL",
         )

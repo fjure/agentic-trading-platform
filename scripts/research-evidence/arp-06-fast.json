@@ -70,6 +70,21 @@
       "id": "ARP-EVAL-OPERATOR-OVERRUN",
       "class": "tests.evaluation.test_operator_store",
       "name": "test_operator_admission_stops_on_expiry_or_recorded_overrun"
+    },
+    {
+      "id": "ARP-EVAL-REVIEW-HANDOFF",
+      "class": "tests.evaluation.test_review_protocol",
+      "name": "test_review_handoff_rejects_unisolated_and_conflicting_annotations"
+    },
+    {
+      "id": "ARP-EVAL-CUSTODIAN-RESTORE",
+      "class": "tests.evaluation.test_custodian",
+      "name": "test_custodian_encrypts_and_denies_replay_after_restore"
+    },
+    {
+      "id": "ARP-EVAL-EXTERNAL-REGISTRATION",
+      "class": "tests.evaluation.test_registration",
+      "name": "test_registration_rejects_tampering_unknown_key_and_early_open"
     }
   ]
 }
