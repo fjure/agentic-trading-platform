@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "packageId": "ARP-06",
+  "suite": "arp-language-evaluation",
+  "gate": "fast",
+  "mode": "offline",
+  "artifact": "research-fast",
+  "cases": [
+    {
+      "id": "ARP-EVAL-AUTHORIZATION-BINDING",
+      "class": "tests.evaluation.test_harness",
+      "name": "test_authorization_binding_blocks_every_dispatch"
+    },
+    {
+      "id": "ARP-EVAL-UNKNOWN-COST",
+      "class": "tests.evaluation.test_harness",
+      "name": "test_unknown_cost_holds_budget_and_prevents_replay"
+    },
+    {
+      "id": "ARP-EVAL-PUBLIC-SPLIT",
+      "class": "tests.evaluation.test_catalog",
+      "name": "test_catalog_public_split_and_hash"
+    },
+    {
+      "id": "ARP-EVAL-CATALOG-TAMPER",
+      "class": "tests.evaluation.test_catalog",
+      "name": "test_catalog_tampering_blocks_loading"
+    },
+    {
+      "id": "ARP-EVAL-MISSING",
+      "class": "tests.evaluation.test_scorer",
+      "name": "test_missing_timeout_and_budget_abort_never_fake_false_positives_or_evaluable_cases"
+    },
+    {
+      "id": "ARP-EVAL-CRITICAL",
+      "class": "tests.evaluation.test_scorer",
+      "name": "test_critical_model_output_and_effective_actions_are_distinct_from_local_rejection"
+    },
+    {
+      "id": "ARP-EVAL-REGRESSION",
+      "class": "tests.evaluation.test_scorer",
+      "name": "test_paired_regression_counts_questions_and_requires_independent_decision"
+    },
+    {
+      "id": "ARP-EVAL-COVERAGE",
+      "class": "tests.evaluation.test_scorer",
+      "name": "test_coverage_requires_group_counts_holdout_classes_and_independent_clusters"
+    },
+    {
+      "id": "ARP-EVAL-GATEWAY-BINDING",
+      "class": "tests.evaluation.test_gateway",
+      "name": "test_gateway_only_dispatches_matching_supervisor_projection"
+    },
+    {
+      "id": "ARP-EVAL-RELEASE-REPETITIONS",
+      "class": "tests.evaluation.test_release",
+      "name": "test_release_requires_every_authorized_model_repetition"
+    },
+    {
+      "id": "ARP-EVAL-CUSTODY",
+      "class": "tests.evaluation.test_custody",
+      "name": "test_custody_requires_independent_key_and_exact_binding"
+    },
+    {
+      "id": "ARP-EVAL-OPERATOR-STORE",
+      "class": "tests.evaluation.test_operator_store",
+      "name": "test_operator_store_is_durable_private_and_non_replayable"
+    },
+    {
+      "id": "ARP-EVAL-OPERATOR-OVERRUN",
+      "class": "tests.evaluation.test_operator_store",
+      "name": "test_operator_admission_stops_on_expiry_or_recorded_overrun"
+    },
+    {
+      "id": "ARP-EVAL-REVIEW-HANDOFF",
+      "class": "tests.evaluation.test_review_protocol",
+      "name": "test_review_handoff_rejects_unisolated_and_conflicting_annotations"
+    },
+    {
+      "id": "ARP-EVAL-CUSTODIAN-RESTORE",
+      "class": "tests.evaluation.test_custodian",
+      "name": "test_custodian_encrypts_and_denies_replay_after_restore"
+    },
+    {
+      "id": "ARP-EVAL-EXTERNAL-REGISTRATION",
+      "class": "tests.evaluation.test_registration",
+      "name": "test_registration_rejects_tampering_unknown_key_and_early_open"
+    }
+  ]
+}

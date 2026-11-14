@@ -19,3 +19,5 @@ Die [normativen Szenarien](traceability.md) sind als eindeutige Pflichtfall-IDs 
 ## Katalogevidenz
 
 ARP-01 prüft sichtbare Sperrgründe für fehlende Kostengrenzen und ungeklärte Abrechnungstiers sowie den gesperrten Erststart. ARP-07 prüft dessen Dashboarddarstellung und den lokalen Klärungsweg. ARP-04 prüft die Invalidierung betroffener Vorschauen und Grants bei Evidenzverlust. ARP-08 prüft vollständige synthetische Bindungen einschließlich Kostenberechnung und Settlement am isolierten Testziel.
+
+ARP-06 prüft synthetisch falsche Ed25519-Signatur, unbekannten oder widerrufenen Pin, veränderten Holdout, Modellbindung und Scorer, manipulierte oder verfrühte Registrierung, Replay, fehlende Reviewisolation, widersprüchliche Annotationen und unbelegte Quant-Behauptungen. Git-, Log- und CI-Grenzen werden auf Fallinhalte geprüft. ARP-10 weist tatsächlichen KI-Review, Custodian-Betrieb und Betreiberfreigabe separat aus.

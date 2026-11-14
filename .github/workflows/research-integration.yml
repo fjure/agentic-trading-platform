@@ -123,6 +123,7 @@ jobs:
                 tests/unit/test_llm_tls_socket.py \
                 tests/unit/test_agent_research_budget.py \
                 tests/unit/test_research_evidence_gate.py \
+                tests/evaluation \
                 tests/security/test_provider_credential_authority.py \
                 --junitxml "$junit" -o junit_logging=no -o junit_log_passing_tests=false || result=$? ;;
               db) .venv/bin/python scripts/test-research-db.py --junitxml "$junit" || result=$? ;;

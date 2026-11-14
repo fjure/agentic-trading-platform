@@ -22,7 +22,7 @@
 
 ## 6. NLP-Katalog und Auswertung
 
-- [ ] 6.1 [ARP-06](work-packages/ARP-06.md) 48 unabhängige Goldfälle, Scorer, paarweise Regression und autorisierungsgebundenes Evaluationsharness erstellen. Prüfung: Versionierte Fixture-Auswertung liefert getrennte und reproduzierbare Kennzahlen.
+- [x] 6.1 [ARP-06](work-packages/ARP-06.md) 48 unabhängige Goldfälle, Scorer, paarweise Regression und autorisierungsgebundenes Evaluationsharness erstellen. Prüfung: Versionierte Fixture-Auswertung liefert getrennte und reproduzierbare Kennzahlen.
 
 ## 7. Dashboard und Betreiberablauf
 

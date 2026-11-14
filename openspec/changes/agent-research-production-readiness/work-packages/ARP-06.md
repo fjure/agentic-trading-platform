@@ -2,11 +2,11 @@
 
 ## Ziel
 
-48 unabhängige Goldfälle, Scorer und autorisierungsgebundenes Evaluationsharness erstellen.
+48 unabhängige Goldfälle, Scorer, isolierten KI-Review-Handoff und deterministischen Custodian für das autorisierungsgebundene Evaluationsharness erstellen.
 
 ## Requirements und Abhängigkeiten
 
-ARP-E01, ARP-E02. Blockiert durch ARP-01.
+ARP-E01, ARP-E02, ARP-E03. Blockiert durch ARP-01.
 
 ## Komponenten
 
@@ -22,8 +22,10 @@ Fehlende Antworten und kritische Semantik-/Safetyverletzungen scheitern. Die [Si
 
 ## Definition of Done und Evidenz
 
-Goldstandard-Review und Scorer-Bericht mit Quell-SHA, reproduzierbarem Prüfkommando und Ergebnis. Relevante Specs, Contract-/CI-Prüfungen und Issue-Read-back sind belegt.
+Goldstandard-Reviewbericht mit belegter Unabhängigkeitsstufe sowie Custodian- und Scorer-Nachweis mit Quell-SHA, reproduzierbarem Prüfkommando und Ergebnis. Relevante Specs, Contract-/CI-Prüfungen und Issue-Read-back sind belegt.
 
 ## Normative Abnahme
 
 48 unabhängige Goldfälle, je sechs Holdoutfälle pro Gruppe, getrennte Qualitätsmetriken und transparente Nenner. Paarweise Modell-/Promptregression, Wilson-Grenzen, kritische Einzelbefunde und Ausbaupfad 100/200 dokumentieren und mit Scorer-Orakeln prüfen.
+
+Synthetische Reviewerantworten, Testschlüssel und Betreiber-Fixtures genügen für die technische Offline-Abnahme. Eine reale modellgebundene KI-Fachfreigabe braucht belegte getrennte Reviewläufe, geschützte Verwahrung, verifizierte Registrierung und eine eigene Betreiberentscheidung.
