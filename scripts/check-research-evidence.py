@@ -126,8 +126,9 @@ def inspect(required, results):
             problem = True
         observed[case_id] = state
     for case_id in required.values():
-        if observed.get(case_id) != "passed":
-            print(f"{case_id}: {observed.get(case_id, 'not_run')}", file=sys.stderr)
+        state = observed.setdefault(case_id, "not_run")
+        if state != "passed":
+            print(f"{case_id}: {state}", file=sys.stderr)
             problem = True
     return observed, problem
 
@@ -137,7 +138,10 @@ def record(args, required, snapshot):
     evidence_path = args.output / "evidence.json"
     junit_path = args.output / "junit.xml"
     status = args.status
-    observed = {}
+    observed = (
+        {} if status == "not_required"
+        else {case_id: "not_run" for case_id in required.values()}
+    )
     junit_hash = None
     if args.status == "not_required" and args.junit is not None:
         raise ValueError("An omitted browser gate cannot contain JUnit")

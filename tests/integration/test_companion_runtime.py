@@ -20,7 +20,7 @@ def test_companion_history_and_dialogue_in_postgresql():
 
     previous_groups, previous_tables = ledger_support.GROUPS, harness.TABLES
     try:
-        ledger_support.GROUPS = (*previous_groups, WORKER_ROLE)
+        ledger_support.GROUPS = (*previous_groups, WORKER_ROLE, "atl_agent_quant_admission")
         harness.TABLES = (*previous_tables, *_TABLES)
         assert harness.host("tests.integration.test_companion_runtime") == _PROOF + "/restore"
     finally:
@@ -251,10 +251,14 @@ if __name__ == "__main__":
         import traceback
 
         frames = traceback.extract_tb(error.__traceback__)
-        relevant = [frame for frame in frames if frame.filename.startswith("/opt/lab/")]
+        relevant = [
+            frame for frame in frames
+            if frame.filename.startswith("/opt/lab/") and "/site-packages/" not in frame.filename
+        ]
         locations = ",".join(
             f"{Path(frame.filename).name}:{frame.lineno}" for frame in relevant[-4:]
         )
-        print(f"FAIL {type(error).__name__} {locations}")
+        state = getattr(getattr(error, "orig", None), "sqlstate", None)
+        print(f"FAIL {type(error).__name__} {state or '-'} {locations}")
         raise SystemExit(1) from None
     print(_PROOF)
