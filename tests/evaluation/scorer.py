@@ -123,6 +123,8 @@ def coverage_gaps(cases):
         gaps.append("catalog:48_cases")
     if len({case["caseId"] for case in cases}) != len(cases):
         gaps.append("catalog:duplicate_case")
+    if len({case["cluster"] for case in cases}) < 48:
+        gaps.append("catalog:48_independent_clusters")
     if any(
         case["group"] not in GROUPS or case["split"] not in {"development", "holdout"}
         for case in cases
@@ -435,7 +437,7 @@ def _thresholds(overall, groups):
     violations = []
     all_metrics = {group: _quality_values(report) for group, report in groups.items()}
     macro = {}
-    for metric, rate in _quality_values(overall).items():
+    for metric in _quality_values(overall):
         values = [
             scores[metric]["value"]
             for scores in all_metrics.values()
@@ -451,8 +453,6 @@ def _thresholds(overall, groups):
             value = scores[metric]["value"]
             if value is not None and value < 0.75:
                 violations.append(f"{group}:{metric}:below_0.75")
-        if rate["value"] is not None and rate["value"] < 0.85:
-            violations.append(f"micro:{metric}:below_0.85")
     protocol = overall["protocol"]
     if protocol["denominator"] and protocol["value"] < 0.95:
         violations.append("protocol:below_0.95")

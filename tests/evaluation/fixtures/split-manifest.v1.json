@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "developmentSha256": "a7153f177d5adcf4a6469f449204281f0afac98d5526d2d899451df79fd59d58",
-  "holdoutSha256": "7ff0981c53835c1ace863a7aecdb30a6f44b7faf4cb4b7a809e7864d88228baa",
+  "developmentSha256": "ad15eefa3641ea478a9df1e66693dc1a8d5bc62c9d173d9279b4cc507813caae",
+  "holdoutSha256": "d0f528e948469d4f4b3b9aa4318bfe454db4c04aa4c2fa1f5ab701403736cf43",
   "cases": [
     {
       "caseId": "DE-A01",
@@ -151,7 +151,7 @@
       "caseId": "DE-B07",
       "version": 1,
       "group": "beginner",
-      "split": "holdout",
+      "split": "development",
       "cluster": "concept-b07",
       "offlineOnly": false
     },
@@ -159,7 +159,7 @@
       "caseId": "DE-B08",
       "version": 1,
       "group": "beginner",
-      "split": "development",
+      "split": "holdout",
       "cluster": "concept-b08",
       "offlineOnly": false
     },

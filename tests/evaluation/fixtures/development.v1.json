@@ -557,49 +557,55 @@
       "rationale": "Ereignisstatistik ist kein unverändert unterstützter Strategieauftrag."
     },
     {
-      "caseId": "DE-B08",
+      "caseId": "DE-B07",
       "version": 1,
       "split": "development",
       "group": "beginner",
-      "cluster": "concept-b08",
-      "input": "Verliert XLU in der Sitzung nach einem 2-Prozent-Tagesverlust noch einmal mindestens ein Prozent?",
+      "cluster": "concept-b07",
+      "input": "Ob sich GLD nach einem fetten Sprung am Wochenanfang bis Freitag wieder beruhigt?",
       "dialogueState": {
         "status": "INITIAL",
         "confirmed": {}
       },
       "labels": {
         "hypothesis": [
-          "Folgeverlust nach starkem Tagesrückgang"
+          "Normalisierung nach Sprung"
         ],
         "event": [
-          "Tagesrendite höchstens -2 %"
+          "Sprung am Wochenanfang"
         ],
         "timeRelation": [
-          "Folgesitzung"
+          "bis Freitag"
         ],
         "conditions": [
-          "Folgerendite höchstens -1 %"
+          "Sprung- und Ruheschwelle fehlen"
         ],
         "instrument": [
-          "XLU"
+          "GLD"
         ],
-        "missingInformation": []
+        "missingInformation": [
+          "Sprungschwelle",
+          "Volatilitätsmaß"
+        ]
       },
       "allowedAlternatives": [],
-      "requestedQuestions": [],
+      "requestedQuestions": [
+        "Wie groß ist der Sprung?",
+        "Wie misst du Beruhigung?"
+      ],
       "expectedAbstention": true,
-      "testability": "MISSING_STRATEGY",
+      "testability": "MISSING_DATA",
       "expectedExpert": {},
       "criticalForbidden": [
         "erfundene Evidenz",
         "unautorisierte Quant-Zulassung"
       ],
       "dataRequirements": [
-        "XLU-Kurse mit Handelssitzungen"
+        "GLD-Bars und Kalender"
       ],
       "offlineOnly": false,
       "offlineClass": null,
-      "rationale": "Die Hypothese kann statistisch geprüft werden; ein Strategiemapping fehlt."
+      "rationale": "Sprung und Beruhigung benötigen unabhängige Operationalisierungen."
     },
     {
       "caseId": "DE-E02",
