@@ -82,7 +82,12 @@ def load_catalog(
 
 
 def read_verified_holdout(manifest: Path, holdout: Path, manifest_hash, holdout_hash) -> list[dict]:
-    return load_catalog(
+    from .scorer import coverage_gaps
+
+    development, selected = load_catalog(
         manifest, manifest.with_name("development.v1.json"), holdout,
         expected_manifest=manifest_hash, expected_holdout=holdout_hash,
-    )[1]
+    )
+    if coverage_gaps(development + selected):
+        raise ValueError("EVALUATION_HOLDOUT_COVERAGE")
+    return selected
