@@ -50,6 +50,11 @@
       "id": "ARP-EVAL-GATEWAY-BINDING",
       "class": "tests.evaluation.test_gateway",
       "name": "test_gateway_only_dispatches_matching_supervisor_projection"
+    },
+    {
+      "id": "ARP-EVAL-RELEASE-REPETITIONS",
+      "class": "tests.evaluation.test_release",
+      "name": "test_release_requires_every_authorized_model_repetition"
     }
   ]
 }
