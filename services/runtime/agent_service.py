@@ -572,7 +572,8 @@ def _configured_discovery(engine, command_key, gateway, config, sources):
     from .research_discovery import ResearchDiscovery
 
     def permitted(scope, source):
-        return source.content_hash in sources and scope.execute(text("""
+        identity = (source.position.source_id, source.content_hash)
+        return identity in sources and scope.execute(text("""
             SELECT agent_research.discovery_source_allowed(:position)
         """), {"position": source.position.commit_version}).scalar_one() is True
 
@@ -582,7 +583,7 @@ def _configured_discovery(engine, command_key, gateway, config, sources):
         return EvidenceAccess(Readiness.READY, Rights.DENIED, Rights.DENIED)
 
     def evidence_claim(source):
-        approved = sources.get(source.content_hash)
+        approved = sources.get((source.position.source_id, source.content_hash))
         market, quotes = approved if approved is not None else (None, ())
         return EvidenceClaim(
             source.position.kind, source.position.source_id, source.revision,

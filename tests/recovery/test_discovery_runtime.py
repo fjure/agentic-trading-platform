@@ -343,13 +343,17 @@ def _provider_fixture(stack, path, calls, owner, worker):
 
         store = ProviderAuthorityStore(worker, check_evidence=check_persisted_evidence)
         with owner.connect() as connection:
-            evidence_digest = connection.scalar(text("""
-                SELECT fingerprint FROM agent_research.discovery_sources ORDER BY position LIMIT 1
-            """))
+            source_id, evidence_digest = connection.execute(text("""
+                SELECT source_id,fingerprint FROM agent_research.discovery_sources
+                ORDER BY position LIMIT 1
+            """)).one()
         options = {
             "instruments": sorted(config.trigger.instruments),
             "maxAgeDays": 1,
-            "sources": [{"digest": evidence_digest, "market": "SPY", "quotes": [_QUOTE]}],
+            "sources": [{
+                "sourceId": str(source_id), "digest": evidence_digest,
+                "market": "SPY", "quotes": [_QUOTE],
+            }],
         }
         options_digest = sha256(json.dumps(
             options, sort_keys=True, separators=(",", ":"), ensure_ascii=True,

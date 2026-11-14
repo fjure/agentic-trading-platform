@@ -4,6 +4,7 @@ import json
 from dataclasses import asdict, replace
 from datetime import timedelta
 from hashlib import sha256
+from uuid import UUID
 
 from sqlalchemy import text
 
@@ -69,11 +70,17 @@ def load_discovery_profile(engine, store, installation, key, client):
         raise RunConflict("PROVIDER_AUTHORITY_UNAVAILABLE")
     sources = {}
     for entry in options["sources"]:
-        if type(entry) is not dict or set(entry) != {"digest", "market", "quotes"}:
+        if type(entry) is not dict or set(entry) != {"sourceId", "digest", "market", "quotes"}:
             raise RunConflict("PROVIDER_AUTHORITY_UNAVAILABLE")
         digest, market, quotes = entry["digest"], entry["market"], entry["quotes"]
+        source_id = entry["sourceId"]
+        try:
+            if type(source_id) is not str or str(UUID(source_id)) != source_id:
+                raise ValueError
+        except ValueError:
+            raise RunConflict("PROVIDER_AUTHORITY_UNAVAILABLE") from None
         if (
-            type(digest) is not str or len(digest) != 64 or digest in sources
+            type(digest) is not str or len(digest) != 64 or (source_id, digest) in sources
             or any(char not in "0123456789abcdef" for char in digest)
             or type(market) is not str or not 1 <= len(market) <= 80
             or type(quotes) is not list or not 1 <= len(quotes) <= 32
@@ -81,7 +88,7 @@ def load_discovery_profile(engine, store, installation, key, client):
             or not safe_result_content([market, *quotes])
         ):
             raise RunConflict("PROVIDER_AUTHORITY_UNAVAILABLE")
-        sources[digest] = (market, tuple(quotes))
+        sources[source_id, digest] = (market, tuple(quotes))
     policy_hash = sha256(json.dumps(
         options, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
     ).encode()).hexdigest()
