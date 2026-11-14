@@ -54,7 +54,7 @@ def _parse_request(body: bytes) -> DispatchRequest:
         request.expires_at.utcoffset() != timedelta(0)
         or not now < request.expires_at <= now + timedelta(minutes=10)
         or not all(_HASH.fullmatch(v) for v in (request.request_hash, request.projection_sha256))
-        or request.purpose not in {"DIALOGUE", "DISCOVERY"}
+        or request.purpose not in {"DIALOGUE", "DISCOVERY", "PROBE"}
         or not all(_IDENTIFIER.fullmatch(v) for v in (
             request.model, request.profile_id, request.envelope_version,
         ))

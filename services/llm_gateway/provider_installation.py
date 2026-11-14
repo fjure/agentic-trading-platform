@@ -21,6 +21,7 @@ class ProviderInstallation:
     binding: ProviderBinding
     capability: Capability
     discovery: dict | None = None
+    probe_output_tokens: int | None = None
 
     def accepts_credential(self, candidate: CredentialBinding, version: int, digest: str) -> bool:
         binding = self.binding
@@ -49,7 +50,14 @@ def load_installation(path: Path = PROFILE_PATH) -> ProviderInstallation | None:
             raw, object_pairs_hook=_unique_fields, parse_constant=_reject_nonfinite,
         )
         required = {"binding", "instructions", "schema"}
-        if type(document) is not dict or set(document) not in (required, required | {"discovery"}):
+        if type(document) is not dict or set(document) not in (
+            required, required | {"discovery"}, required | {"probeOutputTokens"},
+        ):
+            raise ValueError
+        probe_output = document.get("probeOutputTokens")
+        if "probeOutputTokens" in document and (
+            type(probe_output) is not int or not 1 <= probe_output <= 256
+        ):
             raise ValueError
         binding = ProviderBinding.from_record(document["binding"])
         instructions = document["instructions"]
@@ -75,4 +83,4 @@ def load_installation(path: Path = PROFILE_PATH) -> ProviderInstallation | None:
         )
     except (ValueError, TypeError, RecursionError):
         raise ValueError("PROVIDER_INSTALLATION_INVALID") from None
-    return ProviderInstallation(binding, capability, document.get("discovery"))
+    return ProviderInstallation(binding, capability, document.get("discovery"), probe_output)

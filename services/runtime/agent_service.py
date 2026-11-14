@@ -125,6 +125,7 @@ def create_agent_research_service(
     provider_profile: ProviderDialogueProfile | None = None,
     admission_auth=None,
     credential_authority=None,
+    smoke=None,
 ):
     """Bind only already-authorized Research ports. Default dispatch authority is absent."""
     auth = AgentRelayAuthentication(relay_key)
@@ -242,6 +243,9 @@ def create_agent_research_service(
     if discovery is not None:
         handlers[RunKind.SCHEDULED] = discovery.step
 
+    if smoke is not None:
+        handlers[RunKind.PROVIDER_PROBE] = smoke.step
+
     def tick():
         with engine.begin() as connection:
             connection.execute(text("SELECT agent_research.ready_quant_runs()"))
@@ -282,6 +286,8 @@ def create_agent_research_service(
         from services.llm_gateway.supervisor_rpc import register_admission
 
         def consume(request):
+            if request.purpose == "PROBE":
+                return smoke.consume(request) if smoke is not None else None
             if request.purpose == "DISCOVERY":
                 return discovery_port.consume(request) if discovery_port is not None else None
             if provider_profile is None or model_step is None:
@@ -529,12 +535,23 @@ def main():
             base_url="http://research-llm-gateway:8080", timeout=20,
             trust_env=False, follow_redirects=False,
         ) as provider_client:
-            profile, admission_auth, discovery = None, None, None
+            profile, admission_auth, discovery, smoke = None, None, None, None
             if installation is not None:
                 if credential_authority is None:
                     raise ValueError("PROVIDER_AUTHORITY_UNAVAILABLE")
                 dispatch_key = load_relay_key(DISPATCH_KEY_PATH)
-                if installation.discovery is None:
+                if installation.probe_output_tokens is not None:
+                    from services.llm_gateway.app import GatewayDispatchClient
+                    from services.llm_gateway.supervisor_rpc import AdmissionAuthentication
+
+                    from .research_smoke import configured_smoke
+
+                    admission_auth = AdmissionAuthentication(dispatch_key)
+                    smoke, _ = configured_smoke(
+                        engine, credential_authority[0], installation,
+                        GatewayDispatchClient(provider_client, admission_auth),
+                    )
+                elif installation.discovery is None:
                     profile, admission_auth = load_dialogue_profile(
                         engine, credential_authority[0], installation,
                         dispatch_key, provider_client,
@@ -549,7 +566,7 @@ def main():
                 engine, relay_key=relay_key, command_key=command_key,
                 credential_authority=credential_authority,
                 provider_profile=profile, admission_auth=admission_auth,
-                discovery=discovery,
+                discovery=discovery, smoke=smoke,
             )
             uvicorn.run(
                 app,

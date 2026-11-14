@@ -359,24 +359,34 @@ class ProviderAuthorityStore:
         return self._view(row, binding)
 
     def mark_verified(
-        self, binding, epoch, smoke_attempt_id: UUID, *, scope=None,
+        self, binding, epoch, smoke_attempt_id: UUID, *, scope=None, bounded_smoke=False,
     ) -> ProviderAuthority:
         """Verify only a settled successful smoke attempt bound to this exact STAGED epoch."""
         if type(smoke_attempt_id) is not UUID:
             raise _denied()
         with self._transaction(scope) as transaction:
             self.require(binding, epoch, ProviderPurpose.PROBE, scope=transaction)
-            proven = transaction.execute(text("""
+            cost_proof = """
+                a.price_bounds_cost AND a.estimated_cost IS NOT NULL
+                AND EXISTS (
+                    SELECT 1 FROM agent_research.provider_smoke_grants g
+                    WHERE g.grant_id=a.attempt_id AND g.run_id=r.run_id AND g.consumed
+                      AND g.commitment=a.request_hash AND g.binding_digest=:digest
+                      AND g.epoch=:epoch
+                      AND g.maximum_cost=a.cost_bound AND g.operator_limit>=a.cost_bound
+                )
+            """ if bounded_smoke is True else "a.confirmed_cost IS NOT NULL"
+            proven = transaction.execute(text(f"""
                 SELECT 1 FROM agent_research.model_attempts a
                 JOIN agent_research.runs r USING (run_id)
                 WHERE a.attempt_id=:attempt AND r.kind='PROVIDER_PROBE' AND r.state='COMPLETED'
-                  AND a.status='COMPLETED' AND a.confirmed_cost IS NOT NULL
+                  AND a.status='COMPLETED' AND ({cost_proof})
                   AND a.reported_input IS NOT NULL AND a.reported_output IS NOT NULL
                   AND NOT a.exceeded_bound AND a.pricing_version=:tariff
                   AND a.evidence_revision=:evidence AND a.authority_hash=:authority
             """), {
                 "attempt": smoke_attempt_id, "tariff": binding.tariff_revision,
-                "evidence": binding.evidence_revision,
+                "evidence": binding.evidence_revision, "digest": binding.digest, "epoch": epoch,
                 "authority": authority_hash(binding, epoch, ProviderPurpose.PROBE),
             }).scalar_one_or_none()
             if proven != 1:

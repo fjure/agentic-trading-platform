@@ -24,6 +24,7 @@ if __name__ == "__main__":
     from services.runtime.agent_service import load_relay_key
     from services.setup.research_credentials import ResearchCredentialReader
 
+    from .probe import production_probe_capability
     from .provider_installation import DISPATCH_KEY_PATH, JOURNAL_PATH, load_installation
     from .supervisor_rpc import AdmissionAuthentication
 
@@ -31,9 +32,12 @@ if __name__ == "__main__":
     if installation is None:
         main()
     else:
+        capability = installation.capability
+        if installation.probe_output_tokens is not None:
+            capability = production_probe_capability(capability, installation.probe_output_tokens)
         main(
             journal_path=JOURNAL_PATH,
             auth=AdmissionAuthentication(load_relay_key(DISPATCH_KEY_PATH)),
             credentials=ResearchCredentialReader(authorize=installation.accepts_credential),
-            capabilities=(installation.capability,),
+            capabilities=(capability,),
         )

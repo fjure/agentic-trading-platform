@@ -2,7 +2,7 @@
 
 import json
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from hashlib import sha256
 from uuid import UUID
@@ -23,16 +23,26 @@ PROBE_PROJECTION = b"Synthetic connection test. Return true for ok."
 PROBE_INPUT_TOKENS = 1024
 PROBE_OUTPUT_TOKENS = 32
 PROBE_TIMEOUT_SECONDS = 5
-_ENVELOPE = "provider-probe-v1"
+PROBE_ENVELOPE = "provider-probe-v1"
 _INSTRUCTIONS = "Perform the synthetic connectivity check."
 _SCHEMA = '{"type":"object","properties":{"ok":{"type":"boolean","enum":[true]}},' \
     '"required":["ok"],"additionalProperties":false}'
 
 
+def production_probe_capability(base: Capability, max_output_tokens: int) -> Capability:
+    """Fix the smoke contents while preserving the installed model generations."""
+    if type(max_output_tokens) is not int or not 1 <= max_output_tokens <= 256:
+        raise ValueError("invalid smoke output limit")
+    return replace(
+        base, envelope_version=PROBE_ENVELOPE, instructions=_INSTRUCTIONS, schema_json=_SCHEMA,
+        max_output_tokens=max_output_tokens, timeout_seconds=min(base.timeout_seconds, 15),
+    )
+
+
 def probe_hash(probe: ProbeRef, model_id: str) -> str:
     binding = probe.binding
     encoded = json.dumps([
-        _ENVELOPE, probe.probe_id.hex, probe.expires_at.isoformat(), binding.provider,
+        PROBE_ENVELOPE, probe.probe_id.hex, probe.expires_at.isoformat(), binding.provider,
         binding.profile_id, binding.profile_generation, model_id, binding.model_generation,
         binding.credential_generation, PROBE_PROJECTION.decode(), _INSTRUCTIONS, _SCHEMA,
         PROBE_OUTPUT_TOKENS, PROBE_TIMEOUT_SECONDS,
@@ -103,7 +113,7 @@ class OfflineProbeGateway:
             return self._finish(probe, DispatchOutcome.UNSENT, authorized=True)
         profile = Capability(
             binding.provider, request.model_id, binding.profile_id, binding.profile_generation,
-            binding.model_generation, binding.credential_generation, _ENVELOPE,
+            binding.model_generation, binding.credential_generation, PROBE_ENVELOPE,
             _INSTRUCTIONS, _SCHEMA, PROBE_OUTPUT_TOKENS,
             min(remaining, PROBE_TIMEOUT_SECONDS),
         )
