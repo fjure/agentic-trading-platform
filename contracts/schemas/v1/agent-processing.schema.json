@@ -198,7 +198,39 @@
         },
         "modelGeneration": {
           "$ref": "#/$defs/AgentRevision"
+        },
+        "providerRequestBody": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536,
+          "description": "Exact UTF-8 JSON body of the production provider request. Credentials are transport headers and are never returned."
+        },
+        "providerRequestSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "evidenceRevision": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "tariffRevision": {
+          "$ref": "#/$defs/AgentRevision"
         }
+      },
+      "dependentRequired": {
+        "providerRequestBody": [
+          "providerRequestSha256",
+          "evidenceRevision",
+          "tariffRevision"
+        ],
+        "providerRequestSha256": [
+          "providerRequestBody"
+        ],
+        "evidenceRevision": [
+          "providerRequestBody"
+        ],
+        "tariffRevision": [
+          "providerRequestBody"
+        ]
       }
     },
     "AgentProcessingSendV1": {
@@ -409,6 +441,12 @@
         },
         "reasonCode": {
           "$ref": "#/$defs/AgentProcessingReason"
+        },
+        "providerOutcome": {
+          "type": "string",
+          "enum": [
+            "PROVIDER_OUTCOME_UNKNOWN"
+          ]
         },
         "receipt": {
           "$ref": "#/$defs/AgentProcessingReceiptV1"

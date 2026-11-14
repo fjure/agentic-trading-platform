@@ -36,6 +36,13 @@ export interface ProcessingPreviewV1 {
     projectionBinding: string;
     projection: AgentProcessingProjectionV1;
     modelGeneration: number;
+    /**
+     * Exact UTF-8 JSON body of the production provider request. Credentials are transport headers and are never returned.
+     */
+    providerRequestBody?: string;
+    providerRequestSha256?: string;
+    evidenceRevision?: number;
+    tariffRevision?: number;
 }
 export namespace ProcessingPreviewV1 {
     export const PurposeEnum = {

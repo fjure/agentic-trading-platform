@@ -12,7 +12,11 @@ from packages.agent_research.runs import Claim
 from packages.persistence.transaction import ReadOnlyScopedConnection
 from services.llm_gateway.content_policy import valid_projection
 from services.llm_gateway.offline_gateway import AuthorizedDispatch, DispatchRequest
-from services.llm_gateway.provider_http import Capability, conservative_input_bound
+from services.llm_gateway.provider_http import (
+    Capability,
+    conservative_input_bound,
+    provider_request_bytes,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,6 +26,7 @@ class PendingDispatch:
     receipt_id: UUID
     binding: ProcessingBinding
     capability: Capability
+    billable_input_bound: int | None = None
 
 
 class ResearchDispatchAdmission:
@@ -60,13 +65,31 @@ class ResearchDispatchAdmission:
             commitment: str, content: bytes, input_bound: int, output_bound: int,
             expires_at: datetime,
         ) -> bool:
+            if binding.evidence_revision is None:
+                if intent.billable_input_bound is not None:
+                    return False
+                required_input = conservative_input_bound(capability, content)
+            else:
+                if (
+                    type(intent.billable_input_bound) is not int
+                    or intent.billable_input_bound < 1
+                    or binding.provider_request_sha256 is None
+                ):
+                    return False
+                try:
+                    digest = sha256(provider_request_bytes(capability, content)).hexdigest()
+                except Exception:
+                    return False
+                if not compare_digest(digest, binding.provider_request_sha256):
+                    return False
+                required_input = intent.billable_input_bound
             return (
                 compare_digest(commitment, request.request_hash)
                 and compare_digest(sha256(content).hexdigest(), request.projection_sha256)
                 and valid_projection(content, binding.data_classes)
                 and 1 <= capability.max_output_tokens <= output_bound
                 and request.expires_at <= expires_at
-                and conservative_input_bound(capability, content) <= input_bound
+                and required_input <= input_bound
             )
 
         approved = self._processing.authorize(

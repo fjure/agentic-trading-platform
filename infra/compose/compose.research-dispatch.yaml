@@ -1,0 +1,33 @@
+# Apply after research-control, research-setup and research-authority.
+services:
+  research-supervisor:
+    networks: [research_gateway_rpc]
+    configs:
+      - source: research_provider_profile
+        target: /run/config/research-provider.json
+    secrets:
+      - source: research_provider_dispatch_key
+        target: research-provider-dispatch-key
+  research-llm-gateway:
+    configs:
+      - source: research_provider_profile
+        target: /run/config/research-provider.json
+    secrets:
+      - source: research_provider_dispatch_key
+        target: research-provider-dispatch-key
+    volumes:
+      - research_dispatch_journal:/run/research-dispatch
+    healthcheck:
+      test: [CMD, python, -c, "import json, urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8080/health',timeout=2); raise SystemExit(json.load(r).get('state') != 'PROVIDER_READY')"]
+
+volumes:
+  research_dispatch_journal:
+    external: true
+
+configs:
+  research_provider_profile:
+    file: ../../.tooling/application/runtime/research-provider.json
+
+secrets:
+  research_provider_dispatch_key:
+    file: ../../.tooling/application/runtime/research-provider-dispatch-key

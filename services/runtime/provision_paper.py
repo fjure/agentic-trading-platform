@@ -290,7 +290,7 @@ def _dormant_privilege_manifest(revisions):
         "0046_discovery_evidence", "0047_research_reports", "0048_quant_report_reader",
         "0049_processing_operations", "0050_agent_control_commands", "0051_quant_started_receipt",
         "0052_quant_prepare_read", "0053_quant_prepare_intent", "0054_quant_prepare_handoff",
-        "0055_quant_prepare_approval",
+        "0055_quant_prepare_approval", "0056_provider_authority", "0057_model_budget_periods",
     )
     quant_validation_revision = (
         revisions == [("0036_quant_validation_attempts",)] or apf_revision in apf_revisions
@@ -781,7 +781,7 @@ def _dormant_privilege_manifest(revisions):
             ("relation", "backtest.experiment_agent_provenance",
              "atl_paper_control_api", "SELECT", False),
         ))
-    if apf_revision in {"0054_quant_prepare_handoff", "0055_quant_prepare_approval"}:
+    if apf_revision in apf_revisions[apf_revisions.index("0054_quant_prepare_handoff"):]:
         expected.update(
             ("function", name, "atl_paper_control_api", "EXECUTE", False)
             for name in (

@@ -94,7 +94,10 @@ def _seed_source(owner, instrument, now, number):
     return revision
 
 
-def _configure(owner, instrument_id, agent, model, now):
+def _configure(owner, instrument_id, agent, model, now, *, production=False):
+    from packages.agent_research.model_attempts import production_model_budget_scopes
+
+    budget_scopes = production_model_budget_scopes if production else model_budget_scopes
     schedules = ScheduleStore(owner)
     scope_keys = set()
     for identifier in _SCHEDULES:
@@ -107,7 +110,7 @@ def _configure(owner, instrument_id, agent, model, now):
         schedules.create(DailySchedule.parse(document))
         schedules.replace(DailySchedule.parse(document | {"state": "ACTIVE", "version": 2}),
                           expected_version=1)
-        scope_keys.update(model_budget_scopes(
+        scope_keys.update(budget_scopes(
             agent.agent_id, agent.version, RunKind.SCHEDULED, model, identifier,
         ))
     with owner.begin() as connection:
@@ -124,14 +127,15 @@ def _configure(owner, instrument_id, agent, model, now):
         """), [{"scope": f"schedule:{identifier}"} for identifier in _SCHEDULES])
         connection.execute(text("""
             INSERT INTO agent_research.model_budget_policies (scope,version,currency,max_cost,
-                max_input_tokens,max_output_tokens,max_calls,enabled)
-            VALUES (:scope,1,'USD',0.10,32768,4096,8,true)
-        """), [{"scope": key} for key in sorted(scope_keys)])
+                max_input_tokens,max_output_tokens,max_calls,enabled,max_parallelism)
+            VALUES (:scope,1,'USD',0.10,32768,4096,8,true,:parallel)
+        """), [{"scope": key, "parallel": 1 if production else None}
+                for key in sorted(scope_keys)])
         connection.execute(text("""
             INSERT INTO agent_research.model_prices (model_binding,version,currency,
                 input_price,output_price,bounds_unconfirmed_cost)
-            VALUES (CAST(:model AS jsonb),1,'USD',1,2,false)
-        """), {"model": json.dumps(asdict(model))})
+            VALUES (CAST(:model AS jsonb),1,'USD',1,2,:bounded)
+        """), {"model": json.dumps(asdict(model)), "bounded": production})
 
 
 def _provider(calls, *, missing_usage):
@@ -169,7 +173,9 @@ def _provider(calls, *, missing_usage):
     return send
 
 
-def _new_runtime(worker, instrument_id, agent, calls, journal_path, *, missing_usage=()):
+def _new_runtime(
+    worker, instrument_id, agent, calls, journal_path, *, missing_usage=(), dispatch=None,
+):
     schedule_store, attempts = ScheduleStore(worker), ModelAttemptStore(worker)
     store = DiscoveryStore(worker, require_active=ScheduleStore.require_active)
     model = agent.model_binding
@@ -194,6 +200,8 @@ def _new_runtime(worker, instrument_id, agent, calls, journal_path, *, missing_u
             _provider(calls, missing_usage=missing_usage),
         )), capability,
     )
+    if dispatch is not None:
+        gateway, config = dispatch(capability, config)
     def permits_idea(document):
         # The closed lifecycle schema checks server-generated IDs and timestamps.
         # Apply the sensitive-content policy to displayable prose instead.
@@ -226,7 +234,7 @@ def _assert_state(owner, expected, *, publications):
             SELECT w.state,w.reason FROM agent_research.discovery_work w
             ORDER BY source_position
         """)).all()
-        assert states == expected
+        assert states == expected, (states, expected)
         assert connection.scalar(text("""
             SELECT count(*) FROM agent_research.discovery_publications
         """)) == publications
@@ -242,23 +250,239 @@ def _drain(supervisor):
     raise AssertionError("discovery queue did not settle within the bounded fixture steps")
 
 
+def _provider_fixture(stack, path, calls, owner, worker):
+    import asyncio
+    import threading
+    from hashlib import sha256
+
+    from fastapi.testclient import TestClient
+
+    from packages.agent_research.budget import ModelOutcome
+    from packages.agent_research.model_attempts import production_model_budget_scopes
+    from packages.agent_research.provider_authority import (
+        ProviderAuthorityStore,
+        ProviderBinding,
+        ProviderPurpose,
+        authority_hash,
+    )
+    from packages.agent_research.run_state import RunState
+    from services.llm_gateway import provider_http
+    from services.llm_gateway.app import create_gateway_app
+    from services.llm_gateway.offline_gateway import ProviderGateway
+    from services.llm_gateway.provider_installation import load_installation
+    from services.llm_gateway.supervisor_rpc import (
+        AdmissionAuthentication,
+        AdmissionClient,
+        create_admission_app,
+    )
+    from services.runtime.egress import ConnectProxy, MockRoute
+    from services.runtime.provider_profiles import (
+        check_persisted_evidence,
+        load_discovery_profile,
+    )
+    from tests.unit.test_llm_tls_socket import _contexts
+
+    host = "api.openai.com"
+    server_tls, trust = _contexts(path.parent, host)
+    ready = threading.Event()
+    network = {}
+
+    async def provider(reader, writer):
+        try:
+            header = await reader.readuntil(b"\r\n\r\n")
+            lines = header.decode("ascii").strip().split("\r\n")
+            headers = {name.lower(): value for name, value in (
+                line.split(":", 1) for line in lines[1:]
+            )}
+            assert lines[0] == "POST /v1/responses HTTP/1.1"
+            assert headers["authorization"].strip() == "Bearer synthetic-discovery-fixture"
+            content = await reader.readexactly(int(headers["content-length"]))
+            reply = _provider(calls, missing_usage=())(httpx.Request(
+                "POST", "https://api.openai.com/v1/responses", content=content,
+            )).json()
+            reply["service_tier"] = "default"
+            reply["usage"]["input_tokens_details"] = {"cached_tokens": 0, "cache_write_tokens": 0}
+            encoded = json.dumps(reply).encode()
+            writer.write(
+                f"HTTP/1.1 200 OK\r\nContent-Length: {len(encoded)}\r\n"
+                "Connection: close\r\n\r\n".encode() + encoded
+            )
+            await writer.drain()
+        finally:
+            writer.close()
+
+    async def run_network():
+        tls = await asyncio.start_server(provider, "127.0.0.1", 0, ssl=server_tls)
+        route = MockRoute(host, "127.0.0.1", tls.sockets[0].getsockname()[1])
+        proxy = ConnectProxy("research-gateway", mock_route=route)
+        async with tls, await asyncio.start_server(proxy.handle, "127.0.0.1", 0) as egress:
+            network.update(
+                loop=asyncio.get_running_loop(), stop=asyncio.Event(),
+                port=egress.sockets[0].getsockname()[1],
+            )
+            ready.set()
+            await network["stop"].wait()
+
+    thread = threading.Thread(target=lambda: asyncio.run(run_network()), daemon=True)
+    thread.start()
+    assert ready.wait(5)
+
+    def stop_network():
+        network["loop"].call_soon_threadsafe(network["stop"].set)
+        thread.join(5)
+        assert not thread.is_alive()
+
+    stack.callback(stop_network)
+    stack.enter_context(patch.object(
+        provider_http, "_PROVIDER_PROXY", f"http://127.0.0.1:{network['port']}",
+    ))
+    stack.enter_context(patch.object(provider_http, "_provider_tls_context", lambda: trust))
+
+    def install(capability, config):
+        from datetime import UTC, datetime
+
+        store = ProviderAuthorityStore(worker, check_evidence=check_persisted_evidence)
+        with owner.connect() as connection:
+            evidence_digest = connection.scalar(text("""
+                SELECT fingerprint FROM agent_research.discovery_sources ORDER BY position LIMIT 1
+            """))
+        options = {
+            "instruments": sorted(config.trigger.instruments),
+            "maxAgeDays": 1,
+            "sources": [{"digest": evidence_digest, "market": "SPY", "quotes": [_QUOTE]}],
+        }
+        options_digest = sha256(json.dumps(
+            options, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+        ).encode()).hexdigest()
+        binding = ProviderBinding(
+            profile_id=capability.profile_id, profile_generation=1, provider="OPENAI",
+            model_id=capability.model, response_model_id=capability.model, model_generation=1,
+            capability_generation=1, credential_generation=1, credential_version=2,
+            credential_digest="a" * 64, api_version="v1", rights_generation=1,
+            policy_generation=1, prompt_sha256=sha256(capability.instructions.encode()).hexdigest(),
+            schema_sha256=sha256(capability.schema_json.encode()).hexdigest(),
+            evidence_revision=1, tariff_revision=1,
+            evidence_expires_at=datetime.now(UTC) + timedelta(minutes=10),
+            data_classes=("HISTORICAL_REVISION", "PERSISTED_RESEARCH_RESULT"),
+            envelope_version=capability.envelope_version,
+            max_request_bytes=65536, max_response_bytes=262144,
+            timeout_seconds=int(capability.timeout_seconds), max_input_tokens=config.tokens.input,
+            max_output_tokens=config.tokens.output, max_cost=Decimal("0.10"),
+            discovery_policy_sha256=options_digest,
+        )
+        store.attest_credential("OPENAI", 1, 2, binding.credential_digest, expected_version=1)
+        with owner.begin() as connection:
+            connection.execute(text("""
+                INSERT INTO agent_research.provider_cost_evidence VALUES
+                ('OPENAI',:profile,1,:digest,:expiry)
+            """), {
+                "profile": binding.profile_id, "digest": binding.digest,
+                "expiry": binding.evidence_expires_at,
+            })
+        staged = store.stage(binding, 0)
+        prices = replace(config.prices, bounds_unconfirmed_cost=True)
+        run_store, attempts = RunStore(worker), ModelAttemptStore(worker)
+        run_store.enqueue(
+            actor="local-operator", key="synthetic-discovery-smoke", kind=RunKind.PROVIDER_PROBE,
+            input_ref="fixture", trace_id="a" * 32, agent=config.agent,
+        )
+        lease = run_store.claim(uuid4())
+        assert lease is not None
+        scopes = production_model_budget_scopes(
+            config.agent.agent_id, config.agent.version, RunKind.PROVIDER_PROBE,
+            config.agent.model_binding, "fixture",
+        )
+        with owner.begin() as connection:
+            connection.execute(text("""
+                INSERT INTO agent_research.model_budget_policies
+                  (scope,version,currency,max_cost,max_input_tokens,max_output_tokens,max_calls,
+                   enabled,max_parallelism)
+                VALUES (:scope,1,'USD',0.10,32768,4096,8,true,1) ON CONFLICT DO NOTHING
+            """), [{"scope": scope} for scope in scopes])
+        proof = {
+            "evidence_revision": 1,
+            "authority_hash": authority_hash(binding, staged.epoch, ProviderPurpose.PROBE),
+        }
+        attempt_id = uuid4()
+        attempts.reserve(
+            lease, attempt_id=attempt_id, step_id="fixture-smoke", request_hash="b" * 64,
+            model=config.agent.model_binding, prices=prices, tokens=Tokens(100, 100),
+            context_window=1000, timeout_seconds=15, **proof,
+        )
+        with worker.begin() as connection:
+            attempts.authorize_in_transaction(connection, lease, attempt_id, "b" * 64, **proof)
+        attempts.settle(
+            lease, attempt_id, ModelOutcome.COMPLETED, result_ref="fixture-smoke",
+            reported_tokens=Tokens(1, 1), confirmed_cost=Decimal("0.000003"), **proof,
+        )
+        run_store.transition(lease, RunState.COMPLETED, checkpoint_ref="fixture-smoke")
+        verified = store.mark_verified(binding, staged.epoch, attempt_id)
+        store.set_purpose(binding, verified.epoch, ProviderPurpose.DISCOVERY, True)
+        descriptor = path.parent / "provider.json"
+        descriptor.write_text(json.dumps({
+            "binding": binding.record(), "instructions": capability.instructions,
+            "schema": json.loads(capability.schema_json), "discovery": options,
+        }), encoding="utf-8")
+        installation = load_installation(descriptor)
+        assert installation is not None and installation.binding == binding
+        return _install_ports(capability, config, store, installation)
+
+    def _install_ports(capability, config, store, installation):
+        auth = AdmissionAuthentication(bytes(range(32)))
+        signed = create_admission_app(auth, lambda request: port.consume(request))
+        supervisor = stack.enter_context(TestClient(signed))
+
+        class Credentials:
+            def read_active(self, binding):
+                assert binding.credential_generation == capability.credential_generation
+                return "synthetic-discovery-fixture"
+
+        gateway = ProviderGateway(
+            DispatchJournal(path), AdmissionClient(supervisor, auth).authorize,
+            credentials=Credentials(), capabilities=(capability,),
+        )
+        http = stack.enter_context(TestClient(create_gateway_app(gateway, auth)))
+        with patch("services.runtime.provider_profiles.register_provider_agent",
+                   return_value=config.agent):
+            port, loaded, sources, _ = load_discovery_profile(
+                worker, store, installation, bytes(range(32)), http,
+            )
+        assert len(sources) == 1
+        return port, loaded
+
+    return install
+
+
 def _check(owner, worker, now):
     instrument = definitions()[0][0]
     instrument_id = str(instrument.instrument_id)
     model = registry.ModelBinding("OPENAI", "offline-profile", 1, "offline-model", 1)
     agent = replace(registry.QUANT_RESEARCH_V1, model_binding=model)
-    _configure(owner, instrument_id, agent, model, now)
+    _configure(owner, instrument_id, agent, model, now, production=True)
     first_revision = _seed_source(owner, instrument, now, 1)
     calls = []
     with patch.object(registry, "AGENTS", {(agent.agent_id, agent.version): agent}), (
         TemporaryDirectory()
     ) as directory:
         path = Path(directory) / "journal.sqlite"
-        runtime, supervisor = _new_runtime(worker, instrument_id, agent, calls, path)
-        assert runtime.tick(_SCHEDULES[0]) is not None
-        assert supervisor.run_once(uuid4())
-        _assert_state(owner, [("READY", "COMPLETED")], publications=0)
-        assert calls == [str(first_revision)]
+        from contextlib import ExitStack
+
+        with ExitStack() as stack:
+            factory = _provider_fixture(stack, path, calls, owner, worker)
+            runtime, supervisor = _new_runtime(
+                worker, instrument_id, agent, calls, path, dispatch=factory,
+            )
+            assert runtime.tick(_SCHEDULES[0]) is not None
+            assert supervisor.run_once(uuid4())
+            _assert_state(owner, [("READY", "COMPLETED")], publications=0)
+            assert calls == [str(first_revision)]
+            _drain(supervisor)
+            _assert_state(owner, [("COMPLETED", "PUBLISHED")], publications=1)
+        # Subsequent recovery exercises the offline port against the same durable rows.
+        with owner.begin() as connection:
+            connection.execute(text("""
+                UPDATE agent_research.model_prices SET bounds_unconfirmed_cost=false
+            """))
 
         runtime, restarted = _new_runtime(worker, instrument_id, agent, calls, path)
         _drain(restarted)
@@ -338,7 +562,7 @@ def guest():
         config = Config("alembic.ini")
         with owner.begin() as connection:
             config.attributes["connection"] = connection
-            command.upgrade(config, "0046_discovery_evidence")
+            command.upgrade(config, "0057_model_budget_periods")
             register(connection)
             now = connection.scalar(text("SELECT clock_timestamp()"))
         _check(owner, worker, now)
@@ -360,6 +584,7 @@ if __name__ == "__main__":
         locations = ",".join(f"{Path(item.filename).name}:{item.lineno}" for item in relevant[-5:])
         original = getattr(error, "orig", None)
         code = getattr(original, "sqlstate", "") or getattr(error, "code", "")
-        print(f"FAIL {type(error).__name__} {type(original).__name__} {code} {locations}")
+        detail = str(error) if isinstance(error, AssertionError) else ""
+        print(f"FAIL {type(error).__name__} {type(original).__name__} {code} {locations} {detail}")
         raise SystemExit(1) from None
     print(_PROOF)

@@ -33,6 +33,7 @@ class ProcessingAuthority:
     binding: ProcessingBinding
     deadline: datetime
     permits: Callable[[bytes], bool]
+    wire: Callable[[bytes], bytes] | None = None
 
 
 def _canonical(value: object) -> bytes:
@@ -78,9 +79,30 @@ def _versions(dialogue: Dialogue, payload: dict) -> None:
         raise RunConflict("VERSION_CONFLICT")
 
 
-def _preview_response(preview: Preview, content: bytes) -> dict:
+def _bound_wire(authority: ProcessingAuthority, content: bytes) -> bytes | None:
+    if authority.wire is None and authority.binding.evidence_revision is None:
+        return None
+    if authority.wire is None or authority.binding.evidence_revision is None:
+        raise RunConflict("PROCESSING_GRANT_INVALID")
+    try:
+        body = authority.wire(content)
+        if type(body) is not bytes or not 1 <= len(body) <= 65536:
+            raise ValueError
+        body.decode("utf-8")
+        return body
+    except Exception:
+        raise RunConflict("PROCESSING_GRANT_INVALID") from None
+
+
+def _verify_wire(binding: ProcessingBinding, body: bytes | None) -> None:
+    digest = sha256(body).hexdigest() if body is not None else None
+    if digest != binding.provider_request_sha256:
+        raise RunConflict("PROCESSING_GRANT_INVALID")
+
+
+def _preview_response(preview: Preview, content: bytes, body: bytes | None) -> dict:
     binding = preview.binding
-    return {
+    response = {
         "previewId": str(preview.preview_id),
         "turnId": binding.turn_id,
         "turnVersion": binding.turn_version,
@@ -99,6 +121,12 @@ def _preview_response(preview: Preview, content: bytes) -> dict:
         "projectionBinding": preview.commitment,
         "projection": json.loads(content),
     }
+    if body is not None:
+        response["providerRequestBody"] = body.decode("utf-8")
+        response["providerRequestSha256"] = binding.provider_request_sha256
+        response["evidenceRevision"] = binding.evidence_revision
+        response["tariffRevision"] = binding.tariff_revision
+    return response
 
 
 def _status(turn_id: str, version: int, state: str) -> dict:
@@ -139,6 +167,8 @@ def _grant_status(row, receipt, *, replay: bool = False) -> dict:
             result["reasonCode"] = "PROCESSING_PREVIEW_UNAVAILABLE"
         elif state == "BLOCKED":
             result["reasonCode"] = "PROVIDER_UNAVAILABLE"
+            if row.attempt_status == "OUTCOME_UNKNOWN":
+                result["providerOutcome"] = "PROVIDER_OUTCOME_UNKNOWN"
     return result
 
 
@@ -290,7 +320,10 @@ class ProcessingProjection:
             binding = replace(binding, data_classes=actual_classes)
             deadline = self._run_deadline(scope, binding, authority.deadline)
             if prior is not None:
-                if preview.binding != binding or preview.expires_at > deadline:
+                if (
+                    replace(preview.binding, provider_request_sha256=None) != binding
+                    or preview.expires_at > deadline
+                ):
                     raise RunConflict("PROCESSING_PREVIEW_UNAVAILABLE")
                 try:
                     content = self.processing.vault.read(preview, session=session)
@@ -298,12 +331,17 @@ class ProcessingProjection:
                     raise RunConflict("PROCESSING_PREVIEW_UNAVAILABLE") from None
                 self._check_current(scope, actor, idea_id, dialogue)
                 self._require_permission(authority, content)
-                return _preview_response(preview, content)
+                body = _bound_wire(authority, content)
+                _verify_wire(preview.binding, body)
+                return _preview_response(preview, content, body)
 
             original = self.companion.read_original(
                 actor, idea_id, dialogue_id, dialogue.original_id, turn_id=turn_id,
             )
             content = _projection(original, dialogue, binding.data_classes)
+            body = _bound_wire(authority, content)
+            if body is not None:
+                binding = replace(binding, provider_request_sha256=sha256(body).hexdigest())
             preview = create_processing_preview(
                 self.companion, self.processing.vault, binding, idea_id=idea_id,
                 idea_version=dialogue.idea_version, original_id=dialogue.original_id,
@@ -315,7 +353,7 @@ class ProcessingProjection:
             except Exception:
                 self.processing.vault.discard(preview.preview_id)
                 raise
-            return _preview_response(preview, content)
+            return _preview_response(preview, content, body)
 
     @staticmethod
     def _require_permission(authority: ProcessingAuthority, content: bytes) -> None:
@@ -332,7 +370,9 @@ class ProcessingProjection:
         authority = self._authority(scope, binding.actor, dialogue, binding.profile_id)
         if (
             not set(binding.data_classes) <= set(authority.binding.data_classes)
-            or replace(authority.binding, data_classes=binding.data_classes) != binding
+            or replace(authority.binding, data_classes=binding.data_classes)
+            != replace(binding, provider_request_sha256=None)
+            or (binding.provider_request_sha256 is not None) != (authority.wire is not None)
             or authority.deadline <= datetime.now(UTC)
         ):
             raise RunConflict("PROCESSING_GRANT_INVALID")
@@ -366,11 +406,13 @@ class ProcessingProjection:
             authority = self._authority(scope, actor, dialogue, submitted.profile_id)
             if (
                 not set(submitted.data_classes) <= set(authority.binding.data_classes)
-                or replace(authority.binding, data_classes=submitted.data_classes) != submitted
+                or replace(authority.binding, data_classes=submitted.data_classes)
+                != replace(submitted, provider_request_sha256=None)
                 or preview.expires_at > authority.deadline
             ):
                 raise RunConflict("PROCESSING_GRANT_INVALID")
             self._require_permission(authority, content)
+            _verify_wire(submitted, _bound_wire(authority, content))
 
         receipt = self.processing.confirm(
             preview_id, preview.commitment, binding, session=session, key=key,

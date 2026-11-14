@@ -1,6 +1,6 @@
 """Closed v1 research registry. Provider activation is a separate policy decision."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import Decimal
 from enum import StrEnum
 from hashlib import sha256
@@ -112,12 +112,31 @@ QUANT_RESEARCH_V1 = AgentVersion(
 AGENTS = MappingProxyType({
     (QUANT_RESEARCH_V1.agent_id, QUANT_RESEARCH_V1.version): QUANT_RESEARCH_V1,
 })
+_provider_agent: AgentVersion | None = None
+
+
+def register_provider_agent(model: ModelBinding) -> AgentVersion:
+    """Install the validated model identity during supervisor startup."""
+    global _provider_agent
+    candidate = replace(
+        QUANT_RESEARCH_V1,
+        agent_id="quant-research-provider-v1",
+        model_binding=model,
+    )
+    if _provider_agent is not None and _provider_agent != candidate:
+        raise AgentPolicyDenied(AgentPolicyDenied.code)
+    _provider_agent = candidate
+    return candidate
 
 
 def require_agent(agent_id: str, version: int, policy_version: int) -> AgentVersion:
     if type(version) is not int or type(policy_version) is not int:
         raise AgentPolicyDenied(AgentPolicyDenied.code)
     agent = AGENTS.get((agent_id, version))
+    if agent is None and _provider_agent is not None and (
+        agent_id, version
+    ) == (_provider_agent.agent_id, _provider_agent.version):
+        agent = _provider_agent
     if agent is None or agent.policy_version != policy_version:
         raise AgentPolicyDenied(AgentPolicyDenied.code)
     return agent

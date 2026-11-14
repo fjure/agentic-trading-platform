@@ -54,6 +54,7 @@ def _parse_request(body: bytes) -> DispatchRequest:
         request.expires_at.utcoffset() != timedelta(0)
         or not now < request.expires_at <= now + timedelta(minutes=10)
         or not all(_HASH.fullmatch(v) for v in (request.request_hash, request.projection_sha256))
+        or request.purpose not in {"DIALOGUE", "DISCOVERY"}
         or not all(_IDENTIFIER.fullmatch(v) for v in (
             request.model, request.profile_id, request.envelope_version,
         ))
@@ -120,7 +121,11 @@ def create_admission_app(
 ) -> FastAPI:
     """Expose only the private admission route; consume must commit before returning."""
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    register_admission(app, auth, consume)
+    return app
 
+
+def register_admission(app, auth, consume):
     @app.post(ADMISSION_PATH)
     async def admit(http_request: Request) -> Response:
         body = await _signed_body(http_request, auth.request_signature)
@@ -147,9 +152,6 @@ def create_admission_app(
         return Response(payload, media_type="application/json", headers={
             SIGNATURE: auth.response_signature(body, payload), "cache-control": "no-store",
         })
-
-    return app
-
 
 def create_cancellation_app(
     auth: AdmissionAuthentication, cancel: Callable[[UUID, str], None],

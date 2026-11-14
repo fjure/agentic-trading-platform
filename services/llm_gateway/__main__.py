@@ -21,4 +21,19 @@ def main(*, journal_path=None, auth=None, credentials=None, capabilities=()) -> 
 
 
 if __name__ == "__main__":
-    main()
+    from services.runtime.agent_service import load_relay_key
+    from services.setup.research_credentials import ResearchCredentialReader
+
+    from .provider_installation import DISPATCH_KEY_PATH, JOURNAL_PATH, load_installation
+    from .supervisor_rpc import AdmissionAuthentication
+
+    installation = load_installation()
+    if installation is None:
+        main()
+    else:
+        main(
+            journal_path=JOURNAL_PATH,
+            auth=AdmissionAuthentication(load_relay_key(DISPATCH_KEY_PATH)),
+            credentials=ResearchCredentialReader(authorize=installation.accepts_credential),
+            capabilities=(installation.capability,),
+        )

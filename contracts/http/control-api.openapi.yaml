@@ -13805,6 +13805,23 @@ components:
           $ref: '#/components/schemas/AgentProcessingProjectionV1'
         modelGeneration:
           $ref: '#/components/schemas/AgentRevision'
+        providerRequestBody:
+          type: string
+          minLength: 1
+          maxLength: 65536
+          description: Exact UTF-8 JSON body of the production provider request. Credentials are transport headers and are never returned.
+        providerRequestSha256:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        evidenceRevision:
+          $ref: '#/components/schemas/AgentRevision'
+        tariffRevision:
+          $ref: '#/components/schemas/AgentRevision'
+      dependentRequired:
+        providerRequestBody: [providerRequestSha256, evidenceRevision, tariffRevision]
+        providerRequestSha256: [providerRequestBody]
+        evidenceRevision: [providerRequestBody]
+        tariffRevision: [providerRequestBody]
     AgentProcessingSendV1:
       type: object
       additionalProperties: false
@@ -13961,6 +13978,9 @@ components:
           - SENT
         reasonCode:
           $ref: '#/components/schemas/AgentProcessingReason'
+        providerOutcome:
+          type: string
+          enum: [PROVIDER_OUTCOME_UNKNOWN]
         receipt:
           $ref: '#/components/schemas/AgentProcessingReceiptV1'
         proposalId:

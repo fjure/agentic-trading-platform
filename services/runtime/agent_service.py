@@ -39,7 +39,11 @@ from services.control_api.agent_processing_projection import ProcessingProjectio
 from services.llm_gateway.content_policy import safe_result_content
 
 from .agent_control import ResearchControl
-from .agent_interpretation import OfflineDialogueProfile, OfflineDialogueStep
+from .agent_interpretation import (
+    OfflineDialogueProfile,
+    OfflineDialogueStep,
+    ProviderDialogueProfile,
+)
 from .agent_research import ResearchSupervisor, StepResult
 from .agent_research_relay import AgentRelayAuthentication, create_agent_research_relay
 
@@ -118,6 +122,9 @@ def create_agent_research_service(
     extra=None,
     resolve_expert=None,
     offline_profile: OfflineDialogueProfile | None = None,
+    provider_profile: ProviderDialogueProfile | None = None,
+    admission_auth=None,
+    credential_authority=None,
 ):
     """Bind only already-authorized Research ports. Default dispatch authority is absent."""
     auth = AgentRelayAuthentication(relay_key)
@@ -157,7 +164,16 @@ def create_agent_research_service(
     )
     attempts = ModelAttemptStore(engine)
     model_step = None
-    if offline_profile is not None:
+    from services.llm_gateway.discovery import ProviderDiscoveryDispatch
+
+    gateway = getattr(discovery, "gateway", None)
+    discovery_port = gateway if isinstance(gateway, ProviderDiscoveryDispatch) else None
+    if ((provider_profile is None and discovery_port is None) != (admission_auth is None)) or (
+        provider_profile is not None and offline_profile is not None
+    ):
+        raise ValueError("incomplete provider supervisor composition")
+    model_profile = provider_profile or offline_profile
+    if model_profile is not None:
         if resolve_authority is not None:
             raise ValueError("offline profile owns interpretation authority")
         model_step = OfflineDialogueStep(
@@ -167,10 +183,10 @@ def create_agent_research_service(
             ideas,
             companion,
             processing,
-            offline_profile,
+            model_profile,
         )
         processing.resolve_authority = model_step.authority
-        processing.notify_cancel = model_step.gateway.cancel
+        processing.notify_cancel = model_step.cancel
     report_store = ReportStore(engine)
     report_writer = ResearchReports(
         QuantReportSource(engine), report_store, permits=safe_result_content
@@ -261,7 +277,24 @@ def create_agent_research_service(
             stop.set()
             thread.join(timeout=3)
 
-    return create_agent_research_relay(auth, control, lifespan=lifespan)
+    app = create_agent_research_relay(auth, control, lifespan=lifespan)
+    if admission_auth is not None:
+        from services.llm_gateway.supervisor_rpc import register_admission
+
+        def consume(request):
+            if request.purpose == "DISCOVERY":
+                return discovery_port.consume(request) if discovery_port is not None else None
+            if provider_profile is None or model_step is None:
+                return None
+            return model_step.admission.consume(request)
+
+        register_admission(app, admission_auth, consume)
+    if credential_authority is not None:
+        from services.runtime.provider_credential_authority import register_credential_authority
+
+        store, key = credential_authority
+        register_credential_authority(app, store, key)
+    return app
 
 
 def _quant_preflight(journal, claim, input_ref, intent):
@@ -434,7 +467,12 @@ def _database_engine():
 
 
 def main():
+    import httpx
     import uvicorn
+
+    from services.llm_gateway.provider_installation import DISPATCH_KEY_PATH, load_installation
+
+    from .provider_profiles import load_dialogue_profile, load_discovery_profile
 
     relay_key, command_key = load_relay_key(), load_relay_key(COMMAND_KEY_PATH)
     engine = _database_engine()
@@ -476,18 +514,91 @@ def main():
             """),
                 {"configuration": json.dumps(configuration)},
             )
-        app = create_agent_research_service(engine, relay_key=relay_key, command_key=command_key)
-        uvicorn.run(
-            app,
-            host="0.0.0.0",
-            port=8013,
-            access_log=False,
-            log_config=None,
-            proxy_headers=False,
-            server_header=False,
-        )
+        authority_key = Path("/run/secrets/research-credential-authority-key")
+        credential_authority = None
+        if authority_key.exists():
+            from packages.agent_research.provider_authority import ProviderAuthorityStore
+            from services.runtime.provider_profiles import check_persisted_evidence
+
+            credential_authority = (
+                ProviderAuthorityStore(engine, check_evidence=check_persisted_evidence),
+                load_relay_key(authority_key),
+            )
+        installation = load_installation()
+        with httpx.Client(
+            base_url="http://research-llm-gateway:8080", timeout=20,
+            trust_env=False, follow_redirects=False,
+        ) as provider_client:
+            profile, admission_auth, discovery = None, None, None
+            if installation is not None:
+                if credential_authority is None:
+                    raise ValueError("PROVIDER_AUTHORITY_UNAVAILABLE")
+                dispatch_key = load_relay_key(DISPATCH_KEY_PATH)
+                if installation.discovery is None:
+                    profile, admission_auth = load_dialogue_profile(
+                        engine, credential_authority[0], installation,
+                        dispatch_key, provider_client,
+                    )
+                else:
+                    gateway, config, sources, admission_auth = load_discovery_profile(
+                        engine, credential_authority[0], installation,
+                        dispatch_key, provider_client,
+                    )
+                    discovery = _configured_discovery(engine, command_key, gateway, config, sources)
+            app = create_agent_research_service(
+                engine, relay_key=relay_key, command_key=command_key,
+                credential_authority=credential_authority,
+                provider_profile=profile, admission_auth=admission_auth,
+                discovery=discovery,
+            )
+            uvicorn.run(
+                app,
+                host="0.0.0.0",
+                port=8013,
+                access_log=False,
+                log_config=None,
+                proxy_headers=False,
+                server_header=False,
+            )
     finally:
         engine.dispose()
+
+
+def _configured_discovery(engine, command_key, gateway, config, sources):
+    from packages.agent_research.discovery.evidence import EvidenceAccess, Readiness, Rights
+    from packages.agent_research.discovery.publication import EvidenceClaim
+    from packages.agent_research.discovery.store import DiscoveryStore
+
+    from .research_discovery import ResearchDiscovery
+
+    def permitted(scope, source):
+        return source.content_hash in sources and scope.execute(text("""
+            SELECT agent_research.discovery_source_allowed(:position)
+        """), {"position": source.position.commit_version}).scalar_one() is True
+
+    def access(scope, source):
+        if permitted(scope, source):
+            return EvidenceAccess(Readiness.READY, Rights.ALLOWED, Rights.ALLOWED)
+        return EvidenceAccess(Readiness.READY, Rights.DENIED, Rights.DENIED)
+
+    def evidence_claim(source):
+        approved = sources.get(source.content_hash)
+        market, quotes = approved if approved is not None else (None, ())
+        return EvidenceClaim(
+            source.position.kind, source.position.source_id, source.revision,
+            source.content_hash, source.instrument_id, source.observed_at,
+            source.window_start, source.window_end, quotes, market=market,
+            rights_allowed=approved is not None, quality_ok=approved is not None,
+        )
+
+    return ResearchDiscovery(
+        ScheduleStore(engine), DiscoveryStore(engine, require_active=ScheduleStore.require_active),
+        ModelAttemptStore(engine), gateway, CompanionStore(engine, command_key=command_key),
+        IdeaLifecycle(_CONTRACT, permits=_idea_content, verifies=lambda action, *_:
+                      action is IdeaAction.PUBLISH),
+        configure=lambda _: config, access=access, recheck=permitted,
+        evidence_claim=evidence_claim, permits=safe_result_content,
+    )
 
 
 if __name__ == "__main__":

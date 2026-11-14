@@ -38,8 +38,8 @@ from packages.agent_research.run_state import RunState
 from packages.agent_research.runs import RunKind, RunStore
 from packages.persistence.transaction import ReadOnlyScopedConnection
 from packages.research.models import content_fingerprint
-from services.llm_gateway.discovery import OfflineDiscoveryDispatch
-from services.llm_gateway.provider_http import conservative_input_bound
+from services.llm_gateway.discovery import OfflineDiscoveryDispatch, ProviderDiscoveryDispatch
+from services.llm_gateway.provider_http import conservative_input_bound, provider_request_bytes
 from services.llm_gateway.provider_wire import ResultState
 from services.runtime.agent_research import ResearchSupervisor, StepResult
 
@@ -53,6 +53,9 @@ class DiscoveryConfiguration:
     tokens: Tokens
     context_window: int
     policy_version: int = 1
+    provider_authority: Callable[[ReadOnlyScopedConnection], bool] | None = None
+    evidence_revision: int | None = None
+    data_classes: frozenset[str] = frozenset()
 
 
 _SOURCE_KINDS = {
@@ -64,7 +67,8 @@ _SOURCE_KINDS = {
 class ResearchDiscovery:
     def __init__(
         self, schedules: ScheduleStore, store: DiscoveryStore, attempts: ModelAttemptStore,
-        gateway: OfflineDiscoveryDispatch, ideas: CompanionStore, lifecycle: IdeaLifecycle, *,
+        gateway: OfflineDiscoveryDispatch | ProviderDiscoveryDispatch, ideas: CompanionStore,
+        lifecycle: IdeaLifecycle, *,
         configure: Callable[[str], DiscoveryConfiguration],
         access: Callable[[ReadOnlyScopedConnection, EvidenceRevision], EvidenceAccess],
         recheck: Callable[[ReadOnlyScopedConnection, EvidenceRevision], bool],
@@ -88,6 +92,10 @@ class ResearchDiscovery:
         config = self.configure(schedule_id)
 
         def enqueue(connection, schedule, occurrence, *, epoch):
+            if config.provider_authority is not None and (
+                config.provider_authority(ReadOnlyScopedConnection(connection)) is not True
+            ):
+                raise ScheduleDenied("DISCOVERY_SCHEDULE_STALE")
             key = content_fingerprint((schedule.schedule_id, occurrence.local_date.isoformat()))
             return RunStore.enqueue_in_transaction(
                 connection, actor=self.actor, key=key, kind=RunKind.SCHEDULED,
@@ -144,6 +152,11 @@ class ResearchDiscovery:
         config = self.configure(work.input_ref)
         document = schedule.to_document()
         scope = document["scope"]
+        if isinstance(self.gateway, ProviderDiscoveryDispatch) and (
+            config.provider_authority is None or config.evidence_revision is None
+            or not set(scope["sourceKinds"]) <= config.data_classes
+        ):
+            return StepResult(RunState.BLOCKED, "DISCOVERY_BINDING_CHANGED")
         kinds = set().union(*(_SOURCE_KINDS[name] for name in scope["sourceKinds"]))
         if (
             document["triggerPolicyVersion"] != config.policy_version
@@ -167,7 +180,7 @@ class ResearchDiscovery:
         limits = document["limits"]
         ready = self.store.ready(claim)
         if ready is not None:
-            count = self._publish(claim, ready, limits["maxIdeas"], config.trigger)
+            count = self._publish(claim, ready, limits["maxIdeas"], config)
             return StepResult(RunState.QUEUED, "PUBLISHED" if count else "NO_NEW_RESEARCH_IDEAS")
         calls, spent_input, spent_output, spent_cost, scanned, published = self.store.totals(claim)
         if published >= limits["maxIdeas"]:
@@ -235,15 +248,24 @@ class ResearchDiscovery:
             "evidence": source.immutable_binding(),
             "quotes": evidence.quotes,
         }, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode()
-        if (
-            self.permits(json.loads(payload)) is not True
-            or conservative_input_bound(capability, payload) > config.tokens.input
+        production = isinstance(self.gateway, ProviderDiscoveryDispatch)
+        if production and (config.provider_authority is None or config.evidence_revision is None):
+            return StepResult(RunState.BLOCKED, "DISCOVERY_BINDING_CHANGED")
+        if self.permits(json.loads(payload)) is not True or (
+            not production and conservative_input_bound(capability, payload) > config.tokens.input
         ):
             self.store.block_pending(claim, item["evaluation_id"], "DISCOVERY_CONTEXT_DENIED")
             return StepResult(RunState.QUEUED, "DISCOVERY_CONTEXT_DENIED")
         identity = f"discovery-attempt:{claim.run_id}:{claim.fence}:{item['evaluation_id']}"
         attempt_id = uuid5(NAMESPACE_URL, identity)
-        request_hash = content_fingerprint((item["evaluation_hash"], sha256(payload).hexdigest()))
+        bound_bytes = provider_request_bytes(capability, payload) if production else payload
+        request_hash = content_fingerprint((
+            item["evaluation_hash"], sha256(bound_bytes).hexdigest(),
+        ))
+        authority = (
+            {"evidence_revision": config.evidence_revision, "authority_hash": request_hash}
+            if production else {}
+        )
         timeout = int(capability.timeout_seconds)
         deadline = min(work.dispatch_deadline, datetime.now(UTC) + timedelta(seconds=timeout))
         if deadline <= datetime.now(UTC):
@@ -252,6 +274,7 @@ class ResearchDiscovery:
             claim, attempt_id=attempt_id, step_id=f"discovery:{item['evaluation_id']}",
             request_hash=request_hash, model=model, prices=config.prices,
             tokens=config.tokens, context_window=config.context_window, timeout_seconds=timeout,
+            **authority,
         )
         if attempt.status != "RESERVED":
             return StepResult(RunState.BLOCKED, "OUTCOME_UNKNOWN")
@@ -260,7 +283,8 @@ class ResearchDiscovery:
             self.store.authorize(
                 claim, item["evaluation_id"], attempt_id, request_hash,
                 evaluation_hash=item["evaluation_hash"],
-                recheck=lambda scope, evidence: self._current(scope, evidence, config.trigger),
+                recheck=lambda scope, evidence: self._current(scope, evidence, config),
+                **authority,
             )
 
         result = self.gateway.send(
@@ -269,6 +293,7 @@ class ResearchDiscovery:
         if result.state is ResultState.DISPATCH_DENIED:
             self.attempts.settle(
                 claim, attempt_id, ModelOutcome.UNSENT, unsent_evidence_ref=str(attempt_id),
+                **authority,
             )
             self.store.block_pending(claim, item["evaluation_id"], "DISCOVERY_DISPATCH_DENIED")
             return StepResult(RunState.QUEUED, "DISCOVERY_DISPATCH_DENIED")
@@ -278,6 +303,7 @@ class ResearchDiscovery:
         if result.state is ResultState.OUTCOME_UNKNOWN:
             self.store.settle(
                 claim, item["evaluation_id"], attempt_id, outcome=ModelOutcome.OUTCOME_UNKNOWN,
+                **authority,
             )
             return StepResult(RunState.BLOCKED, "OUTCOME_UNKNOWN")
         candidates = None
@@ -303,16 +329,19 @@ class ResearchDiscovery:
         self.store.settle(
             claim, item["evaluation_id"], attempt_id,
             outcome=outcome, safe_result=candidates, usage=usage, denials=denials,
+            **authority,
         )
         return StepResult(RunState.QUEUED, "DISCOVERY_RESULT_SAVED")
 
-    def _current(self, scope, source: EvidenceRevision, policy: TriggerPolicy) -> bool:
+    def _current(self, scope, source: EvidenceRevision, config: DiscoveryConfiguration) -> bool:
+        if config.provider_authority is not None and config.provider_authority(scope) is not True:
+            return False
         now = scope.execute(text("SELECT clock_timestamp()")).scalar_one()
         return evaluate_evidence(
-            source, self.access(scope, source), policy, now=now,
+            source, self.access(scope, source), config.trigger, now=now,
         ).eligible and self.recheck(scope, source) is True
 
-    def _publish(self, claim, evaluation_id, limit: int, policy: TriggerPolicy) -> int:
+    def _publish(self, claim, evaluation_id, limit: int, config: DiscoveryConfiguration) -> int:
         def write(scope, candidates, source):
             scope.execute(text("SELECT pg_advisory_xact_lock(894217349)"))
             count = scope.execute(text("""
@@ -376,7 +405,7 @@ class ResearchDiscovery:
 
         return self.store.publish(
             claim, evaluation_id,
-            recheck=lambda scope, evidence: self._current(scope, evidence, policy), write=write,
+            recheck=lambda scope, evidence: self._current(scope, evidence, config), write=write,
         )
 
     def _known_manual(self, scope, idea: dict) -> bool:

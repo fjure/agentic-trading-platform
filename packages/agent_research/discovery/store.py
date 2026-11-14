@@ -348,6 +348,8 @@ class DiscoveryStore:
         self, claim: Claim, evaluation_id: UUID, attempt_id: UUID, request_hash: str, *,
         evaluation_hash: str,
         recheck: Callable[[ReadOnlyScopedConnection, EvidenceRevision], bool],
+        evidence_revision: int | None = None,
+        authority_hash: str | None = None,
     ) -> None:
         with self.engine.begin() as connection:
             scan = self._lock_scan(connection, claim)
@@ -366,7 +368,15 @@ class DiscoveryStore:
                 or recheck(ReadOnlyScopedConnection(connection), _evidence(row)) is not True
             ):
                 raise RunConflict("AGENT_POLICY_DENIED")
-            ModelAttemptStore.authorize_in_transaction(connection, claim, attempt_id, request_hash)
+            if evidence_revision is None and authority_hash is None:
+                ModelAttemptStore.authorize_in_transaction(
+                    connection, claim, attempt_id, request_hash,
+                )
+            else:
+                ModelAttemptStore.authorize_in_transaction(
+                    connection, claim, attempt_id, request_hash,
+                    evidence_revision=evidence_revision, authority_hash=authority_hash,
+                )
             connection.execute(text("""
                 UPDATE agent_research.discovery_work
                 SET state='DISPATCHING',reason='DISPATCH_AUTHORIZED',run_id=:run,attempt_id=:attempt
@@ -378,6 +388,8 @@ class DiscoveryStore:
         self, claim: Claim, evaluation_id: UUID, attempt_id: UUID, *,
         outcome: ModelOutcome, safe_result: list | None = None, usage: Tokens | None = None,
         denials: tuple[str, ...] = (),
+        evidence_revision: int | None = None,
+        authority_hash: str | None = None,
     ) -> None:
         if (outcome is ModelOutcome.COMPLETED) != (safe_result is not None):
             raise ValueError("invalid discovery result")
@@ -387,22 +399,26 @@ class DiscoveryStore:
         }[outcome]
         with self.engine.begin() as connection:
             _lock_run(connection, claim)
+            attempt = ModelAttemptStore.settle_in_transaction(
+                connection, claim, attempt_id, outcome, reported_tokens=usage,
+                result_ref=str(evaluation_id) if safe_result is not None else None,
+                evidence_revision=evidence_revision, authority_hash=authority_hash,
+            )
+            if attempt.status != "COMPLETED":
+                safe_result = None
+                state = "OUTCOME_UNKNOWN" if attempt.status == "OUTCOME_UNKNOWN" else "BLOCKED"
             position = connection.execute(text("""
                 UPDATE agent_research.discovery_work SET state=:state,reason=:reason,
                   safe_result=CAST(:result AS jsonb)
                 WHERE evaluation_id=:evaluation AND run_id=:run AND attempt_id=:attempt
                   AND state='DISPATCHING' RETURNING source_position
-            """), {"state": state, "reason": outcome.value, "evaluation": evaluation_id,
+            """), {"state": state, "reason": attempt.status, "evaluation": evaluation_id,
                     "run": claim.run_id, "attempt": attempt_id,
                     "result": None if safe_result is None else json.dumps(safe_result)}
             ).scalar_one_or_none()
             if position is None:
                 raise RunConflict("AGENT_POLICY_DENIED")
-            ModelAttemptStore.settle_in_transaction(
-                connection, claim, attempt_id, outcome, reported_tokens=usage,
-                result_ref=str(evaluation_id) if safe_result is not None else None,
-            )
-            _event(connection, claim, position, outcome.value)
+            _event(connection, claim, position, attempt.status)
             for denial in denials:
                 _event(connection, claim, position, denial)
 

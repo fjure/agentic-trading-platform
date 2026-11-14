@@ -172,7 +172,8 @@ class ResearchCredentialStore(_Volume):
                     ),
                     None,
                 )
-            return current.status(), sha256(current.encode()).hexdigest()
+            digest = sha256(current.encode()).hexdigest() if current.allocation else None
+            return current.status(), digest
 
     def status(self, provider: Provider) -> CredentialStatus:
         return self.authority_metadata(provider)[0]

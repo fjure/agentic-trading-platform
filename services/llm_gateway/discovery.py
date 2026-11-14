@@ -3,11 +3,51 @@
 from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
+from hashlib import sha256
+from threading import Lock
 from uuid import UUID
 
 from .dispatch_journal import DispatchJournal, DispatchOutcome, JournalDenied
+from .offline_gateway import AuthorizedDispatch, DispatchRequest
 from .provider_http import Capability, OfflineProviderHttp
 from .provider_wire import ProviderResult, ResultState
+
+
+class ProviderDiscoveryDispatch:
+    """Release a scheduled projection only through signed, one-use admission."""
+
+    def __init__(self, gateway, capability: Capability):
+        self._gateway = gateway
+        self.capability = capability
+        self._lock = Lock()
+        self._pending = {}
+
+    def send(self, attempt_id, commitment, deadline, payload, *, authorize):
+        capability = self.capability
+        request = DispatchRequest(
+            attempt_id, commitment, sha256(payload).hexdigest(), capability.provider,
+            capability.model, capability.profile_id, capability.profile_generation,
+            capability.model_generation, capability.credential_generation,
+            capability.envelope_version, deadline, purpose="DISCOVERY",
+        )
+        with self._lock:
+            if self._pending:
+                return ProviderResult(ResultState.DISPATCH_DENIED)
+            self._pending[attempt_id] = (request, payload, authorize)
+        try:
+            return self._gateway.dispatch(request)
+        finally:
+            with self._lock:
+                self._pending.pop(attempt_id, None)
+
+    def consume(self, request):
+        with self._lock:
+            pending = self._pending.get(request.attempt_id)
+            if pending is None or pending[0] != request or request.expires_at <= datetime.now(UTC):
+                return None
+            _, payload, authorize = self._pending.pop(request.attempt_id)
+        authorize()
+        return AuthorizedDispatch(request, self.capability, payload)
 
 
 class OfflineDiscoveryDispatch:
