@@ -27,7 +27,7 @@ def run(*args, env=None, timeout=240):
     subprocess.run(args, env=env, cwd=ROOT, check=True, timeout=timeout)
 
 
-def prepare(base_image, test_image):
+def prepare(base_image, test_image, use_ci_build):
     node = shutil.which("node")
     npm = shutil.which("npm")
     if node is None or npm is None:
@@ -43,7 +43,11 @@ def prepare(base_image, test_image):
         "--build-arg", f"RESEARCH_TEST_BASE={base_image}", ".",
     )
     run(npm, "--prefix", "apps/dashboard", "ci", "--no-audit", "--no-fund")
-    run(npm, "--prefix", "apps/dashboard", "run", "build")
+    if use_ci_build:
+        run(sys.executable, "scripts/check-research-browser-build.py", "check",
+            "apps/dashboard/dist/dashboard")
+    else:
+        run(npm, "--prefix", "apps/dashboard", "run", "build")
     chromium = ["chromium"] if os.name == "nt" else ["--with-deps", "chromium"]
     run(node, str(PLAYWRIGHT), "install", *chromium)
     return node
@@ -110,13 +114,14 @@ def execute(node, test_image, junitxml):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--junitxml", type=Path, required=True)
+    parser.add_argument("--use-ci-build", action="store_true")
     args = parser.parse_args()
     identity = uuid4().hex
     base_image = f"atl-research-browser-base:{identity}"
     test_image = f"atl-research-browser:{identity}"
     try:
         try:
-            node = prepare(base_image, test_image)
+            node = prepare(base_image, test_image, args.use_ci_build)
         except (RuntimeError, OSError, subprocess.SubprocessError) as error:
             print(
                 f"Research browser environment unavailable ({type(error).__name__}).",

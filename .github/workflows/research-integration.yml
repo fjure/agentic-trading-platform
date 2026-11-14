@@ -13,8 +13,57 @@ on:
 permissions:
   contents: read
 
+env:
+  PR_BASE: ${{ github.event.pull_request.base.sha }}
+  PR_HEAD: ${{ github.event.pull_request.head.sha }}
+
 jobs:
+  plan:
+    name: Research test selection
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      browser: ${{ steps.selection.outputs.browser }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: selection
+        run: |
+          browser=$(python3 scripts/research-browser-required.py --event "$GITHUB_EVENT_NAME" \
+            --base "$PR_BASE" --head "$PR_HEAD")
+          echo "browser=$browser" >> "$GITHUB_OUTPUT"
+
+  dashboard:
+    name: Research Angular build
+    needs: plan
+    if: needs.plan.outputs.browser != 'false'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.23.3'
+      - run: |
+          npm --prefix apps/dashboard ci --no-audit --no-fund
+          npm --prefix apps/dashboard run build
+          python3 scripts/check-research-browser-build.py record apps/dashboard/dist/dashboard
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: angular-research-build
+          path: |
+            apps/dashboard/dist/dashboard/browser
+            apps/dashboard/dist/dashboard/research-build.json
+          if-no-files-found: error
+          retention-days: 7
+
   gate:
+    needs: [plan, dashboard]
+    if: always() && !cancelled()
     name: Research ${{ matrix.gate }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -24,6 +73,7 @@ jobs:
         gate: [fast, db, browser]
     env:
       GATE: ${{ matrix.gate }}
+      BROWSER_REQUIRED: ${{ needs.plan.outputs.browser }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -32,11 +82,17 @@ jobs:
         with:
           python-version: '3.13.16'
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        if: matrix.gate == 'browser'
+        if: matrix.gate == 'browser' && env.BROWSER_REQUIRED != 'false'
         with:
           node-version: '22.23.3'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        if: matrix.gate == 'browser' && env.BROWSER_REQUIRED != 'false'
+        with:
+          name: angular-research-build
+          path: apps/dashboard/dist/dashboard
       - name: Install locked dependencies
         id: dependencies
+        if: matrix.gate != 'browser' || env.BROWSER_REQUIRED != 'false'
         run: |
           python -m pip install uv==0.13.0
           uv sync --frozen --python python --no-python-downloads
@@ -54,7 +110,10 @@ jobs:
           junit="$RUNNER_TEMP/research-results.xml"
           status=missing_environment
           reason="Locked dependencies unavailable"
-          if [[ "$DEPENDENCIES" == success ]]; then
+          if [[ "$GATE" == browser && "$BROWSER_REQUIRED" == false ]]; then
+            status=not_required
+            reason="Only documentation changed in the complete pull request diff"
+          elif [[ "$DEPENDENCIES" == success ]]; then
             result=0
             case "$GATE" in
               fast) .venv/bin/python -m pytest \
@@ -67,7 +126,7 @@ jobs:
                 tests/security/test_provider_credential_authority.py \
                 --junitxml "$junit" -o junit_logging=no -o junit_log_passing_tests=false || result=$? ;;
               db) .venv/bin/python scripts/test-research-db.py --junitxml "$junit" || result=$? ;;
-              browser) .venv/bin/python scripts/test-research-browser.py --junitxml "$junit" || result=$? ;;
+              browser) .venv/bin/python scripts/test-research-browser.py --use-ci-build --junitxml "$junit" || result=$? ;;
             esac
             if [[ "$result" == 0 ]]; then
               status=passed
@@ -84,7 +143,7 @@ jobs:
           python scripts/check-research-evidence.py record --gate "$GATE" \
             --source-sha "$sha" --output "$RUNNER_TEMP/evidence" \
             --status "$status" --reason "$reason" "${args[@]}"
-          test "$status" = passed
+          [[ "$status" == passed || "$status" == not_required ]]
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always() && !cancelled()
         with:
@@ -96,12 +155,13 @@ jobs:
   required:
     name: Research required evidence
     if: always()
-    needs: gate
+    needs: [plan, gate]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
@@ -111,12 +171,16 @@ jobs:
         if: always()
         env:
           GATE_RESULT: ${{ needs.gate.result }}
+          PLAN_DECISION: ${{ needs.plan.outputs.browser }}
         run: |
           sha=$(git rev-parse HEAD)
           test "$sha" = "$GITHUB_SHA"
           for gate in fast db browser; do
             mv "$RUNNER_TEMP/research-artifacts/research-$gate" "$RUNNER_TEMP/research-artifacts/$gate" || true
           done
+          browser=$(python3 scripts/research-browser-required.py --event "$GITHUB_EVENT_NAME" \
+            --base "$PR_BASE" --head "$PR_HEAD")
+          test "$PLAN_DECISION" = "$browser"
           python3 scripts/check-research-evidence.py check --source-sha "$sha" \
-            --artifacts "$RUNNER_TEMP/research-artifacts" --browser-required true
+            --artifacts "$RUNNER_TEMP/research-artifacts" --browser-required "$browser"
           test "$GATE_RESULT" = success
