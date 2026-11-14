@@ -7,3 +7,7 @@ Der Workflow `Research integration` führt Fast-, PostgreSQL- und Chromium-Gates
 Der Aggregator bindet redigiertes JUnit an Quell-SHA, Manifest-SHA und Artefaktprüfsumme. Fehlende Umgebung, übersprungene Fälle, fehlende IDs, doppelte Pflichtfälle, fehlende Artefakte und abweichende SHAs verhindern einen positiven Check. Neue Offline-Suiten werden mit einem Fragment in `scripts/research-evidence/` und der Testauswahl des zugeordneten Gate-Runners registriert.
 
 GitHub meldete für `main` keine geltende Branchschutzregel und kein Ruleset. Wer Merge-Schutz erzwingen will, muss im Repository-Ruleset den Check `Research required evidence` aus GitHub Actions für `main` verpflichtend machen. Bestehende Regeln wurden lesend geprüft.
+
+Der erste GitHub-Lauf 43595019836 belegte, dass ein fehlgeschlagener DB-Job den Aggregator rot färbt. Auf einer frischen PostgreSQL-Instanz benötigten die Ledger- und Companion-Fixtures eine zusätzliche Migrationsrolle. Nach deren Provisionierung bestanden lokal alle acht Fälle. Der unabhängige Browserlauf prüfte vier Chromium-Fälle und die SQL-Nachprüfung. Die Auswahl wurde mit vollständigem Doku-Diff, Lockfile-Änderung, fehlender Git-Basis und Release-Ereignis geprüft.
+
+Die normative Abnahme verlangt einen erfolgreichen echten Pull-Request-Lauf und einen Releasevalidierungslauf. Beide Auslöser sind getrennt vom Branch-Push. Für das Repository wurde kein Pull Request eröffnet.
