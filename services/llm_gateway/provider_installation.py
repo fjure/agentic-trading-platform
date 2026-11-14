@@ -61,6 +61,10 @@ def load_installation(path: Path = PROFILE_PATH) -> ProviderInstallation | None:
         if (
             sha256(instructions.encode()).hexdigest() != binding.prompt_sha256
             or sha256(schema.encode()).hexdigest() != binding.schema_sha256
+            or binding.response_model_id != binding.model_id
+            or binding.api_version != ("2026-10-21" if binding.provider == "ANTHROPIC" else "v1")
+            or binding.max_response_bytes != 262144
+            or not 1 <= binding.timeout_seconds <= 15
         ):
             raise ValueError
         capability = Capability(

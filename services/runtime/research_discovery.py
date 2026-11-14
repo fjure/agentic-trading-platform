@@ -39,7 +39,11 @@ from packages.agent_research.runs import RunKind, RunStore
 from packages.persistence.transaction import ReadOnlyScopedConnection
 from packages.research.models import content_fingerprint
 from services.llm_gateway.discovery import OfflineDiscoveryDispatch, ProviderDiscoveryDispatch
-from services.llm_gateway.provider_http import conservative_input_bound, provider_request_bytes
+from services.llm_gateway.provider_http import (
+    conservative_input_bound,
+    production_input_bound,
+    provider_request_bytes,
+)
 from services.llm_gateway.provider_wire import ResultState
 from services.runtime.agent_research import ResearchSupervisor, StepResult
 
@@ -56,6 +60,7 @@ class DiscoveryConfiguration:
     provider_authority: Callable[[ReadOnlyScopedConnection], bool] | None = None
     evidence_revision: int | None = None
     data_classes: frozenset[str] = frozenset()
+    max_request_bytes: int = 65536
 
 
 _SOURCE_KINDS = {
@@ -251,14 +256,23 @@ class ResearchDiscovery:
         production = isinstance(self.gateway, ProviderDiscoveryDispatch)
         if production and (config.provider_authority is None or config.evidence_revision is None):
             return StepResult(RunState.BLOCKED, "DISCOVERY_BINDING_CHANGED")
-        if self.permits(json.loads(payload)) is not True or (
-            not production and conservative_input_bound(capability, payload) > config.tokens.input
+        try:
+            bound_bytes = provider_request_bytes(capability, payload) if production else payload
+            required_input = (
+                production_input_bound(bound_bytes) if production
+                else conservative_input_bound(capability, payload)
+            )
+        except ValueError:
+            self.store.block_pending(claim, item["evaluation_id"], "DISCOVERY_CONTEXT_DENIED")
+            return StepResult(RunState.QUEUED, "DISCOVERY_CONTEXT_DENIED")
+        if (
+            self.permits(json.loads(payload)) is not True or required_input > config.tokens.input
+            or (production and len(bound_bytes) > config.max_request_bytes)
         ):
             self.store.block_pending(claim, item["evaluation_id"], "DISCOVERY_CONTEXT_DENIED")
             return StepResult(RunState.QUEUED, "DISCOVERY_CONTEXT_DENIED")
         identity = f"discovery-attempt:{claim.run_id}:{claim.fence}:{item['evaluation_id']}"
         attempt_id = uuid5(NAMESPACE_URL, identity)
-        bound_bytes = provider_request_bytes(capability, payload) if production else payload
         request_hash = content_fingerprint((
             item["evaluation_hash"], sha256(bound_bytes).hexdigest(),
         ))

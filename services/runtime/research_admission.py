@@ -15,6 +15,7 @@ from services.llm_gateway.offline_gateway import AuthorizedDispatch, DispatchReq
 from services.llm_gateway.provider_http import (
     Capability,
     conservative_input_bound,
+    production_input_bound,
     provider_request_bytes,
 )
 
@@ -77,12 +78,15 @@ class ResearchDispatchAdmission:
                 ):
                     return False
                 try:
-                    digest = sha256(provider_request_bytes(capability, content)).hexdigest()
+                    wire = provider_request_bytes(capability, content)
+                    digest = sha256(wire).hexdigest()
                 except Exception:
                     return False
                 if not compare_digest(digest, binding.provider_request_sha256):
                     return False
-                required_input = intent.billable_input_bound
+                required_input = production_input_bound(wire)
+                if required_input > intent.billable_input_bound:
+                    return False
             return (
                 compare_digest(commitment, request.request_hash)
                 and compare_digest(sha256(content).hexdigest(), request.projection_sha256)

@@ -137,6 +137,29 @@ def _lock_policies(connection: Connection, scopes: tuple[str, ...]) -> list[RowM
     return rows
 
 
+def _budget_binding(policies, period: date) -> str:
+    revisions = [[policy["scope"], policy["version"]] for policy in policies]
+    return sha256(json.dumps([period.isoformat(), revisions]).encode()).hexdigest()
+
+
+def preview_budget_binding(connection, agent, model, dialogue_id: str) -> str:
+    scopes = production_model_budget_scopes(
+        agent.agent_id, agent.version, "DIALOGUE", model, dialogue_id,
+    )
+    policies = list(connection.execute(text("""
+        SELECT scope,version,enabled FROM agent_research.model_budget_policies
+        WHERE scope=ANY(CAST(:scopes AS text[])) ORDER BY scope
+    """), {"scopes": list(scopes)}).mappings())
+    if tuple(policy["scope"] for policy in policies) != scopes or any(
+        not policy["enabled"] for policy in policies
+    ):
+        raise RunConflict("BUDGET_POLICY_UNAVAILABLE")
+    period = connection.execute(text(
+        "SELECT (clock_timestamp() AT TIME ZONE 'UTC')::date"
+    )).scalar_one()
+    return _budget_binding(policies, period)
+
+
 def _audit(connection: Connection, attempt_id: UUID) -> None:
     connection.execute(text("""
         INSERT INTO agent_research.model_attempt_events (attempt_id,status,exceeded_bound)
@@ -317,6 +340,7 @@ class ModelAttemptStore:
         model: ModelBinding, prices: TokenPrices, tokens: Tokens, context_window: int,
         timeout_seconds: int,
         evidence_revision: int | None = None, authority_hash: str | None = None,
+        budget_binding_sha256: str | None = None,
     ) -> Attempt:
         if (not _REFERENCE.fullmatch(step_id) or not _HASH.fullmatch(request_hash)
             or type(timeout_seconds) is not int or not 1 <= timeout_seconds <= 600):
@@ -365,6 +389,10 @@ class ModelAttemptStore:
             _require_current_prices(connection, agent["model_binding"], prices)
             run = _lock_run(connection, claim)
             period = run["current_period"] if production else run["budget_period"]
+            if budget_binding_sha256 is not None and (
+                not production or _budget_binding(policies, period) != budget_binding_sha256
+            ):
+                raise RunConflict("PROCESSING_GRANT_INVALID")
             require_capacity(
                 _windows(connection, run, policies, period, production=production), bound,
             )

@@ -55,6 +55,7 @@ class ProcessingBinding:
     evidence_revision: int | None = None
     tariff_revision: int | None = None
     provider_request_sha256: str | None = None
+    budget_binding_sha256: str | None = None
 
     def __post_init__(self) -> None:
         identities = (
@@ -79,12 +80,13 @@ class ProcessingBinding:
                 value is not None and (type(value) is not int or value < 1)
                 for value in (self.evidence_revision, self.tariff_revision)
             )
-            or (
-                self.provider_request_sha256 is not None and (
+            or any(
+                value is not None and (
                     self.evidence_revision is None
-                    or not isinstance(self.provider_request_sha256, str)
-                    or not _COMMITMENT.fullmatch(self.provider_request_sha256)
+                    or not isinstance(value, str)
+                    or not _COMMITMENT.fullmatch(value)
                 )
+                for value in (self.provider_request_sha256, self.budget_binding_sha256)
             )
         ):
             raise _invalid()

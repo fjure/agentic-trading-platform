@@ -26,7 +26,11 @@ from packages.agent_research.runs import RunConflict
 from services.llm_gateway.app import GatewayDispatchClient
 from services.llm_gateway.content_policy import safe_result_content, valid_projection
 from services.llm_gateway.discovery import ProviderDiscoveryDispatch
-from services.llm_gateway.provider_http import Capability, provider_request_bytes
+from services.llm_gateway.provider_http import (
+    Capability,
+    production_input_bound,
+    provider_request_bytes,
+)
 from services.llm_gateway.provider_installation import ProviderInstallation
 from services.llm_gateway.supervisor_rpc import AdmissionAuthentication, CancellationClient
 
@@ -160,7 +164,7 @@ def bind_discovery_authority(
 
     return replace(
         config, provider_authority=current, evidence_revision=binding.evidence_revision,
-        data_classes=frozenset(binding.data_classes),
+        data_classes=frozenset(binding.data_classes), max_request_bytes=binding.max_request_bytes,
     )
 
 
@@ -249,8 +253,12 @@ def bind_dialogue_profile(
         return True
 
     def permits(projection):
-        return valid_projection(projection) and (
-            len(provider_request_bytes(capability, projection)) <= binding.max_request_bytes
+        if not valid_projection(projection):
+            return False
+        wire = provider_request_bytes(capability, projection)
+        return (
+            len(wire) <= binding.max_request_bytes
+            and production_input_bound(wire) <= tokens.input
         )
 
     return ProviderDialogueProfile(

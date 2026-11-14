@@ -144,6 +144,11 @@ def provider_request_bytes(capability: Capability, projection: bytes) -> bytes:
     return _request_parts(capability, projection, production=True)[1]
 
 
+def production_input_bound(wire: bytes) -> int:
+    """Bound tokens using all exact wire bytes and provider framing overhead."""
+    return len(wire) + 256
+
+
 class _ProviderHttp:
     def _send(
         self, capability: Capability, projection: bytes,

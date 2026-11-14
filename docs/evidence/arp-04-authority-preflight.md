@@ -1,4 +1,4 @@
-# ARP-04 · Lokaler Prüfstand
+# ARP-04 · Prüfnachweis
 
 Basis `3737c6f7b896594608b1557ac645767f279a502b`. GitHub bestätigte #97 und #98 als abgeschlossene Voraussetzungen von #99.
 
@@ -19,4 +19,8 @@ Basis `3737c6f7b896594608b1557ac645767f279a502b`. GitHub bestätigte #97 und #98
 
 - Der Supervisor-Einstieg erzeugt bei explizitem Discovery-Deskriptor die Konfiguration und den signierten Gateway-Port aus PostgreSQL und der versionsgebundenen Quelldefinition. Die Quelldefinition bindet Quell-ID und Fingerprint sowie die freigegebenen Zitate an den Profilhash. Der Discovery-Test lädt den Deskriptor über den Produktionsloader und prüft den gesamten Weg bis zur Veröffentlichung. Die kombinierte Compose-Konfiguration wurde statisch validiert.
 
-Offen bleiben der integrierte Compose-Start mit aktivem Testprofil und die Abnahme des exakten Abschlusscommits. Externer Providerdispatch bleibt im Standardprofil gesperrt. #99 bleibt offen.
+- Auf Quellstand `bc4ce4d142130ff000844ca8771e0c3a8302713d` bestand der GitHub-Lauf Contracts 43538231491 nach Neugenerierung aus dem endgültigen Vertrag. Beide Generierungen lieferten 491 bytegleiche Dateien. Vertragsprüfungen, Angular-Produktionsbuild und Browserprüfungen bestanden.
+
+- Der integrierte Compose-Start auf demselben Quellstand verwendete die Overlays `research-control`, `research-setup`, `research-authority` und `research-dispatch`. Ein temporäres Overlay entfernte veröffentlichte PostgreSQL-Ports und unbenutzte Datenbanknetze. Es stellte Testdateien über private Linux-Volumes bereit. In der temporären Datenbank `lab_paper_runtime` aktivierte eine synthetisch gefencete und abgerechnete Smoke-Fixture ein Dialogprofil mit eigener Kosten- und Tarifevidenz. Nach Provisionierung des Journals durch UID 10002 meldete `docker compose up --no-build -d --wait --wait-timeout 45 research-supervisor research-llm-gateway` PostgreSQL und Gateway gesund. Der Supervisor wies einen unsignierten Aufruf von `/private/v1/research/dispatch-admission` aus dem Gateway-Container mit HTTP 403 ab. Externer Egress blieb aus. Anschließend wurden Testprojekt, Testvolumes und temporäre Zugangsdaten entfernt.
+
+- Das unabhängige Review identifizierte zwei Lücken vor Versand. Dialog und Discovery prüfen jetzt die exakten Wire-Bytes samt konservativer Framing-Reserve gegen den Tokenrahmen. Discovery prüft zusätzlich das profilgebundene Bytelimit. Der Installationsloader erzwingt die gemeinsame Wire-Version, das Antwortmodell und die festen Transportgrenzen. Die Dialogfreigabe bindet die UTC-Kostenperiode und die Revisionen aller betroffenen Budgetrichtlinien. Die Reservierung prüft diese Bindung unter den Ledger-Sperren, die Admission prüft sie erneut. Der PostgreSQL-Test weist eine abweichende Bindung vor der Reservierung zurück.

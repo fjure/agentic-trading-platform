@@ -234,6 +234,10 @@ def verify_attempts(owner, worker, model, agent, kind, prices):
             """), {"owner": owner_id, "run": run}).one()
         claim = Claim(run, owner_id, row.fence, row.version)
         claims.append(claim)
+    with pytest.raises(RunConflict, match="PROCESSING_GRANT_INVALID"):
+        attempts.reserve(
+            claims[0], attempt_id=uuid4(), budget_binding_sha256="0" * 64, **reservation,
+        )
     barrier = Barrier(2, timeout=5)
 
     def race(claim):

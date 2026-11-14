@@ -13,6 +13,7 @@ from packages.agent_research.companion.dialogue import DialogueError
 from packages.agent_research.companion.interpretation import InterpretationDenied
 from packages.agent_research.companion.service import DialogueCommand
 from packages.agent_research.companion.store import CompanionConflict
+from packages.agent_research.model_attempts import preview_budget_binding
 from packages.agent_research.processing import ProcessingBinding
 from packages.agent_research.registry import AgentVersion
 from packages.agent_research.run_state import RunState
@@ -160,6 +161,9 @@ class OfflineDialogueStep:
                 {
                     "evidence_revision": self.profile.evidence_revision,
                     "tariff_revision": self.profile.tariff_revision,
+                    "budget_binding_sha256": preview_budget_binding(
+                        scope, self.profile.agent, model, dialogue.dialogue_id,
+                    ),
                 }
                 if isinstance(self.profile, ProviderDialogueProfile) else {}
             ),
@@ -215,6 +219,11 @@ class OfflineDialogueStep:
             content = store.vault._dispatch_content(row.preview_id, binding, row.commitment)
         except RunConflict:
             return StepResult(RunState.WAITING_FOR_INPUT)
+        if (
+            isinstance(self.profile, ProviderDialogueProfile)
+            and binding.budget_binding_sha256 is None
+        ):
+            return StepResult(RunState.WAITING_FOR_INPUT)
         capability = self.profile.capability
         timeout = min(20, int(capability.timeout_seconds))
         deadline = min(
@@ -239,6 +248,7 @@ class OfflineDialogueStep:
                 {
                     "evidence_revision": self.profile.evidence_revision,
                     "authority_hash": row.commitment,
+                    "budget_binding_sha256": binding.budget_binding_sha256,
                 }
                 if isinstance(self.profile, ProviderDialogueProfile) else {}
             ),
