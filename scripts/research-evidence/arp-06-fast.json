@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "packageId": "ARP-06",
+  "suite": "arp-language-evaluation",
+  "gate": "fast",
+  "mode": "offline",
+  "artifact": "research-fast",
+  "cases": [
+    {
+      "id": "ARP-EVAL-AUTHORIZATION-BINDING",
+      "class": "tests.evaluation.test_harness",
+      "name": "test_authorization_binding_blocks_every_dispatch"
+    },
+    {
+      "id": "ARP-EVAL-UNKNOWN-COST",
+      "class": "tests.evaluation.test_harness",
+      "name": "test_unknown_cost_holds_budget_and_prevents_replay"
+    },
+    {
+      "id": "ARP-EVAL-PUBLIC-SPLIT",
+      "class": "tests.evaluation.test_catalog",
+      "name": "test_catalog_public_split_and_hash"
+    },
+    {
+      "id": "ARP-EVAL-CATALOG-TAMPER",
+      "class": "tests.evaluation.test_catalog",
+      "name": "test_catalog_tampering_blocks_loading"
+    },
+    {
+      "id": "ARP-EVAL-MISSING",
+      "class": "tests.evaluation.test_scorer",
+      "name": "test_missing_timeout_and_budget_abort_never_fake_false_positives_or_evaluable_cases"
+    },
+    {
+      "id": "ARP-EVAL-CRITICAL",
+      "class": "tests.evaluation.test_scorer",
+      "name": "test_critical_model_output_and_effective_actions_are_distinct_from_local_rejection"
+    },
+    {
+      "id": "ARP-EVAL-REGRESSION",
+      "class": "tests.evaluation.test_scorer",
+      "name": "test_paired_regression_counts_questions_and_requires_independent_decision"
+    },
+    {
+      "id": "ARP-EVAL-COVERAGE",
+      "class": "tests.evaluation.test_scorer",
+      "name": "test_coverage_requires_group_counts_holdout_classes_and_independent_clusters"
+    },
+    {
+      "id": "ARP-EVAL-GATEWAY-BINDING",
+      "class": "tests.evaluation.test_gateway",
+      "name": "test_gateway_only_dispatches_matching_supervisor_projection"
+    }
+  ]
+}

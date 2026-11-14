@@ -1,0 +1,391 @@
+{
+  "version": 1,
+  "developmentSha256": "a7153f177d5adcf4a6469f449204281f0afac98d5526d2d899451df79fd59d58",
+  "holdoutSha256": "7ff0981c53835c1ace863a7aecdb30a6f44b7faf4cb4b7a809e7864d88228baa",
+  "cases": [
+    {
+      "caseId": "DE-A01",
+      "version": 1,
+      "group": "advanced",
+      "split": "development",
+      "cluster": "concept-a01",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-A02",
+      "version": 1,
+      "group": "advanced",
+      "split": "development",
+      "cluster": "concept-a02",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-A03",
+      "version": 1,
+      "group": "advanced",
+      "split": "development",
+      "cluster": "concept-a03",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-A04",
+      "version": 1,
+      "group": "advanced",
+      "split": "development",
+      "cluster": "concept-a04",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-A05",
+      "version": 1,
+      "group": "advanced",
+      "split": "development",
+      "cluster": "concept-a05",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-A06",
+      "version": 1,
+      "group": "advanced",
+      "split": "development",
+      "cluster": "concept-a06",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-A07",
+      "version": 1,
+      "group": "advanced",
+      "split": "holdout",
+      "cluster": "concept-a07",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-A08",
+      "version": 1,
+      "group": "advanced",
+      "split": "holdout",
+      "cluster": "concept-a08",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-A09",
+      "version": 1,
+      "group": "advanced",
+      "split": "holdout",
+      "cluster": "concept-a09",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-A10",
+      "version": 1,
+      "group": "advanced",
+      "split": "holdout",
+      "cluster": "concept-a10",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-A11",
+      "version": 1,
+      "group": "advanced",
+      "split": "holdout",
+      "cluster": "concept-a11",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-A12",
+      "version": 1,
+      "group": "advanced",
+      "split": "holdout",
+      "cluster": "concept-a12",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-B01",
+      "version": 1,
+      "group": "beginner",
+      "split": "holdout",
+      "cluster": "concept-b01",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-B02",
+      "version": 1,
+      "group": "beginner",
+      "split": "development",
+      "cluster": "concept-b02",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-B03",
+      "version": 1,
+      "group": "beginner",
+      "split": "development",
+      "cluster": "concept-b03",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-B04",
+      "version": 1,
+      "group": "beginner",
+      "split": "development",
+      "cluster": "concept-b04",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-B05",
+      "version": 1,
+      "group": "beginner",
+      "split": "development",
+      "cluster": "concept-b05",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-B06",
+      "version": 1,
+      "group": "beginner",
+      "split": "development",
+      "cluster": "concept-b06",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-B07",
+      "version": 1,
+      "group": "beginner",
+      "split": "holdout",
+      "cluster": "concept-b07",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-B08",
+      "version": 1,
+      "group": "beginner",
+      "split": "development",
+      "cluster": "concept-b08",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-B09",
+      "version": 1,
+      "group": "beginner",
+      "split": "holdout",
+      "cluster": "concept-b09",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-B10",
+      "version": 1,
+      "group": "beginner",
+      "split": "holdout",
+      "cluster": "concept-b10",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-B11",
+      "version": 1,
+      "group": "beginner",
+      "split": "holdout",
+      "cluster": "concept-b11",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-B12",
+      "version": 1,
+      "group": "beginner",
+      "split": "holdout",
+      "cluster": "concept-b12",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-E01",
+      "version": 1,
+      "group": "expert",
+      "split": "holdout",
+      "cluster": "concept-e01",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-E02",
+      "version": 1,
+      "group": "expert",
+      "split": "development",
+      "cluster": "concept-e02",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-E03",
+      "version": 1,
+      "group": "expert",
+      "split": "development",
+      "cluster": "concept-e03",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-E04",
+      "version": 1,
+      "group": "expert",
+      "split": "development",
+      "cluster": "concept-e04",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-E05",
+      "version": 1,
+      "group": "expert",
+      "split": "development",
+      "cluster": "concept-e05",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-E06",
+      "version": 1,
+      "group": "expert",
+      "split": "development",
+      "cluster": "concept-e06",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-E07",
+      "version": 1,
+      "group": "expert",
+      "split": "development",
+      "cluster": "concept-e07",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-E08",
+      "version": 1,
+      "group": "expert",
+      "split": "holdout",
+      "cluster": "concept-e08",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-E09",
+      "version": 1,
+      "group": "expert",
+      "split": "holdout",
+      "cluster": "concept-e09",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-E10",
+      "version": 1,
+      "group": "expert",
+      "split": "holdout",
+      "cluster": "concept-e10",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-E11",
+      "version": 1,
+      "group": "expert",
+      "split": "holdout",
+      "cluster": "concept-e11",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-E12",
+      "version": 1,
+      "group": "expert",
+      "split": "holdout",
+      "cluster": "concept-e12",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-N01",
+      "version": 1,
+      "group": "negative",
+      "split": "development",
+      "cluster": "concept-n01",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-N02",
+      "version": 1,
+      "group": "negative",
+      "split": "development",
+      "cluster": "concept-n02",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-N03",
+      "version": 1,
+      "group": "negative",
+      "split": "development",
+      "cluster": "concept-n03",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-N04",
+      "version": 1,
+      "group": "negative",
+      "split": "holdout",
+      "cluster": "concept-n04",
+      "offlineOnly": true
+    },
+    {
+      "caseId": "DE-N05",
+      "version": 1,
+      "group": "negative",
+      "split": "holdout",
+      "cluster": "concept-n05",
+      "offlineOnly": true
+    },
+    {
+      "caseId": "DE-N06",
+      "version": 1,
+      "group": "negative",
+      "split": "holdout",
+      "cluster": "concept-n06",
+      "offlineOnly": true
+    },
+    {
+      "caseId": "DE-N07",
+      "version": 1,
+      "group": "negative",
+      "split": "development",
+      "cluster": "concept-n07",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-N08",
+      "version": 1,
+      "group": "negative",
+      "split": "holdout",
+      "cluster": "concept-n08",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-N09",
+      "version": 1,
+      "group": "negative",
+      "split": "holdout",
+      "cluster": "concept-n09",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-N10",
+      "version": 1,
+      "group": "negative",
+      "split": "holdout",
+      "cluster": "concept-n10",
+      "offlineOnly": false
+    },
+    {
+      "caseId": "DE-N11",
+      "version": 1,
+      "group": "negative",
+      "split": "development",
+      "cluster": "concept-n11",
+      "offlineOnly": true
+    },
+    {
+      "caseId": "DE-N12",
+      "version": 1,
+      "group": "negative",
+      "split": "development",
+      "cluster": "concept-n12",
+      "offlineOnly": false
+    }
+  ]
+}
