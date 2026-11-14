@@ -1,8 +1,8 @@
-FROM agentic-trading-lab-dev-build-smoke:latest
+ARG RESEARCH_TEST_BASE=agentic-trading-lab-dev-build-smoke:latest
+FROM ${RESEARCH_TEST_BASE}
 USER root
-RUN /usr/local/bin/python -m pip install --no-cache-dir \
+RUN /usr/local/bin/python -m pip install --no-cache-dir --no-deps \
     --target /opt/lab/.venv/lib/python3.13/site-packages \
-    jsonschema==4.26.0 jsonschema-specifications==2025.9.1 \
-    referencing==0.37.0 rpds-py==2026.9.1 attrs==26.1.0 \
-    pytest==9.1.1 pyyaml==6.0.3
+    pytest==9.1.1 pyyaml==6.0.3 iniconfig==2.3.1 packaging==26.3 \
+    pluggy==1.6.0 pygments==2.21.0
 USER 10001:10001

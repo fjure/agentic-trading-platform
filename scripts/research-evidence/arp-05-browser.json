@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "packageId": "ARP-05",
+  "suite": "arp-browser",
+  "gate": "browser",
+  "mode": "offline",
+  "artifact": "research-browser",
+  "cases": [
+    {
+      "id": "ARP-BROWSER-EXACT-CONSENT",
+      "class": "agent-research-integrated.spec.ts",
+      "name": "the real browser confirms a persisted hypothesis after explicit consent to the exact send preview"
+    },
+    {
+      "id": "ARP-BROWSER-GUIDED-RELOAD",
+      "class": "agent-companion.spec.ts",
+      "name": "the Guided UI keeps the local question, preview, and send decision separate across reload"
+    },
+    {
+      "id": "ARP-BROWSER-QUANT-BINDING",
+      "class": "agent-companion.spec.ts",
+      "name": "Quant decisions bind the displayed version and reports retain exact server metrics"
+    },
+    {
+      "id": "ARP-BROWSER-LOCAL-CLARIFICATION",
+      "class": "agent-companion.spec.ts",
+      "name": "local clarification uses the active turn and preserves an Advanced experiment binding"
+    },
+    {
+      "id": "ARP-BROWSER-PERSISTED-STATE",
+      "class": "research_browser",
+      "name": "verify_persisted_state"
+    }
+  ]
+}

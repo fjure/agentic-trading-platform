@@ -1,6 +1,7 @@
 """Actual constrained worker container, internal network and fixed PostgreSQL identity."""
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -140,7 +141,9 @@ def isolated_worker_host(
                 "--entrypoint",
                 "python",
             ]
-            image = "agentic-trading-lab-research-test:local"
+            image = os.environ.get(
+                "ATL_RESEARCH_TEST_IMAGE", "agentic-trading-lab-research-test:local",
+            )
             if safety:
                 # Only the separate test provisioner owns its synthetic key files.
                 docker(
