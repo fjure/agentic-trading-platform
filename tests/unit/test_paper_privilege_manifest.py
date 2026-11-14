@@ -32,6 +32,8 @@ def test_agent_heads_preserve_the_exact_paper_acl_boundary():
     assert manifest("0052_quant_prepare_read") == apf
     assert manifest("0053_quant_prepare_intent") == apf
     assert manifest("0055_quant_prepare_approval") == manifest("0054_quant_prepare_handoff")
+    assert manifest("0056_provider_authority") == manifest("0055_quant_prepare_approval")
+    assert manifest("0057_model_budget_periods") == manifest("0055_quant_prepare_approval")
     assert manifest("0054_quant_prepare_handoff") == apf | {
         ("function", name, "atl_paper_control_api", "EXECUTE", False)
         for name in (

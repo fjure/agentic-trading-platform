@@ -50,6 +50,27 @@ def model_budget_scopes(
     return tuple(sorted(scopes))
 
 
+def production_model_budget_scopes(
+    agent_id: str, agent_version: int, kind: str, model: ModelBinding, input_ref: str,
+) -> tuple[str, ...]:
+    """Return the shared policy keys for a versioned provider attempt."""
+    scopes = model_budget_scopes(agent_id, agent_version, kind, model, input_ref)
+    scopes += (_scope("profile", model.provider, model.profile_id), _scope("utc_day"))
+    if kind == "PROVIDER_PROBE":
+        scopes += (_scope("probe"),)
+    return tuple(sorted(scopes))
+
+
+def _check_authority_binding(evidence_revision, authority_hash):
+    if evidence_revision is None and authority_hash is None:
+        return
+    if (
+        type(evidence_revision) is not int or not 1 <= evidence_revision < 2**63
+        or not isinstance(authority_hash, str) or not _HASH.fullmatch(authority_hash)
+    ):
+        raise RunConflict("AGENT_POLICY_DENIED")
+
+
 @dataclass(frozen=True, slots=True)
 class Attempt:
     attempt_id: UUID
@@ -116,6 +137,29 @@ def _lock_policies(connection: Connection, scopes: tuple[str, ...]) -> list[RowM
     return rows
 
 
+def _budget_binding(policies, period: date) -> str:
+    revisions = [[policy["scope"], policy["version"]] for policy in policies]
+    return sha256(json.dumps([period.isoformat(), revisions]).encode()).hexdigest()
+
+
+def preview_budget_binding(connection, agent, model, dialogue_id: str) -> str:
+    scopes = production_model_budget_scopes(
+        agent.agent_id, agent.version, "DIALOGUE", model, dialogue_id,
+    )
+    policies = list(connection.execute(text("""
+        SELECT scope,version,enabled FROM agent_research.model_budget_policies
+        WHERE scope=ANY(CAST(:scopes AS text[])) ORDER BY scope
+    """), {"scopes": list(scopes)}).mappings())
+    if tuple(policy["scope"] for policy in policies) != scopes or any(
+        not policy["enabled"] for policy in policies
+    ):
+        raise RunConflict("BUDGET_POLICY_UNAVAILABLE")
+    period = connection.execute(text(
+        "SELECT (clock_timestamp() AT TIME ZONE 'UTC')::date"
+    )).scalar_one()
+    return _budget_binding(policies, period)
+
+
 def _audit(connection: Connection, attempt_id: UUID) -> None:
     connection.execute(text("""
         INSERT INTO agent_research.model_attempt_events (attempt_id,status,exceeded_bound)
@@ -126,8 +170,11 @@ def _audit(connection: Connection, attempt_id: UUID) -> None:
 
 def _window(
     connection: Connection, limit: BudgetAmount, *, run_id: UUID | None = None,
-    scope: str | None = None, period: date | None = None,
+    scope: str | None = None, period: date | None = None, production: bool = False,
+    max_parallelism: int | None = None,
 ) -> BudgetWindow:
+    if production:
+        return _production_window(connection, limit, run_id, scope, period, max_parallelism)
     carry = scope is not None and scope.startswith(("global:", "provider:", "model:"))
     if run_id is not None:
         condition = "run_id=:run"
@@ -165,8 +212,48 @@ def _window(
     )
 
 
+def _production_window(connection, limit, run_id, scope, period, max_parallelism):
+    condition = "run_id=:run" if run_id is not None else "scopes @> ARRAY[CAST(:scope AS text)]"
+    totals = connection.execute(text(f"""
+        SELECT
+          coalesce(sum(confirmed_cost) FILTER (WHERE current_period),0) AS confirmed_cost,
+          coalesce(sum(reported_input) FILTER (WHERE current_period),0) AS input,
+          coalesce(sum(reported_output) FILTER (WHERE current_period),0) AS output,
+          count(*) AS calls,
+          count(*) FILTER (WHERE status IN ('RESERVED','DISPATCH_AUTHORIZED')) AS active,
+          coalesce(sum(held_cost),0) AS held_cost,
+          coalesce(sum(held_input),0) AS held_input,
+          coalesce(sum(held_output),0) AS held_output,
+          bool_or(currency<>:currency) AS currency_changed,
+          bool_or(exceeded_bound) AS overrun
+        FROM (
+          SELECT *, (:all_periods OR coalesce(send_period,period)=:period) AS current_period
+          FROM agent_research.model_attempts WHERE {condition}
+        ) AS scoped
+        WHERE current_period OR held_cost>0 OR held_input>0 OR held_output>0 OR exceeded_bound
+    """), {"run": run_id, "scope": scope, "period": period, "all_periods": run_id is not None,
+           "currency": limit.currency}).one()
+    if totals.currency_changed:
+        raise BudgetDenied("BUDGET_CURRENCY_MISMATCH")
+    if totals.overrun:
+        raise BudgetDenied("BUDGET_EXHAUSTED")
+    return BudgetWindow(
+        limit,
+        BudgetAmount(
+            limit.currency, totals.confirmed_cost, int(totals.input), int(totals.output),
+            totals.calls,
+        ),
+        BudgetAmount(
+            limit.currency, totals.held_cost, int(totals.held_input), int(totals.held_output),
+        ),
+        max_parallelism=max_parallelism,
+        active=totals.active,
+    )
+
+
 def _windows(
     connection: Connection, run: RowMapping, policies: list[RowMapping], period: date,
+    *, production: bool = False,
 ) -> list[BudgetWindow]:
     limits = run["agent_binding"]["limits"]
     max_calls = limits["max_model_calls"]
@@ -176,13 +263,21 @@ def _windows(
         limits["currency"], Decimal(limits["max_cost"]), limits["max_input_tokens"],
         limits["max_output_tokens"], max_calls,
     )
-    windows = [_window(connection, run_limit, run_id=run["run_id"])]
+    windows = [_window(
+        connection, run_limit, run_id=run["run_id"], production=production,
+        max_parallelism=limits["max_parallelism"] if production else None,
+    )]
     for policy in policies:
+        if production and policy["max_parallelism"] is None:
+            raise BudgetDenied("BUDGET_POLICY_UNAVAILABLE")
         limit = BudgetAmount(
             policy["currency"], policy["max_cost"], policy["max_input_tokens"],
             policy["max_output_tokens"], policy["max_calls"],
         )
-        windows.append(_window(connection, limit, scope=policy["scope"], period=period))
+        windows.append(_window(
+            connection, limit, scope=policy["scope"], period=period, production=production,
+            max_parallelism=policy["max_parallelism"] if production else None,
+        ))
     return windows
 
 
@@ -244,10 +339,14 @@ class ModelAttemptStore:
         self, claim: Claim, *, attempt_id: UUID, step_id: str, request_hash: str,
         model: ModelBinding, prices: TokenPrices, tokens: Tokens, context_window: int,
         timeout_seconds: int,
+        evidence_revision: int | None = None, authority_hash: str | None = None,
+        budget_binding_sha256: str | None = None,
     ) -> Attempt:
         if (not _REFERENCE.fullmatch(step_id) or not _HASH.fullmatch(request_hash)
             or type(timeout_seconds) is not int or not 1 <= timeout_seconds <= 600):
             raise RunConflict("INVALID_REQUEST")
+        _check_authority_binding(evidence_revision, authority_hash)
+        production = evidence_revision is not None
         reservation = reserve_model(prices, tokens, context_window)
         bound = reservation.bound
         with self.engine.begin() as connection:
@@ -265,11 +364,13 @@ class ModelAttemptStore:
                     existing["pricing_version"], existing["input_bound"], existing["output_bound"],
                     existing["input_price"], existing["output_price"], existing["currency"],
                     existing["price_bounds_cost"],
+                    existing.get("evidence_revision"), existing.get("authority_hash"),
                 ) != (
                     claim.run_id, step_id, request_hash, prices.version,
                     tokens.input, tokens.output,
                     prices.input_per_million, prices.output_per_million, prices.currency,
                     prices.bounds_unconfirmed_cost,
+                    evidence_revision, authority_hash,
                 ):
                     raise RunConflict("IDEMPOTENCY_CONFLICT")
                 return _attempt(existing)
@@ -278,35 +379,49 @@ class ModelAttemptStore:
                     WHERE run_id=:run AND step_id=:step AND status<>'UNSENT')
             """), {"run": claim.run_id, "step": step_id}).scalar_one():
                 raise RunConflict("PROVIDER_OUTCOME_UNKNOWN")
-            scopes = model_budget_scopes(
+            scope_for = production_model_budget_scopes if production else model_budget_scopes
+            scopes = scope_for(
                 agent["agent_id"], agent["version"], run["kind"], model, run["input_ref"],
             )
             policies = _lock_policies(connection, scopes)
             if any(not policy["enabled"] for policy in policies):
                 raise BudgetDenied("BUDGET_POLICY_UNAVAILABLE")
             _require_current_prices(connection, agent["model_binding"], prices)
-            require_capacity(_windows(connection, run, policies, run["budget_period"]), bound)
-            current = _current_period_windows(connection, run, policies, run["budget_period"])
-            if current:
-                require_capacity(current, bound)
-            row = connection.execute(text("""
+            run = _lock_run(connection, claim)
+            period = run["current_period"] if production else run["budget_period"]
+            if budget_binding_sha256 is not None and (
+                not production or _budget_binding(policies, period) != budget_binding_sha256
+            ):
+                raise RunConflict("PROCESSING_GRANT_INVALID")
+            require_capacity(
+                _windows(connection, run, policies, period, production=production), bound,
+            )
+            if not production:
+                current = _current_period_windows(connection, run, policies, period)
+                if current:
+                    require_capacity(current, bound)
+            production_columns = ",evidence_revision,authority_hash" if production else ""
+            production_values = ",:evidence_revision,:authority_hash" if production else ""
+            row = connection.execute(text(f"""
                 INSERT INTO agent_research.model_attempts (
                     attempt_id,run_id,step_id,request_hash,fence,run_version,deadline_at,period,
                     scopes,policy_versions,pricing_version,currency,input_price,output_price,
                     price_bounds_cost,input_bound,output_bound,cost_bound,held_cost,held_input,
-                    held_output,status
+                    held_output,status{production_columns}
                 )
                 SELECT :id,r.run_id,:step,:hash,r.fence,r.version,
                     least(r.deadline_at,clock_timestamp()+:timeout*interval '1 second'),:period,
                     CAST(:scopes AS text[]),CAST(:versions AS bigint[]),:pricing,:currency,:in_rate,
                     :out_rate,:bounds_cost,:input,:output,:cost,:cost,:input,:output,'RESERVED'
+                    {production_values}
                 FROM agent_research.runs r
                 WHERE r.run_id=:run AND r.lease_until>clock_timestamp()
                   AND r.deadline_at>clock_timestamp()
                 ON CONFLICT (attempt_id) DO NOTHING RETURNING *
             """), {
                 "id": attempt_id, "run": claim.run_id, "step": step_id, "hash": request_hash,
-                "timeout": timeout_seconds, "period": run["budget_period"], "scopes": list(scopes),
+                "timeout": timeout_seconds, "period": period, "scopes": list(scopes),
+                "evidence_revision": evidence_revision, "authority_hash": authority_hash,
                 "versions": [policy["version"] for policy in policies], "pricing": prices.version,
                 "currency": prices.currency, "in_rate": prices.input_per_million,
                 "out_rate": prices.output_per_million,
@@ -323,6 +438,7 @@ class ModelAttemptStore:
     def authorize_in_transaction(
         connection: Connection, claim: Claim, attempt_id: UUID, request_hash: str,
         *, dialogue_authorized: bool = False,
+        evidence_revision: int | None = None, authority_hash: str | None = None,
     ) -> Attempt:
         """Consume dispatch once, optionally within the bound dialogue consent transaction."""
         run = _lock_run(connection, claim)
@@ -338,6 +454,11 @@ class ModelAttemptStore:
         row = _lock_attempt(connection, claim, attempt_id)
         if row["status"] != "RESERVED" or row["request_hash"] != request_hash:
             raise RunConflict("AGENT_POLICY_DENIED")
+        _check_authority_binding(evidence_revision, authority_hash)
+        if (row.get("evidence_revision"), row.get("authority_hash")) != (
+            evidence_revision, authority_hash,
+        ):
+            raise RunConflict("AGENT_POLICY_DENIED")
         policies = _lock_policies(connection, tuple(row["scopes"]))
         if (
             any(not policy["enabled"] for policy in policies)
@@ -349,15 +470,31 @@ class ModelAttemptStore:
             row["price_bounds_cost"],
         ))
         no_increment = BudgetAmount(row["currency"])
-        require_capacity(_windows(connection, run, policies, row["period"]), no_increment)
-        current = _current_period_windows(connection, run, policies, row["period"])
-        if current:
-            require_capacity(current, no_increment)
-        _lock_run(connection, claim)
-        updated = connection.execute(text("""
-            UPDATE agent_research.model_attempts SET status='DISPATCH_AUTHORIZED'
+        run = _lock_run(connection, claim)
+        production = evidence_revision is not None
+        if production and row["period"] != run["current_period"]:
+            require_capacity(
+                _windows(connection, run, policies, run["current_period"], production=True),
+                no_increment,
+            )
+            raise BudgetDenied("BUDGET_POLICY_UNAVAILABLE")
+        require_capacity(
+            _windows(connection, run, policies, row["period"], production=production), no_increment,
+        )
+        if not production:
+            current = _current_period_windows(connection, run, policies, row["period"])
+            if current:
+                require_capacity(current, no_increment)
+        period_update = ",send_period=period" if production else ""
+        period_guard = (
+            "AND period=(clock_timestamp() AT TIME ZONE 'UTC')::date" if production else ""
+        )
+        updated = connection.execute(text(f"""
+            UPDATE agent_research.model_attempts SET status='DISPATCH_AUTHORIZED'{period_update}
             WHERE attempt_id=:id AND fence=:fence AND run_version=:version
-              AND deadline_at>clock_timestamp() RETURNING *
+              AND deadline_at>clock_timestamp()
+              {period_guard}
+            RETURNING *
         """), {"id": attempt_id, "fence": claim.fence, "version": claim.version}
         ).mappings().one_or_none()
         if updated is None:
@@ -438,12 +575,14 @@ class ModelAttemptStore:
         self, claim: Claim, attempt_id: UUID, outcome: ModelOutcome, *,
         result_ref: str | None = None, reported_tokens: Tokens | None = None,
         confirmed_cost: Decimal | None = None, unsent_evidence_ref: str | None = None,
+        evidence_revision: int | None = None, authority_hash: str | None = None,
     ) -> Attempt:
         with self.engine.begin() as connection:
             return self.settle_in_transaction(
                 connection, claim, attempt_id, outcome, result_ref=result_ref,
                 reported_tokens=reported_tokens, confirmed_cost=confirmed_cost,
                 unsent_evidence_ref=unsent_evidence_ref,
+                evidence_revision=evidence_revision, authority_hash=authority_hash,
             )
 
     @staticmethod
@@ -452,6 +591,7 @@ class ModelAttemptStore:
         result_ref: str | None = None, reported_tokens: Tokens | None = None,
         confirmed_cost: Decimal | None = None, unsent_evidence_ref: str | None = None,
         dialogue_authorized: bool = False,
+        evidence_revision: int | None = None, authority_hash: str | None = None,
     ) -> Attempt:
         """Accept a result only while the attempt's original fence remains valid."""
         if (
@@ -472,12 +612,31 @@ class ModelAttemptStore:
         ):
             raise RunConflict("PROCESSING_GRANT_REQUIRED")
         row = _lock_attempt(connection, claim, attempt_id)
+        production = row.get("evidence_revision") is not None
+        if outcome is ModelOutcome.COMPLETED:
+            _check_authority_binding(evidence_revision, authority_hash)
+            if (row.get("evidence_revision"), row.get("authority_hash")) != (
+                evidence_revision, authority_hash,
+            ):
+                raise RunConflict("AGENT_POLICY_DENIED")
         _lock_policies(connection, tuple(row["scopes"]))
         _lock_run(connection, claim)
         if outcome is ModelOutcome.COMPLETED and (
             row["fence"], row["run_version"]
         ) != (claim.fence, claim.version):
             raise RunConflict("LEASE_LOST")
+        prices = TokenPrices(
+            row["pricing_version"], row["currency"], row["input_price"], row["output_price"],
+            row["price_bounds_cost"],
+        )
+        reservation = ModelReservation(prices, BudgetAmount(
+            prices.currency, row["cost_bound"], row["input_bound"], row["output_bound"], 1,
+        ))
+        if production and outcome is not ModelOutcome.UNSENT and reported_tokens is None:
+            outcome, result_ref = ModelOutcome.OUTCOME_UNKNOWN, None
+        settlement = reconcile_model(reservation, outcome, reported_tokens, confirmed_cost)
+        if production and outcome is ModelOutcome.COMPLETED and settlement.exceeded_bound:
+            outcome, result_ref = ModelOutcome.RESULT_UNAVAILABLE, None
         if row["status"] == outcome.value:
             if (
                 row["result_ref"], row["reported_input"], row["reported_output"],
@@ -497,14 +656,6 @@ class ModelAttemptStore:
             outcome is ModelOutcome.UNSENT and unsent_evidence_ref is None
         ):
             raise RunConflict("AGENT_POLICY_DENIED")
-        prices = TokenPrices(
-            row["pricing_version"], row["currency"], row["input_price"], row["output_price"],
-            row["price_bounds_cost"],
-        )
-        reservation = ModelReservation(prices, BudgetAmount(
-            prices.currency, row["cost_bound"], row["input_bound"], row["output_bound"], 1,
-        ))
-        settlement = reconcile_model(reservation, outcome, reported_tokens, confirmed_cost)
         updated = connection.execute(text("""
             UPDATE agent_research.model_attempts SET status=:status,result_ref=:result,
                 unsent_evidence_ref=:unsent_evidence_ref,

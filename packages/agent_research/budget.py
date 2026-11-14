@@ -64,6 +64,8 @@ class BudgetWindow:
     limit: BudgetAmount
     consumed: BudgetAmount
     reserved: BudgetAmount
+    max_parallelism: int | None = None
+    active: int = 0
 
 
 def require_capacity(windows: Iterable[BudgetWindow], requested: BudgetAmount) -> None:
@@ -84,6 +86,11 @@ def require_capacity(windows: Iterable[BudgetWindow], requested: BudgetAmount) -
                 limit, consumed, reserved = (getattr(amount, dimension) for amount in amounts)
                 if consumed + reserved + getattr(requested, dimension) > limit:
                     raise BudgetDenied("BUDGET_EXHAUSTED")
+            if (
+                window.max_parallelism is not None
+                and window.active + requested.model_calls > window.max_parallelism
+            ):
+                raise BudgetDenied("BUDGET_EXHAUSTED")
     if not checked:
         raise BudgetDenied("BUDGET_POLICY_UNAVAILABLE")
 

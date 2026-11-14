@@ -14,7 +14,7 @@
 
 ## 4. Profile, Freigaben und Kosten
 
-- [ ] 4.1 [ARP-04](work-packages/ARP-04.md) Produktive Supervisor-Komposition mit Profilepoch, exakter Preview, proaktivem Grant und hierarchischem Ledger vervollständigen. Prüfung: Aktuelle Rechte und Reservierungen sind bis zum veröffentlichten Ergebnis gebunden.
+- [x] 4.1 [ARP-04](work-packages/ARP-04.md) Produktive Supervisor-Komposition mit Profilepoch, exakter Preview, proaktivem Grant und hierarchischem Ledger vervollständigen. Prüfung: Aktuelle Rechte und Reservierungen sind bis zum veröffentlichten Ergebnis gebunden.
 
 ## 5. Verbindliche APF-Integration-CI
 

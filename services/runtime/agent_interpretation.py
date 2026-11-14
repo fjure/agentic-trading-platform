@@ -13,11 +13,13 @@ from packages.agent_research.companion.dialogue import DialogueError
 from packages.agent_research.companion.interpretation import InterpretationDenied
 from packages.agent_research.companion.service import DialogueCommand
 from packages.agent_research.companion.store import CompanionConflict
+from packages.agent_research.model_attempts import preview_budget_binding
 from packages.agent_research.processing import ProcessingBinding
 from packages.agent_research.registry import AgentVersion
 from packages.agent_research.run_state import RunState
 from packages.agent_research.runs import RunConflict, RunKind
 from services.control_api.agent_processing_projection import ProcessingAuthority
+from services.llm_gateway.app import GatewayDispatchClient
 from services.llm_gateway.dispatch_journal import DispatchJournal, DispatchOutcome, JournalDenied
 from services.llm_gateway.offline_gateway import DispatchRequest, OfflineGateway
 from services.llm_gateway.provider_http import Capability, OfflineProviderHttp
@@ -48,6 +50,23 @@ class OfflineDialogueProfile:
     credentials: SyntheticCredentialStore
 
 
+@dataclass(frozen=True, slots=True)
+class ProviderDialogueProfile:
+    agent: AgentVersion
+    capability: Capability
+    policy_generation: int
+    current: Callable
+    permits: Callable[[bytes], bool]
+    prices: TokenPrices
+    tokens: Tokens
+    context_window: int
+    gateway: GatewayDispatchClient
+    cancel: Callable
+    evidence_revision: int
+    tariff_revision: int
+    data_classes: tuple[str, ...]
+
+
 class OfflineDialogueStep:
     def __init__(self, engine, runs, attempts, ideas, companion, projection, profile):
         self.engine, self.runs, self.attempts = engine, runs, attempts
@@ -59,13 +78,18 @@ class OfflineDialogueStep:
             lambda _: self.pending,
             projection.check_dispatch,
         )
-        self.gateway = OfflineGateway(
-            profile.journal,
-            profile.transport,
-            self.admission.consume,
-            credentials=profile.credentials,
-            capabilities=(profile.capability,),
-        )
+        if isinstance(profile, ProviderDialogueProfile):
+            self.gateway = profile.gateway
+            self.cancel = profile.cancel
+        else:
+            self.gateway = OfflineGateway(
+                profile.journal,
+                profile.transport,
+                self.admission.consume,
+                credentials=profile.credentials,
+                capabilities=(profile.capability,),
+            )
+            self.cancel = self.gateway.cancel
 
     def enqueue(self, actor, dialogue_id, turn_id, trace):
         return self.runs.enqueue(
@@ -130,11 +154,29 @@ class OfflineDialogueStep:
             capability.credential_generation,
             self.profile.policy_generation,
             capability.envelope_version,
-            ("OPERATOR_RESEARCH_EXCERPT", "CONFIRMED_RESEARCH_FIELDS"),
+            self.profile.data_classes if isinstance(self.profile, ProviderDialogueProfile)
+            else ("OPERATOR_RESEARCH_EXCERPT", "CONFIRMED_RESEARCH_FIELDS"),
             "hypothesis-interpretation",
+            **(
+                {
+                    "evidence_revision": self.profile.evidence_revision,
+                    "tariff_revision": self.profile.tariff_revision,
+                    "budget_binding_sha256": preview_budget_binding(
+                        scope, self.profile.agent, model, dialogue.dialogue_id,
+                    ),
+                }
+                if isinstance(self.profile, ProviderDialogueProfile) else {}
+            ),
         )
         if self.profile.current(scope, binding) is not True:
             raise RunConflict("MODEL_CONTEXT_DENIED")
+        if isinstance(self.profile, ProviderDialogueProfile):
+            from services.llm_gateway.provider_http import provider_request_bytes
+
+            return ProcessingAuthority(
+                binding, row.deadline_at, self.profile.permits,
+                wire=lambda projection: provider_request_bytes(capability, projection),
+            )
         try:
             credential = self.profile.credentials.status(
                 capability.provider,
@@ -177,6 +219,11 @@ class OfflineDialogueStep:
             content = store.vault._dispatch_content(row.preview_id, binding, row.commitment)
         except RunConflict:
             return StepResult(RunState.WAITING_FOR_INPUT)
+        if (
+            isinstance(self.profile, ProviderDialogueProfile)
+            and binding.budget_binding_sha256 is None
+        ):
+            return StepResult(RunState.WAITING_FOR_INPUT)
         capability = self.profile.capability
         timeout = min(20, int(capability.timeout_seconds))
         deadline = min(
@@ -197,6 +244,14 @@ class OfflineDialogueStep:
             tokens=self.profile.tokens,
             context_window=self.profile.context_window,
             timeout_seconds=timeout,
+            **(
+                {
+                    "evidence_revision": self.profile.evidence_revision,
+                    "authority_hash": row.commitment,
+                    "budget_binding_sha256": binding.budget_binding_sha256,
+                }
+                if isinstance(self.profile, ProviderDialogueProfile) else {}
+            ),
         )
         dispatch = DispatchRequest(
             attempt_id,
@@ -212,7 +267,13 @@ class OfflineDialogueStep:
             deadline,
         )
         del content
-        self.pending = PendingDispatch(dispatch, claim, row.receipt_id, binding, capability)
+        self.pending = PendingDispatch(
+            dispatch, claim, row.receipt_id, binding, capability,
+            **(
+                {"billable_input_bound": self.profile.tokens.input}
+                if isinstance(self.profile, ProviderDialogueProfile) else {}
+            ),
+        )
         try:
             result = self.gateway.dispatch(dispatch)
         finally:
@@ -245,15 +306,27 @@ class OfflineDialogueStep:
                 provider_result=result,
                 check_policy=self.projection.check_dispatch,
             )
-        except (CompanionConflict, DialogueError, InterpretationDenied):
+        except CompanionConflict as error:
+            if error.code != "INTERPRETATION_SETTLEMENT_BLOCKED":
+                self._settle_failure(claim, dispatch, result)
+            return StepResult(RunState.WAITING_FOR_INPUT)
+        except (DialogueError, InterpretationDenied):
             self._settle_failure(claim, dispatch, result)
             return StepResult(RunState.WAITING_FOR_INPUT)
         return StepResult(RunState.COMPLETED, proposal_id)
 
     def _settle_failure(self, claim, dispatch, result):
+        authority = (
+            {
+                "evidence_revision": self.profile.evidence_revision,
+                "authority_hash": dispatch.request_hash,
+            }
+            if isinstance(self.profile, ProviderDialogueProfile) else {}
+        )
         try:
             unsent = (
-                self.profile.journal.status(
+                isinstance(self.profile, OfflineDialogueProfile)
+                and self.profile.journal.status(
                     dispatch.attempt_id,
                     dispatch.request_hash,
                 )
@@ -277,6 +350,7 @@ class OfflineDialogueStep:
                 dispatch.attempt_id,
                 ModelOutcome.UNSENT,
                 unsent_evidence_ref=str(dispatch.attempt_id),
+                **authority,
             )
             return
         usage = result.usage
@@ -287,4 +361,5 @@ class OfflineDialogueStep:
             reported_tokens=None
             if usage is None
             else Tokens(usage.input_tokens, usage.output_tokens),
+            **authority,
         )

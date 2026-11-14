@@ -52,6 +52,10 @@ class ProcessingBinding:
     envelope_version: str
     data_classes: tuple[str, ...]
     step_id: str
+    evidence_revision: int | None = None
+    tariff_revision: int | None = None
+    provider_request_sha256: str | None = None
+    budget_binding_sha256: str | None = None
 
     def __post_init__(self) -> None:
         identities = (
@@ -71,11 +75,24 @@ class ProcessingBinding:
             or len(set(self.data_classes)) != len(self.data_classes)
             or not set(self.data_classes) <= _CLASSES
             or "OPERATOR_RESEARCH_EXCERPT" not in self.data_classes
+            or (self.evidence_revision is None) != (self.tariff_revision is None)
+            or any(
+                value is not None and (type(value) is not int or value < 1)
+                for value in (self.evidence_revision, self.tariff_revision)
+            )
+            or any(
+                value is not None and (
+                    self.evidence_revision is None
+                    or not isinstance(value, str)
+                    or not _COMMITMENT.fullmatch(value)
+                )
+                for value in (self.provider_request_sha256, self.budget_binding_sha256)
+            )
         ):
             raise _invalid()
 
     def record(self) -> dict:
-        return asdict(self) | {
+        return {name: value for name, value in asdict(self).items() if value is not None} | {
             "run_id": str(self.run_id), "data_classes": list(self.data_classes),
             "purpose": _PURPOSE,
         }
@@ -388,6 +405,8 @@ class ProcessingStore:
             check_policy(ReadOnlyScopedConnection(connection), binding)
             ModelAttemptStore.authorize_in_transaction(
                 connection, claim, attempt_id, grant.commitment, dialogue_authorized=True,
+                evidence_revision=binding.evidence_revision,
+                authority_hash=grant.commitment if binding.evidence_revision is not None else None,
             )
             changed = connection.execute(text("""
                 UPDATE agent_research.processing_grants SET state='DISPATCHED',revision=revision+1,
@@ -415,29 +434,31 @@ class ProcessingStore:
             _lock_claim(connection, claim)
             params = {"id": receipt_id, "run_id": claim.run_id, "attempt": attempt_id,
                       "fence": claim.fence, "result": result_ref}
-            changed = connection.execute(text("""
-                UPDATE agent_research.processing_grants SET state='ACCEPTED',revision=revision+1,
-                    result_ref=:result
+            grant = connection.execute(text("""
+                SELECT * FROM agent_research.processing_grants
                 WHERE receipt_id=:id AND run_id=:run_id AND attempt_id=:attempt
-                  AND dispatch_fence=:fence AND state='DISPATCHED'
-                RETURNING *
+                  AND dispatch_fence=:fence
+                FOR UPDATE
             """), params).one_or_none()
-            if changed is None:
-                state = connection.execute(text("""
-                    SELECT state FROM agent_research.processing_grants
-                    WHERE receipt_id=:id AND run_id=:run_id AND attempt_id=:attempt
-                """), params).scalar_one_or_none()
-                if state == "REVOKED":
-                    raise RunConflict("PROCESSING_GRANT_REVOKED")
-                raise _invalid()
-            if changed.binding != binding.record():
+            if grant is not None and grant.state == "REVOKED":
+                raise RunConflict("PROCESSING_GRANT_REVOKED")
+            if grant is None or grant.state != "DISPATCHED" or grant.binding != binding.record():
                 raise _invalid()
             check_policy(ReadOnlyScopedConnection(connection), binding)
-            ModelAttemptStore.settle_in_transaction(
+            attempt = ModelAttemptStore.settle_in_transaction(
                 connection, claim, attempt_id, ModelOutcome.COMPLETED, result_ref=result_ref,
                 reported_tokens=reported_tokens, confirmed_cost=confirmed_cost,
                 dialogue_authorized=True,
+                evidence_revision=binding.evidence_revision,
+                authority_hash=grant.commitment if binding.evidence_revision is not None else None,
             )
+            if attempt.status != ModelOutcome.COMPLETED.value:
+                return _receipt(grant)
+            changed = connection.execute(text("""
+                UPDATE agent_research.processing_grants SET state='ACCEPTED',revision=revision+1,
+                    result_ref=:result
+                WHERE receipt_id=:id RETURNING *
+            """), params).one()
             persist_result(ScopedConnection(connection))
             _lock_claim(connection, claim)
             _audit(connection, receipt_id)

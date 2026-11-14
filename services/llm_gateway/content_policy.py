@@ -55,6 +55,23 @@ def valid_projection(content: bytes, classes: tuple[str, ...] | None = None) -> 
     )
 
 
+def valid_discovery_projection(content: bytes) -> bool:
+    if type(content) is not bytes or not 1 <= len(content) <= 16384:
+        return False
+    try:
+        payload = json.loads(content, object_pairs_hook=_unique_object)
+        return (
+            type(payload) is dict and set(payload) == {"purpose", "evidence", "quotes"}
+            and payload["purpose"] == "PROACTIVE_RESEARCH_DISCOVERY_V1"
+            and type(payload["evidence"]) is dict
+            and type(payload["quotes"]) is list and len(payload["quotes"]) <= 32
+            and all(_research_text(quote, 2048) for quote in payload["quotes"])
+            and safe_result_content(payload)
+        )
+    except (ValueError, RecursionError):
+        return False
+
+
 def safe_result_content(value) -> bool:
     if isinstance(value, str):
         return not _UNSAFE_TEXT.search(value) and not _ACTIVE_CONTENT.search(value)

@@ -41,7 +41,9 @@ _ROUTES = {
 }
 
 
-def create_app(storage, authority: LocalAuth, *, lifespan=None) -> FastAPI:
+def create_app(
+    storage, authority: LocalAuth, *, lifespan=None, credential_authority=None,
+) -> FastAPI:
     app = FastAPI(
         docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False,
         lifespan=lifespan,
@@ -116,6 +118,11 @@ def create_app(storage, authority: LocalAuth, *, lifespan=None) -> FastAPI:
                 data.clear()
             validate_payload(operation, payload)
             version = payload["expectedCredentialVersion"]
+            if credential_authority is not None:
+                previous = await run_in_threadpool(storage.status, provider_id)
+                if previous.version != version:
+                    return problem(409, "VERSION_CONFLICT")
+                await run_in_threadpool(credential_authority.block, provider_id, version)
             if action == "rotate":
                 status = await run_in_threadpool(
                     storage.rotate, provider_id, payload.pop("credential"),
@@ -130,6 +137,13 @@ def create_app(storage, authority: LocalAuth, *, lifespan=None) -> FastAPI:
             else:
                 status = await run_in_threadpool(
                     storage.save, provider_id, payload.pop("credential"), expected_version=version,
+                )
+            if credential_authority is not None:
+                current, digest = await run_in_threadpool(storage.authority_metadata, provider_id)
+                if current != status:
+                    return problem(503, "PROVIDER_UNAVAILABLE")
+                await run_in_threadpool(
+                    credential_authority.attest, provider_id, status, digest, version,
                 )
         except AuthDenied:
             return problem(403, "REQUEST_FORBIDDEN")
@@ -159,9 +173,12 @@ def create_app(storage, authority: LocalAuth, *, lifespan=None) -> FastAPI:
 def main():
     import socket
 
+    import httpx
     import uvicorn
 
+    from services.runtime.agent_service import load_relay_key
     from services.runtime.api import _private_dir
+    from services.runtime.provider_credential_authority import CredentialAuthorityClient
 
     if sys.argv[1:2] == ["activate"]:
         if (
@@ -215,8 +232,19 @@ def main():
             yield
 
     listener = socket.socket(socket.AF_UNIX)
-    app = create_app(ResearchCredentialStore(), authority, lifespan=lifespan)
-    with listener:
+    authority_key = Path("/run/secrets/research-credential-authority-key")
+    with listener, httpx.Client(
+        base_url="http://research-supervisor:8013", timeout=3, trust_env=False,
+        follow_redirects=False,
+    ) as client:
+        credential_authority = (
+            CredentialAuthorityClient(client, load_relay_key(authority_key))
+            if authority_key.exists() else None
+        )
+        app = create_app(
+            ResearchCredentialStore(), authority, lifespan=lifespan,
+            credential_authority=credential_authority,
+        )
         listener.bind(str(SOCKET))
         os.chmod(SOCKET, 0o660)
         listener.listen(16)

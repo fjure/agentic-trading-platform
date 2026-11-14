@@ -116,5 +116,5 @@ def publish_model_proposal(
         check_policy=check_policy, persist_result=persist, reported_tokens=usage,
     )
     if revision is None:
-        raise CompanionConflict("INTERPRETATION_NOT_PUBLISHABLE")
+        raise CompanionConflict("INTERPRETATION_SETTLEMENT_BLOCKED")
     return revision

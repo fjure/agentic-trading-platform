@@ -36,6 +36,7 @@ class DispatchRequest:
     credential_generation: int
     envelope_version: str
     expires_at: datetime
+    purpose: str = "DIALOGUE"
 
 
 @dataclass(frozen=True, slots=True)
@@ -192,8 +193,11 @@ class OfflineGateway:
             and profile.envelope_version == request.envelope_version
             and type(authorized.projection) is bytes
             and compare_digest(sha256(authorized.projection).hexdigest(), request.projection_sha256)
-            and valid_projection(authorized.projection)
+            and self._projection_permitted(authorized.projection, request.purpose)
         )
+
+    def _projection_permitted(self, projection: bytes, purpose: str) -> bool:
+        return purpose == "DIALOGUE" and valid_projection(projection)
 
 
 class ProviderGateway(OfflineGateway):
@@ -210,3 +214,10 @@ class ProviderGateway(OfflineGateway):
         return self._transport.send(
             capability, projection, cancelled=stopped, credential=credential,
         )
+
+    def _projection_permitted(self, projection: bytes, purpose: str) -> bool:
+        if purpose == "DISCOVERY":
+            from .content_policy import valid_discovery_projection
+
+            return valid_discovery_projection(projection)
+        return super()._projection_permitted(projection, purpose)

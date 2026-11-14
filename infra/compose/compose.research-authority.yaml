@@ -1,0 +1,21 @@
+# Apply after the research-control and research-setup overlays.
+services:
+  research-setup:
+    network_mode: !reset null
+    networks: [research_credential_authority]
+    secrets:
+      - source: research_credential_authority_key
+        target: research-credential-authority-key
+  research-supervisor:
+    networks: [research_credential_authority]
+    secrets:
+      - source: research_credential_authority_key
+        target: research-credential-authority-key
+
+networks:
+  research_credential_authority:
+    internal: true
+
+secrets:
+  research_credential_authority_key:
+    file: ../../.tooling/application/runtime/research-credential-authority-key

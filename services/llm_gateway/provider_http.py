@@ -118,6 +118,37 @@ def conservative_input_bound(capability: Capability, projection: bytes) -> int:
     return len(json.dumps(body, ensure_ascii=False, separators=(",", ":")).encode()) + 256
 
 
+def _request_parts(capability: Capability, projection: bytes, *, production: bool):
+    schema = json.loads(
+        capability.schema_json, object_pairs_hook=_unique_fields,
+        parse_constant=_reject_nonfinite,
+    )
+    Draft202012Validator.check_schema(schema)
+    if not isinstance(schema, dict) or schema.get("type") != "object":
+        raise ValueError("invalid provider schema")
+    body = build_request(
+        capability.provider, model=capability.model, instructions=capability.instructions,
+        projection=projection.decode("utf-8"),
+        max_output_tokens=capability.max_output_tokens, schema=schema,
+    )
+    if production and capability.provider is Provider.OPENAI:
+        body["service_tier"] = "default"
+    encoded = json.dumps(body, ensure_ascii=False, separators=(",", ":")).encode()
+    if len(encoded) > _MAX_REQUEST_BYTES:
+        raise ValueError("provider request too large")
+    return schema, encoded
+
+
+def provider_request_bytes(capability: Capability, projection: bytes) -> bytes:
+    """Return exactly the UTF-8 HTTP body used by the production transport."""
+    return _request_parts(capability, projection, production=True)[1]
+
+
+def production_input_bound(wire: bytes) -> int:
+    """Bound tokens using all exact wire bytes and provider framing overhead."""
+    return len(wire) + 256
+
+
 class _ProviderHttp:
     def _send(
         self, capability: Capability, projection: bytes,
@@ -132,25 +163,12 @@ class _ProviderHttp:
         ):
             return ProviderResult(ResultState.CAPABILITY_MISMATCH)
         try:
-            schema = json.loads(
-                capability.schema_json, object_pairs_hook=_unique_fields,
-                parse_constant=_reject_nonfinite,
-            )
-            Draft202012Validator.check_schema(schema)
-            if not isinstance(schema, dict) or schema.get("type") != "object":
-                return ProviderResult(ResultState.CAPABILITY_MISMATCH)
-            body = build_request(
-                capability.provider, model=capability.model, instructions=capability.instructions,
-                projection=projection.decode("utf-8"),
-                max_output_tokens=capability.max_output_tokens, schema=schema,
-            )
+            schema, encoded = _request_parts(capability, projection, production=production)
         except (ValueError, RecursionError, TypeError, SchemaError):
             return ProviderResult(ResultState.CAPABILITY_MISMATCH)
         headers = {"accept": "application/json", "accept-encoding": "identity"}
         if capability.provider is Provider.ANTHROPIC:
             headers["anthropic-version"] = "2026-10-21" if production else "2023-06-01"
-        elif production:
-            body["service_tier"] = "default"
         if credential is not None:
             pattern = _WIRE_CREDENTIAL if production else _SYNTHETIC_CREDENTIAL
             if not isinstance(credential, str) or not pattern.fullmatch(credential):
@@ -160,12 +178,6 @@ class _ProviderHttp:
             else:
                 headers["x-api-key"] = credential
         elif production:
-            return ProviderResult(ResultState.CAPABILITY_MISMATCH)
-        try:
-            encoded = json.dumps(body, ensure_ascii=False, separators=(",", ":")).encode()
-        except (ValueError, RecursionError, TypeError):
-            return ProviderResult(ResultState.CAPABILITY_MISMATCH)
-        if len(encoded) > _MAX_REQUEST_BYTES:
             return ProviderResult(ResultState.CAPABILITY_MISMATCH)
         headers["content-type"] = "application/json"
         if cancelled is not None and cancelled():
