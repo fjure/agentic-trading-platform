@@ -7,11 +7,13 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
-from .catalog import _read_json
+from .catalog import _parse_json, _read_json, decode_catalog
 from .custodian import Custodian
 from .custody_release import release_attestation
 from .harness import RunBinding
 from .operator import _owner_file
+from .review_protocol import validate_review
+from .scorer import coverage_gaps
 
 PRIVATE_INPUTS = (
     "holdout.v1.json",
@@ -52,18 +54,33 @@ def main():
         Custodian.provision(state, **parameters)
         return
     custodian = Custodian(state, **parameters)
+    value = _read_json(_owner_file(config / "binding.json"))
+    value["repetitions"] = tuple(value["repetitions"])
+    binding = RunBinding(**value)
     if args.command == "seal":
-        custodian.seal(
-            str(args.revision),
-            {name: _owner_file(args.input / name).read_bytes() for name in PRIVATE_INPUTS},
+        artifacts = {name: _owner_file(args.input / name).read_bytes() for name in PRIVATE_INPUTS}
+        development, cases = decode_catalog(
+            artifacts["split-manifest.v1.json"],
+            artifacts["development.v1.json"],
+            artifacts["holdout.v1.json"],
+            expected_manifest=binding.dataset_sha256,
+            expected_holdout=binding.holdout_sha256,
         )
+        if coverage_gaps(development + cases):
+            raise ValueError("EVALUATION_HOLDOUT_COVERAGE")
+        validate_review(
+            binding.holdout_sha256,
+            cases,
+            _parse_json(artifacts["primary-review.json"]),
+            _parse_json(artifacts["secondary-review.json"]),
+            target_provider=settings["targetProvider"],
+            target_model=binding.model,
+        )
+        custodian.seal(str(args.revision), artifacts)
         return
     if args.output is None:
         parser.error("--output is required for release")
     args.output.mkdir(mode=0o700)
-    value = _read_json(_owner_file(config / "binding.json"))
-    value["repetitions"] = tuple(value["repetitions"])
-    binding = RunBinding(**value)
     registration = _owner_file(config / "registration.json").read_bytes()
     signature = _owner_file(config / "registration.sig").read_bytes()
     artifacts = custodian.release(

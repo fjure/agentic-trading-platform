@@ -112,7 +112,9 @@ def verify_custody(
                     "schemaSha256": binding.schema_sha256,
                     "scorerSha256": binding.scorer_sha256,
                 }
-                or not document["review"].get("independence")
+                or type(document["review"]) is not dict
+                or document["review"].get("fixturesOnly") is not False
+                or "SEPARATE_CONTEXT" not in document["review"].get("independence", ())
                 or registration_path is None
                 or registration_signature is None
             ):
@@ -129,5 +131,5 @@ def verify_custody(
                 or receipt["registeredAt"] != document["registeredAt"]
             ):
                 raise ValueError("invalid registration binding")
-    except (InvalidSignature, OSError, ValueError, TypeError) as error:
+    except (InvalidSignature, OSError, ValueError, TypeError, KeyError) as error:
         raise ValueError("EVALUATION_CUSTODY_UNVERIFIED") from error
