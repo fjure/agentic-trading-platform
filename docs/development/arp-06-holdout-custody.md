@@ -21,3 +21,11 @@ Die Attestierung setzt `version` auf 1. `holdoutSha256` enthält die Prüfsumme 
   "openedAt": "2026-01-01T10:00:00Z"
 }
 ```
+
+## KI-Review und Custodian ausführen
+
+Der Betreiber isoliert zwei Reviewer-Kontexte und stellt je Kontext ausschließlich den eingefrorenen Fallentwurf, die kanonischen Quant-/Backtestingverträge und den versionierten Reviewprompt bereit. Er bestätigt die Berichtsherkunft unabhängig von den Selbstauskünften des Modells. Der Runbindungs- und Registrierungsbeleg muss aus einem getrennt verwalteten externen Register stammen. Die Tests verwenden dafür synthetische Registerquittungen.
+
+`python -m tests.evaluation.custodian_cli init|seal|release --config <privat> --input <privat> --revision <Nr>` läuft unter der separaten Custodian-Identität. Der Befehlsname ist einzeln zu wählen. `release` schreibt in ein neues privates Verzeichnis über `--output`. Das Quellpaket für `seal` enthält die Holdout- und Splitdatei, die öffentliche Entwicklungsdatei und beide strukturierten Reviewberichte. Die Ausgabedateien enthalten den Holdout, das Splitmanifest und die signierten Nachweise. Der Ledger wird unabhängig vom verschlüsselten Store gesichert und bei einem Payload-Restore weiterverwendet. Ein unterbrochener Übergabevorgang gilt als verbraucht.
+
+`custodian.json` enthält `developmentUid`, `reviewerUid`, `targetProvider`, `state` und `releaseLedger`. Schlüsseldateien sind `storage.key` und `custodian.key`, jeweils 32 Byte aus der separaten Betreiberprovisionierung. `registrar.pub` und `operator.pub` sind getrennte Ed25519-Pins. Zur Freigabe hinterlegt der Betreiber `binding.json`, `registration.json`, `registration.sig`, `release.json` und `release.sig`. Das Evaluationskonto hält zusätzlich `reviewer.pub` als Pin für den Custodian und `registrar.pub` als Pin für den Registrar. Bei Schlüsselverlust stoppt der Betreiber die Instanz, entfernt den widerrufenen Pin und provisioniert eine neue Schlüsselbindung. Der separat gesicherte Freigabeledger bleibt erhalten.
