@@ -11,6 +11,7 @@ import { firstValueFrom } from 'rxjs';
 import type { Resource } from '../state/supervisor.models';
 import { SupervisorStore } from '../state/supervisor.store';
 import { DemoSetupComponent } from '../demo-setup/demo-setup.component';
+import { ResearchProviderSetupComponent } from '../research/research-provider-setup.component';
 import { PaperWorkflowComponent } from '../paper-workflow/paper-workflow.component';
 import { ResearchComponent } from '../research/research.component';
 
@@ -86,7 +87,7 @@ export class ConfirmDialogComponent { readonly data = inject<DialogData>(MAT_DIA
 
 @Component({
   selector: 'atl-supervisor',
-  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatTableModule, MatToolbarModule, DemoSetupComponent, PaperWorkflowComponent, ResearchComponent],
+  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatTableModule, MatToolbarModule, DemoSetupComponent, ResearchProviderSetupComponent, PaperWorkflowComponent, ResearchComponent],
   templateUrl: './supervisor.component.html',
   styleUrl: './supervisor.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

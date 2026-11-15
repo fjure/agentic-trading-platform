@@ -47,6 +47,8 @@ import { AgentProviderProbeRequestV1 } from '../model/agentProviderProbeRequestV
 // @ts-ignore
 import { AgentProviderProbeResultV1 } from '../model/agentProviderProbeResultV1';
 // @ts-ignore
+import { AgentProviderSmokePreviewV1 } from '../model/agentProviderSmokePreviewV1';
+// @ts-ignore
 import { AgentQuantApprovalDecisionV1 } from '../model/agentQuantApprovalDecisionV1';
 // @ts-ignore
 import { AgentQuantApprovalPageV1 } from '../model/agentQuantApprovalPageV1';
@@ -1908,6 +1910,87 @@ export class AgentResearchService extends BaseService implements AgentResearchSe
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Prepare a bound synthetic provider smoke preview
+     * Prepares an expiring quote without sending any provider request.
+     * @endpoint post /api/v1/research/agent/providers/{provider}/probe-previews
+     * @param provider 
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param agentProviderProbeRequestV1 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public prepareAgentProviderSmoke(provider: AgentProviderId, idempotencyKey: string, agentProviderProbeRequestV1: AgentProviderProbeRequestV1, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/problem+json' | 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<AgentProviderSmokePreviewV1>;
+    public prepareAgentProviderSmoke(provider: AgentProviderId, idempotencyKey: string, agentProviderProbeRequestV1: AgentProviderProbeRequestV1, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/problem+json' | 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<AgentProviderSmokePreviewV1>>;
+    public prepareAgentProviderSmoke(provider: AgentProviderId, idempotencyKey: string, agentProviderProbeRequestV1: AgentProviderProbeRequestV1, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/problem+json' | 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<AgentProviderSmokePreviewV1>>;
+    public prepareAgentProviderSmoke(provider: AgentProviderId, idempotencyKey: string, agentProviderProbeRequestV1: AgentProviderProbeRequestV1, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/problem+json' | 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (provider === null || provider === undefined) {
+            throw new Error('Required parameter provider was null or undefined when calling prepareAgentProviderSmoke.');
+        }
+        if (idempotencyKey === null || idempotencyKey === undefined) {
+            throw new Error('Required parameter idempotencyKey was null or undefined when calling prepareAgentProviderSmoke.');
+        }
+        if (agentProviderProbeRequestV1 === null || agentProviderProbeRequestV1 === undefined) {
+            throw new Error('Required parameter agentProviderProbeRequestV1 was null or undefined when calling prepareAgentProviderSmoke.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (idempotencyKey !== undefined && idempotencyKey !== null) {
+            localVarHeaders = localVarHeaders.set('Idempotency-Key', String(idempotencyKey));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/problem+json',
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/agent/providers/${this.configuration.encodeParam({name: "provider", value: provider, in: "path", style: "simple", explode: false, dataType: "AgentProviderId", dataFormat: undefined})}/probe-previews`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<AgentProviderSmokePreviewV1>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: agentProviderProbeRequestV1,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

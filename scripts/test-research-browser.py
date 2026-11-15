@@ -87,7 +87,8 @@ def execute(node, test_image, junitxml):
         try:
             run(
                 node, str(PLAYWRIGHT), "test", "--config", "playwright.config.ts",
-                "agent-companion.spec.ts", "--reporter=junit",
+                "agent-companion.spec.ts", "research-provider-setup.spec.ts",
+                "research-provider-smoke.spec.ts", "--reporter=junit",
                 env=os.environ | {"PLAYWRIGHT_JUNIT_OUTPUT_FILE": str(companion)},
             )
         except (OSError, subprocess.SubprocessError) as error:

@@ -10,6 +10,7 @@ import { ResearchService } from '../api/generated/control-api/api/research.servi
 import type { ResearchBarPage, ResearchContext, ResearchEvidenceResult, ResearchInstrument, ResearchInterval, ResearchJob, ResearchJobRequest, ResearchSourceCatalog } from '../api/generated/control-api/model/models';
 import { httpStatus, safeError } from '../state/supervisor-api';
 import { BacktestingComponent } from './backtesting.component';
+import { ResearchProviderSmokeComponent } from './research-provider-smoke.component';
 import { AgentCompanionComponent } from './agent-companion.component';
 import { QuantLabComponent } from './quant-lab/quant-lab.component';
 
@@ -20,7 +21,7 @@ type Bound = { instrumentId: string; start: string; end: string; interval: Resea
 
 @Component({
   selector: 'atl-research',
-  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule, AgentCompanionComponent, BacktestingComponent, QuantLabComponent],
+  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule, AgentCompanionComponent, ResearchProviderSmokeComponent, BacktestingComponent, QuantLabComponent],
   templateUrl: './research.component.html',
   styleUrl: './research.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

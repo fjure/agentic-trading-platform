@@ -169,7 +169,8 @@ def create_agent_research_service(
 
     gateway = getattr(discovery, "gateway", None)
     discovery_port = gateway if isinstance(gateway, ProviderDiscoveryDispatch) else None
-    if ((provider_profile is None and discovery_port is None) != (admission_auth is None)) or (
+    if ((provider_profile is None and discovery_port is None and smoke is None)
+            != (admission_auth is None)) or (
         provider_profile is not None and offline_profile is not None
     ):
         raise ValueError("incomplete provider supervisor composition")
@@ -562,11 +563,22 @@ def main():
                         dispatch_key, provider_client,
                     )
                     discovery = _configured_discovery(engine, command_key, gateway, config, sources)
+            provider_controls = None
+            if installation is not None:
+                from .agent_production_provider_controls import ProductionProviderControls
+
+                provider_controls = ProductionProviderControls(
+                    engine,
+                    capability=smoke.capability if smoke is not None else installation.capability,
+                    binding=installation.binding,
+                    smoke_authority=smoke.authority if smoke is not None else None,
+                    dialogue=profile is not None, key=command_key,
+                ).routes
             app = create_agent_research_service(
                 engine, relay_key=relay_key, command_key=command_key,
                 credential_authority=credential_authority,
                 provider_profile=profile, admission_auth=admission_auth,
-                discovery=discovery, smoke=smoke,
+                discovery=discovery, smoke=smoke, extra=provider_controls,
             )
             uvicorn.run(
                 app,

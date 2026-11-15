@@ -45,7 +45,14 @@
       </mat-card>
     } @else {
       @if (paperActive() || active() === 'overview') {
-        <atl-research (sessionLost)="paperSessionLost()" />
+        @defer (on immediate) {
+          <atl-research (sessionLost)="paperSessionLost()" />
+        }
+        @defer (on interaction) {
+          <atl-research-provider-setup (sessionLost)="paperSessionLost()" />
+        } @placeholder {
+          <button mat-stroked-button type="button">Research-Schlüssel verwalten</button>
+        }
       }
       @if (paperActive()) {
         <atl-paper-workflow (sessionLost)="paperSessionLost()" />

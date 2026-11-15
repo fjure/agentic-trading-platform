@@ -21,11 +21,28 @@
     @if (cursor()) { <button mat-button type="button" (click)="reload(true)" [disabled]="busy()">Weitere Ideen</button> }
     <h3>Providerstatus</h3>
     <button mat-button type="button" (click)="loadProviders()" [disabled]="busy()">Providerstatus laden</button>
+    @if (providerReadiness(); as readiness) {
+      <p role="status">Providerbereitschaft · {{ readiness.state }}</p>
+      @for (candidate of readiness.candidates; track candidate.provider + ':' + candidate.modelId) {
+        <details>
+          <summary>{{ candidate.provider }} · {{ candidate.modelId }} · {{ candidate.evidenceState }}</summary>
+          <ul>
+            @for (reason of candidate.blockingReasons; track reason) {
+              <li>{{ providerReasons[reason] }} <code>{{ reason }}</code></li>
+            }
+          </ul>
+        </details>
+      }
+    } @else {
+      <p role="status">Die Providerbereitschaft wurde noch nicht bestätigt.</p>
+    }
     <ul>
       @for (provider of providers(); track provider.binding.profileId) {
         <li>
           {{ provider.binding.provider }} · {{ provider.binding.modelId }} · {{ provider.availability }} · {{ provider.probeState }} · {{ provider.credential.state }}
           <details><summary>Modellfähigkeiten</summary>
+            <p>Profil {{ provider.binding.profileId }} · Profilversion {{ provider.binding.profileGeneration }} · Modellversion {{ provider.binding.modelGeneration }}</p>
+            <p>Credential-Version {{ provider.credential.credentialVersion }} · Tarifrevision {{ provider.pricingVersion ?? 'nicht gemeldet' }}</p>
             <p>Strukturierte Ausgabe {{ provider.structuredOutputSupported ? 'verfügbar' : 'nicht verfügbar' }} · Schema {{ provider.outputSchemaVersion }}</p>
             <p>Eingabelimit {{ provider.maxInputTokens }} Token · Ausgabelimit {{ provider.maxOutputTokens }} Token</p>
             <p>Datenrichtlinie {{ provider.dataHandlingPolicyId }} · Version {{ provider.dataHandlingPolicyVersion }}</p>
@@ -106,7 +123,10 @@
           @for (turn of thread.turns; track turn.turnId) {
             <article>
               <p role="status">{{ processingLabels[turn.processing.state] }} · {{ turn.processing.state }} · {{ turn.processing.delivery }} · Kostenstatus {{ turn.processing.costState }}</p>
-              @if (turn.processing.reasonCode; as reason) { <p>{{ reason }}</p> }
+              @if (turn.processing.reasonCode; as reason) { <p>{{ processingReason(reason) }} <code>{{ reason }}</code></p> }
+              @if (turn.processing.providerOutcome === 'PROVIDER_OUTCOME_UNKNOWN') {
+                <p role="status">Der Providerausgang ist unbekannt. Prüfe den Dialogstatus und kläre die Frage lokal.</p>
+              }
               @for (question of turn.localQuestions; track question.id) {
                 <form (submit)="$event.preventDefault(); answer(question, localAnswer.value)">
                   <mat-form-field>
@@ -136,8 +156,21 @@
                     <p>Profil {{ send.profileId }} · Profilversion {{ send.profileGeneration }} · Modellversion {{ send.modelGeneration }}</p>
                     <p>Richtlinienversion {{ send.policyGeneration }} · Zugangsversion {{ send.credentialGeneration }} · Umschlag {{ send.envelopeVersion }}</p>
                     <p>Gültig bis {{ send.expiresAt }}</p>
-                    <pre>{{ send.projection.excerpt }}</pre>
-                    <pre>{{ send.projection.confirmedContext | json }}</pre>
+                    @if (send.providerRequestBody !== undefined) {
+                      <details open>
+                        <summary>Exakter Request-Body</summary>
+                        <pre>{{ send.providerRequestBody }}</pre>
+                        @if (send.providerRequestSha256) {
+                          <p>Request-Prüfsumme <code>{{ send.providerRequestSha256 }}</code></p>
+                        }
+                      </details>
+                    } @else {
+                      <pre>{{ send.projection.excerpt }}</pre>
+                      <pre>{{ send.projection.confirmedContext | json }}</pre>
+                    }
+                    @if (send.tariffRevision !== undefined && send.evidenceRevision !== undefined) {
+                      <p>Tarifrevision {{ send.tariffRevision }} · Kostennachweisrevision {{ send.evidenceRevision }}</p>
+                    }
                     @if (previewExpired()) { <p role="status">Die Sendefassung ist abgelaufen. Erstelle eine neue Vorschau.</p> }
                     <button mat-flat-button type="button" (click)="decideProcessing(turn, 'SEND')" [disabled]="busy() || previewExpired()">Diese Fassung senden</button>
                   </section>
@@ -247,11 +280,29 @@
         }
       }
     </section>
+    <section aria-labelledby="companion-schedule">
+      <h3 id="companion-schedule">Proaktive Forschung</h3>
+      @if (schedule(); as plan) {
+        <p role="status">Serverseitiger Zeitplan · {{ plan.state }}</p>
+        <p>{{ plan.localTime }} · {{ plan.timeZone }} · Version {{ plan.version }}</p>
+        @if (plan.nextExecutionAt) { <p>Nächster Lauf <time>{{ plan.nextExecutionAt }}</time></p> }
+        @if (plan.lastExecutionAt) { <p>Letzter Lauf <time>{{ plan.lastExecutionAt }}</time></p> }
+        @if (plan.checkpointId) { <p>Verarbeitungsstand <code>{{ plan.checkpointId }}</code></p> }
+        <p>Maximal {{ plan.limits.maxModelCalls }} Modellaufrufe · Budget {{ plan.limits.maxCost }} {{ plan.limits.currency }}</p>
+        <details>
+          <summary>Quellen und Limits</summary>
+          <p>Instrumente {{ plan.scope.instrumentIds }} · Quellen {{ plan.scope.sourceKinds }}</p>
+          <p>Maximal {{ plan.limits.maxSourceItems }} Quellen, {{ plan.limits.maxPendingItems }} offene Fälle und {{ plan.limits.maxIdeas }} Ideen</p>
+          <p>{{ plan.limits.maxInputTokens }} Eingabe-Token · {{ plan.limits.maxOutputTokens }} Ausgabe-Token · Auslöserrichtlinie {{ plan.triggerPolicyVersion }}</p>
+        </details>
+      } @else {
+        <p role="status">Der serverseitige Zeitplan ist noch nicht bestätigt.</p>
+      }
+    </section>
     <section aria-labelledby="companion-diagnostics">
       <h3 id="companion-diagnostics">Researchbetrieb</h3>
       <button mat-button type="button" [disabled]="busy()" (click)="loadDiagnostics()">Zeitplan, Registry und Läufe laden</button>
       @if (diagnostics(); as details) {
-        <details><summary>Zeitplan und Limits</summary><pre>{{ details.schedule | json }}</pre></details>
         <details><summary>Registry und Berechtigungen</summary><pre>{{ details.registry.items | json }}</pre></details>
         <ul>
           @for (run of details.runs.items; track run.runId) {

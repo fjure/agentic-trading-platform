@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from hashlib import sha256
 from unittest.mock import patch
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from alembic import command
@@ -19,9 +19,15 @@ from packages.agent_research.budget import BudgetDenied, TokenPrices, Tokens
 from packages.agent_research.model_attempts import production_model_budget_scopes
 from packages.agent_research.provider_authority import ProviderAuthorityStore, ProviderBinding
 from packages.agent_research.runs import RunConflict, RunKind, RunState, RunStore
+from services.control_api.agent_research_routes import (
+    OPERATIONS,
+    AgentResearchError,
+    validate_response,
+)
 from services.llm_gateway.probe import PROBE_PROJECTION, production_probe_capability
 from services.llm_gateway.provider_http import provider_request_bytes
 from services.llm_gateway.provider_wire import Provider, ProviderResult, ResultState, Usage
+from services.runtime.agent_production_provider_controls import ProductionProviderControls
 from services.runtime.provider_profiles import check_persisted_evidence
 from services.runtime.research_smoke import ProductionSmoke
 from services.runtime.smoke_authority import SmokeAuthority, SmokePlan
@@ -132,7 +138,7 @@ def configure(owner, model, agent, binding):
     with owner.begin() as connection:
         config = Config("alembic.ini")
         config.attributes["connection"] = connection
-        command.upgrade(config, "0058_provider_smoke")
+        command.upgrade(config, "0059_provider_status_time")
         scopes = production_model_budget_scopes(
             agent.agent_id,
             agent.version,
@@ -196,12 +202,56 @@ def assert_scenarios(owner, worker, model, agent, store, binding, epoch, plan):
         )
     with pytest.raises(RunConflict, match="PROCESSING_GRANT_INVALID"):
         authority.approve(stale, actor, stale.commitment, **kwargs)
-    grant = authority.preview(actor, uuid4())
-    with pytest.raises(RunConflict, match="PROCESSING_GRANT_INVALID"):
-        authority.approve(grant, actor, "e" * 64, **kwargs)
+    control = ProductionProviderControls(
+        worker,
+        capability=fixture_capability(model),
+        binding=binding,
+        smoke_authority=authority,
+        key=bytes(32),
+    )
+    operations = {op.operation_id: op for op in OPERATIONS}
+
+    def call(name, payload=None, *, scope="a" * 64, key="synthetic-smoke-key"):
+        params = {} if payload is None else {"provider": binding.provider}
+        status, view = control.routes[name](
+            params,
+            {},
+            payload,
+            actor=actor,
+            key=key,
+            trace=uuid4().hex,
+            scope=scope,
+        )
+        validate_response(operations[name], status, view)
+        return view
+
+    request = {
+        "profileId": binding.profile_id,
+        "profileGeneration": binding.profile_generation,
+        "modelGeneration": binding.model_generation,
+        "credentialGeneration": binding.credential_generation,
+    }
+    before = call("listAgentProviders")["items"][0]
+    assert (before["availability"], before["probeState"]) == ("BLOCKED", "NOT_TESTED")
+    assert before["credential"]["state"] == "STORED"
+    with pytest.raises(AgentResearchError) as missing:
+        call("probeAgentProvider", request)
+    assert missing.value.code == "PROCESSING_GRANT_REQUIRED"
+    with pytest.raises(AgentResearchError) as stale_credential:
+        call("prepareAgentProviderSmoke", request | {"credentialGeneration": 2})
+    assert stale_credential.value.code == "VERSION_CONFLICT"
+    view = call("prepareAgentProviderSmoke", request)
+    assert call("prepareAgentProviderSmoke", request) == view
+    approval = request | {"grantId": view["grantId"], "commitment": view["commitment"]}
+    with pytest.raises(AgentResearchError) as foreign:
+        call("probeAgentProvider", approval, scope="b" * 64)
+    assert foreign.value.code == "PROCESSING_GRANT_INVALID"
     assert runs.claim(uuid4()) is None
-    run_id = authority.approve(grant, actor, grant.commitment, **kwargs)
-    assert authority.approve(grant, actor, grant.commitment, **kwargs) == run_id
+    accepted = call("probeAgentProvider", approval)
+    assert call("probeAgentProvider", approval) == accepted
+    assert call("listAgentProviders")["items"][0]["probeState"] == "QUEUED"
+    grant = authority.lookup(UUID(accepted["probeId"]))
+    run_id = grant.run_id
     claim = runs.claim(uuid4())
     assert claim is not None and claim.run_id == run_id
     approved = authority.lookup(grant.grant_id)
@@ -235,6 +285,11 @@ def assert_scenarios(owner, worker, model, agent, store, binding, epoch, plan):
         ).one()
         assert tuple(usage) == (3, 2, None, Decimal("0.0002"))
     assert authority.verify(approved).state == "VERIFIED"
+    after = call("listAgentProviders")["items"][0]
+    assert (after["availability"], after["probeState"]) == ("BLOCKED", "VERIFIED")
+    assert after["credential"]["state"] == "VERIFIED"
+    assert after["lastProbeId"] == accepted["probeId"]
+    assert after["credential"]["updatedAt"] == before["credential"]["updatedAt"]
 
 
 if __name__ == "__main__":

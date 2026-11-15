@@ -15,7 +15,7 @@ import type {
   AgentProviderCapabilityV1, AgentResearchHypothesis, ProcessingDecisionV1, ProcessingPreviewV1,
   AgentQuantApprovalDecisionV1, AgentQuantApprovalPageV1, AgentQuantApprovalV1, AgentReportPageV1, AgentReportV1,
   AgentProcessingState, AgentRegistryPageV1, AgentReportPhaseV1, AgentRunEventPageV1, AgentRunPageV1, AgentScheduleV1,
-  AgentTestabilityClass,
+  AgentTestabilityClass, ResearchProviderCandidateV1, ResearchProviderReadinessV1,
 } from '../api/generated/control-api/model/models';
 import { httpStatus, safeError } from '../state/supervisor-api';
 
@@ -26,6 +26,8 @@ const RESEARCH_ERRORS: ReadonlyMap<string, string> = new Map([
   ['PROCESSING_GRANT_INVALID', 'Die Sendefreigabe ist ungültig. Lade den Dialog und prüfe eine neue Vorschau.'],
   ['PROCESSING_GRANT_REVOKED', 'Die Sendefreigabe wurde widerrufen.'],
   ['PROCESSING_PREVIEW_UNAVAILABLE', 'Für diesen Beitrag ist keine sendbare Vorschau verfügbar. Prüfe den aktuellen Dialogstatus.'],
+  ['PROVIDER_UNAVAILABLE', 'Der Provider ist derzeit nicht verfügbar. Kläre die Frage lokal.'],
+  ['BUDGET_EXHAUSTED', 'Das serverseitige Budget ist ausgeschöpft. Kläre die Frage lokal.'],
   ['APPROVAL_EXPIRED', 'Die Quant-Freigabe ist abgelaufen.'],
   ['APPROVAL_STALE', 'Die Quant-Freigabe gehört zu einem früheren Researchstand. Lade die Freigaben neu.'],
   ['APPROVAL_ALREADY_DECIDED', 'Für diese Quant-Freigabe liegt bereits eine Entscheidung vor.'],
@@ -73,6 +75,14 @@ export class AgentCompanionComponent implements OnInit {
     return dialogue?.turns.some(turn => turn.dialogueVersion === dialogue.version &&
       (turn.processing.state === 'SEND_AUTHORIZED' || turn.processing.state === 'IN_FLIGHT')) ?? false;
   });
+  readonly providerReadiness = signal<ResearchProviderReadinessV1 | null>(null);
+  readonly schedule = signal<AgentScheduleV1 | null>(null);
+  readonly providerReasons: Record<ResearchProviderCandidateV1.BlockingReasonsEnum, string> = {
+    MODEL_BINDING_UNVERIFIED: 'Die gebundene Modellversion ist nicht verifiziert.',
+    BILLABLE_INPUT_LIMIT_UNVERIFIED: 'Für die abrechenbare Eingabe fehlt eine belegte Obergrenze.',
+    BILLING_TIERS_UNVERIFIED: 'Nicht alle erreichbaren Abrechnungsstufen sind belegt.',
+    TARIFF_UNVERIFIED: 'Der Tarif ist nicht verifiziert.',
+  };
   readonly providers = signal<AgentProviderCapabilityV1[]>([]);
   readonly providerCursor = signal<string | undefined>(undefined);
   readonly preview = signal<ProcessingPreviewV1 | null>(null);
@@ -81,7 +91,7 @@ export class AgentCompanionComponent implements OnInit {
   readonly approval = signal<AgentQuantApprovalV1 | null>(null);
   readonly reports = signal<AgentReportPageV1 | null>(null);
   readonly report = signal<AgentReportV1 | null>(null);
-  readonly diagnostics = signal<{ registry: AgentRegistryPageV1; runs: AgentRunPageV1; schedule: AgentScheduleV1 } | null>(null);
+  readonly diagnostics = signal<{ registry: AgentRegistryPageV1; runs: AgentRunPageV1 } | null>(null);
   readonly runEvents = signal<AgentRunEventPageV1 | null>(null);
   readonly previewExpired = signal(false);
   private expiryTimer?: ReturnType<typeof setTimeout>;
@@ -126,7 +136,7 @@ export class AgentCompanionComponent implements OnInit {
       this.active = false;
       clearTimeout(this.expiryTimer);
     });
-    void this.reload();
+    void this.reload().then(() => this.loadProviders(false, true));
   }
 
   async reload(append = false): Promise<void> {
@@ -245,13 +255,34 @@ export class AgentCompanionComponent implements OnInit {
     });
   }
 
-  async loadProviders(append = false): Promise<void> {
+  private async refreshOperatingStatus(): Promise<void> {
+    await Promise.all([
+      firstValueFrom(this.api.getResearchProviderReadiness().pipe(takeUntilDestroyed(this.destroy)))
+        .then(value => { if (this.active) this.providerReadiness.set(value); },
+          () => { if (this.active) this.providerReadiness.set(null); }),
+      firstValueFrom(this.api.getAgentSchedule().pipe(takeUntilDestroyed(this.destroy)))
+        .then(value => { if (this.active) this.schedule.set(value); },
+          () => { if (this.active) this.schedule.set(null); }),
+    ]);
+  }
+
+  async loadProviders(append = false, initial = false): Promise<void> {
     await this.perform(async () => {
-      const page = await firstValueFrom(this.api.listAgentProviders(append ? this.providerCursor() : undefined, 30)
-        .pipe(takeUntilDestroyed(this.destroy)));
-      if (this.active) {
-        this.providers.update(items => append ? [...items, ...page.items] : page.items);
-        this.providerCursor.set(page.nextCursor);
+      if (!append) {
+        this.providers.set([]);
+        this.providerCursor.set(undefined);
+        this.preview.set(null);
+        void this.refreshOperatingStatus();
+      }
+      try {
+        const page = await firstValueFrom(this.api.listAgentProviders(append ? this.providerCursor() : undefined, 30)
+          .pipe(takeUntilDestroyed(this.destroy)));
+        if (this.active) {
+          this.providers.update(items => append ? [...items, ...page.items] : page.items);
+          this.providerCursor.set(page.nextCursor);
+        }
+      } catch (error) {
+        if (!initial || httpStatus(error) === 401) throw error;
       }
     });
   }
@@ -263,7 +294,10 @@ export class AgentCompanionComponent implements OnInit {
         runs: this.api.listResearchAgentRuns(undefined, 30),
         schedule: this.api.getAgentSchedule(),
       }).pipe(takeUntilDestroyed(this.destroy)));
-      if (this.active) this.diagnostics.set(result);
+      if (this.active) {
+        this.schedule.set(result.schedule);
+        this.diagnostics.set({ registry: result.registry, runs: result.runs });
+      }
     });
   }
 
@@ -354,6 +388,10 @@ export class AgentCompanionComponent implements OnInit {
       { label: 'Walk-forward Out-of-Sample', phase: report.phases.walkForwardOos },
       { label: 'Holdout', phase: report.phases.holdout },
     ];
+  }
+
+  processingReason(code: string): string | undefined {
+    return RESEARCH_ERRORS.get(code);
   }
 
   async showPreview(turn: AgentDialogueTurnV1, profileId: string): Promise<void> {
@@ -512,6 +550,8 @@ export class AgentCompanionComponent implements OnInit {
         this.dialogue.set(null);
         this.providers.set([]);
         this.providerCursor.set(undefined);
+        this.providerReadiness.set(null);
+        this.schedule.set(null);
         this.preview.set(null);
         this.approvals.set(null);
         this.approval.set(null);

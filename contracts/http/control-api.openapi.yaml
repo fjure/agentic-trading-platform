@@ -10014,6 +10014,68 @@ paths:
           $ref: '#/components/responses/AgentProcessing429'
         '503':
           $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/research/agent/providers/{provider}/probe-previews:
+    post:
+      tags:
+      - Agent research
+      operationId: prepareAgentProviderSmoke
+      summary: Prepare a bound synthetic provider smoke preview
+      description: Prepares an expiring quote without sending any provider request.
+      parameters:
+      - name: provider
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentProviderId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentProviderProbeRequestV1'
+            example:
+              profileId: profile-001
+              profileGeneration: 1
+              modelGeneration: 1
+              credentialGeneration: 1
+      responses:
+        '401':
+          $ref: '#/components/responses/AgentProcessing401'
+        '403':
+          $ref: '#/components/responses/AgentProcessing403'
+        '404':
+          $ref: '#/components/responses/AgentProcessing404'
+        '409':
+          $ref: '#/components/responses/AgentProcessing409'
+        '422':
+          $ref: '#/components/responses/AgentProcessing422'
+        '429':
+          $ref: '#/components/responses/AgentProcessing429'
+        '503':
+          $ref: '#/components/responses/AgentProcessing503'
+        '200':
+          description: Current smoke budget and exact confirmation binding
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentProviderSmokePreviewV1'
+              example:
+                grantId: 98798d51-cd5d-4d95-bb25-f3f60ff50862
+                commitment: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                maximumCost: '0.003'
+                operatorLimit: '0.65'
+                expiresAt: '2026-11-15T19:00:00Z'
+                tariffRevision: 1
+                currency: USD
+                inputBoundKind: REQUEST
   /api/v1/research/agent/providers/{provider}/probe:
     post:
       tags:
@@ -12685,6 +12747,54 @@ components:
           $ref: '#/components/schemas/AgentRevision'
         credentialGeneration:
           $ref: '#/components/schemas/AgentRevision'
+        grantId:
+          type: string
+          format: uuid
+        commitment:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+    AgentProviderSmokePreviewV1:
+      type: object
+      additionalProperties: false
+      required:
+      - grantId
+      - commitment
+      - maximumCost
+      - operatorLimit
+      - expiresAt
+      - tariffRevision
+      - currency
+      - inputBoundKind
+      properties:
+        grantId:
+          type: string
+          format: uuid
+        commitment:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+        maximumCost:
+          type: string
+          pattern: ^\d+(?:\.\d{1,18})?$
+        operatorLimit:
+          type: string
+          pattern: ^\d+(?:\.\d{1,18})?$
+        expiresAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        blockedReason:
+          type: string
+          enum:
+          - BUDGET_EXHAUSTED
+        tariffRevision:
+          $ref: '#/components/schemas/AgentRevision'
+        currency:
+          type: string
+          enum:
+          - USD
+        inputBoundKind:
+          type: string
+          enum:
+          - REQUEST
+          - MODEL
     AgentProviderProbeResultV1:
       type: object
       additionalProperties: false

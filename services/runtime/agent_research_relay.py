@@ -29,7 +29,8 @@ _ALLOWED_OPERATIONS = frozenset({
     "createAgentDialogue", "getAgentDialogue", "createAgentDialogueTurn", "decideAgentHypothesis",
     "getAgentRegistry", "listResearchAgentRuns", "getAgentRun", "listAgentRunEvents",
     "cancelAgentRun", "getAgentSchedule", "updateAgentSchedule", "commandAgentSchedule",
-    "listAgentProviders", "probeAgentProvider", "listAgentQuantApprovals", "getAgentQuantApproval",
+    "listAgentProviders", "prepareAgentProviderSmoke", "probeAgentProvider",
+    "listAgentQuantApprovals", "getAgentQuantApproval",
     "decideAgentQuantApproval", "listAgentResearchReports", "getAgentResearchReport",
 })
 

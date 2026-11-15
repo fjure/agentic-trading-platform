@@ -47,6 +47,7 @@ OPERATIONS = {
     "/reports/{id}": {"get"},
     "/providers": {"get"},
     "/providers/{provider}/probe": {"post"},
+    "/providers/{provider}/probe-previews": {"post"},
 }
 
 
