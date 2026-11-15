@@ -1,5 +1,6 @@
 <section aria-labelledby="research-title">
   @defer (when companionOpen()) {
+    <atl-research-provider-smoke />
     <atl-agent-companion (sessionLost)="sessionLost.emit()" />
   } @placeholder {
     <button mat-stroked-button type="button" (click)="companionOpen.set(true)">Research Companion öffnen</button>

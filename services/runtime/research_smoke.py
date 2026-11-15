@@ -94,7 +94,7 @@ class ProductionSmoke:
 
 
 def configured_smoke(engine, store, installation, gateway):
-    """Load the staged installation and re-read its explicit policy at each fence."""
+    """Re-read the installed policy at each fence and let the authority require STAGED."""
     from pathlib import Path
 
     from sqlalchemy import text
@@ -114,7 +114,7 @@ def configured_smoke(engine, store, installation, gateway):
         epoch = scope.execute(
             text("""
             SELECT epoch FROM agent_research.provider_authority
-            WHERE provider=:provider AND profile_id=:profile AND state='STAGED'
+            WHERE provider=:provider AND profile_id=:profile
         """),
             {"provider": binding.provider, "profile": binding.profile_id},
         ).scalar_one()

@@ -26,7 +26,7 @@
 
 ## 7. Dashboard und Betreiberablauf
 
-- [ ] 7.1 [ARP-07](work-packages/ARP-07.md) Material-Setup, Providerbereitschaft, Sendefreigabe und proaktiven Serverstatus umsetzen. Prüfung: Operator führt Setup, Preview, lokale Klärung und Statusabfrage aus.
+- [x] 7.1 [ARP-07](work-packages/ARP-07.md) Material-Setup, Providerbereitschaft, Sendefreigabe und proaktiven Serverstatus umsetzen. Prüfung: Operator führt Setup, Preview, lokale Klärung und Statusabfrage aus.
 
 ## 8. Autorisierter Smoke-Harness
 

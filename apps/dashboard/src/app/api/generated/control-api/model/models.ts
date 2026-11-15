@@ -48,6 +48,7 @@ export * from './agentProviderPageV1';
 export * from './agentProviderProbeRequestV1';
 export * from './agentProviderProbeResultV1';
 export * from './agentProviderProbeStateV1';
+export * from './agentProviderSmokePreviewV1';
 export * from './agentQuantApprovalBindingV1';
 export * from './agentQuantApprovalDecisionV1';
 export * from './agentQuantApprovalPageV1';

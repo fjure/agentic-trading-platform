@@ -115,7 +115,7 @@ class SmokeAuthority:
         self.binding = binding
         self.epoch = epoch
         self._plan = plan
-        self._agent = agent
+        self.agent = agent
         self._attempts = ModelAttemptStore(engine)
 
     @property
@@ -130,8 +130,8 @@ class SmokeAuthority:
         plan = self._plan(scope)
         budget = preview_budget_binding(
             scope,
-            self._agent,
-            self._agent.model_binding,
+            self.agent,
+            self.agent.model_binding,
             grant_id.hex,
             kind=RunKind.PROVIDER_PROBE,
         )

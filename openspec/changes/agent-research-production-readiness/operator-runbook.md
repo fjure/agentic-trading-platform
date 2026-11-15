@@ -23,3 +23,11 @@ Der versionierte Pfad beginnt mit `/api/v1/integrations/research-setup/providers
 3. Zielmodell, Prompt, Schema, Scorer und Datensatzrevision vor Öffnung extern nachvollziehbar registrieren. Attestation, Registrierungsreferenz und Betreiberentscheidung verifizieren.
 4. Den Holdout einmal für die gesondert autorisierte Evaluation freigeben. C:\Users\Domenik\Documents\atp ist der spätere Übergabeort. Originale und privater Signaturschlüssel verbleiben in der geschützten Verwahrung.
 5. Widerrufene Pins sperren, Rotation separat bestätigen und Restore ohne Reaktivierung prüfen. Nur redigierte Prüfergebnisse und Metadaten in Git, Logs und CI übernehmen.
+
+## Dashboard für Setup und Verbindungstest
+
+Öffne nach der lokalen Sitzungsaktivierung **Research-Schlüssel verwalten**. Fordere im Setup-Container den Einmalcode für Anbieter und Aktion an. Trage den Code und beim Speichern oder Ersetzen den Schlüssel in das lokale Formular ein. Bei einer unklaren Antwort prüfe den redigierten Status und verwende für eine weitere Mutation einen neuen Einmalcode. Den externen Schlüssel widerruft der Betreiber beim Anbieter.
+
+Öffne im Research Companion **Provider-Verbindungstest** und lade den Status. Die Vorschau zeigt Reserve, Betreiberlimit, Tarifrevision, Nachweisart und Ablauf. Die Bestätigung sendet den gebundenen synthetischen Test. Bei unklarem Ausgang lade den Status erneut. Nach einem Reload wird kein Test ausgelöst.
+
+Prüfe die exakte Research-Vorschau vor der separaten Sendefreigabe. Die lokale Klärung bleibt verfügbar. Das Dashboard liest den proaktiven Zeitplan vom Supervisor. Quant-Zulassung und Experimentstart verwenden eigene Aktionen.

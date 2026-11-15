@@ -82,6 +82,7 @@ model/agentProviderPageV1.ts
 model/agentProviderProbeRequestV1.ts
 model/agentProviderProbeResultV1.ts
 model/agentProviderProbeStateV1.ts
+model/agentProviderSmokePreviewV1.ts
 model/agentQuantApprovalBindingV1.ts
 model/agentQuantApprovalDecisionV1.ts
 model/agentQuantApprovalPageV1.ts

@@ -17,5 +17,7 @@ export interface AgentProviderProbeRequestV1 {
     profileGeneration: number;
     modelGeneration: number;
     credentialGeneration: number;
+    grantId?: string;
+    commitment?: string;
 }
 

@@ -26,6 +26,7 @@ import { AgentProviderId } from '../model/models';
 import { AgentProviderPageV1 } from '../model/models';
 import { AgentProviderProbeRequestV1 } from '../model/models';
 import { AgentProviderProbeResultV1 } from '../model/models';
+import { AgentProviderSmokePreviewV1 } from '../model/models';
 import { AgentQuantApprovalDecisionV1 } from '../model/models';
 import { AgentQuantApprovalPageV1 } from '../model/models';
 import { AgentQuantApprovalProblemV1 } from '../model/models';
@@ -279,6 +280,16 @@ export interface AgentResearchServiceInterface {
      * @param limit 
      */
     listResearchAgentRuns(cursor?: string, limit?: number, extraHttpRequestParams?: any): Observable<AgentRunPageV1>;
+
+    /**
+     * Prepare a bound synthetic provider smoke preview
+     * Prepares an expiring quote without sending any provider request.
+     * @endpoint post /api/v1/research/agent/providers/{provider}/probe-previews
+     * @param provider 
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param agentProviderProbeRequestV1 
+     */
+    prepareAgentProviderSmoke(provider: AgentProviderId, idempotencyKey: string, agentProviderProbeRequestV1: AgentProviderProbeRequestV1, extraHttpRequestParams?: any): Observable<AgentProviderSmokePreviewV1>;
 
     /**
      * Request an authorized synthetic provider probe

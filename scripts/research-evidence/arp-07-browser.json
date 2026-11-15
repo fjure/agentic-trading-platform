@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "packageId": "ARP-07",
+  "suite": "arp-operator-browser",
+  "gate": "browser",
+  "mode": "offline",
+  "artifact": "research-browser",
+  "cases": [
+    {
+      "id": "ARP-OPERATOR-SETUP-EPHEMERAL",
+      "class": "research-provider-setup.spec.ts",
+      "name": "Research setup separates local consent, credential rotation and revocation without replay"
+    },
+    {
+      "id": "ARP-OPERATOR-SMOKE-CONSENT",
+      "class": "research-provider-smoke.spec.ts",
+      "name": "provider smoke needs a current unblocked quote and an explicit click after reload"
+    }
+  ]
+}

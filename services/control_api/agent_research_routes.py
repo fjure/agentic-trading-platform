@@ -186,6 +186,13 @@ OPERATIONS = (
         query=PAGED,
     ),
     _operation(
+        "prepareAgentProviderSmoke",
+        "POST",
+        BASE + "/providers/{provider}/probe-previews",
+        {200: "AgentProviderSmokePreviewV1"},
+        request="AgentProviderProbeRequestV1",
+    ),
+    _operation(
         "probeAgentProvider",
         "POST",
         BASE + "/providers/{provider}/probe",

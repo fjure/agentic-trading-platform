@@ -2439,6 +2439,14 @@
         },
         "credentialGeneration": {
           "$ref": "#/$defs/AgentRevision"
+        },
+        "grantId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "commitment": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
         }
       }
     },
@@ -6975,6 +6983,63 @@
               "TARIFF_UNVERIFIED"
             ]
           }
+        }
+      }
+    },
+    "AgentProviderSmokePreviewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grantId",
+        "commitment",
+        "maximumCost",
+        "operatorLimit",
+        "expiresAt",
+        "tariffRevision",
+        "currency",
+        "inputBoundKind"
+      ],
+      "properties": {
+        "grantId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "commitment": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "maximumCost": {
+          "type": "string",
+          "pattern": "^\\d+(?:\\.\\d{1,18})?$"
+        },
+        "operatorLimit": {
+          "type": "string",
+          "pattern": "^\\d+(?:\\.\\d{1,18})?$"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "blockedReason": {
+          "type": "string",
+          "enum": [
+            "BUDGET_EXHAUSTED"
+          ]
+        },
+        "tariffRevision": {
+          "$ref": "#/$defs/AgentRevision"
+        },
+        "currency": {
+          "type": "string",
+          "enum": [
+            "USD"
+          ]
+        },
+        "inputBoundKind": {
+          "type": "string",
+          "enum": [
+            "REQUEST",
+            "MODEL"
+          ]
         }
       }
     }

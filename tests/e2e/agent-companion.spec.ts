@@ -35,6 +35,14 @@ test('the Guided UI keeps the local question, preview, and send decision separat
   let followUp = false;
   let turns: Array<typeof turn> = [];
   const posts: Array<{ path: string; body: unknown }> = [];
+  const exactRequest = JSON.stringify({ model: 'local-double', input: original });
+  const requestHash = 'a'.repeat(64);
+  await page.route('**/api/v1/integrations/research-provider-readiness', route => route.fulfill({
+    json: { state: 'DISABLED', candidates: [{
+      provider: 'OPENAI', modelId: 'blocked-fixture', evidenceState: 'INCOMPLETE',
+      blockingReasons: ['BILLING_TIERS_UNVERIFIED'],
+    }] },
+  }));
   await page.route('**/api/v1/research/agent/**', async route => {
     const request = route.request();
     const path = new URL(request.url()).pathname.slice(base.length);
@@ -67,6 +75,14 @@ test('the Guided UI keeps the local question, preview, and send decision separat
         }
         turns = [turn];
         return route.fulfill({ status: 202, json: turn });
+      case '/schedule':
+        return route.fulfill({ json: {
+          scheduleId: 'daily-research', state: 'DISABLED', version: 1, localTime: '07:00',
+          timeZone: 'UTC', triggerPolicyVersion: 1, tzdataVersion: 'fixture',
+          scope: { instrumentIds: [], sourceKinds: [] },
+          limits: { maxInputTokens: 1, maxOutputTokens: 1, maxCost: '0', currency: 'USD',
+            maxModelCalls: 0, maxIdeas: 0, maxSourceItems: 50, maxPendingItems: 25 },
+        } });
       case '/providers':
         return route.fulfill({ json: { items: [{
           binding: { provider: 'SYNTHETIC', profileId: 'profile-1', modelId: 'local-double' },
@@ -79,6 +95,8 @@ test('the Guided UI keeps the local question, preview, and send decision separat
           provider: 'SYNTHETIC', profileId: 'profile-1', modelId: 'local-double', dataClasses: ['RESEARCH_TEXT'],
           expiresAt: new Date(Date.now() + 120_000).toISOString(), projectionBinding: 'fixture-binding',
           projection: { excerpt: original, confirmedContext: {} },
+          providerRequestBody: exactRequest, providerRequestSha256: requestHash,
+          tariffRevision: 4, evidenceRevision: 5,
         } });
       case '/dialogues/dialogue-1/turns/turn-1/processing-decisions':
         processing.state = 'SEND_AUTHORIZED';
@@ -96,6 +114,10 @@ test('the Guided UI keeps the local question, preview, and send decision separat
   });
 
   const companion = await openCompanion(page);
+  await expect(companion.getByText('Standardkatalog · DISABLED')).toBeVisible();
+  await companion.getByText('OPENAI · blocked-fixture · INCOMPLETE').click();
+  await expect(companion.getByText('BILLING_TIERS_UNVERIFIED')).toBeVisible();
+  await expect(companion.getByText('Serverseitiger Zeitplan · DISABLED')).toBeVisible();
   await companion.getByLabel('Titel', { exact: true }).fill(idea.title);
   await companion.getByLabel('Forschungsfrage', { exact: true }).fill(original);
   await companion.getByRole('button', { name: 'Forschungsfrage speichern' }).press('Enter');
@@ -110,11 +132,17 @@ test('the Guided UI keeps the local question, preview, and send decision separat
   previewBlocked = false;
   await companion.getByRole('button', { name: 'Sendefassung für local-double anzeigen' }).click();
   await expect(companion.getByRole('heading', { name: 'Sendefassung' })).toBeFocused();
-  await expect(companion.getByRole('region', { name: 'Sendefassung' })).toContainText(original);
+  const sendPreview = companion.getByRole('region', { name: 'Sendefassung' });
+  await expect(sendPreview.locator('pre')).toHaveText(exactRequest);
+  await expect(sendPreview.getByText(requestHash)).toBeVisible();
+  await expect(sendPreview.getByText('Tarifrevision 4 · Kostennachweisrevision 5')).toBeVisible();
   expect(posts.filter(post => post.path.endsWith('processing-decisions'))).toEqual([]);
 
+  const requestsBeforeReload = posts.length;
   await page.reload();
   await expect(companion.getByLabel(question, { exact: true })).toBeVisible();
+  await expect(companion.getByText('Serverseitiger Zeitplan · DISABLED')).toBeVisible();
+  expect(posts).toHaveLength(requestsBeforeReload);
   await expect(companion.getByRole('button', { name: 'Diese Fassung senden' })).toHaveCount(0);
   await companion.getByRole('button', { name: 'Providerstatus laden' }).click();
   await companion.getByRole('button', { name: 'Sendefassung für local-double anzeigen' }).click();
