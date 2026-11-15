@@ -34,7 +34,7 @@
 
 ## 9. Security und Recovery unter Last
 
-- [ ] 9.1 [ARP-09](work-packages/ARP-09.md) Produktionskomposition und deterministische Crash-/Widerrufs-/Lastfälle im Gate absichern. Prüfung: Reconciliation und Kill bleiben innerhalb des Safetybudgets.
+- [x] 9.1 [ARP-09](work-packages/ARP-09.md) Produktionskomposition und deterministische Crash-/Widerrufs-/Lastfälle im Gate absichern. Prüfung: Reconciliation und Kill bleiben innerhalb des Safetybudgets.
 
 ## 10. Integrierte Readiness-Abnahme
 
