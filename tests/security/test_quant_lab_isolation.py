@@ -109,6 +109,11 @@ def _ledger_state(conn):
     ).one()
     return dict(
         fingerprints=dict(financial_fingerprints(conn, SAFETY_STABLE_TABLES)),
+        paper_strategies=[
+            list(row) for row in conn.execute(
+                text("SELECT version,strategy FROM public.paper_profile_versions ORDER BY version")
+            )
+        ],
         cash=cash,
         equity=equity,
     )
@@ -183,12 +188,16 @@ def _research_load(database):
     from threading import Event
     from uuid import uuid4
 
+    from pytest import raises
     from sqlalchemy import text
 
+    from packages.agent_research.model_attempts import ModelAttemptStore
     from packages.agent_research.registry import QUANT_RESEARCH_V1, ToolId
     from packages.agent_research.run_state import RunState
-    from packages.agent_research.runs import RunKind, RunStore
+    from packages.agent_research.runs import RunConflict, RunKind, RunStore
     from packages.agent_research.tools import ToolCall, ToolJournal
+    from services.runtime.agent_research import ResearchSupervisor, StepResult
+    from tests.security.research_safety_load import crash_research_worker, dispatch_during_safety
 
     engine = _engine("atl_agent_research", database)
     runs = RunStore(engine)
@@ -200,6 +209,22 @@ def _research_load(database):
             input_ref="synthetic-isolation-input", trace_id="b" * 32, agent=QUANT_RESEARCH_V1,
         )
 
+        old_claim = crash_research_worker(database, run, uuid4())
+        assert runs.claim(uuid4()) is None, "Second Research starter bypassed the old lease"
+        # Advance the crashed lease deterministically, leaving its fence for recovery.
+        admin = _engine("lab_migration", database)
+        try:
+            with admin.begin() as connection:
+                expired = connection.execute(text("""
+                    UPDATE agent_research.runs
+                    SET claimed_at=clock_timestamp()-interval '2 seconds',
+                        lease_until=clock_timestamp()-interval '1 second'
+                    WHERE run_id=:run AND state='RUNNING' AND fence=:fence
+                """), {"run": run, "fence": old_claim.fence})
+                assert expired.rowcount == 1
+        finally:
+            admin.dispose()
+
         def authorize(scope):
             assert scope.execute(text("""
                 SELECT input_ref FROM agent_research.runs
@@ -207,22 +232,25 @@ def _research_load(database):
             """), {"run": run}).scalar_one() == "synthetic-isolation-input"
 
         def operation(_scope):
-            active.set()
-            # Keep the real journal transaction open across the measured safety calls.
-            assert release.wait(timeout=20), "Paper safety calls did not finish under Research load"
+            dispatch_during_safety(active, release)
             return "synthetic-isolation-result"
 
-        def work():
-            claim = runs.claim(uuid4())
-            assert claim is not None and claim.run_id == run
+        def resume(claim, _request, recovered):
+            assert claim.run_id == run and claim.fence > old_claim.fence
+            assert not recovered
+            with raises(RunConflict, match="LEASE_LOST"):
+                runs.transition(old_claim, RunState.COMPLETED)
             call = ToolCall("isolation-read", ToolId.RESEARCH_READ, 1, "c" * 64)
             assert journal.execute(claim, call, authorize=authorize, operation=operation) == (
                 "synthetic-isolation-result"
             )
-            runs.transition(claim, RunState.COMPLETED)
+            return StepResult(RunState.COMPLETED)
 
+        supervisor = ResearchSupervisor(
+            runs, {RunKind.DIALOGUE: resume}, attempts=ModelAttemptStore(engine),
+        )
         with ThreadPoolExecutor(max_workers=1) as pool:
-            pending = pool.submit(work)
+            pending = pool.submit(supervisor.run_once, uuid4())
             try:
                 if not active.wait(timeout=5):
                     pending.result(timeout=5)
@@ -231,7 +259,7 @@ def _research_load(database):
                 assert not pending.done(), "Research load ended before the safety checks"
             finally:
                 release.set()
-            pending.result(timeout=5)
+            assert pending.result(timeout=5)
         assert runs.snapshot(run, actor="local-operator").state is RunState.COMPLETED
     finally:
         engine.dispose()
@@ -275,14 +303,15 @@ def safety():
             assert fixture.api.read_status(fixture.trace)["entryGateOpen"] is True
             loads.enter_context(_research_load(fixture.database))
 
-            def timed(call, *args, **kwargs):
+            def timed(action, call, *args, **kwargs):
                 started = monotonic()
                 result = call(*args, **kwargs)
                 elapsed = monotonic() - started
-                assert elapsed < 5
+                assert elapsed < 5, f"{action} exceeded the Safety budget: {elapsed:.3f}s"
                 return result, elapsed
 
             paused, pause_seconds = timed(
+                "PAUSE_NEW",
                 fixture.api.enqueue,
                 "PAUSE",
                 {"action": "PAUSE"},
@@ -294,8 +323,9 @@ def safety():
             assert fixture.sql("execution", "SELECT safety_state FROM risk_account_context") == (
                 "PAUSE_NEW"
             )
-            _, reconcile_seconds = timed(fixture.refresh, publish=False)
+            _, reconcile_seconds = timed("Reconciliation", fixture.refresh, publish=False)
             killed, kill_seconds = timed(
+                "Kill",
                 fixture.api.enqueue,
                 "KILL",
                 {"action": "KILL"},
@@ -317,7 +347,8 @@ def safety():
         assert fixture.receipt.ready and all(method == "GET" for method, _ in fixture.http_calls)
         print(
             f"PASS Paper safety Pause {pause_seconds:.3f}s, Kill {kill_seconds:.3f}s, "
-            f"Reconciliation {reconcile_seconds:.3f}s with overlapping Quant and APF Research",
+            f"Reconciliation {reconcile_seconds:.3f}s with overlapping Quant, Research "
+            "and private gateway failure, zero financial writes and broker orders",
             flush=True,
         )
     finally:

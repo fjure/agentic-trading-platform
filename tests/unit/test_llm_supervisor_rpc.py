@@ -102,6 +102,7 @@ def test_supervisor_bridge_resolves_binding_before_consuming_and_checks_committe
         model_generation=request.model_generation, profile_generation=request.profile_generation,
         envelope_version=request.envelope_version,
         data_classes=("OPERATOR_RESEARCH_EXCERPT",),
+        evidence_revision=None,
     )
     pending = PendingDispatch(request, Mock(), uuid4(), binding, PROFILE)
     processing = Mock()

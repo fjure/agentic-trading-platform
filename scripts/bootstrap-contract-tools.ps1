@@ -51,7 +51,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $nodeHome 'node.exe'))) {
 }
 
 $jar = Join-Path $cache 'openapi-generator-cli-7.26.0.jar'
-Ensure-VerifiedFile 'https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.26.0/openapi-generator-cli-7.26.0.jar' $jar '1760050094997b9cc790cc1350be095f15da8c08a996b184d3eadc4ccda5e35e'
+Ensure-VerifiedFile 'https://repo.maven.apache.org/maven2/org/openapitools/openapi-generator-cli/7.26.0/openapi-generator-cli-7.26.0.jar' $jar '1760050094997b9cc790cc1350be095f15da8c08a996b184d3eadc4ccda5e35e'
 
 $oasdiffDir = Join-Path $tooling 'oasdiff'
 New-Item -ItemType Directory -Force -Path $oasdiffDir | Out-Null

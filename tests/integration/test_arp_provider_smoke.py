@@ -50,7 +50,7 @@ def test_arp_provider_smoke_actual_postgresql():
         ledger_support.GROUPS, harness.TABLES = groups, tables
 
 
-def guest():
+def guest(scenarios=None):
     fixture = json.load(sys.stdin)
     url = URL.create(
         "postgresql+psycopg",
@@ -115,7 +115,8 @@ def guest():
             input_bound_kind="REQUEST",
         )
         with patch.object(registry, "AGENTS", {(agent.agent_id, agent.version): agent}):
-            assert_scenarios(owner, worker, model, agent, store, binding, staged.epoch, plan)
+            check = scenarios or assert_scenarios
+            check(owner, worker, model, agent, store, binding, staged.epoch, plan)
     finally:
         worker.dispose()
         owner.dispose()
@@ -128,6 +129,8 @@ def fixture_capability(model):
             provider=Provider(model.provider),
             profile_id=model.profile_id,
             model=model.model_id,
+            profile_generation=model.profile_generation,
+            model_generation=model.model_generation,
             timeout_seconds=15,
         ),
         50,

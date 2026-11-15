@@ -234,6 +234,7 @@ test('STOP and KILL require confirmation and blocked or failed operations expose
   await expect(operations.getByText('CREDENTIALS_INVALID:', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Paper stoppen', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Abbrechen' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(f.writes).toHaveLength(0);
   await page.getByRole('button', { name: 'Paper stoppen', exact: true }).click(); await confirm(page);
   await expect.poll(() => f.writes.length).toBe(1);
