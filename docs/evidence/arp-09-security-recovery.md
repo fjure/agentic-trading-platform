@@ -35,3 +35,5 @@ Code-Commit `fce1f94cdae6b1b5a0d0ed258b824d13e88fde48` enthält die geprüften T
 | Strict-OpenSpec, Ruff und Credential-Quellscan | Bestanden |
 
 Der GitHub-Read-back von [#104](https://github.com/fjure/agentic-trading-platform/issues/104) bestätigt den Evidenzlink, den unveränderten Titel, die beiden Labels und die abgeschlossenen Abhängigkeiten #99 und #100. Die GitHub-Workflows binden die Wiederholung an den SHA des ausgecheckten Issue-Branches.
+
+Der Windows-Runner erhielt beim ersten Contract-Lauf einen HTTP-403 vom bisherigen Maven-Central-Host. Der Bootstrap lädt denselben OpenAPI-Generator jetzt über den Apache-Maven-Central-Endpunkt. Der Download wurde gegen die bestehende SHA-256-Pin geprüft.
