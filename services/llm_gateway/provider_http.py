@@ -80,11 +80,12 @@ def _bounded_usage(
         or type(written) is not int or written != 0
     ):
         return None
-    if smoke and (cached != 0 or any(
-        type(block) is not dict or block.get("type") != "text"
-        for block in payload.get("content", ())
-    )):
-        return None
+    if smoke:
+        blocks = payload.get("content")
+        if cached != 0 or type(blocks) is not list or any(
+            type(block) is not dict or block.get("type") != "text" for block in blocks
+        ):
+            return None
     return Usage(usage.input_tokens + cached, usage.output_tokens)
 
 

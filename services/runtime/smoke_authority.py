@@ -55,6 +55,7 @@ class SmokePlan:
         if (
             not self.prices.bounds_unconfirmed_cost
             or reserved.bound.cost != self.maximum_cost
+            or self.operator_limit <= 0
             or self.operator_limit < self.maximum_cost
             or type(self.timeout_seconds) is not int
             or not 1 <= self.timeout_seconds <= 15
@@ -92,7 +93,8 @@ class SmokeGrant:
             "currency": self.currency,
             "inputBoundKind": self.input_bound_kind,
             "blockedReason": (
-                "BUDGET_EXHAUSTED" if self.maximum_cost > self.operator_limit else None
+                "BUDGET_EXHAUSTED"
+                if self.operator_limit <= 0 or self.maximum_cost > self.operator_limit else None
             ),
         }
 

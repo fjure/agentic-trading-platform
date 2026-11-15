@@ -5,6 +5,7 @@ import sys
 from dataclasses import asdict, replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from hashlib import sha256
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -14,13 +15,18 @@ from alembic.config import Config
 from sqlalchemy import URL, create_engine, event, text
 
 from packages.agent_research import registry
-from packages.agent_research.budget import BudgetDenied, ModelOutcome, TokenPrices, Tokens
+from packages.agent_research.budget import BudgetDenied, TokenPrices, Tokens
 from packages.agent_research.model_attempts import production_model_budget_scopes
 from packages.agent_research.provider_authority import ProviderAuthorityStore, ProviderBinding
 from packages.agent_research.runs import RunConflict, RunKind, RunState, RunStore
+from services.llm_gateway.probe import PROBE_PROJECTION, production_probe_capability
+from services.llm_gateway.provider_http import provider_request_bytes
+from services.llm_gateway.provider_wire import Provider, ProviderResult, ResultState, Usage
 from services.runtime.provider_profiles import check_persisted_evidence
+from services.runtime.research_smoke import ProductionSmoke
 from services.runtime.smoke_authority import SmokeAuthority, SmokePlan
 from tests.integration.test_agent_research_runtime import WORKER_ROLE
+from tests.unit.test_llm_provider_http import PROFILE
 
 PROOF = "PASS durable production smoke consent, replay, and usage settlement"
 
@@ -91,9 +97,10 @@ def guest():
         store = ProviderAuthorityStore(worker, check_evidence=check_persisted_evidence)
         store.attest_credential("OPENAI", 1, 2, binding.credential_digest, expected_version=1)
         staged = store.stage(binding, 0)
+        capability = fixture_capability(model)
         plan = SmokePlan(
             "d" * 64,
-            "e" * 64,
+            sha256(provider_request_bytes(capability, PROBE_PROJECTION)).hexdigest(),
             prices,
             Tokens(100, 50),
             Decimal("0.0002"),
@@ -106,6 +113,19 @@ def guest():
     finally:
         worker.dispose()
         owner.dispose()
+
+
+def fixture_capability(model):
+    return production_probe_capability(
+        replace(
+            PROFILE,
+            provider=Provider(model.provider),
+            profile_id=model.profile_id,
+            model=model.model_id,
+            timeout_seconds=15,
+        ),
+        50,
+    )
 
 
 def configure(owner, model, agent, binding):
@@ -171,7 +191,7 @@ def assert_scenarios(owner, worker, model, agent, store, binding, epoch, plan):
     with owner.begin() as connection:
         connection.execute(
             text("""
-            UPDATE agent_research.model_budget_policies SET version=2 WHERE scope='global'
+            UPDATE agent_research.model_budget_policies SET version=2 WHERE scope LIKE 'global:%'
         """)
         )
     with pytest.raises(RunConflict, match="PROCESSING_GRANT_INVALID"):
@@ -186,22 +206,25 @@ def assert_scenarios(owner, worker, model, agent, store, binding, epoch, plan):
     assert claim is not None and claim.run_id == run_id
     approved = authority.lookup(grant.grant_id)
     assert approved is not None
-    assert authority.reserve(approved, claim, model).status == "RESERVED"
 
-    current = replace(plan, policy_sha256="f" * 64)
-    with pytest.raises(RunConflict, match="PROCESSING_GRANT_INVALID"):
-        authority.authorize(approved, claim, approved.commitment)
-    current = plan
-    assert authority.authorize(approved, claim, approved.commitment).status == "DISPATCH_AUTHORIZED"
-    with pytest.raises(RunConflict, match="PROCESSING_GRANT_INVALID"):
-        authority.authorize(approved, claim, approved.commitment)
+    class Boundary:
+        def dispatch(self, request):
+            nonlocal current
+            current = replace(plan, policy_sha256="f" * 64)
+            with pytest.raises(RunConflict, match="PROCESSING_GRANT_INVALID"):
+                smoke.consume(request)
+            current = plan
+            assert smoke.consume(request).projection == PROBE_PROJECTION
+            with pytest.raises(RunConflict):
+                smoke.consume(request)
+            with pytest.raises(RunConflict, match="PROVIDER_OUTCOME_UNKNOWN"):
+                authority.preview(actor, uuid4())
+            return ProviderResult(ResultState.ACCEPTED, Usage(3, 2), {"ok": True})
 
-    with pytest.raises(RunConflict, match="PROVIDER_OUTCOME_UNKNOWN"):
-        authority.preview(actor, uuid4())
-
-    result = authority.settle(approved, claim, ModelOutcome.COMPLETED, reported_tokens=Tokens(3, 2))
-    assert result.status == "COMPLETED"
-    runs.transition(claim, RunState.COMPLETED)
+    smoke = ProductionSmoke(authority, Boundary(), fixture_capability(model), model)
+    result = smoke.step(claim, runs.load_input(claim), ())
+    assert result.target == RunState.COMPLETED
+    runs.transition(claim, result.target)
     with worker.connect() as connection:
         usage = connection.execute(
             text("""
@@ -217,7 +240,7 @@ def assert_scenarios(owner, worker, model, agent, store, binding, epoch, plan):
 if __name__ == "__main__":
     try:
         guest()
-    except Exception as error:
+    except (Exception, pytest.fail.Exception) as error:
         from pathlib import Path
         from traceback import extract_tb
 
