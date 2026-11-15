@@ -1,0 +1,10 @@
+# Apply after research-dispatch on a separately provisioned staged profile.
+services:
+  research-supervisor:
+    configs:
+      - source: research_smoke_policy
+        target: /run/config/research-smoke.json
+
+configs:
+  research_smoke_policy:
+    file: ../../.tooling/application/runtime/research-smoke.json

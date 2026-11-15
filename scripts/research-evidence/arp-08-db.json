@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "packageId": "ARP-08",
+  "suite": "arp-smoke-ledger",
+  "gate": "db",
+  "mode": "offline",
+  "artifact": "research-db",
+  "cases": [
+    {
+      "id": "ARP-SMOKE-POSTGRES-AUTHORITY",
+      "class": "tests.integration.test_arp_provider_smoke",
+      "name": "test_arp_provider_smoke_actual_postgresql"
+    }
+  ]
+}

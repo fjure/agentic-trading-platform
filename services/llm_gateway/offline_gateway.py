@@ -175,13 +175,17 @@ class OfflineGateway:
     def _capability_key(capability: Capability) -> tuple:
         return (
             capability.provider, capability.profile_id, capability.profile_generation,
-            capability.model, capability.model_generation,
+            capability.model, capability.model_generation, capability.envelope_version,
         )
 
     def _matches(self, request: DispatchRequest, authorized: AuthorizedDispatch | None) -> bool:
         if not isinstance(authorized, AuthorizedDispatch) or authorized.request != request:
             return False
+        from .probe import PROBE_ENVELOPE
+
         profile = authorized.capability
+        if (request.envelope_version == PROBE_ENVELOPE) != (request.purpose == "PROBE"):
+            return False
         return (
             isinstance(profile, Capability)
             and self._capabilities.get(self._capability_key(profile)) == profile
@@ -216,6 +220,10 @@ class ProviderGateway(OfflineGateway):
         )
 
     def _projection_permitted(self, projection: bytes, purpose: str) -> bool:
+        if purpose == "PROBE":
+            from .probe import PROBE_PROJECTION
+
+            return projection == PROBE_PROJECTION
         if purpose == "DISCOVERY":
             from .content_policy import valid_discovery_projection
 

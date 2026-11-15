@@ -6,6 +6,7 @@ import ssl
 from collections import deque
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+from hashlib import sha256
 
 import pytest
 from cryptography import x509
@@ -18,6 +19,7 @@ from services.llm_gateway import provider_http
 from services.llm_gateway.app import GatewayDispatchClient, create_provider_gateway_app
 from services.llm_gateway.dispatch_journal import DispatchJournal
 from services.llm_gateway.offline_gateway import AuthorizedDispatch
+from services.llm_gateway.probe import PROBE_PROJECTION, production_probe_capability
 from services.llm_gateway.provider_http import ProviderHttp
 from services.llm_gateway.provider_wire import Provider, ResultState
 from services.llm_gateway.supervisor_rpc import AdmissionAuthentication, create_admission_app
@@ -60,11 +62,12 @@ def _contexts(tmp_path, host):
     (Provider.ANTHROPIC, "api.anthropic.com", "/v1/messages", "messages"),
 ])
 def test_fixed_provider_protocol_crosses_local_connect_and_verified_tls(
-    tmp_path, monkeypatch, provider, host, route, message_key,
+    tmp_path, monkeypatch, provider, host, route, message_key, *, probe=False,
 ):
     server_tls, trust = _contexts(tmp_path, host)
     seen = []
     replies = deque((200, 429, 307, 200))
+    projection = PROBE_PROJECTION if probe else PROJECTION
 
     async def provider_handler(reader, writer):
         try:
@@ -73,7 +76,7 @@ def test_fixed_provider_protocol_crosses_local_connect_and_verified_tls(
             headers = dict(line.lower().split(":", 1) for line in lines[1:])
             body = await reader.readexactly(int(headers["content-length"]))
             seen.append((lines[0], json.loads(body), headers))
-            payload = response(provider, '{"hypothesis":"synthetic"}')
+            payload = response(provider, '{"ok":true}' if probe else '{"hypothesis":"synthetic"}')
             status = replies.popleft()
             if not replies:
                 payload["model"] = "different-model"
@@ -83,6 +86,8 @@ def test_fixed_provider_protocol_crosses_local_connect_and_verified_tls(
                 payload["usage"]["input_tokens_details"] = {
                     "cached_tokens": 0, "cache_write_tokens": 0,
                 }
+                if probe:
+                    payload["usage"]["output_tokens_details"] = {"reasoning_tokens": 0}
             else:
                 payload["usage"].update(
                     service_tier="standard", cache_read_input_tokens=0,
@@ -109,8 +114,18 @@ def test_fixed_provider_protocol_crosses_local_connect_and_verified_tls(
                 monkeypatch.setattr(provider_http, "_PROVIDER_PROXY", f"http://127.0.0.1:{relay_port}")
                 monkeypatch.setattr(provider_http, "_provider_tls_context", lambda: trust)
                 profile = replace(PROFILE, provider=provider)
-                request = replace(make_request(), provider=provider)
-                denied = replace(make_request(), provider=provider)
+                if probe:
+                    profile = production_probe_capability(profile, 32)
+
+                def new_request():
+                    return replace(
+                        make_request(), provider=provider,
+                        envelope_version=profile.envelope_version,
+                        projection_sha256=sha256(projection).hexdigest(),
+                        purpose="PROBE" if probe else "DIALOGUE",
+                    )
+
+                request, denied = new_request(), new_request()
 
                 class FixtureCredentials:
                     def read_active(self, binding):
@@ -137,7 +152,7 @@ def test_fixed_provider_protocol_crosses_local_connect_and_verified_tls(
                             ResultState.REDIRECT_DENIED,
                             ResultState.MODEL_MISMATCH,
                         ):
-                            next_request = replace(make_request(), provider=provider)
+                            next_request = new_request()
                             assert client.dispatch(next_request).state is expected
 
                 auth = AdmissionAuthentication(bytes(range(32)))
@@ -145,7 +160,7 @@ def test_fixed_provider_protocol_crosses_local_connect_and_verified_tls(
                 def consume(current):
                     if current == denied:
                         return None
-                    return AuthorizedDispatch(current, profile, PROJECTION)
+                    return AuthorizedDispatch(current, profile, projection)
 
                 admission = create_admission_app(
                     auth, consume,
@@ -178,7 +193,7 @@ def test_fixed_provider_protocol_crosses_local_connect_and_verified_tls(
                     provider_http, "_provider_tls_context", lambda: untrusted,
                 )
                 failure = await asyncio.to_thread(
-                    ProviderHttp().send, profile, PROJECTION, credential="synthetic-wire-fixture",
+                    ProviderHttp().send, profile, projection, credential="synthetic-wire-fixture",
                 )
                 assert failure.state is ResultState.OUTCOME_UNKNOWN
 
@@ -186,13 +201,20 @@ def test_fixed_provider_protocol_crosses_local_connect_and_verified_tls(
     assert len(seen) == 4
     request_line, body, headers = seen[0]
     assert request_line == f"POST {route} HTTP/1.1"
-    assert body[message_key] == [{"role": "user", "content": PROJECTION.decode()}]
+    assert body[message_key] == [{"role": "user", "content": projection.decode()}]
     if provider is Provider.OPENAI:
         assert body["service_tier"] == "default"
         assert headers["authorization"].strip() == "bearer synthetic-wire-fixture"
     else:
         assert headers["anthropic-version"].strip() == "2026-10-21"
         assert headers["x-api-key"].strip() == "synthetic-wire-fixture"
+
+
+def test_production_smoke_uses_fixed_payload_and_blocks_journal_replay(tmp_path, monkeypatch):
+    test_fixed_provider_protocol_crosses_local_connect_and_verified_tls(
+        tmp_path, monkeypatch, Provider.OPENAI, "api.openai.com", "/v1/responses", "input",
+        probe=True,
+    )
 
 
 def test_research_proxy_cannot_start_without_explicit_loopback_double():

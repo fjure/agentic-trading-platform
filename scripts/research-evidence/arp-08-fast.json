@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "packageId": "ARP-08",
+  "suite": "arp-smoke-transport",
+  "gate": "fast",
+  "mode": "offline",
+  "artifact": "research-fast",
+  "cases": [
+    {
+      "id": "ARP-SMOKE-FIXED-PAYLOAD-TLS",
+      "class": "tests.unit.test_llm_tls_socket",
+      "name": "test_production_smoke_uses_fixed_payload_and_blocks_journal_replay"
+    },
+    {
+      "id": "ARP-SMOKE-UNKNOWN-RESERVATION",
+      "class": "tests.unit.test_production_smoke",
+      "name": "test_smoke_unknown_usage_remains_held_and_is_not_retried"
+    },
+    {
+      "id": "ARP-SMOKE-REQUEST-BOUND",
+      "class": "tests.unit.test_smoke_budget",
+      "name": "test_smoke_reserve_prefers_exact_request_proof_then_full_model_ceiling"
+    },
+    {
+      "id": "ARP-SMOKE-COMPONENT-TARIFF",
+      "class": "tests.unit.test_smoke_budget",
+      "name": "test_smoke_cost_checks_reasoning_and_cache_pricing_and_ledger_envelope"
+    },
+    {
+      "id": "ARP-SMOKE-LIMIT-REVISION",
+      "class": "tests.unit.test_smoke_budget",
+      "name": "test_smoke_operator_limit_expiry_fixture_and_reapproval_fail_closed"
+    },
+    {
+      "id": "ARP-SMOKE-DESCRIPTOR",
+      "class": "tests.unit.test_smoke_budget",
+      "name": "test_smoke_budget_descriptor_strictly_parses_decimal_and_limits"
+    },
+    {
+      "id": "ARP-SMOKE-CACHE-TIER",
+      "class": "tests.unit.test_smoke_budget",
+      "name": "test_smoke_counts_anthropic_cache_additively_and_rejects_missing_tier"
+    }
+  ]
+}

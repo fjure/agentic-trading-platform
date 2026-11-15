@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TESTS = (
     "tests/integration/test_agent_research_runtime.py",
     "tests/integration/test_arp_model_attempts.py",
+    "tests/integration/test_arp_provider_smoke.py",
     "tests/integration/test_llm_provider_probe.py",
     "tests/integration/test_companion_runtime.py",
     "tests/recovery/test_discovery_runtime.py",

@@ -121,6 +121,8 @@ jobs:
                 tests/unit/test_provider_discovery_dispatch.py \
                 tests/unit/test_llm_provider_http.py \
                 tests/unit/test_llm_tls_socket.py \
+                tests/unit/test_production_smoke.py \
+                tests/unit/test_smoke_budget.py \
                 tests/unit/test_agent_research_budget.py \
                 tests/unit/test_research_evidence_gate.py \
                 tests/evaluation \

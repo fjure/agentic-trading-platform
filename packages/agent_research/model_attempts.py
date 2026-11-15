@@ -2,7 +2,7 @@
 
 import json
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import date
 from decimal import Decimal
 from hashlib import sha256
@@ -142,9 +142,9 @@ def _budget_binding(policies, period: date) -> str:
     return sha256(json.dumps([period.isoformat(), revisions]).encode()).hexdigest()
 
 
-def preview_budget_binding(connection, agent, model, dialogue_id: str) -> str:
+def preview_budget_binding(connection, agent, model, input_ref: str, *, kind="DIALOGUE") -> str:
     scopes = production_model_budget_scopes(
-        agent.agent_id, agent.version, "DIALOGUE", model, dialogue_id,
+        agent.agent_id, agent.version, kind, model, input_ref,
     )
     policies = list(connection.execute(text("""
         SELECT scope,version,enabled FROM agent_research.model_budget_policies
@@ -635,6 +635,13 @@ class ModelAttemptStore:
         if production and outcome is not ModelOutcome.UNSENT and reported_tokens is None:
             outcome, result_ref = ModelOutcome.OUTCOME_UNKNOWN, None
         settlement = reconcile_model(reservation, outcome, reported_tokens, confirmed_cost)
+        if production and run["kind"] == "PROVIDER_PROBE" and (
+            confirmed_cost is None and outcome is not ModelOutcome.UNSENT
+        ):
+            # Aggregated usage lacks the component breakdown needed to release money.
+            settlement = replace(settlement, reserved=replace(
+                settlement.reserved, cost=max(reservation.bound.cost, settlement.reserved.cost),
+            ))
         if production and outcome is ModelOutcome.COMPLETED and settlement.exceeded_bound:
             outcome, result_ref = ModelOutcome.RESULT_UNAVAILABLE, None
         if row["status"] == outcome.value:

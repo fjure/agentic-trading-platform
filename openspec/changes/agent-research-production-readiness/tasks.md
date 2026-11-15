@@ -30,7 +30,7 @@
 
 ## 8. Autorisierter Smoke-Harness
 
-- [ ] 8.1 [ARP-08](work-packages/ARP-08.md) Synthetischen Einmal-Smoke mit modellabhängiger Budgetpolicy in Produktionsroute und hierarchisches Ledger integrieren. Prüfung: Emulator belegt exakte Modellbindung und Usage-Erfassung.
+- [x] 8.1 [ARP-08](work-packages/ARP-08.md) Synthetischen Einmal-Smoke mit modellabhängiger Budgetpolicy in Produktionsroute und hierarchisches Ledger integrieren. Prüfung: Emulator belegt exakte Modellbindung und Usage-Erfassung.
 
 ## 9. Security und Recovery unter Last
 
