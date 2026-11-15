@@ -4,10 +4,11 @@ from datetime import UTC, datetime, timedelta
 from hashlib import sha256
 from uuid import UUID
 
-from packages.agent_research.budget import ModelOutcome, Tokens
-from packages.agent_research.runs import RunState
+from packages.agent_research.budget import BudgetDenied, ModelOutcome, Tokens
+from packages.agent_research.runs import RunConflict, RunState
 from services.llm_gateway.offline_gateway import AuthorizedDispatch, DispatchRequest
 from services.llm_gateway.probe import PROBE_PROJECTION
+from services.llm_gateway.provider_http import provider_request_bytes
 from services.llm_gateway.provider_wire import ResultState
 
 from .agent_research import StepResult
@@ -26,6 +27,9 @@ class ProductionSmoke:
         if pending is None or pending[0] != request:
             return None
         _, grant, claim = pending
+        wire = provider_request_bytes(self.capability, PROBE_PROJECTION)
+        if sha256(wire).hexdigest() != grant.wire_sha256:
+            return None
         self.authority.authorize(grant, claim, request.request_hash)
         return AuthorizedDispatch(request, self.capability, PROBE_PROJECTION)
 
@@ -36,7 +40,16 @@ class ProductionSmoke:
         if grant is None or grant.expires_at <= datetime.now(UTC):
             return StepResult(RunState.BLOCKED, "PROVIDER_UNAVAILABLE")
         started = datetime.now(UTC)
-        attempt = self.authority.reserve(grant, claim, self.model)
+        try:
+            attempt = self.authority.reserve(grant, claim, self.model)
+        except BudgetDenied:
+            raise
+        except RunConflict as error:
+            if error.code != "PROVIDER_AUTHORITY_UNAVAILABLE":
+                raise
+            return StepResult(RunState.BLOCKED, "PROVIDER_UNAVAILABLE")
+        except (OSError, ValueError):
+            return StepResult(RunState.BLOCKED, "PROVIDER_UNAVAILABLE")
         if attempt.status != "RESERVED":
             return StepResult(RunState.BLOCKED, "PROVIDER_OUTCOME_UNKNOWN")
         capability = self.capability
@@ -115,7 +128,7 @@ def configured_smoke(engine, store, installation, gateway):
         if len(raw) > 65536 or path.is_symlink():
             raise ValueError("PROVIDER_SMOKE_POLICY_INVALID")
         budget = load_smoke_budget(_decode(raw))
-        quote = budget.quote(capability, PROBE_PROJECTION, datetime.now(UTC))
+        quote = budget.quote(capability, PROBE_PROJECTION, datetime.now(UTC), allow_blocked=True)
         if (
             quote.ledger_prices != current_tariff(scope, binding)
             or budget.evidence.revision != binding.evidence_revision
@@ -134,6 +147,7 @@ def configured_smoke(engine, store, installation, gateway):
             budget.limit.amount,
             int(capability.timeout_seconds),
             quote.expires_at,
+            quote.input_bound_kind,
         )
 
     model = ModelBinding(
@@ -143,5 +157,6 @@ def configured_smoke(engine, store, installation, gateway):
         binding.model_id,
         binding.model_generation,
     )
-    authority = SmokeAuthority(engine, store, binding=binding, epoch=epoch, plan=plan)
-    return ProductionSmoke(authority, gateway, capability, model), register_provider_agent(model)
+    agent = register_provider_agent(model)
+    authority = SmokeAuthority(engine, store, binding=binding, epoch=epoch, plan=plan, agent=agent)
+    return ProductionSmoke(authority, gateway, capability, model), agent

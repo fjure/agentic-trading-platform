@@ -43,7 +43,9 @@ def _provider_tls_context() -> ssl.SSLContext:
     return context
 
 
-def _bounded_usage(provider: Provider, payload: object, usage: Usage | None) -> Usage | None:
+def _bounded_usage(
+    provider: Provider, payload: object, usage: Usage | None, *, smoke: bool = False,
+) -> Usage | None:
     if usage is None or not isinstance(payload, dict):
         return None
     raw = payload["usage"]
@@ -57,6 +59,11 @@ def _bounded_usage(provider: Provider, payload: object, usage: Usage | None) -> 
             or type(written) is not int or written != 0
         ):
             return None
+        if smoke:
+            output = raw.get("output_tokens_details")
+            reasoning = output.get("reasoning_tokens") if type(output) is dict else None
+            if cached != 0 or type(reasoning) is not int or reasoning != 0:
+                return None
         return usage
     if raw.get("service_tier") != "standard":
         return None
@@ -72,6 +79,11 @@ def _bounded_usage(provider: Provider, payload: object, usage: Usage | None) -> 
         type(cached) is not int or not 0 <= cached <= 2**31 - 1 - usage.input_tokens
         or type(written) is not int or written != 0
     ):
+        return None
+    if smoke and (cached != 0 or any(
+        type(block) is not dict or block.get("type") != "text"
+        for block in payload.get("content", ())
+    )):
         return None
     return Usage(usage.input_tokens + cached, usage.output_tokens)
 
@@ -196,11 +208,22 @@ class _ProviderHttp:
             schema=Draft202012Validator(schema, registry=Registry()),
         )
         if production:
-            usage = _bounded_usage(capability.provider, payload, result.usage)
+            from .probe import PROBE_ENVELOPE
+
+            usage = _bounded_usage(
+                capability.provider, payload, result.usage,
+                smoke=capability.envelope_version == PROBE_ENVELOPE,
+            )
             if result.state is ResultState.MODEL_MISMATCH:
                 return replace(result, usage=None)
-            if usage is None or usage.output_tokens > capability.max_output_tokens:
+            if usage is None:
                 return ProviderResult(ResultState.OUTCOME_UNKNOWN)
+            if usage.output_tokens > capability.max_output_tokens:
+                return (
+                    ProviderResult(ResultState.INVALID_OUTPUT, usage)
+                    if capability.envelope_version == PROBE_ENVELOPE
+                    else ProviderResult(ResultState.OUTCOME_UNKNOWN)
+                )
             result = replace(result, usage=usage)
         try:
             safe_output = safe_result_content(result.output) and (

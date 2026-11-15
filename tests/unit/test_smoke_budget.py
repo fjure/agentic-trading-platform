@@ -204,3 +204,38 @@ def test_smoke_budget_descriptor_strictly_parses_decimal_and_limits():
     ):
         with pytest.raises(BudgetDenied):
             load_smoke_budget(invalid)
+
+
+def test_smoke_counts_anthropic_cache_additively_and_rejects_missing_tier():
+    capability = replace(CAPABILITY, provider=Provider.ANTHROPIC)
+    evidence = replace(
+        EVIDENCE,
+        provider=Provider.ANTHROPIC,
+        api_version="2026-10-21",
+        cache_read_tokens=200,
+        cache_read_is_subset=False,
+    )
+    tariff = replace(TARIFF, cache_read=Decimal("1"), tiers=("standard",))
+    arguments = dict(tariff=tariff, limit=LIMIT, now=NOW, offline_fixture=True)
+    result = ProviderSmokeBudgetPolicyV1.quote(
+        capability,
+        PROBE_PROJECTION,
+        evidence=evidence,
+        **arguments,
+    )
+    assert result.tokens == Tokens(250_200, 32)
+    assert result.component_cost_bound == Decimal("0.500584")
+    with pytest.raises(BudgetDenied, match="BUDGET_POLICY_UNAVAILABLE"):
+        ProviderSmokeBudgetPolicyV1.quote(
+            capability,
+            PROBE_PROJECTION,
+            evidence=replace(evidence, cache_read_is_subset=True),
+            **arguments,
+        )
+    with pytest.raises(BudgetDenied, match="BUDGET_POLICY_UNAVAILABLE"):
+        ProviderSmokeBudgetPolicyV1.quote(
+            capability,
+            PROBE_PROJECTION,
+            evidence=evidence,
+            **(arguments | {"tariff": replace(tariff, tiers=("other",))}),
+        )

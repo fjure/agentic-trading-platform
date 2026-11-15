@@ -230,6 +230,7 @@ class ProviderSmokeBudgetPolicyV1:
         now: datetime,
         policy_revision: int = 1,
         offline_fixture: bool = False,
+        allow_blocked: bool = False,
     ) -> SmokeQuote:
         if (
             not isinstance(now, datetime)
@@ -243,6 +244,7 @@ class ProviderSmokeBudgetPolicyV1:
             or not isinstance(tariff.ledger_prices, TokenPrices)
             or type(evidence.fixture_only) is not bool
             or type(offline_fixture) is not bool
+            or type(allow_blocked) is not bool
             or evidence.fixture_only != offline_fixture
             or not _current(evidence.expires_at, now, evidence.revision)
             or not _current(tariff.expires_at, now, tariff.ledger_prices.version)
@@ -290,7 +292,7 @@ class ProviderSmokeBudgetPolicyV1:
         ).bound.cost
         if maximum < component_cost:
             _deny()
-        if limit.amount <= 0 or maximum > limit.amount:
+        if not allow_blocked and (limit.amount <= 0 or maximum > limit.amount):
             _deny("BUDGET_EXHAUSTED")
         commitment = sha256(
             json.dumps(
@@ -340,6 +342,7 @@ class SmokeBudgetInputs:
         now: datetime,
         *,
         offline_fixture: bool = False,
+        allow_blocked: bool = False,
     ) -> SmokeQuote:
         if (
             capability.max_output_tokens != self.output_tokens
@@ -355,6 +358,7 @@ class SmokeBudgetInputs:
             now=now,
             policy_revision=self.policy_revision,
             offline_fixture=offline_fixture,
+            allow_blocked=allow_blocked,
         )
 
 

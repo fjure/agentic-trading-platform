@@ -35,6 +35,11 @@
       "id": "ARP-SMOKE-DESCRIPTOR",
       "class": "tests.unit.test_smoke_budget",
       "name": "test_smoke_budget_descriptor_strictly_parses_decimal_and_limits"
+    },
+    {
+      "id": "ARP-SMOKE-CACHE-TIER",
+      "class": "tests.unit.test_smoke_budget",
+      "name": "test_smoke_counts_anthropic_cache_additively_and_rejects_missing_tier"
     }
   ]
 }

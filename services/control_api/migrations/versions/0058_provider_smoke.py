@@ -17,6 +17,7 @@ def upgrade():
       epoch bigint NOT NULL CHECK (epoch > 0),
       policy_sha256 text NOT NULL CHECK (policy_sha256 ~ '^[a-f0-9]{64}$'),
       wire_sha256 text NOT NULL CHECK (wire_sha256 ~ '^[a-f0-9]{64}$'),
+      budget_binding_sha256 text NOT NULL CHECK (budget_binding_sha256 ~ '^[a-f0-9]{64}$'),
       commitment text NOT NULL CHECK (commitment ~ '^[a-f0-9]{64}$'),
       maximum_cost numeric(30,18) NOT NULL CHECK (maximum_cost >= 0),
       operator_limit numeric(30,18) NOT NULL CHECK (operator_limit >= 0),

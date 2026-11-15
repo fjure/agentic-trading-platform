@@ -86,6 +86,8 @@ def test_fixed_provider_protocol_crosses_local_connect_and_verified_tls(
                 payload["usage"]["input_tokens_details"] = {
                     "cached_tokens": 0, "cache_write_tokens": 0,
                 }
+                if probe:
+                    payload["usage"]["output_tokens_details"] = {"reasoning_tokens": 0}
             else:
                 payload["usage"].update(
                     service_tier="standard", cache_read_input_tokens=0,
