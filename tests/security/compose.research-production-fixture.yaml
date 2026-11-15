@@ -1,0 +1,100 @@
+# Follow the production overlays. Only this disposable project trusts the emulator.
+x-fixture: &fixture
+  source: arp09_fixture
+  target: /opt/lab/arp09_fixture.py
+
+services:
+  research-llm-gateway:
+    image: ${ARP09_TEST_IMAGE}
+    command: [python, /opt/lab/arp09_fixture.py, gateway]
+    configs:
+      - *fixture
+      - source: arp09_ca
+        target: /run/config/arp09-provider.pem
+  research-provider-egress:
+    image: ${ARP09_TEST_IMAGE}
+    command: [python, /opt/lab/arp09_fixture.py, egress]
+    configs:
+      - *fixture
+  research-supervisor:
+    image: ${ARP09_TEST_IMAGE}
+    command: [python, /opt/lab/arp09_fixture.py, supervisor]
+    configs:
+      - *fixture
+  research-setup:
+    image: ${ARP09_TEST_IMAGE}
+    configs:
+      - *fixture
+  research-setup-volumes:
+    image: ${ARP09_TEST_IMAGE}
+  arp09-emulator:
+    image: ${ARP09_TEST_IMAGE}
+    command: [python, /opt/lab/arp09_fixture.py, emulator]
+    user: "10001:10001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks: [research_provider_outbound]
+    configs:
+      - *fixture
+      - source: arp09_ca
+        target: /run/config/arp09-provider.pem
+      - source: arp09_endpoint
+        target: /run/config/arp09-endpoint.pem
+      - source: arp09_tls_key
+        target: /run/config/arp09-provider.key
+  arp09-db-canary:
+    image: ${ARP09_TEST_IMAGE}
+    command: [python, -m, http.server, "5432", --directory, /tmp]
+    user: "10001:10001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks:
+      research_supervisor_db:
+        aliases: [postgres]
+  arp09-journal-init:
+    image: ${ARP09_TEST_IMAGE}
+    command: [python, /opt/lab/arp09_fixture.py, journal]
+    user: "0:0"
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID]
+    security_opt: ["no-new-privileges:true"]
+    configs:
+      - *fixture
+    volumes:
+      - research_dispatch_journal:/run/research-dispatch
+
+networks:
+  research_provider_outbound:
+    internal: true
+
+volumes:
+  research_dispatch_journal:
+    external: false
+
+configs:
+  arp09_fixture:
+    file: ../../tests/security/research_production_fixture.py
+  arp09_ca:
+    file: ${ARP09_SCRATCH}/provider.pem
+  arp09_endpoint:
+    file: ${ARP09_SCRATCH}/endpoint.pem
+  arp09_tls_key:
+    file: ${ARP09_SCRATCH}/provider.key
+  research_provider_profile:
+    file: ${ARP09_SCRATCH}/profile.json
+
+secrets:
+  research_provider_dispatch_key:
+    file: ${ARP09_SCRATCH}/dispatch-key
+  research_credential_authority_key:
+    file: ${ARP09_SCRATCH}/unused
+  research_relay_key:
+    file: ${ARP09_SCRATCH}/unused
+  research_command_key:
+    file: ${ARP09_SCRATCH}/unused
+  agent_research_database:
+    file: ${ARP09_SCRATCH}/unused

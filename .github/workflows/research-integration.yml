@@ -120,6 +120,11 @@ jobs:
                 tests/contracts/test_agent_research_contract.py \
                 tests/unit/test_provider_discovery_dispatch.py \
                 tests/unit/test_llm_provider_http.py \
+                tests/unit/test_llm_dispatch_journal.py \
+                tests/unit/test_llm_offline_gateway.py \
+                tests/unit/test_llm_gateway_app.py \
+                tests/unit/test_llm_credentials.py \
+                tests/unit/test_llm_supervisor_rpc.py \
                 tests/unit/test_llm_tls_socket.py \
                 tests/unit/test_production_smoke.py \
                 tests/unit/test_smoke_budget.py \
@@ -127,6 +132,9 @@ jobs:
                 tests/unit/test_research_evidence_gate.py \
                 tests/evaluation \
                 tests/security/test_provider_credential_authority.py \
+                tests/security/test_execution_isolation.py::test_live_is_not_a_supported_mode \
+                tests/security/test_execution_isolation.py::test_worker_and_control_modules_do_not_import_execution_or_broker_submit \
+                tests/unit/test_quant_approval.py::test_private_start_rechecks_operator_even_on_an_identical_retry \
                 --junitxml "$junit" -o junit_logging=no -o junit_log_passing_tests=false || result=$? ;;
               db) .venv/bin/python scripts/test-research-db.py --junitxml "$junit" || result=$? ;;
               browser) .venv/bin/python scripts/test-research-browser.py --use-ci-build --junitxml "$junit" || result=$? ;;

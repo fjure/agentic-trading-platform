@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "packageId": "ARP-09",
+  "suite": "arp-production-isolation-and-recovery",
+  "gate": "db",
+  "mode": "offline",
+  "artifact": "research-db",
+  "cases": [
+    {
+      "id": "ARP-PRODUCTION-COMPOSE-ISOLATION",
+      "class": "tests.security.test_research_production_compose_gate",
+      "name": "test_research_production_compose"
+    },
+    {
+      "id": "ARP-DISPATCH-POSTGRES-RECOVERY",
+      "class": "tests.recovery.test_arp_dispatch_recovery",
+      "name": "test_arp_dispatch_recovery_actual_postgresql"
+    },
+    {
+      "id": "ARP-QUANT-OPERATOR-APPROVAL-AUTHORITY",
+      "class": "tests.integration.test_quant_operator_approval",
+      "name": "test_quant_operator_approval_actual_postgresql"
+    }
+  ]
+}

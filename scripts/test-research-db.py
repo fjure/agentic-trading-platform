@@ -17,8 +17,11 @@ TESTS = (
     "tests/integration/test_arp_provider_smoke.py",
     "tests/integration/test_llm_provider_probe.py",
     "tests/integration/test_companion_runtime.py",
+    "tests/integration/test_quant_operator_approval.py",
     "tests/recovery/test_discovery_runtime.py",
     "tests/recovery/test_quant_lab_execution.py",
+    "tests/recovery/test_arp_dispatch_recovery.py",
+    "tests/security/test_research_production_compose_gate.py",
     "tests/security/test_quant_lab_isolation.py",
     "tests/integration/test_research_network_smoke.py",
 )

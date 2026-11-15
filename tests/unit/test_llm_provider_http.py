@@ -63,6 +63,20 @@ def test_timeout_and_non_double_transport_fail_closed():
         OfflineProviderHttp(httpx.HTTPTransport())
 
 
+def test_read_disconnect_remains_unknown_without_another_request():
+    calls = 0
+
+    def disconnect(_request):
+        nonlocal calls
+        calls += 1
+        raise httpx.ReadError("synthetic disconnect")
+
+    result = OfflineProviderHttp(httpx.MockTransport(disconnect)).send(PROFILE, PROJECTION)
+    assert result.state is ResultState.OUTCOME_UNKNOWN
+    assert result.usage is None and result.output is None
+    assert calls == 1
+
+
 @pytest.mark.parametrize("provider", list(Provider))
 def test_provider_cannot_echo_a_synthetic_credential(provider):
     canary = "offline-canary-" + "x" * 32
