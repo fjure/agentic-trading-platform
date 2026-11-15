@@ -10,6 +10,8 @@ from packages.agent_research.runs import RunConflict
 from packages.domain.models import utc_string
 from services.control_api.agent_research_routes import AgentResearchError
 
+from .provider_profiles import check_persisted_evidence
+
 
 class ProductionProviderControls:
     """Project only the installed profile and authorize its fixed synthetic probe."""
@@ -167,7 +169,10 @@ class ProductionProviderControls:
                     "credential": binding.credential_digest,
                 },
             ).one()
-        credential_state = _credential_state(row)
+            policy_current = bool(
+                row.evidence_current and check_persisted_evidence(connection, binding)
+            )
+        credential_state = _credential_state(row, policy_current)
         credential = {
             "credentialVersion": row.version,
             "state": credential_state,
@@ -200,7 +205,7 @@ class ProductionProviderControls:
             "dataHandlingPolicyId": "production-provider",
             "dataHandlingPolicyVersion": binding.policy_generation,
             "pricingVersion": binding.tariff_revision,
-            "probeState": _probe_state(row),
+            "probeState": _probe_state(row, policy_current),
         }
         if row.grant_id is not None:
             result["lastProbeId"] = row.grant_id.hex
@@ -216,12 +221,12 @@ def _problem(error):
     return AgentResearchError(503, "PROVIDER_UNAVAILABLE")
 
 
-def _credential_state(row):
+def _credential_state(row, policy_current):
     if row.generation is None:
         return "NOT_CONFIGURED"
     if not row.stored:
         return "REVOKED"
-    if not row.blocked and row.current and row.exact and row.evidence_current:
+    if not row.blocked and row.current and row.exact and policy_current:
         if row.state in {"VERIFIED", "ACTIVE"}:
             return row.state
     return "STORED"
@@ -233,7 +238,7 @@ def _availability(row, credential_state, dialogue):
     return "AVAILABLE" if credential_state == "ACTIVE" and row.dialogue and dialogue else "BLOCKED"
 
 
-def _probe_state(row):
+def _probe_state(row, policy_current):
     if row.grant_id is None:
         return "NOT_TESTED"
     if row.attempt_state == "OUTCOME_UNKNOWN":
@@ -247,7 +252,7 @@ def _probe_state(row):
     if (
         row.current
         and row.exact
-        and row.evidence_current
+        and policy_current
         and not row.blocked
         and row.state not in {"REVOKED", "DISABLED"}
         and row.run_state == "COMPLETED"

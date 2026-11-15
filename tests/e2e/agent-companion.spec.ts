@@ -114,7 +114,7 @@ test('the Guided UI keeps the local question, preview, and send decision separat
   });
 
   const companion = await openCompanion(page);
-  await expect(companion.getByText('Providerbereitschaft · DISABLED')).toBeVisible();
+  await expect(companion.getByText('Standardkatalog · DISABLED')).toBeVisible();
   await companion.getByText('OPENAI · blocked-fixture · INCOMPLETE').click();
   await expect(companion.getByText('BILLING_TIERS_UNVERIFIED')).toBeVisible();
   await expect(companion.getByText('Serverseitiger Zeitplan · DISABLED')).toBeVisible();

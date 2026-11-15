@@ -22,7 +22,7 @@
     <h3>Providerstatus</h3>
     <button mat-button type="button" (click)="loadProviders()" [disabled]="busy()">Providerstatus laden</button>
     @if (providerReadiness(); as readiness) {
-      <p role="status">Providerbereitschaft · {{ readiness.state }}</p>
+      <p role="status">Standardkatalog · {{ readiness.state }}</p>
       @for (candidate of readiness.candidates; track candidate.provider + ':' + candidate.modelId) {
         <details>
           <summary>{{ candidate.provider }} · {{ candidate.modelId }} · {{ candidate.evidenceState }}</summary>

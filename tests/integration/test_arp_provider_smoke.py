@@ -290,6 +290,11 @@ def assert_scenarios(owner, worker, model, agent, store, binding, epoch, plan):
     assert after["credential"]["state"] == "VERIFIED"
     assert after["lastProbeId"] == accepted["probeId"]
     assert after["credential"]["updatedAt"] == before["credential"]["updatedAt"]
+    with owner.begin() as connection:
+        connection.execute(text("UPDATE agent_research.model_prices SET version=version+1"))
+    changed = call("listAgentProviders")["items"][0]
+    assert (changed["availability"], changed["probeState"]) == ("BLOCKED", "FAILED")
+    assert changed["credential"]["state"] == "STORED"
 
 
 if __name__ == "__main__":
