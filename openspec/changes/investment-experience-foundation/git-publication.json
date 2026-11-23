@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "repository": "fjure/agentic-trading-platform",
+  "observedAt": "2026-11-23T14:37:14.288899+00:00",
+  "scope": "Verified first publication; subsequent evidence-only commits may advance these refs without changing the reviewed proposal",
+  "baseline": "0442f29571e53b983e9e08f2180c4bd3536e0b6a",
+  "planningBranch": "codex/ief-propose",
+  "planningCommit": "fd4438d07ced70d2ac2758e9907496bd0985f4d3",
+  "remotePlanningCommitVerified": true,
+  "mainMerge": "702b2519cb9875e78352d9ec7e2100adf4e6158b",
+  "remoteMainVerified": true,
+  "planningAncestorOfMain": true,
+  "identicalTree": "5d9037513d14d0cd6642e9bb8d2b1357a8c0e08b",
+  "changedPathsOnly": "openspec/changes/investment-experience-foundation/",
+  "applicationFilesChanged": 0,
+  "issues": [
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115
+  ],
+  "nativeDependencies": 26,
+  "sourceCheckoutPreserved": true,
+  "ciAtObservation": [
+    {
+      "name": "Contracts",
+      "runId": 45196013111,
+      "status": "in_progress"
+    },
+    {
+      "name": "Research integration",
+      "runId": 45196013139,
+      "status": "in_progress"
+    }
+  ]
+}

@@ -31,3 +31,8 @@ Diese Unterscheidung ist verbindlich: vorhandene Artefakte und gültige OpenSpec
 - Öffentliche Nutzung, echte Mehrbenutzerisolation, regulatorische Einordnung/Datenschutz und personalisierte Empfehlungen verlangen gesonderte fachliche/rechtliche Entscheidungen; lokale Präferenzen sind keine Geeignetheitsprüfung.
 
 Empfehlung erst nach Planungschecks: gesonderter Applyauftrag für die geplanten Pakete möglich; keine pauschale Betriebsfreigabe. Der finale tatsächliche Prüfstand steht in planning-verification.md.
+
+
+## Abschließender Planungsstand
+
+Alle Planungsnachweise einschließlich Reviews, strengem OpenSpec, vollständigem Issue-/Hash-/Native-Readback und erster Git-Veröffentlichung sind erbracht; siehe planning-verification.md und git-publication.json.0/9Pakete bleiben implementiert. Damit ist die Planung zur Nutzerprüfung bereit, Apply weiterhin nicht beauftragt. Auf der ersten reinen Planungsveröffentlichung gestartete neue CI-Läufe wurden zunächst laufend beobachtet und werden nicht als abgeschlossen ausgegeben.

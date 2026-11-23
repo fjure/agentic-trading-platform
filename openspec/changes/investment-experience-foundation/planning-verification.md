@@ -33,8 +33,13 @@ Der tatsächliche Issue-create-Versuch über GitHub-MCP wurde mit403 `Resource n
 
 Vollständiger Read-back:9Titel, stabile Marker, Managedblockinhalte, Labels, offene Zustände und exakte SHA-256-Hashes der UTF-8/LF-Inhalte;26Kanten sowohl blocked_by als auch blocking geprüft, einschließlich der erfüllten ARP-10-Provenienz. Ein Windows-Zeilenumbruchunterschied wurde vor Abschluss korrigiert und bytegenau erneut gelesen. Die Wiederholung ergab0neue Issues,0Inhaltsupdates,9unverändert sowie0neue Kanten/26unverändert. Mapping, UTC-Zeit und maschinenlesbarer Read-back stehen in github-issues.json. Kein Issue wurde geschlossen;0/9IEF-Pakete implementiert.
 
-Der erneute unmittelbar vor Veröffentlichung ausgeführte Remotecheck bestätigt main0442f29 und0offene PRs. Endgültiger Git-Read-back wird nach Push/Merge als separate Publikationsevidenz ergänzt; der bisherige Prüfstand behauptet diesen noch nicht.
+Der erneute unmittelbar vor Veröffentlichung ausgeführte Remotecheck bestätigt main0442f29 und0offene PRs. Die geprüfte erste Git-Veröffentlichung ist in git-publication.json mit tatsächlichen Remote-SHAs dokumentiert: Planungscommitfd4438d, regulärer main-Merge702b251, identischer Baum5d9037513d14d0cd6642e9bb8d2b1357a8c0e08b und bestätigte Erreichbarkeit. Ausschließlich39IEF-Planungsartefakte wurden aufgenommen; kein Anwendungscode. Der ursprüngliche belegte main-Checkout wurde nicht vorgezogen oder verändert. Nachfolgende reine Publikationsevidenz darf Branch/main weiterführen; deren abschließender Remotecheck wird im Nutzerabschluss berichtet.
 
 ## Empfehlung und Stopgrenze
 
-Fachliche Planung, unabhängige Reviews und tatsächlicher Issue-Sync sind vollständig; vor endgültiger Veröffentlichung bleibt nur der Git-Read-back offen. Nach dessen Abschluss ist ein gesonderter Applyauftrag möglich. Bestehende ARP-Readiness ist technisch erfüllt, reale Provider-/Modellfreigaben bleiben gesondert. Kein Apply, neue Brokerrechte, Paperorder, LIVE, automatisches Strategieupgrade oder erhöhte Autonomie in diesem Auftrag.
+Fachliche Planung, unabhängige Reviews, tatsächlicher Issue-Sync und Git-Veröffentlichung samt Remote-Read-back sind vollständig. Die Planung ist bereit für einen gesonderten Applyauftrag. Bestehende ARP-Readiness ist technisch erfüllt, reale Provider-/Modellfreigaben bleiben gesondert. Kein Apply, neue Brokerrechte, Paperorder, LIVE, automatisches Strategieupgrade oder erhöhte Autonomie in diesem Auftrag.
+
+
+## CI an der ersten Planungsveröffentlichung
+
+Die neuen [Contracts45196013111](https://github.com/fjure/agentic-trading-platform/actions/runs/45196013111) und [Research integration45196013139](https://github.com/fjure/agentic-trading-platform/actions/runs/45196013139) wurden auf main-Merge702b251 tatsächlich als in_progress gelesen. Dies ist kein behaupteter Erfolg. Die technischen Baselinechecks0442f29 sind grün; IEF verändert ausschließlich Planungsdokumente. Ein späterer Implementierungsabschluss braucht eigene erfolgreiche Laufzeit-/CI-Nachweise. Der allerletzte beobachtete Stand nach dem reinen Evidenzcommit steht im Nutzerabschluss; diese Datei behauptet keine künftige CI-Fertigstellung.
