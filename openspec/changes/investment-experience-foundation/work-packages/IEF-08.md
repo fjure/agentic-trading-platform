@@ -35,6 +35,10 @@ Kein Dashboardmockwert bei Ausfall; keine doppelte Aktivität oder versteckte Wi
 
 Geltende Screenverträge aus ux-architecture.md und navigation-design.md: deutsche klare Sprache, Herkunft und letzte bestätigte Zeit, Progressive Disclosure, Text zusätzlich zu Statusfarbe, zugängliche Labels/Fokus/Fehler, mobile Karten ohne horizontale Primärnavigation. Loading/leer/offline/stale/conflict werden am Paket selbst getestet. Backendpakete liefern die hierfür erforderlichen expliziten Zustände im Vertrag.
 
+## Verbindliche Refinement-Abnahme
+
+IEF-T-C06/C07. Den freigegebenen IEF-01-Flow in allen zehn Screens umsetzen und Abweichungen begründen. Desktop/Mobile, Tastatur, Screenreader, Progressive Disclosure, vier klare Wirkungsarten und sichere Fehlerfolgen gegen die Prototypfassung prüfen. Die menschliche Gesamtfreigabe erfolgt in IEF-09.
+
 ## Evidenznachweis und Definition of Done
 
 Eigene Component-/API-/SQL-/Securityprüfungen und betroffene Regressionen mit Quell-SHA, Kommando, Ergebnis und unverändertem Safetyumfang protokollieren; Pflichtszenarien aus traceability.md zuordnen. Änderungen am OAS mit Beispielen/Breaking-Diff/zweifacher Clientgenerierung prüfen. Abhängigkeiten tatsächlich erfüllt, unabhängiger begrenzter Review ohne offene kritische Befunde, native Issuekanten und Managedblock vollständig zurückgelesen. Paketdokumentation und Recoveryhinweise gehören zum selben Stand. Keine echten Provideraufrufe, Brokerorders oder neue Rechte. Erst dann Checkbox und zugehöriges Issue gemeinsam abschließen; eigener geprüfter Issuebranch und Integration nach Repositoryworkflow.

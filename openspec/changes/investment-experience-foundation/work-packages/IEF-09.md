@@ -35,6 +35,10 @@ Keine übersprungenen Pflichtfälle als bestanden; kein echter Provider/Brokerko
 
 Geltende Screenverträge aus ux-architecture.md und navigation-design.md: deutsche klare Sprache, Herkunft und letzte bestätigte Zeit, Progressive Disclosure, Text zusätzlich zu Statusfarbe, zugängliche Labels/Fokus/Fehler, mobile Karten ohne horizontale Primärnavigation. Loading/leer/offline/stale/conflict werden am Paket selbst getestet. Backendpakete liefern die hierfür erforderlichen expliziten Zustände im Vertrag.
 
+## Verbindliche Refinement-Abnahme
+
+IEF-T-C08. Mindestens fünf fachfremde Personen am integrierten Build in allen sechs Journeys prüfen. Je Aufgabe und Begriffsfrage mindestens 80 Prozent, Sicherheitsfälle 100 Prozent. Kritische Fehlbedienung oder Kernwegsperre blockiert bis zum menschlichen Nachtest. Technische CI, Prototypfreigabe und Nutzernachweis separat protokollieren.
+
 ## Evidenznachweis und Definition of Done
 
 Eigene Component-/API-/SQL-/Securityprüfungen und betroffene Regressionen mit Quell-SHA, Kommando, Ergebnis und unverändertem Safetyumfang protokollieren; Pflichtszenarien aus traceability.md zuordnen. Änderungen am OAS mit Beispielen/Breaking-Diff/zweifacher Clientgenerierung prüfen. Abhängigkeiten tatsächlich erfüllt, unabhängiger begrenzter Review ohne offene kritische Befunde, native Issuekanten und Managedblock vollständig zurückgelesen. Paketdokumentation und Recoveryhinweise gehören zum selben Stand. Keine echten Provideraufrufe, Brokerorders oder neue Rechte. Erst dann Checkbox und zugehöriges Issue gemeinsam abschließen; eigener geprüfter Issuebranch und Integration nach Repositoryworkflow.

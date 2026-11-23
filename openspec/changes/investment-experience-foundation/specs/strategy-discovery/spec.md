@@ -28,6 +28,16 @@ Die Oberfläche SHALL Forschungsstand und aktuelle Paperzulässigkeit getrennt p
 - **WHEN** ein historischer Validierungsnachweis existiert, aber aktuelle Paperpolicy oder Fähigkeiten fehlen
 - **THEN** bleibt der historische Bericht lesbar und der Paperübergang gesperrt; ein Statusbadge ersetzt keine aktuelle Prüfung.
 
+#### Scenario: IEF-T-S06 Historische Evidenz und aktueller Paperzugang
+- **GIVEN** ein Nutzer hat eine konkrete Strategieversion entdeckt, ihre Funktionsweise gelesen und ihren Evidenzbericht geprüft
+- **WHEN** er für ein ausgewähltes Instrument die Paper-Eignung prüft
+- **THEN** zeigt die Oberfläche historische Evidenz mit Revision und Zeitraum sowie separat den aktuellen, serverseitig belegten Eignungszustand mit Prüfdatenstand und Gründen. Die Eignung setzt belegte Kompatibilität mit bestehender Paper-Konfiguration und Capability voraus. Nur bei belegter Eignung kann er bewusst in den manuellen Previewweg wechseln. Historische Ergebnisse lösen keine Order und keine Übernahme von Richtung, Menge oder Preis aus.
+
+#### Scenario: IEF-T-S07 Fehlende oder geänderte Bindung
+- **GIVEN** ein historischer Bericht bleibt lesbar, aber Strategieversion, Instrument oder Eignungsbeleg haben sich geändert oder sind unverfügbar
+- **WHEN** der Nutzer den Paperweg öffnet oder per Deep Link wieder aufnimmt
+- **THEN** bleibt der Übergang bis zur erneuten belegten Eignungsprüfung gesperrt. Der Nutzer erhält einen konkreten Grund und kann zur Strategie zurückkehren.
+
 ### Requirement: IEF-S03 Geführte Forschungsübergänge
 Der Nutzer SHALL aus Strategieansichten einen gebundenen Backtest- oder Researchentwurf vorbereiten können. Alle notwendigen Hypothesen-, Daten-, Budget- und Quantfreigaben MUST vor Wirkungen separat geprüft werden; Ansichtswechsel MUST ursprüngliche Agentenherkunft und Versionsbindung erhalten.
 

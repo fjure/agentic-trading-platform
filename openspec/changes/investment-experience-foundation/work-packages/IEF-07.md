@@ -35,6 +35,10 @@ Kein Broker-I/O in Preview, kein LLMsubmit/LIVE/Market/Short; SELL kein garantie
 
 Geltende Screenverträge aus ux-architecture.md und navigation-design.md: deutsche klare Sprache, Herkunft und letzte bestätigte Zeit, Progressive Disclosure, Text zusätzlich zu Statusfarbe, zugängliche Labels/Fokus/Fehler, mobile Karten ohne horizontale Primärnavigation. Loading/leer/offline/stale/conflict werden am Paket selbst getestet. Backendpakete liefern die hierfür erforderlichen expliziten Zustände im Vertrag.
 
+## Verbindliche Refinement-Abnahme
+
+IEF-T-G06–G08. Exakte manuelle Terms an Strategie-/Instrument-/Daten-/Eignungs-/Freigabebindungen koppeln. Read-only Risk-Vorprüfung vor Bestätigung, verbindliche Risk-/Reservations-/Executionprüfung weiterhin im bestehenden Pfad. Abbruch, Stale, Ablehnung, Doppelklick, Replay und UNKNOWN bis zum belegten Status testen. UNKNOWN führt zur bestehenden Operation und Reconciliation. Der atomare Commit prüft Previewhash und gebundene Strategie-/Eignungsreferenzen erneut, ohne bei Manipulation auf Portfolio auszuweichen. Blockierte und nicht prüfbare Vorprüfung sperren die Bestätigung serverseitig. Replay und Status bleiben an den aktuell autorisierten Betreiber und denselben Paperkontokontext gebunden.
+
 ## Evidenznachweis und Definition of Done
 
 Eigene Component-/API-/SQL-/Securityprüfungen und betroffene Regressionen mit Quell-SHA, Kommando, Ergebnis und unverändertem Safetyumfang protokollieren; Pflichtszenarien aus traceability.md zuordnen. Änderungen am OAS mit Beispielen/Breaking-Diff/zweifacher Clientgenerierung prüfen. Abhängigkeiten tatsächlich erfüllt, unabhängiger begrenzter Review ohne offene kritische Befunde, native Issuekanten und Managedblock vollständig zurückgelesen. Paketdokumentation und Recoveryhinweise gehören zum selben Stand. Keine echten Provideraufrufe, Brokerorders oder neue Rechte. Erst dann Checkbox und zugehöriges Issue gemeinsam abschließen; eigener geprüfter Issuebranch und Integration nach Repositoryworkflow.

@@ -24,6 +24,16 @@ Alle Hauptansichten SHALL deutsche verständliche Texte, Loading-, Leer-, Fehler
 - **WHEN** bei 360 Pixel Breite die Sitzung oder Datenverbindung ausfällt
 - **THEN** bleiben Datenalter und Blocker lesbar, der Fokus erreicht die sichere Folgeaktion, keine primäre Aktion erfordert horizontales Scrollen und Wiederanmeldung startet keine Wirkung.
 
+#### Scenario: IEF-T-C06 Durchgängiger früher Prototyp
+- **GIVEN** IEF-01 plant die gemeinsame Shell vor Übergabe an die Featurepakete
+- **WHEN** der klickbare Prototyp in Desktop- und Mobileansicht geprüft wird
+- **THEN** sind alle zehn Screens und sechs Wege verbunden, einschließlich Sperre, Abbruch und Wiederaufnahme. Navigation, Statussprache, Fokusreihenfolge und Offenlegung von Fachdetails sind dokumentiert und freigegeben, bevor Featureteams den Flow übernehmen. Die Freigabe gilt für den Entwurf.
+
+#### Scenario: IEF-T-C07 Fehler mit sicherer Folgeaktion
+- **GIVEN** ein fachfremder Nutzer sieht eine abgelaufene Vorschau oder einen unbekannten Orderausgang
+- **WHEN** er den Status und die nächste Aktion liest
+- **THEN** nennt die Ansicht Ursache oder bestätigte Ungewissheit, Wirkung und sicheren nächsten Schritt in Alltagssprache. Bei UNKNOWN führt die Hauptaktion zur bestehenden Operation statt zu einer neuen Order.
+
 ### Requirement: IEF-C03 Quellengebundene Activity Timeline
 Die Timeline SHALL gespeicherte Aufträge, Entscheidungen, Research- und Paperereignisse mit Akteur, UTC-Zeit, Kontext, Quellidentität, Version und Detailverweis projizieren. Pagination und Reconnect MUST Lücken und Duplikate verhindern oder einen neuen Snapshot verlangen. Die Ansicht MUST begrenzte redigierte Evidenz statt Geheimnissen oder internen Gedankengängen liefern.
 
@@ -37,3 +47,8 @@ Die sechs Nutzerreisen SHALL mit Produktionsfrontend, Control API, temporärem P
 #### Scenario: IEF-T-C05 Getrennte Nachweise
 - **WHEN** die Offline-Journeys erfolgreich sind, aber ARP-10 oder ein benötigter Betreiberbeleg fehlt
 - **THEN** werden nur tatsächlich bestandene Offline-Prüfungen ausgewiesen und die betroffene produktive Freigabe bleibt offen; Tests senden keine echten Provider- oder Brokerrequests.
+
+#### Scenario: IEF-T-C08 Abnahme durch fachfremde Personen
+- **GIVEN** mindestens fünf fachfremde Testpersonen prüfen den integrierten Build nach dem Protokoll in ux-validation.md
+- **WHEN** die sechs Aufgaben und die vier Begriffs- und Wirkungsfragen ausgewertet werden
+- **THEN** erfüllen mindestens 80 Prozent je Aufgabe und mindestens 80 Prozent je Begriffsfrage die Kriterien. Alle Personen verstehen vor Bestätigung den Paperkontext und die anstehende Übermittlung und wählen in den Sicherheitsfällen den sicheren Weg. Jede kritische Fehlbedienung oder Sperre eines Kernwegs blockiert die UX-Freigabe bis zur Korrektur und zum menschlichen Nachtest.

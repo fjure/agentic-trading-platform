@@ -64,3 +64,7 @@ ARP-10 = #105, am ersten Discoveryzeitpunkt offen, nach aktualisiertem Remoteche
 | IEF-07 | [[IEF-07] Guided Paper Order](https://github.com/fjure/agentic-trading-platform/issues/113) |
 | IEF-08 | [[IEF-08] Personal Cockpit und Activity Timeline](https://github.com/fjure/agentic-trading-platform/issues/114) |
 | IEF-09 | [[IEF-09] Integrated Experience Acceptance](https://github.com/fjure/agentic-trading-platform/issues/115) |
+
+## Refinement
+
+Der Prototyp liegt in IEF-01, das bereits vor den abhängigen Featurepaketen und transitiv vor IEF-08 liegt. IEF-07 hängt bereits von IEF-05 ab. IEF-09 hängt von allen erforderlichen Paketen ab. Die menschliche Abnahme ist ein Nachweis innerhalb der bestehenden Pakete. Es entsteht keine neue technische Voraussetzung zwischen Issues.

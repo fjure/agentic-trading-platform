@@ -20,8 +20,8 @@
       "issueNumber": 107,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/107",
       "issueId": 6561573630,
-      "contentHash": "963fdf97f575c84a07c4ef315c5ae9d25d5b421f936c167fad9c13f1a7617881",
-      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+      "contentHash": "8b6eb9fa893e88317c9bb7668f2e76fbdbb802058428a24787f44f48f9f6b053",
+      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
     },
     {
       "taskId": "IEF-02",
@@ -38,8 +38,8 @@
       "issueNumber": 108,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/108",
       "issueId": 6561574342,
-      "contentHash": "ec838b391cf17bdc43162ee8f27fe799bd3ec40bee6cf112465e1aa2464012a8",
-      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+      "contentHash": "7c559fd3faada814816cd71356e59aa577237905f280e44b91519dbce95104b7",
+      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
     },
     {
       "taskId": "IEF-03",
@@ -57,7 +57,7 @@
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/109",
       "issueId": 6561575190,
       "contentHash": "be4019cebaaf528892a9c927feb3b62dc5d9f1b14f9d81910135e0d0facc9b6d",
-      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
     },
     {
       "taskId": "IEF-04",
@@ -77,7 +77,7 @@
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/110",
       "issueId": 6561575866,
       "contentHash": "3d7b796de9341dd876152a5c3af3a3e91c9d0f1c16c6217f81002ebe96b29ee6",
-      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
     },
     {
       "taskId": "IEF-05",
@@ -95,8 +95,8 @@
       "issueNumber": 111,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/111",
       "issueId": 6561576576,
-      "contentHash": "5e35e3f15f7482c0793d2a70d3a2f0f80263393dbb2e8b91fb3cef5e2b1af2e0",
-      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+      "contentHash": "9e5c834cd59d5943cd569c1eda7e535466105b4012a2f2aa052fc423d928a3fe",
+      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
     },
     {
       "taskId": "IEF-06",
@@ -118,7 +118,7 @@
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/112",
       "issueId": 6561577273,
       "contentHash": "4fac1b31fb92e4027233105ccd2fd029103c0aa76a9b835914bb69dca3de4f50",
-      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
     },
     {
       "taskId": "IEF-07",
@@ -138,8 +138,8 @@
       "issueNumber": 113,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/113",
       "issueId": 6561577997,
-      "contentHash": "8e0097da8338750b0d24393484b02f0a3e9081b5c2eb641a9ef2bac2d6e1bb8f",
-      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+      "contentHash": "9c41c92b24f74c2aa3a20d135d6c1e4af986441f2b6a9082dd04870decd584dd",
+      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
     },
     {
       "taskId": "IEF-08",
@@ -162,8 +162,8 @@
       "issueNumber": 114,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/114",
       "issueId": 6561578646,
-      "contentHash": "3a9a51a5b13cd9f6c261467041a68f5dc87550546d338f15092128a7a098bf60",
-      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+      "contentHash": "fb70f25d755203749fa03e6b5728bb9502047054d8ccd8876156ab076a732464",
+      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
     },
     {
       "taskId": "IEF-09",
@@ -187,8 +187,8 @@
       "issueNumber": 115,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/115",
       "issueId": 6561579331,
-      "contentHash": "1963008ddc4906c941f69685ecd59d74e19aaab33345c4f44be6cbdd65af603e",
-      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+      "contentHash": "9bfbffc1a0fbb33a9d006ba8c824f783c6eb062bde4d636507728edec8e733e1",
+      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
     }
   ],
   "syncSummary": {
@@ -227,14 +227,14 @@
     }
   },
   "readBack": {
-    "verifiedAt": "2026-11-23T14:34:49.646043+00:00",
+    "verifiedAt": "2026-11-23T14:54:09.129298+00:00",
     "verifiedIssues": 9,
     "duplicates": 0,
     "details": {
       "IEF-01": {
         "issueNumber": 107,
         "state": "open",
-        "contentHash": "963fdf97f575c84a07c4ef315c5ae9d25d5b421f936c167fad9c13f1a7617881",
+        "contentHash": "8b6eb9fa893e88317c9bb7668f2e76fbdbb802058428a24787f44f48f9f6b053",
         "blockedBy": [],
         "blocking": [
           108,
@@ -248,7 +248,7 @@
       "IEF-02": {
         "issueNumber": 108,
         "state": "open",
-        "contentHash": "ec838b391cf17bdc43162ee8f27fe799bd3ec40bee6cf112465e1aa2464012a8",
+        "contentHash": "7c559fd3faada814816cd71356e59aa577237905f280e44b91519dbce95104b7",
         "blockedBy": [
           107
         ],
@@ -288,7 +288,7 @@
       "IEF-05": {
         "issueNumber": 111,
         "state": "open",
-        "contentHash": "5e35e3f15f7482c0793d2a70d3a2f0f80263393dbb2e8b91fb3cef5e2b1af2e0",
+        "contentHash": "9e5c834cd59d5943cd569c1eda7e535466105b4012a2f2aa052fc423d928a3fe",
         "blockedBy": [
           107
         ],
@@ -315,7 +315,7 @@
       "IEF-07": {
         "issueNumber": 113,
         "state": "open",
-        "contentHash": "8e0097da8338750b0d24393484b02f0a3e9081b5c2eb641a9ef2bac2d6e1bb8f",
+        "contentHash": "9c41c92b24f74c2aa3a20d135d6c1e4af986441f2b6a9082dd04870decd584dd",
         "blockedBy": [
           107,
           109,
@@ -329,7 +329,7 @@
       "IEF-08": {
         "issueNumber": 114,
         "state": "open",
-        "contentHash": "3a9a51a5b13cd9f6c261467041a68f5dc87550546d338f15092128a7a098bf60",
+        "contentHash": "fb70f25d755203749fa03e6b5728bb9502047054d8ccd8876156ab076a732464",
         "blockedBy": [
           108,
           109,
@@ -345,7 +345,7 @@
       "IEF-09": {
         "issueNumber": 115,
         "state": "open",
-        "contentHash": "1963008ddc4906c941f69685ecd59d74e19aaab33345c4f44be6cbdd65af603e",
+        "contentHash": "9bfbffc1a0fbb33a9d006ba8c824f783c6eb062bde4d636507728edec8e733e1",
         "blockedBy": [
           105,
           107,
@@ -367,5 +367,21 @@
     "duplicateIssues": 0
   },
   "authorization": "Explicit user approval 2026-11-23: GH CLI for IEF issue synchronization after MCP create403; existing target fjure/agentic-trading-platform only",
-  "hashEncoding": "SHA-256 of exact UTF-8 bytes between managed delimiters; LF line endings"
+  "hashEncoding": "SHA-256 of exact UTF-8 bytes between managed delimiters; LF line endings",
+  "refinementSync": {
+    "transport": "GitHub MCP read and attempted update (403), explicitly authorized IEF GH CLI fallback",
+    "verifiedAt": "2026-11-23T14:54:09.129298+00:00",
+    "updated": [
+      107,
+      108,
+      111,
+      113,
+      114,
+      115
+    ],
+    "created": 0,
+    "unchanged": 3,
+    "dependencyWrites": 0,
+    "nativeEdgesVerifiedBothDirections": 26
+  }
 }

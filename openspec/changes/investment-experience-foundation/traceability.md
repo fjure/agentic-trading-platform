@@ -43,3 +43,16 @@ Verbindliche Zuordnung aller Requirements und Szenarien zu Arbeitspaketen, Nutze
 ## Evidenzdateien im späteren Apply
 
 Jedes Paket führt `docs/evidence/ief-NN.md` mit Quell-SHA, Werkzeug-/Datenversionen, Kommandos, Resultaten, Negativfällen und unabhängigen Befunden. IEF-09 ergänzt `docs/evidence/ief-integrated-acceptance.md` und ein maschinenlesbares J1–J6-Pflichtmanifest. Run-/Analyse-/Approval-/Order-/Traceidentitäten sind referenzierbar, Inhalte bleiben synthetisch und secretfrei. Keine Screenshotbehauptung ohne tatsächliche Browserausführung. Issue- und CI-Mappings sind getrennte Planungsnachweise und kein Ersatz für fachliche Laufzeitprüfungen.
+
+## Zusätzliche normative Refinement-Szenarien
+
+| Szenarien | Requirement | Paket | Journey und Evidenz |
+| --- | --- | --- | --- |
+| IEF-T-O05 | IEF-O01 | IEF-02 | J1, funktionaler menschlicher Onboardingtest |
+| IEF-T-C06 | IEF-C02 | IEF-01, IEF-08 | J1–J6, Prototypfreigabe und dokumentierter Integrationsabgleich |
+| IEF-T-C07 | IEF-C02 | IEF-08, IEF-09 | J5/J6, Browser, Accessibility, menschliche sichere Folgeaktion |
+| IEF-T-C08 | IEF-C04 | IEF-09 | J1–J6, menschliche Produktabnahme und Nachtests |
+| IEF-T-S06/S07 | IEF-S02 | IEF-05 | J3/J5, aktuelle Eignung und ungültiger Übergang |
+| IEF-T-G06/G07/G08 | IEF-G02/G03 | IEF-07, IEF-09 | J5/J6, Previewbindung, deterministische Vorprüfung, Replay, Abbruch und UNKNOWN |
+
+Protokoll, Schwellen und Evidenztrennung siehe [UX-Validierung](ux-validation.md).

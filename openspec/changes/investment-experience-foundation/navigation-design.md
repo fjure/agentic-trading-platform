@@ -41,3 +41,7 @@ Abgelaufene Sitzung führt in den lokalen Aktivierungsweg und leert sensible fl�
 4. Betrieb/Research/Quant entflechten, vorhandene Funktionalität und Datenfrischehinweise erhalten. Paper bleibt eigener Ledger. Fake/Demo unter ergänzender Navigation separat kennzeichnen.
 
 Abnahme deckt sämtliche zehn Screens, Deep Link vor/nach Login, Browserhistorie, Reload, inkompatible Parameter, 401/404, schmale Ansicht, Tastaturfokus und pausier-/killbare bestehende Paperkontrollen unter Researchlast ab. Keine Routerguardprüfung ersetzt serverseitige Rechte oder Tradinggates.
+
+## Übergabestand IEF-01
+
+IEF-01 prototypisiert die vollständige Karte oben vor dem Start der abhängigen Featurepakete. Für S5/S6/S9/S10 werden belegte Eignung, Sperre, Rückweg und UNKNOWN gemeinsam dargestellt. Die Fokus- und Zustandskarte ist Teil der freigegebenen Prototypversion gemäß [UX-Validierung](ux-validation.md). IEF-08 übernimmt sie und prüft die echte Integration.

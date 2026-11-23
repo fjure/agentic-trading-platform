@@ -35,6 +35,10 @@ Kein Ranking ohne gleiche Basis, keine automatische Promotion oder erwartete Ren
 
 Geltende Screenverträge aus ux-architecture.md und navigation-design.md: deutsche klare Sprache, Herkunft und letzte bestätigte Zeit, Progressive Disclosure, Text zusätzlich zu Statusfarbe, zugängliche Labels/Fokus/Fehler, mobile Karten ohne horizontale Primärnavigation. Loading/leer/offline/stale/conflict werden am Paket selbst getestet. Backendpakete liefern die hierfür erforderlichen expliziten Zustände im Vertrag.
 
+## Verbindliche Refinement-Abnahme
+
+IEF-T-S06/S07. Fundstelle, Funktionsweise und historische Evidenz mit Zeitraum/Revision vor separater aktueller serverseitiger Eignungsprüfung zeigen. Vorhandene Paper-Konfiguration und Capability müssen konkrete Version und Symbol abdecken, sonst bleibt der Weg gesperrt. Positivfall mit explizit kompatibler synthetischer Fixture. Weitergabe ausschließlich des versionierten Strategie-/Instrument-/Evidenz-/Eignungskontexts an IEF-07, keine Orderparameter aus Historie oder KI. Bei fehlender oder geänderter Bindung Weiterweg sperren und Grund/Rückweg zeigen.
+
 ## Evidenznachweis und Definition of Done
 
 Eigene Component-/API-/SQL-/Securityprüfungen und betroffene Regressionen mit Quell-SHA, Kommando, Ergebnis und unverändertem Safetyumfang protokollieren; Pflichtszenarien aus traceability.md zuordnen. Änderungen am OAS mit Beispielen/Breaking-Diff/zweifacher Clientgenerierung prüfen. Abhängigkeiten tatsächlich erfüllt, unabhängiger begrenzter Review ohne offene kritische Befunde, native Issuekanten und Managedblock vollständig zurückgelesen. Paketdokumentation und Recoveryhinweise gehören zum selben Stand. Keine echten Provideraufrufe, Brokerorders oder neue Rechte. Erst dann Checkbox und zugehöriges Issue gemeinsam abschließen; eigener geprüfter Issuebranch und Integration nach Repositoryworkflow.
