@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "packageId": "ARP-10",
+  "suite": "arp-release-acceptance",
+  "gate": "db",
+  "mode": "offline",
+  "artifact": "research-db",
+  "cases": [
+    {
+      "id": "ARP-ANTHROPIC-PRODUCTION-COMPOSE",
+      "class": "tests.security.test_research_production_compose_gate",
+      "name": "test_anthropic_research_production_compose"
+    },
+    {
+      "id": "ARP-CLEAN-INSTALL-AND-ROLLBACK",
+      "class": "tests.recovery.test_arp_release_rollback",
+      "name": "test_arp_release_rollback_actual_postgresql"
+    },
+    {
+      "id": "ARP-EVALUATION-AUTHORIZED-SUPERVISOR",
+      "class": "tests.integration.test_arp_evaluation_supervisor",
+      "name": "test_arp_evaluation_supervisor_actual_postgresql"
+    },
+    {
+      "id": "ARP-PACKAGED-EVALUATION-OPERATOR",
+      "class": "tests.security.test_evaluation_installation",
+      "name": "test_packaged_private_evaluation_operator"
+    }
+  ]
+}

@@ -99,7 +99,7 @@ jobs:
       - name: Lint Research runtime and CI code
         if: matrix.gate == 'fast'
         run: |
-          .venv/bin/ruff check packages/agent_research services/llm_gateway scripts/check-research-evidence.py scripts/test-research-db.py scripts/test-research-browser.py
+          .venv/bin/ruff check packages/agent_research services/llm_gateway scripts/check-research-evidence.py scripts/test-research-db.py scripts/test-research-browser.py services/runtime/research_evaluation.py
       - name: Execute required cases and record evidence
         if: always() && !cancelled()
         env:

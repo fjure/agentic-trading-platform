@@ -43,8 +43,16 @@ test('the real browser confirms a persisted hypothesis after explicit consent to
   await page.getByRole('button', { name: 'Sitzung aktivieren', exact: true }).click();
   await page.getByRole('button', { name: 'Research Companion öffnen', exact: true }).click();
   const companion = page.locator('atl-agent-companion');
-  await expect(companion.getByRole('button', { name: 'Does the market recover after a decline?' }))
-    .toBeVisible();
+  const discovered = companion.getByRole('button', { name: 'Does the market recover after a decline?' });
+  await expect(discovered).toBeVisible();
+  await discovered.click();
+  await expect(companion.getByRole('heading', { name: 'Discovery', exact: true })).toBeVisible();
+  await expect(companion.getByText(/Datenaktualität CURRENT/)).toBeVisible();
+  const recommendation = await selectedIdea(page);
+  expect(recommendation.status).toBe('PROPOSED');
+  expect(recommendation.discovery?.freshness).toBe('CURRENT');
+  expect(recommendation.evidence.length).toBeGreaterThan(0);
+  expect(recommendation.experimentDraftIds).toEqual([]);
 
   await companion.getByLabel('Titel', { exact: true }).fill(title);
   await companion.getByLabel('Forschungsfrage', { exact: true }).fill(original);
@@ -83,9 +91,13 @@ test('the real browser confirms a persisted hypothesis after explicit consent to
   expect(prepared.status()).toBe(201);
   await expect(companion.getByRole('heading', { name: 'Sendefassung', exact: true })).toBeFocused();
   const preview = companion.getByRole('region', { name: 'Sendefassung', exact: true });
-  await expect(preview.getByText(original, { exact: true })).toBeVisible();
-  await expect(preview.getByText('{}', { exact: true })).toBeVisible();
-  await expect(preview).toContainText('offline-profile');
+  await expect(preview.locator('pre')).toBeVisible();
+  const wire = JSON.parse(await preview.locator('pre').innerText());
+  expect(wire.model).toBe('offline-model');
+  expect(wire.store).toBe(false);
+  expect(wire.service_tier).toBe('default');
+  expect(JSON.parse(wire.input[0].content)).toEqual({ excerpt: original, confirmedContext: {} });
+  await expect(preview).toContainText('offline-dialogue-profile');
   const awaiting = await read<ProcessingStatusV1>(page, processingPath);
   expect(awaiting.state).toBe('AWAITING_DECISION');
 
@@ -237,27 +249,22 @@ test('the real browser confirms a persisted hypothesis after explicit consent to
   const quantSubmitted = posted(page, quantDialogue + '/turns');
   await companion.getByRole('button', { name: 'Gespeicherte Frage lokal klären' }).click();
   expect((await quantSubmitted).status()).toBe(202);
-  const inputs = {
-    MARKET: 'SPY', TRIGGER: 'EMA crossover', SIGNAL: 'EMA(10) above EMA(30)',
-    OBSERVATION_WINDOW: '2026-01-05/2026-02-24', TARGET: 'net return',
-    MEASUREMENT_HORIZON: 'entire evaluation window', BENCHMARK: 'buy-hold-v1',
-    EVALUATION_CRITERION: 'return greater than benchmark',
-  };
-  for (const [field, value] of Object.entries(inputs)) {
-    const current = await read<AgentDialogueV1>(page, quantDialogue);
-    const question = current.turns.at(-1)?.localQuestions.find(item => item.field === field);
-    expect(question).toBeDefined();
-    const form = companion.locator('form').filter({
-      has: page.getByLabel(question!.question, { exact: true }),
-    }).filter({
-      has: page.getByRole('button', { name: 'Lokal beantworten', exact: true }).and(page.locator(':enabled')),
-    });
-    await expect(form).toHaveCount(1);
-    await form.getByLabel(question!.question, { exact: true }).fill(value);
-    const answer = posted(page, quantDialogue + '/turns');
-    await form.getByRole('button', { name: 'Lokal beantworten', exact: true }).click();
-    expect((await answer).status()).toBe(202);
-  }
+  const quantTurn = (await read<AgentDialogueV1>(page, quantDialogue)).turns.at(-1)!;
+  await expect.poll(async () => (await read<AgentRunV1>(page, `${agent}/runs/${quantTurn.runId}`)).state)
+    .toBe('WAITING_FOR_PROCESSING_DECISION');
+  await companion.getByRole('button', { name: 'Providerstatus laden', exact: true }).click();
+  await companion.getByRole('button', { name: 'Sendefassung für offline-model anzeigen', exact: true }).click();
+  await expect(companion.getByRole('region', { name: 'Sendefassung' })).toContainText(quantQuestion);
+  const quantProcessing = `${quantDialogue}/turns/${quantTurn.turnId}/processing`;
+  const quantSend = posted(page, quantProcessing + '-decisions');
+  await companion.getByRole('button', { name: 'Diese Fassung senden', exact: true }).click();
+  expect((await quantSend).status()).toBe(202);
+  await expect.poll(async () => (await read<ProcessingStatusV1>(page, quantProcessing)).state)
+    .toBe('PROPOSAL_VALIDATED');
+  const proposed = (await read<AgentDialogueV1>(page, quantDialogue)).turns.at(-1)!.proposal;
+  expect(proposed?.interpretation.hypothesis.signal).toBe('EMA(10) above EMA(30)');
+  expect((await selectedIdea(page)).experimentDraftIds).toEqual([]);
+  await companion.getByRole('button', { name: 'Dialogstatus aktualisieren', exact: true }).click();
   const confirm = companion.getByRole('button', { name: 'Auswahl als Hypothese bestätigen' });
   await expect(confirm).toBeEnabled();
   const fields = companion.locator('form').filter({
@@ -265,7 +272,12 @@ test('the real browser confirms a persisted hypothesis after explicit consent to
   }).getByRole('checkbox');
   await expect(fields).toHaveCount(8);
   for (const field of await fields.all()) await field.check();
+  const quantConfirmed = posted(page, quantDialogue + '/decisions');
   await confirm.click();
+  expect((await quantConfirmed).status()).toBe(200);
+  const confirmedIdea = await selectedIdea(page);
+  expect(confirmedIdea.id).toBe(quantIdea.id);
+  expect(confirmedIdea.hypothesis?.signal).toBe('EMA(10) above EMA(30)');
   await companion.getByRole('button', { name: 'Quant-Entwurf prüfen lassen' }).click();
   const findApproval = async () => (await read<AgentQuantApprovalPageV1>(page, agent + '/approvals'))
     .items.find(item => item.binding.ideaId === quantIdea.id);

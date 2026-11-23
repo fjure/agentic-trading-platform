@@ -10,7 +10,7 @@ ARP-E01, ARP-E02, ARP-E03, ARP-I01, ARP-I02, ARP-P06, ARP-P07. Blockiert durch A
 
 ## Komponenten
 
-infra/compose, docs/runbooks, docs/evidence.
+infra/compose, infra/containers, services/runtime, packages/agent_research, tests/evaluation, tests/integration, tests/security, tests/recovery, docs/runbooks, docs/evidence.
 
 ## Akzeptanz und positive Tests
 

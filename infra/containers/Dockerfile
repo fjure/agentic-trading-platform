@@ -11,6 +11,7 @@ ENV PATH="/opt/lab/.venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 COPY --from=build /opt/lab/.venv /opt/lab/.venv
 COPY services /opt/lab/services
 COPY packages /opt/lab/packages
+COPY tests/evaluation /opt/lab/tests/evaluation
 COPY config /opt/lab/config
 COPY contracts/schemas/v1/backtesting.schema.json /opt/lab/contracts/schemas/v1/backtesting.schema.json
 COPY contracts/schemas/v1/quant-lab.schema.json /opt/lab/contracts/schemas/v1/quant-lab.schema.json

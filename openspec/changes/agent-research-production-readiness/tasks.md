@@ -38,7 +38,7 @@
 
 ## 10. Integrierte Readiness-Abnahme
 
-- [ ] 10.1 [ARP-10](work-packages/ARP-10.md) Saubere Installation, vollständige lokale Kette und Rollback wiederholbar abnehmen. Prüfung: Releasekandidat führt alle Offline-Gates und dokumentierte Betreiberpfade aus.
+- [x] 10.1 [ARP-10](work-packages/ARP-10.md) Saubere Installation, vollständige lokale Kette und Rollback wiederholbar abnehmen. Prüfung: Releasekandidat führt alle Offline-Gates und dokumentierte Betreiberpfade aus.
 
 ## Workflow follow-up
 

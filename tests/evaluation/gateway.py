@@ -46,7 +46,7 @@ class GatewaySupervisor:
     def execute(
         self, approval: Approval, repetition: int, case: EvaluationInput,
     ) -> AttemptOutcome:
-        if not self._store.reserve(approval, repetition, case.case_id):
+        if self._store.reserve(approval, repetition, case.case_id) is not True:
             raise ValueError("EVALUATION_RESERVATION_DENIED")
         prepared = self._prepare(approval, repetition, case)
         request, projection = prepared.request, prepared.approved_projection
@@ -58,10 +58,14 @@ class GatewaySupervisor:
             or not datetime.now(UTC) < request.expires_at <= approval.expires_at
             or not valid_projection(projection)
             or json.loads(projection)["excerpt"] != case.text
+            or (
+                json.loads(projection)["confirmedContext"]
+                != case.dialogue_state.get("confirmed", {})
+            )
             or sha256(projection).hexdigest() != request.projection_sha256
         ):
             raise ValueError("EVALUATION_DISPATCH_BINDING_MISMATCH")
-        if not self._store.authorize(approval, repetition, case.case_id):
+        if self._store.authorize(approval, repetition, case.case_id) is not True:
             raise ValueError("EVALUATION_RESERVATION_DENIED")
         result = self._gateway.dispatch(request)
         cost = self._settle(approval, repetition, case.case_id, request, result)

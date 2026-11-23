@@ -301,6 +301,12 @@ def create_agent_research_service(
 
         store, key = credential_authority
         register_credential_authority(app, store, key)
+    # Private in-process ports let the operator evaluation composition use the
+    # same grant, budget, fence and transport path without exposing another API.
+    app.state.research_evaluation = {
+        "companion": companion, "ideas": ideas, "runs": runs,
+        "processing": processing, "model_step": model_step,
+    }
     return app
 
 

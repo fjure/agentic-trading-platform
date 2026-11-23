@@ -1,0 +1,20 @@
+# Apply last, during an explicitly authorized private evaluation.
+services:
+  research-supervisor:
+    command:
+      - python
+      - -m
+      - tests.evaluation.operator
+      - ${ATL_EVALUATION_COMMAND:-status}
+      - --private-dir
+      - /run/research-evaluation/private
+      - --inputs
+      - /run/research-evaluation/inputs
+    volumes:
+      - type: bind
+        source: ${ATL_EVALUATION_PRIVATE_DIR:?Set the owner-only evaluation state directory}
+        target: /run/research-evaluation/private
+      - type: bind
+        source: ${ATL_EVALUATION_INPUT_DIR:?Set the approved evaluation input directory}
+        target: /run/research-evaluation/inputs
+        read_only: true

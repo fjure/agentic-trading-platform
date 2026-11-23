@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "packageId": "ARP-10",
+  "suite": "arp-release-evaluation",
+  "gate": "fast",
+  "mode": "offline",
+  "artifact": "research-fast",
+  "cases": [
+    {
+      "id": "ARP-RELEASE-AUTHORIZED-BASELINE",
+      "class": "tests.evaluation.test_release",
+      "name": "test_release_rejects_unverified_baseline_repetitions"
+    },
+    {
+      "id": "ARP-RELEASE-BOUND-REGRESSION-REVIEW",
+      "class": "tests.evaluation.test_release",
+      "name": "test_release_requires_bound_independent_regression_decision"
+    },
+    {
+      "id": "ARP-OPERATOR-AUTHORITY-BEFORE-HOLDOUT-ACCESS",
+      "class": "tests.evaluation.test_operator",
+      "name": "test_operator_checks_expiry_and_custody_before_reading_bound_inputs"
+    },
+    {
+      "id": "ARP-REGISTERED-MODEL-SCORING-CLI",
+      "class": "tests.evaluation.test_cli",
+      "name": "test_cli_model_mode_uses_selected_manifest_and_requires_complete_observations"
+    }
+  ]
+}
