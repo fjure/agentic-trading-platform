@@ -65,3 +65,7 @@ Das Produktionsimage enthält den privaten Operator-Einstieg und das optionale O
 | Abgeleitete Produktivtransport-Prüfung mit fehlender Usage | PostgreSQL samt Restore bestanden in 17,25 s, unklarer Ausgang, vollständige Reserve, keine Ergebnisübernahme und kein Replay |
 
 Die lokalen Laufzeitartefakte enthalten synthetische Daten und verbleiben außerhalb der versionierten Evidenz. Der final gepushte Stand wird durch die SHA-gebundenen GitHub-Gates erneut geprüft.
+
+Der Scorer-Einstieg nimmt zusätzlich den registrierten Manifest, die gebundene Entwicklungsreferenz und `--mode model` entgegen. Der Modellmodus verlangt den Holdout-Split und die strengen modellbezogenen Pflichtbeobachtungen. Der CLI-Regressionsfall verwendet ausschließlich öffentlich abgeleitete synthetische Testfälle und bestätigt die Sperre bei fehlenden Antworten. Diese Ergänzung und die gesamte Evaluierungs- und Evidenzsuite bestanden mit 40 Tests.
+
+Der erste Research-CI-Lauf auf `1e1d011299fa93f42253006cddd079f0bf6ccabe` meldete bei der Chromium-Systemvorbereitung `missing_environment`. Das Ubuntu-Paketmirror lieferte die angeforderten Font-/Mesa-Pakete innerhalb des bisherigen 240-Sekunden-Limits nicht vollständig. Ausschließlich der Browser-Installationsschritt erhält nun ein begrenztes 600-Sekunden-Fenster. Die Testfristen, Pflichtfälle und fail-closed Aggregation bleiben verbindlich.

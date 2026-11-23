@@ -49,7 +49,7 @@ def prepare(base_image, test_image, use_ci_build):
     else:
         run(npm, "--prefix", "apps/dashboard", "run", "build")
     chromium = ["chromium"] if os.name == "nt" else ["--with-deps", "chromium"]
-    run(node, str(PLAYWRIGHT), "install", *chromium)
+    run(node, str(PLAYWRIGHT), "install", *chromium, timeout=600)
     return node
 
 
