@@ -34,10 +34,13 @@ ROOT = Path("/run/research-credentials")
 CA = "/run/config/arp09-provider.pem"
 PROJECTION = b'{"excerpt":"synthetic research","confirmedContext":{}}'
 KEY = "arp09-synthetic-credential"
-HOST = "api.openai.com"
-ROUTE = "/v1/responses"
+PROVIDER = Provider(os.environ.get("ARP_FIXTURE_PROVIDER", "OPENAI"))
+HOST, ROUTE = {
+    Provider.OPENAI: ("api.openai.com", "/v1/responses"),
+    Provider.ANTHROPIC: ("api.anthropic.com", "/v1/messages"),
+}[PROVIDER]
 PROFILE = Capability(
-    Provider.OPENAI,
+    PROVIDER,
     "fixture-model",
     "fixture-profile",
     1,
@@ -102,9 +105,9 @@ def setup(action):
     assert not DISPATCH_KEY_PATH.exists() and not JOURNAL_PATH.parent.exists()
     store = ResearchCredentialStore()
     if action == "seed":
-        store.save(Provider.OPENAI, KEY, expected_version=1)
+        store.save(PROVIDER, KEY, expected_version=1)
     else:
-        store.revoke(Provider.OPENAI, expected_version=2, generation=1)
+        store.revoke(PROVIDER, expected_version=2, generation=1)
 
 
 def serve_supervisor():
@@ -180,14 +183,38 @@ def serve_emulator():
     @app.post(ROUTE)
     async def respond(request: Request):
         nonlocal calls
-        if request.headers.get("authorization") != "Bearer " + KEY:
+        if PROVIDER is Provider.OPENAI:
+            authenticated = request.headers.get("authorization") == "Bearer " + KEY
+            message_field = "input"
+        else:
+            authenticated = (
+                request.headers.get("x-api-key") == KEY
+                and request.headers.get("anthropic-version") == "2026-10-21"
+            )
+            message_field = "messages"
+        if not authenticated:
             return JSONResponse(status_code=401, content={})
         body = await request.json()
-        if body.get("input") != [{"role": "user", "content": PROJECTION.decode()}]:
+        if body.get(message_field) != [{"role": "user", "content": PROJECTION.decode()}]:
             return JSONResponse(status_code=422, content={})
         calls += 1
         if calls == 2:
             return RedirectResponse("/health", status_code=307)
+        if PROVIDER is Provider.ANTHROPIC:
+            return {
+                "model": PROFILE.model,
+                "type": "message",
+                "role": "assistant",
+                "stop_reason": "end_turn",
+                "content": [{"type": "text", "text": '{"hypothesis":"synthetic"}'}],
+                "usage": {
+                    "input_tokens": 10,
+                    "output_tokens": 5,
+                    "service_tier": "standard",
+                    "cache_read_input_tokens": 0,
+                    "cache_creation_input_tokens": 0,
+                },
+            }
         return {
             "model": PROFILE.model,
             "status": "completed",

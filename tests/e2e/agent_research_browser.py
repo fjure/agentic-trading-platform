@@ -21,6 +21,18 @@ from tests.integration.research_browser_support import ORIGIN, host
 
 ORIGINAL = "Erholen sich Technologieaktien nach enttäuschenden Quartalszahlen?"
 TRIGGER = "Quartalszahlen unter den Erwartungen"
+QUANT_QUESTION = "Wie schneidet der EMA-Kreuzungspunkt gegen Buy-and-Hold ab?"
+QUANT_FIELDS = {
+    "statement": QUANT_QUESTION,
+    "market": "SPY",
+    "trigger": "EMA crossover",
+    "signal": "EMA(10) above EMA(30)",
+    "observationWindow": "2026-01-05/2026-02-24",
+    "target": "net return",
+    "measurementHorizon": "entire evaluation window",
+    "benchmark": "buy-hold-v1",
+    "evaluationCriterion": "return greater than benchmark",
+}
 VARIANTS = {
     "Können sich Technologiewerte nach enttäuschenden Quartalsberichten erholen?": TRIGGER,
     "Was folgt auf drei negative Handelstage?": "Drei negative Handelstage",
@@ -57,7 +69,8 @@ def serve(application, port):
 
 
 @contextmanager
-def provider_double(capability):
+def provider_double(capability, tls):
+    from tests.e2e.agent_provider_browser import CREDENTIAL
     from tests.unit.test_companion_interpretation import INTERPRETATION
 
     calls = []
@@ -80,10 +93,21 @@ def provider_double(capability):
             "hypothesis": proposal["hypothesis"] | {"statement": excerpt, "trigger": trigger},
             "requiredDataTypes": [] if trigger != TRIGGER else proposal["requiredDataTypes"],
         }
+        if excerpt == QUANT_QUESTION:
+            body = proposal | {
+                "hypothesis": QUANT_FIELDS,
+                "requiredDataTypes": ["PRICE_BARS"],
+                "openQuestions": [],
+            }
         return json.dumps({
             "model": capability.model,
             "status": "completed",
-            "usage": {"input_tokens": 93, "output_tokens": 46},
+            "service_tier": "default",
+            "usage": {
+                "input_tokens": 93,
+                "output_tokens": 46,
+                "input_tokens_details": {"cached_tokens": 0, "cache_write_tokens": 0},
+            },
             "output": [
                 {
                     "type": "message",
@@ -100,12 +124,15 @@ def provider_double(capability):
 
         def do_POST(self):
             size = int(self.headers.get("Content-Length", "0"))
-            if self.path != "/v1/responses" or not 0 < size < 100_000:
+            if (
+                self.path != "/v1/responses" or not 0 < size < 100_000
+                or self.headers.get("Authorization") != "Bearer " + CREDENTIAL
+            ):
                 self.send_error(400)
                 return
             request = json.loads(self.rfile.read(size))
             excerpt = json.loads(request["input"][0]["content"])["excerpt"]
-            if excerpt not in {ORIGINAL, *VARIANTS}:
+            if excerpt not in {ORIGINAL, *VARIANTS, QUANT_QUESTION}:
                 self.send_error(400)
                 return
             calls.append(request)
@@ -117,10 +144,11 @@ def provider_double(capability):
             self.wfile.write(response)
 
     with ThreadingHTTPServer(("127.0.0.1", 0), Handler) as server:
+        server.socket = tls.wrap_socket(server.socket, server_side=True)
         thread = Thread(target=server.serve_forever, daemon=True)
         thread.start()
         try:
-            yield f"http://127.0.0.1:{server.server_port}/v1/responses", calls
+            yield server.server_port, calls
         finally:
             server.shutdown()
             thread.join(timeout=5)
@@ -130,12 +158,9 @@ def guest():
     import httpx
     from alembic import command
     from alembic.config import Config
-    from sqlalchemy import URL, create_engine, text
+    from sqlalchemy import URL, create_engine
 
     from packages.agent_research import registry
-    from packages.agent_research.budget import TokenPrices, Tokens
-    from packages.agent_research.model_attempts import model_budget_scopes
-    from packages.agent_research.runs import RunKind
     from packages.persistence.ledger import PostgresLedger
     from services.control_api.app import create_app
     from services.control_api.auth import LocalAuth
@@ -145,20 +170,18 @@ def guest():
     from services.control_api.quant_lab_service import QuantLabService
     from services.control_api.research_client import AgentResearchClient
     from services.control_api.snapshot import SnapshotReader
-    from services.llm_gateway.dispatch_journal import DispatchJournal
-    from services.llm_gateway.provider_http import Capability, OfflineProviderHttp
+    from services.llm_gateway import provider_http
+    from services.llm_gateway.provider_http import Capability
     from services.llm_gateway.provider_wire import Provider
     from services.runtime import agent_quant_admission as admission_api
     from services.runtime import agent_research_relay as relay
-    from services.runtime.agent_interpretation import OfflineDialogueProfile
+    from services.runtime.agent_production_provider_controls import ProductionProviderControls
     from services.runtime.agent_service import create_agent_research_service
     from services.runtime.api import create_bridge
     from services.runtime.provision import seed
     from services.worker.backtesting import BacktestWorker
-    from tests.integration.companion_model_support import (
-        _credentials,
-        _provider_schema,
-    )
+    from tests.e2e.agent_provider_browser import bind_dialogue, fixture_tls, start_synthetic_egress
+    from tests.integration.companion_model_support import _provider_schema
     from tests.integration.test_backtest_jobs import role_engine
 
     logging.disable(logging.CRITICAL)
@@ -217,7 +240,7 @@ def guest():
                 8014,
             )
         )
-        model = registry.ModelBinding("OPENAI", "offline-profile", 1, "offline-model", 1)
+        model = registry.ModelBinding("OPENAI", "offline-dialogue-profile", 1, "offline-model", 1)
         agent = replace(registry.QUANT_RESEARCH_V1, model_binding=model)
         capability = Capability(
             Provider.OPENAI,
@@ -230,46 +253,29 @@ def guest():
             "Return a structured hypothesis only.",
             _provider_schema(),
             512,
-            2,
+            6,
         )
         expert = seed_quant_template(owner, research, quant)
-        dialogue_scope, = (
-            scope for scope in model_budget_scopes(
-                agent.agent_id, agent.version, RunKind.DIALOGUE, model, "dialogue",
-            ) if scope.startswith("work:")
-        )
-        with owner.begin() as connection:
-            connection.execute(text("""
-                INSERT INTO agent_research.model_budget_policies
-                  (scope,version,currency,max_cost,max_input_tokens,max_output_tokens,max_calls,enabled)
-                VALUES (:scope,1,'USD',0.10,16384,4096,3,true)
-            """), {"scope": dialogue_scope})
         stack.enter_context(
             patch.object(registry, "AGENTS", {(agent.agent_id, agent.version): agent})
         )
         stack.enter_context(
             patch.object(relay, "RELAY_URL", "http://127.0.0.1:8013" + relay.RELAY_PATH)
         )
-        provider_url, calls = stack.enter_context(provider_double(capability))
         temporary = Path(stack.enter_context(TemporaryDirectory()))
-
-        def provider(request):
-            with httpx.Client(timeout=3, trust_env=False, follow_redirects=False) as client:
-                # Only the encoded body crosses the synthetic local provider boundary.
-                return client.post(provider_url, content=request.content)
-
-        profile = OfflineDialogueProfile(
-            agent,
-            capability,
-            1,
-            lambda *_: True,
-            lambda _: True,
-            TokenPrices(1, "USD", Decimal(1), Decimal(2)),
-            Tokens(4096, 512),
-            8192,
-            DispatchJournal.provision(temporary / "dispatch.sqlite"),
-            OfflineProviderHttp(httpx.MockTransport(provider)),
-            _credentials(capability),
+        tls, trust = fixture_tls(temporary)
+        tls_port, calls = stack.enter_context(provider_double(capability, tls))
+        start_synthetic_egress(stack, tls_port)
+        stack.enter_context(patch.object(provider_http, "_provider_tls_context", lambda: trust))
+        gateway_http = stack.enter_context(httpx.Client(
+            base_url="http://127.0.0.1:8015", timeout=10, trust_env=False,
+        ))
+        profile, gateway_auth, binding = bind_dialogue(
+            stack, owner, research, agent, capability, temporary, serve, gateway_http,
+            token_bytes(32),
+        )
+        provider_controls = ProductionProviderControls(
+            research, capability=capability, binding=binding, dialogue=True, key=token_bytes(32),
         )
         key = token_bytes(32)
         stack.enter_context(
@@ -278,8 +284,8 @@ def guest():
                     research,
                     relay_key=key,
                     command_key=token_bytes(32),
-                    offline_profile=profile,
-                    extra={"listAgentProviders": lambda *_args, **_kwargs: provider_status(model)},
+                    provider_profile=profile, admission_auth=gateway_auth,
+                    extra=provider_controls.routes,
                 ),
                 8013,
             )
@@ -312,9 +318,9 @@ def guest():
 
 
 def seed_quant_template(owner, research, quant):
-    from sqlalchemy import text
-
     from runpy import run_path
+
+    from sqlalchemy import text
 
     from tests.integration.test_quant_lab_acceptance import PERIODS, seed_market
     from tests.integration.test_quant_lab_storage import fixture
@@ -384,50 +390,15 @@ def seed_discovery(owner, research):
     _check(owner, research, now)
 
 
-def provider_status(model):
-    """Publish the isolated fixture's redacted, contract-validated capability."""
-    return 200, {
-        "items": [
-            {
-                "binding": {
-                    "provider": model.provider,
-                    "profileId": model.profile_id,
-                    "profileGeneration": 1,
-                    "modelId": model.model_id,
-                    "modelGeneration": 1,
-                },
-                "credential": {
-                    "credentialVersion": 4,
-                    "credentialGeneration": 1,
-                    "state": "ACTIVE",
-                    "providerRevocationState": "NOT_CONFIRMED",
-                    "updatedAt": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
-                },
-                "availability": "AVAILABLE",
-                "adapter": "OPENAI_RESPONSES",
-                "outputSchemaVersion": 1,
-                "schemaSubsetVersion": 1,
-                "structuredOutputSupported": True,
-                "maxInputTokens": 4096,
-                "maxOutputTokens": 512,
-                "timeoutSeconds": 2,
-                "cancelSupport": "NONE",
-                "rateLimitSupport": "NONE",
-                "dataHandlingPolicyId": "offline",
-                "dataHandlingPolicyVersion": 1,
-                "pricingVersion": 1,
-                "probeState": "NOT_TESTED",
-            }
-        ]
-    }
-
-
 def verify(owner, calls, capability):
     from sqlalchemy import text
 
-    assert len(calls) == 3
+    assert len(calls) == 4
     request = calls[0]
-    assert set(request) == {"model", "store", "instructions", "input", "max_output_tokens", "text"}
+    assert set(request) == {
+        "model", "store", "instructions", "input", "max_output_tokens", "text", "service_tier",
+    }
+    assert request["service_tier"] == "default"
     assert request["model"] == capability.model and request["store"] is False
     assert request["instructions"] == capability.instructions
     assert request["max_output_tokens"] == capability.max_output_tokens
@@ -445,9 +416,11 @@ def verify(owner, calls, capability):
         "excerpt": ORIGINAL,
         "confirmedContext": {},
     }
-    assert [json.loads(call["input"][0]["content"]) for call in calls[1:]] == [
+    assert [json.loads(call["input"][0]["content"]) for call in calls[1:3]] == [
         {"excerpt": excerpt, "confirmedContext": {}} for excerpt in VARIANTS
     ]
+    quant_projection = json.loads(calls[3]["input"][0]["content"])
+    assert quant_projection["excerpt"] == QUANT_QUESTION
     with owner.connect() as connection:
         triggers = (
             connection.execute(
@@ -461,6 +434,13 @@ def verify(owner, calls, capability):
             .all()
         )
         assert triggers == [TRIGGER]
+        persisted_quant_signal = connection.scalar(text("""
+            SELECT document->'hypothesis'->>'signal'
+            FROM agent_research.companion_idea_versions
+            WHERE document->>'title'='Synthetische EMA-Forschungsfrage'
+            ORDER BY version DESC LIMIT 1
+        """))
+        assert persisted_quant_signal == QUANT_FIELDS["signal"]
         assert connection.scalar(text("SELECT count(*) FROM backtest.experiment_batches")) == 1
         assert connection.scalar(text("SELECT count(*) FROM agent_research.report_versions")) == 1
         assert (

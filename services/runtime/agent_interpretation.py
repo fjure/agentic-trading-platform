@@ -188,7 +188,7 @@ class OfflineDialogueStep:
             raise RunConflict("MODEL_CONTEXT_DENIED")
         return ProcessingAuthority(binding, row.deadline_at, self.profile.permits)
 
-    def run(self, claim, request, _recovered):
+    def dispatch_authorized(self, claim, request):
         with self.engine.connect() as connection:
             row = connection.execute(
                 text("""
@@ -278,6 +278,15 @@ class OfflineDialogueStep:
             result = self.gateway.dispatch(dispatch)
         finally:
             self.pending = None
+        return binding, row.receipt_id, dispatch, result
+
+    def run(self, claim, request, _recovered):
+        prepared = self.dispatch_authorized(claim, request)
+        if isinstance(prepared, StepResult):
+            return prepared
+        binding, receipt_id, dispatch, result = prepared
+        attempt_id = dispatch.attempt_id
+        store = self.projection.processing
         if result.state is not ResultState.ACCEPTED:
             self._settle_failure(claim, dispatch, result)
             return StepResult(RunState.WAITING_FOR_INPUT)
@@ -298,7 +307,7 @@ class OfflineDialogueStep:
                 store,
                 command,
                 claim=claim,
-                receipt_id=row.receipt_id,
+                receipt_id=receipt_id,
                 attempt_id=attempt_id,
                 processing_binding=binding,
                 proposal_id=proposal_id,

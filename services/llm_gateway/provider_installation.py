@@ -43,8 +43,13 @@ def load_installation(path: Path = PROFILE_PATH) -> ProviderInstallation | None:
             raw = source.read(65537)
     except FileNotFoundError:
         return None
+    return parse_installation(raw)
+
+
+def parse_installation(raw: bytes) -> ProviderInstallation:
+    """Validate the exact descriptor bytes pinned by an operator composition."""
     try:
-        if len(raw) > 65536:
+        if type(raw) is not bytes or len(raw) > 65536:
             raise ValueError
         document = json.loads(
             raw, object_pairs_hook=_unique_fields, parse_constant=_reject_nonfinite,

@@ -16,7 +16,7 @@ foreach ($dir in @($tooling, $cache, $jdkDir, $nodeDir)) {
     New-Item -ItemType Directory -Force -Path $resolved | Out-Null
 }
 
-function Ensure-VerifiedFile([string]$url, [string]$path, [string]$sha256, [hashtable]$headers = @{}) {
+function Ensure-VerifiedFile([string]$url, [string]$path, [string]$sha256) {
     $expected = $sha256.ToLowerInvariant()
     if (Test-Path -LiteralPath $path) {
         $actual = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -25,7 +25,7 @@ function Ensure-VerifiedFile([string]$url, [string]$path, [string]$sha256, [hash
         $download = "$path.$([Guid]::NewGuid().ToString('N')).download"
         try {
             Write-Output "Downloading $(Split-Path -Leaf $path) from $url"
-            Invoke-WebRequest -Uri $url -Headers $headers -OutFile $download
+            Invoke-WebRequest -Uri $url -OutFile $download
             $actual = (Get-FileHash -LiteralPath $download -Algorithm SHA256).Hash.ToLowerInvariant()
             if ($actual -ne $expected) { throw "SHA-256 mismatch: $path" }
             Move-Item -LiteralPath $download -Destination $path
@@ -37,7 +37,7 @@ function Ensure-VerifiedFile([string]$url, [string]$path, [string]$sha256, [hash
 }
 
 $jdkZip = Join-Path $jdkDir 'OpenJDK17U-jdk_x64_windows_hotspot_17.0.20.1_1.zip'
-Ensure-VerifiedFile 'https://api.github.com/repos/adoptium/temurin17-binaries/releases/assets/527352161' $jdkZip 'e53a79c3c3d86865bd7e787903884331068e71321714ffd44f145785affc7cb0' @{ Accept = 'application/octet-stream' }
+Ensure-VerifiedFile 'https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.20.1%2B1/OpenJDK17U-jdk_x64_windows_hotspot_17.0.20.1_1.zip' $jdkZip 'e53a79c3c3d86865bd7e787903884331068e71321714ffd44f145785affc7cb0'
 $jdkHome = Join-Path $jdkDir 'jdk-17.0.20.1+1'
 if (-not (Test-Path -LiteralPath (Join-Path $jdkHome 'bin/java.exe'))) {
     Expand-Archive -LiteralPath $jdkZip -DestinationPath $jdkDir -Force
@@ -56,7 +56,7 @@ Ensure-VerifiedFile 'https://repo.maven.apache.org/maven2/org/openapitools/opena
 $oasdiffDir = Join-Path $tooling 'oasdiff'
 New-Item -ItemType Directory -Force -Path $oasdiffDir | Out-Null
 $oasdiffArchive = Join-Path $oasdiffDir 'release.tar.gz'
-Ensure-VerifiedFile 'https://api.github.com/repos/oasdiff/oasdiff/releases/assets/603658993' $oasdiffArchive '22f98c7247075f8a446e783595802d6d38637de1760df264f3d4b3309f766c5b' @{ Accept = 'application/octet-stream' }
+Ensure-VerifiedFile 'https://github.com/oasdiff/oasdiff/releases/download/v1.33.0/oasdiff_1.33.0_windows_amd64.tar.gz' $oasdiffArchive '22f98c7247075f8a446e783595802d6d38637de1760df264f3d4b3309f766c5b'
 & tar -xzf $oasdiffArchive -C $oasdiffDir
 if ($LASTEXITCODE -ne 0) { throw 'Verified oasdiff extraction failed.' }
 & (Join-Path $oasdiffDir 'oasdiff.exe') --version

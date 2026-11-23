@@ -15,6 +15,10 @@ contracts/schemas/v1/*
 !contracts/schemas/v1/quant-lab.schema.json
 !contracts/schemas/v1/agent-research.schema.json
 tests
+!tests
+tests/*
+!tests/evaluation
+tests/evaluation/test_*.py
 __pycache__
 *.pyc
 .env

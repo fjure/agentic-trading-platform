@@ -4,7 +4,7 @@ import argparse
 import json
 import os
 import stat
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from importlib import import_module
 from pathlib import Path
@@ -81,8 +81,8 @@ def main() -> int:
         return 0
     if args.inputs is None:
         parser.error("--inputs is required to register or run")
-    files = _paths(args.inputs)
-    binding.verify(files)
+    if approval.expires_at.utcoffset() is None or approval.expires_at <= datetime.now(UTC):
+        raise ValueError("EVALUATION_AUTHORIZATION_REQUIRED")
     rehearsal = _read_json(FIXTURES / "split-manifest.v1.json")
     if binding.holdout_sha256 == rehearsal["holdoutSha256"]:
         raise ValueError("EVALUATION_REHEARSAL_HOLDOUT")
@@ -97,6 +97,8 @@ def main() -> int:
         registration_path=args.inputs / "registration.json",
         registration_signature=args.inputs / "registration.sig",
     )
+    files = _paths(args.inputs)
+    binding.verify(files)
     if args.command == "register":
         cases = read_verified_holdout(
             files["dataset"],
@@ -107,10 +109,18 @@ def main() -> int:
         store.register(approval, tuple(case["caseId"] for case in cases if not case["offlineOnly"]))
         return 0
     deployment = _read_json(_owner_file(private / "deployment.json"))
-    supervisor = import_module(deployment["supervisorModule"]).evaluation_supervisor(
-        store, approval
+    module = deployment["supervisorModule"]
+    factory = import_module(module).evaluation_supervisor
+    supervisor = (
+        factory(store, approval, files=files)
+        if module == "services.runtime.research_evaluation" else factory(store, approval)
     )
-    result = run_holdout(binding, files, approval, supervisor)
+    try:
+        result = run_holdout(binding, files, approval, supervisor)
+    finally:
+        close = getattr(supervisor, "close", None)
+        if close is not None:
+            close()
     print(json.dumps(result, sort_keys=True))
     return int(not result["complete"])
 

@@ -34,10 +34,9 @@ EGRESS_RPC = "research_provider_egress_rpc"
 OUTBOUND = "research_provider_outbound"
 
 
-def write_fixture(scratch):
+def write_fixture(scratch, host):
     issuer_key = ec.generate_private_key(ec.SECP256R1())
     issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "ARP-09 ephemeral fixture CA")])
-    host = "api.openai.com"
     endpoint = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, host)])
     now = datetime.now(UTC)
 
@@ -164,7 +163,7 @@ def verify_topology(model, *, fixture):
         assert services[EGRESS]["environment"]["ATL_RESEARCH_EGRESS_ENABLED"] == "0"
 
 
-def runtime_model(model):
+def runtime_model(model, provider):
     """Start only the roles in the isolated proof from the verified Compose render."""
     names = (
         GATEWAY,
@@ -177,6 +176,8 @@ def runtime_model(model):
         DB_CANARY,
     )
     services = {name: model["services"][name] for name in names}
+    for name in (GATEWAY, EGRESS, SUPERVISOR, SETUP, EMULATOR):
+        services[name].setdefault("environment", {})["ARP_FIXTURE_PROVIDER"] = provider
     # The signed-admission fixture has no database. The canonical supervisor
     # dependency is still present in the separately checked production model.
     services[SUPERVISOR].pop("depends_on")
@@ -208,7 +209,8 @@ def runtime_model(model):
     return runtime
 
 
-def main():
+def main(provider="OPENAI"):
+    host = {"OPENAI": "api.openai.com", "ANTHROPIC": "api.anthropic.com"}[provider]
     project = "atl-arp09-" + uuid4().hex[:12]
     base = ["docker", "compose", "-p", project]
     for layer in LAYERS:
@@ -221,7 +223,7 @@ def main():
     verify_topology(json.loads(production), fixture=False)
 
     with TemporaryDirectory(prefix="atl-arp09-") as directory:
-        write_fixture(Path(directory))
+        write_fixture(Path(directory), host)
         environment = dict(
             os.environ,
             ARP09_SCRATCH=Path(directory).as_posix(),
@@ -249,7 +251,7 @@ def main():
         model = json.loads(rendered)
         verify_topology(model, fixture=True)
         runtime = Path(directory) / "compose.json"
-        runtime.write_text(json.dumps(runtime_model(model)), encoding="utf-8")
+        runtime.write_text(json.dumps(runtime_model(model, provider)), encoding="utf-8")
         compose = ["docker", "compose", "-p", project, "-f", str(runtime), "--profile", "*"]
         attempt = str(uuid4())
         run("build", GATEWAY, timeout=270)
@@ -288,7 +290,7 @@ def main():
                 capture_output=True,
             )
     print(
-        "PASS ARP-09 Compose: isolated TLS, wrong CA/SNI, redirect, "
+        f"PASS Research Compose ({provider}): isolated TLS, wrong CA/SNI, redirect, "
         "mount boundaries, replay and revocation"
     )
 

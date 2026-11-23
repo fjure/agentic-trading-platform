@@ -168,7 +168,9 @@ class RunStore:
             raise RunConflict("IDEMPOTENCY_CONFLICT")
         return original.run_id
 
-    def claim(self, owner: UUID, *, discovery: bool = False) -> Claim | None:
+    def claim(
+        self, owner: UUID, *, discovery: bool = False, run_id: UUID | None = None,
+    ) -> Claim | None:
         scheduled_filter = """
           AND (kind<>'SCHEDULED' OR EXISTS(
             SELECT FROM agent_research.discovery_occurrences o
@@ -189,6 +191,7 @@ class RunStore:
                       AND {_ACTIVE_MS}<active_limit_ms
                       AND (state='QUEUED' OR (state='RUNNING' AND lease_until<=clock_timestamp()))
                       {scheduled_filter}
+                      AND (CAST(:target AS uuid) IS NULL OR run_id=:target)
                       AND NOT EXISTS (
                           SELECT FROM agent_research.runs active
                           WHERE active.state='RUNNING' AND active.lease_until>clock_timestamp()
@@ -204,7 +207,7 @@ class RunStore:
                     updated_at=clock_timestamp()
                 FROM ready WHERE r.run_id=ready.run_id
                 RETURNING r.run_id,r.fence,r.version
-            """), {"owner": owner, "lease": _LEASE_SECONDS}).one_or_none()
+            """), {"owner": owner, "lease": _LEASE_SECONDS, "target": run_id}).one_or_none()
             if row is None:
                 return None
             try:
