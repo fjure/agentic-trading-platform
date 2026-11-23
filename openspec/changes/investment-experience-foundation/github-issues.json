@@ -1,0 +1,371 @@
+{
+  "schemaVersion": 1,
+  "repository": "fjure/agentic-trading-platform",
+  "changeId": "investment-experience-foundation",
+  "baseline": "0442f29571e53b983e9e08f2180c4bd3536e0b6a",
+  "status": "synchronized-read-back-verified",
+  "tasks": [
+    {
+      "taskId": "IEF-01",
+      "title": "[IEF-01] Experience Architecture und API Contracts",
+      "requirements": [
+        "IEF-C01",
+        "IEF-P01",
+        "IEF-A01",
+        "IEF-G01"
+      ],
+      "dependsOn": [],
+      "path": "work-packages/IEF-01.md",
+      "state": "planned",
+      "issueNumber": 107,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/107",
+      "issueId": 6561573630,
+      "contentHash": "963fdf97f575c84a07c4ef315c5ae9d25d5b421f936c167fad9c13f1a7617881",
+      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+    },
+    {
+      "taskId": "IEF-02",
+      "title": "[IEF-02] Guided Onboarding",
+      "requirements": [
+        "IEF-O01",
+        "IEF-O02"
+      ],
+      "dependsOn": [
+        "IEF-01"
+      ],
+      "path": "work-packages/IEF-02.md",
+      "state": "planned",
+      "issueNumber": 108,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/108",
+      "issueId": 6561574342,
+      "contentHash": "ec838b391cf17bdc43162ee8f27fe799bd3ec40bee6cf112465e1aa2464012a8",
+      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+    },
+    {
+      "taskId": "IEF-03",
+      "title": "[IEF-03] Portfolio Hub",
+      "requirements": [
+        "IEF-P01",
+        "IEF-P02"
+      ],
+      "dependsOn": [
+        "IEF-01"
+      ],
+      "path": "work-packages/IEF-03.md",
+      "state": "planned",
+      "issueNumber": 109,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/109",
+      "issueId": 6561575190,
+      "contentHash": "be4019cebaaf528892a9c927feb3b62dc5d9f1b14f9d81910135e0d0facc9b6d",
+      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+    },
+    {
+      "taskId": "IEF-04",
+      "title": "[IEF-04] Portfolio Insights und begrenzte Erklärung",
+      "requirements": [
+        "IEF-P03",
+        "IEF-P04",
+        "IEF-A01"
+      ],
+      "dependsOn": [
+        "IEF-03",
+        "ARP-10"
+      ],
+      "path": "work-packages/IEF-04.md",
+      "state": "planned",
+      "issueNumber": 110,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/110",
+      "issueId": 6561575866,
+      "contentHash": "3d7b796de9341dd876152a5c3af3a3e91c9d0f1c16c6217f81002ebe96b29ee6",
+      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+    },
+    {
+      "taskId": "IEF-05",
+      "title": "[IEF-05] Strategy Discovery",
+      "requirements": [
+        "IEF-S01",
+        "IEF-S02",
+        "IEF-S03"
+      ],
+      "dependsOn": [
+        "IEF-01"
+      ],
+      "path": "work-packages/IEF-05.md",
+      "state": "planned",
+      "issueNumber": 111,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/111",
+      "issueId": 6561576576,
+      "contentHash": "5e35e3f15f7482c0793d2a70d3a2f0f80263393dbb2e8b91fb3cef5e2b1af2e0",
+      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+    },
+    {
+      "taskId": "IEF-06",
+      "title": "[IEF-06] AI Task Center",
+      "requirements": [
+        "IEF-A01",
+        "IEF-A02",
+        "IEF-A03",
+        "IEF-A04"
+      ],
+      "dependsOn": [
+        "IEF-01",
+        "IEF-04",
+        "ARP-10"
+      ],
+      "path": "work-packages/IEF-06.md",
+      "state": "planned",
+      "issueNumber": 112,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/112",
+      "issueId": 6561577273,
+      "contentHash": "4fac1b31fb92e4027233105ccd2fd029103c0aa76a9b835914bb69dca3de4f50",
+      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+    },
+    {
+      "taskId": "IEF-07",
+      "title": "[IEF-07] Guided Paper Order",
+      "requirements": [
+        "IEF-G01",
+        "IEF-G02",
+        "IEF-G03"
+      ],
+      "dependsOn": [
+        "IEF-01",
+        "IEF-03",
+        "IEF-05"
+      ],
+      "path": "work-packages/IEF-07.md",
+      "state": "planned",
+      "issueNumber": 113,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/113",
+      "issueId": 6561577997,
+      "contentHash": "8e0097da8338750b0d24393484b02f0a3e9081b5c2eb641a9ef2bac2d6e1bb8f",
+      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+    },
+    {
+      "taskId": "IEF-08",
+      "title": "[IEF-08] Personal Cockpit und Activity Timeline",
+      "requirements": [
+        "IEF-C01",
+        "IEF-C02",
+        "IEF-C03"
+      ],
+      "dependsOn": [
+        "IEF-02",
+        "IEF-03",
+        "IEF-04",
+        "IEF-05",
+        "IEF-06",
+        "IEF-07"
+      ],
+      "path": "work-packages/IEF-08.md",
+      "state": "planned",
+      "issueNumber": 114,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/114",
+      "issueId": 6561578646,
+      "contentHash": "3a9a51a5b13cd9f6c261467041a68f5dc87550546d338f15092128a7a098bf60",
+      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+    },
+    {
+      "taskId": "IEF-09",
+      "title": "[IEF-09] Integrated Experience Acceptance",
+      "requirements": [
+        "IEF-C04"
+      ],
+      "dependsOn": [
+        "IEF-01",
+        "IEF-02",
+        "IEF-03",
+        "IEF-04",
+        "IEF-05",
+        "IEF-06",
+        "IEF-07",
+        "IEF-08",
+        "ARP-10"
+      ],
+      "path": "work-packages/IEF-09.md",
+      "state": "planned",
+      "issueNumber": 115,
+      "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/115",
+      "issueId": 6561579331,
+      "contentHash": "1963008ddc4906c941f69685ecd59d74e19aaab33345c4f44be6cbdd65af603e",
+      "syncedAt": "2026-11-23T14:34:49.646043+00:00"
+    }
+  ],
+  "syncSummary": {
+    "created": 0,
+    "updated": 0,
+    "unchanged": 9,
+    "duplicates": 0
+  },
+  "transport": "GH CLI explicitly authorized after MCP create403 on 2026-11-23",
+  "milestone": "none-existing-change-label-only",
+  "nativeDependencyWrite": {
+    "created": 0,
+    "unchanged": 26
+  },
+  "syncHistory": [
+    {
+      "created": 0,
+      "updated": 1,
+      "unchanged": 8,
+      "duplicates": 0
+    },
+    {
+      "created": 0,
+      "updated": 0,
+      "unchanged": 9,
+      "duplicates": 0
+    }
+  ],
+  "nativeDependencies": {
+    "edges": 26,
+    "bothDirectionsVerified": true,
+    "externalPrerequisite": {
+      "taskId": "ARP-10",
+      "issueNumber": 105,
+      "state": "closed"
+    }
+  },
+  "readBack": {
+    "verifiedAt": "2026-11-23T14:34:49.646043+00:00",
+    "verifiedIssues": 9,
+    "duplicates": 0,
+    "details": {
+      "IEF-01": {
+        "issueNumber": 107,
+        "state": "open",
+        "contentHash": "963fdf97f575c84a07c4ef315c5ae9d25d5b421f936c167fad9c13f1a7617881",
+        "blockedBy": [],
+        "blocking": [
+          108,
+          109,
+          111,
+          112,
+          113,
+          115
+        ]
+      },
+      "IEF-02": {
+        "issueNumber": 108,
+        "state": "open",
+        "contentHash": "ec838b391cf17bdc43162ee8f27fe799bd3ec40bee6cf112465e1aa2464012a8",
+        "blockedBy": [
+          107
+        ],
+        "blocking": [
+          114,
+          115
+        ]
+      },
+      "IEF-03": {
+        "issueNumber": 109,
+        "state": "open",
+        "contentHash": "be4019cebaaf528892a9c927feb3b62dc5d9f1b14f9d81910135e0d0facc9b6d",
+        "blockedBy": [
+          107
+        ],
+        "blocking": [
+          110,
+          113,
+          114,
+          115
+        ]
+      },
+      "IEF-04": {
+        "issueNumber": 110,
+        "state": "open",
+        "contentHash": "3d7b796de9341dd876152a5c3af3a3e91c9d0f1c16c6217f81002ebe96b29ee6",
+        "blockedBy": [
+          105,
+          109
+        ],
+        "blocking": [
+          112,
+          114,
+          115
+        ]
+      },
+      "IEF-05": {
+        "issueNumber": 111,
+        "state": "open",
+        "contentHash": "5e35e3f15f7482c0793d2a70d3a2f0f80263393dbb2e8b91fb3cef5e2b1af2e0",
+        "blockedBy": [
+          107
+        ],
+        "blocking": [
+          113,
+          114,
+          115
+        ]
+      },
+      "IEF-06": {
+        "issueNumber": 112,
+        "state": "open",
+        "contentHash": "4fac1b31fb92e4027233105ccd2fd029103c0aa76a9b835914bb69dca3de4f50",
+        "blockedBy": [
+          105,
+          107,
+          110
+        ],
+        "blocking": [
+          114,
+          115
+        ]
+      },
+      "IEF-07": {
+        "issueNumber": 113,
+        "state": "open",
+        "contentHash": "8e0097da8338750b0d24393484b02f0a3e9081b5c2eb641a9ef2bac2d6e1bb8f",
+        "blockedBy": [
+          107,
+          109,
+          111
+        ],
+        "blocking": [
+          114,
+          115
+        ]
+      },
+      "IEF-08": {
+        "issueNumber": 114,
+        "state": "open",
+        "contentHash": "3a9a51a5b13cd9f6c261467041a68f5dc87550546d338f15092128a7a098bf60",
+        "blockedBy": [
+          108,
+          109,
+          110,
+          111,
+          112,
+          113
+        ],
+        "blocking": [
+          115
+        ]
+      },
+      "IEF-09": {
+        "issueNumber": 115,
+        "state": "open",
+        "contentHash": "1963008ddc4906c941f69685ecd59d74e19aaab33345c4f44be6cbdd65af603e",
+        "blockedBy": [
+          105,
+          107,
+          108,
+          109,
+          110,
+          111,
+          112,
+          113,
+          114
+        ],
+        "blocking": []
+      }
+    }
+  },
+  "initialSync": {
+    "createdIssues": 9,
+    "createdNativeEdges": 26,
+    "duplicateIssues": 0
+  },
+  "authorization": "Explicit user approval 2026-11-23: GH CLI for IEF issue synchronization after MCP create403; existing target fjure/agentic-trading-platform only",
+  "hashEncoding": "SHA-256 of exact UTF-8 bytes between managed delimiters; LF line endings"
+}
