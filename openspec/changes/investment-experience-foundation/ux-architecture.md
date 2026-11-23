@@ -72,7 +72,7 @@ Abnahme: Kontrast für normalen Text mindestens4.5:1, große Schrift und relevan
 
 **Nutzerziel:** verstehen, welche konkrete Hypothese eine registrierte Strategie tatsächlich prüfen kann. **Hierarchie:** verständliche These → Regel und Parameter → Instrument-/Daten-/Modusgrenzen → vorhandene Ergebnisse mit Version/Herkunft → nächste zulässige Untersuchung.
 
-**Primär:** „Research-Experiment entwerfen“, wenn der Katalog den Pfad trägt; sonst „Fehlende Voraussetzungen ansehen“. **Sekundär:** Vergleich, vorhandenen Report öffnen, freie Idee klären. **Zustände:** lesbar, keine Ergebnisse, vorhandene positive/negative/blockierte Ergebnisse, nicht mehr verfügbare Version. **Fehler:** Ergebnisausfall verdeckt Definition nicht; alte Ergebnisse werden nie still der aktuellen Version zugeordnet. Keine Strategiepromotion oder Paperübernahme aus Rendite allein.
+**Primär:** „Research-Experiment entwerfen“, wenn der Katalog den Pfad trägt; sonst „Fehlende Voraussetzungen ansehen“. **Sekundär:** Vergleich, vorhandenen Report öffnen, freie Idee klären und nach historischer Evidenz „Paper-Eignung prüfen“. Bei belegter Eignung führt die ausdrückliche Wahl zu S9, bei Sperre bleiben Grund und Rückweg sichtbar. **Zustände:** lesbar, keine Ergebnisse, vorhandene positive/negative/blockierte Ergebnisse, nicht mehr verfügbare Version. **Fehler:** Ergebnisausfall verdeckt Definition nicht; alte Ergebnisse werden nie still der aktuellen Version zugeordnet. Keine Strategiepromotion oder Paperübernahme aus Rendite allein.
 
 **Mobile/a11y:** Parameter in Label-Wert-Gruppen, Formeln zusätzlich sprachlich erklärt; Versions-/Modushinweise stehen vor Startaktion. **API:** geplantes Strategiedetail innerhalb `/experience/strategies`, vorhandene Quant-/Backtestdefinitionen und Berichte. Nur vorhandene Werte darstellen; neue Definitionen fachlich im Contract klären. **Übergänge:** vorhandener Quant-Entwurf, S8 mit Referenz und S5; explizite Approximation führt in bestätigbaren Ideendialog, niemals direkt zum Test der Originalidee.
 
@@ -94,7 +94,7 @@ Abnahme: Kontrast für normalen Text mindestens4.5:1, große Schrift und relevan
 
 ## S9 – Guided Paper Order
 
-**Nutzerziel:** eine konkrete menschliche LIMIT-Anforderung bewusst vorbereiten und ihren echten Zustand verfolgen. **Hierarchie:** Paper-/Kontokontext → Voraussetzungen → Backendplan → menschlicher Review → bestätigte Operation → Orders/Fills und unabhängige Kontrollen.
+**Nutzerziel:** eine konkrete menschliche LIMIT-Anforderung bewusst vorbereiten und ihren echten Zustand verfolgen. **Hierarchie:** Paper-/Kontokontext → Voraussetzungen → Vorschau → lesende Risk-Vorprüfung mit Grund und Bindung → ausdrückliche menschliche Bestätigung → bestätigte Operation → Orders/Fills und unabhängige Kontrollen.
 
 **Primär:** „Plan prüfen“, dann „Diese Paperanforderung bestätigen“ ausschließlich bei gültiger Bindung. **Sekundär:** zurück, verwerfen, vorhandenen Vorgang prüfen, zulässige Stornierung; Pause/Kill bleiben unabhängig erreichbar. **Zustände:** nicht eingerichtet, Prüfung nötig, gesperrt, gültiger Plan, angenommen/pending, ungeklärt, teilgefüllt, terminal, Cancel pending. **Fehler:** stale oder abgelaufener Plan sperrt neue Bestätigung; unklarer Submit führt zum bestehenden Vorgang mit ursprünglichem Schlüssel. Cancel bestätigt keinen Fill und keine Budgetfreigabe.
 
@@ -118,3 +118,7 @@ Bestehende Researchdaten, Readiness, Quant Builder/Ergebnisse, Providerverwaltun
 ## Verbindlicher Erstnutzerpfad S1–S4
 
 S1 erklärt überspringbare Präferenzen und Demo ohne Schlüssel. S2 zeigt den ausdrücklich gewählten demoRunId-Snapshot; vorhandenen Demolauf wählen oder eine ausdrückliche Demoanlage verwenden, nie GET- oder Navigationseffekte. S3 erhält exakt denselben Namespace/Run-/Snapshotkontext. S4 erstellt nur auf bewusste lokale Analyseaktion einen persistenten deterministischen Befund; sourceType PORTFOLIO_ANALYSIS, analysisId und Methoden-/Quellrevision bleiben nach Reload in S7/S8 wieder auffindbar. Das ist der vollständige J1-Weg. Paperquellen und der zusätzliche Researchdialog J4 sind getrennte mögliche Einstiege. Im positiven No-Key-Test wird externes I/O null gezählt; fehlende Preise und Historie sind verständliche Grenzen, keine erfundenen Resultate.
+
+## Frühe visuelle Validierung
+
+Screen-Flow und Layoutregeln dieses Dokuments sind Grundlage des zusammenhängenden klickbaren Prototyps in IEF-01. Das [UX-Protokoll](ux-validation.md) legt Freigabe, menschliche Prüfung und Blocker fest. Die UI verwendet sichtbare Bezeichnungen für Research, historischen Backtest, Paper-Simulation und bestätigte Ausführung im jeweiligen Kontokontext. Ein Fehler zeigt Ursache oder Ungewissheit, Wirkung und genau den zulässigen nächsten Schritt.

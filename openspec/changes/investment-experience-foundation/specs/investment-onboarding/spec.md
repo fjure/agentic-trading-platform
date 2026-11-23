@@ -17,6 +17,11 @@ Das System SHALL Ziele, Erfahrung, freiwilligen Anlagehorizont und Verlusttolera
 - **WHEN** der Betreiber nach einem gespeicherten Schritt neu lädt
 - **THEN** werden erledigte und übersprungene Schritte unterschieden, er kann fortsetzen oder direkt ins Cockpit wechseln.
 
+#### Scenario: IEF-T-O05 Einstieg verständlich und schnell
+- **GIVEN** eine fachfremde Testperson startet in der Einrichtungsansicht
+- **WHEN** sie den Demo-Einstieg wählt und optionale Fragen überspringt
+- **THEN** erreicht sie ohne Moderationshilfe in höchstens drei Minuten das gekennzeichnete Demo-Cockpit und erkennt den Einstieg zur lokalen Analyse. Für die Teilstrecke müssen mindestens vier von fünf Personen bestehen, bei größerer Stichprobe mindestens 80 Prozent.
+
 ### Requirement: IEF-O02 Versionierte Betreiberpräferenzen
 Präferenzen SHALL dem authentifizierten Betreiber serverseitig zugeordnet und versioniert sein. Änderungen MUST idempotent sein und veraltete Versionen ablehnen. Präferenzen MUST weder finanzielle Wahrheit noch Autorisierung oder Geeignetheitsprüfung darstellen.
 

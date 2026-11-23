@@ -1,0 +1,7 @@
+# IEF Refinement. Prüfstand
+
+Ausgangsbasis ist der veröffentlichte main 1bf6cf1cb9fa790fe8735bb14aacf047b5eefc59. Research integration 45196230653 und Contracts 45196231160 waren nach erneutem CI-Readback erfolgreich.
+
+Ausgeführt: OpenSpec Strict für alle 22 Einträge, Struktur- und Linkprüfung für 20 Requirements und 42 eindeutige Szenarien in sechs Capability-Deltas, sechs Journeys und neun offene Tasks. Die neun GitHub-Issues wurden gelesen. Sechs Managedblocks wurden aktualisiert und alle neun Inhalte samt Markern, Titeln, Labels und Status vollständig zurückgelesen. Der MCP wies das Update mit 403 ab. Der ausdrücklich freigegebene IEF-Fallback nutzte die vorhandene GH CLI. Beide Richtungen der 26 nativen Kanten wurden gelesen und mit dem azyklischen Graph abgeglichen. Keine Kante wurde neu geschrieben. Details stehen in [GitHub-Mapping](github-issues.json) und [Reviewbefunden](reviews/refinement.md).
+
+Geplant für Apply: Klickbarer Prototyp, formative Prüfung, funktionale Onboarding-Teilstrecke und integrierter Nachweis mit Testpersonen nach [UX-Protokoll](ux-validation.md). Technische Checks umfassen die versionierte Strategieübergabe, Risk-Vorprüfung und Order-Recovery mit synthetischen Doubles. Auf der späteren Produktumgebung bleibt die Existenz einer tatsächlich kompatiblen Paper-Konfiguration zu belegen. Fehlt sie, bleibt der Strategieübergang gesperrt. Der Plan ist bereit für einen gesonderten Apply-Auftrag.

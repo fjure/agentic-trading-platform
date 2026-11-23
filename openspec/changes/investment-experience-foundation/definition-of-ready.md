@@ -36,3 +36,7 @@ Empfehlung erst nach Planungschecks: gesonderter Applyauftrag für die geplanten
 ## Abschließender Planungsstand
 
 Alle Planungsnachweise einschließlich Reviews, strengem OpenSpec, vollständigem Issue-/Hash-/Native-Readback und erster Git-Veröffentlichung sind erbracht; siehe planning-verification.md und git-publication.json.0/9Pakete bleiben implementiert. Damit ist die Planung zur Nutzerprüfung bereit, Apply weiterhin nicht beauftragt. Auf der ersten reinen Planungsveröffentlichung gestartete neue CI-Läufe wurden zunächst laufend beobachtet und werden nicht als abgeschlossen ausgegeben.
+
+## Refinement-Gates
+
+Für Apply müssen die Szenarien, Messregeln, frühe Prototypsequenz und Zuordnung zu den vorhandenen Issues dokumentiert, unabhängig geprüft und veröffentlicht sein. Prototyp und menschliche Beobachtungen sind Liefergegenstände des späteren Apply. IEF-01 darf den Flow erst nach formativer Prüfung übergeben. IEF-09 darf nach technischen Gates, menschlicher Abnahme und Korrektur/Nachtest sämtlicher UX-Blocker abschließen. Genehmigung des Plans, Freigabe des Prototyps und Freigabe des integrierten Builds werden separat geführt.
