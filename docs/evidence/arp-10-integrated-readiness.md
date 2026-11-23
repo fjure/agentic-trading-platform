@@ -69,3 +69,22 @@ Die lokalen Laufzeitartefakte enthalten synthetische Daten und verbleiben außer
 Der Scorer-Einstieg nimmt zusätzlich den registrierten Manifest, die gebundene Entwicklungsreferenz und `--mode model` entgegen. Der Modellmodus verlangt den Holdout-Split und die strengen modellbezogenen Pflichtbeobachtungen. Der CLI-Regressionsfall verwendet ausschließlich öffentlich abgeleitete synthetische Testfälle und bestätigt die Sperre bei fehlenden Antworten. Diese Ergänzung und die gesamte Evaluierungs- und Evidenzsuite bestanden mit 40 Tests.
 
 Der erste Research-CI-Lauf auf `1e1d011299fa93f42253006cddd079f0bf6ccabe` meldete bei der Chromium-Systemvorbereitung `missing_environment`. Das Ubuntu-Paketmirror lieferte die angeforderten Font-/Mesa-Pakete innerhalb des bisherigen 240-Sekunden-Limits nicht vollständig. Ausschließlich der Browser-Installationsschritt erhält nun ein begrenztes 600-Sekunden-Fenster. Die Testfristen, Pflichtfälle und fail-closed Aggregation bleiben verbindlich.
+
+## Readiness-Matrix
+
+`CIVerified` bezieht sich auf den abschließend geprüften Releasekandidaten. Die betriebliche Freigabe bleibt je realer Provider- und Modellbindung erforderlich.
+
+| Bereich | Implemented | OfflineVerified | CIVerified | SecurityVerified | RequiresOperatorApproval | RealProviderVerified |
+| --- | --- | --- | --- | --- | --- | --- |
+| Gateway, Egress und beide Providerprotokolle | Ja | Ja | Ja | Ja | Ja | Nein |
+| Setup, Rotation und Widerruf | Ja | Ja | Ja | Ja | Ja | Nein |
+| Modellbezogener Smoke und Budgetledger | Ja | Ja | Ja | Ja | Ja | Nein |
+| Dialog, Discovery und Quant bis Report | Ja | Ja | Ja | Ja | Ja | Nein |
+| Private Evaluierung und Fachfreigabemechanik | Ja | Ja | Ja | Ja | Ja | Nein |
+| Safety, Wiederanlauf und Rollback | Ja | Ja | Ja | Ja | Ja | Nein |
+
+Der korrigierte Code-Commit `6ead1a62c6c04d29004cc14f73a9bbae1735b372` bestand [Research integration](https://github.com/fjure/agentic-trading-platform/actions/runs/45172565322) vollständig. CI bestätigte 181 Fast-Fälle, 16 Datenbankfälle, den integrierten Browserfall, fünf ergänzende Browserfälle und den SQL-Pflichtnachweis. Der Aggregator akzeptierte alle Artefakte für denselben ausgecheckten SHA.
+
+Auch [Contracts](https://github.com/fjure/agentic-trading-platform/actions/runs/45172565411) bestand auf `6ead1a62c6c04d29004cc14f73a9bbae1735b372` vollständig, einschließlich reproduzierbarer Clientgenerierung, Vertragstests, Angular-Produktionsbuild und Supervisor-Browserregression. Damit ist die technische Offline-Abnahme grün. OpenSpec führt zehn abgeschlossene Implementierungstasks. Die Matrix bewertet die tatsächlichen realen Provider- und KI-Fachfreigaben weiterhin mit `RealProviderVerified = Nein`.
+
+Die offizielle GitHub-MCP-Integration konnte lesen, verweigerte Issue-Änderungen jedoch mit HTTP 403. Der gemäß `AGENTS.md` autorisierte GH-CLI-Fallback synchronisierte den verwalteten Block. Ein erneuter offizieller Read-back bestätigte Titel, Labels, Evidenzlink, eindeutige Taskzuordnung und die abgeschlossenen Abhängigkeiten.

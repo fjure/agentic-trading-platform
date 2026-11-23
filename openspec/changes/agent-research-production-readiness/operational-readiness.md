@@ -4,7 +4,7 @@
 - [x] Provider-Setup erreicht ausschließlich den LLM-Schlüsselspeicher. Mounts, Prozesse, Hostdateirechte, interne Netze und tatsächlicher Egress geprüft.
 - [x] Default-deny bei leerer Konfiguration und Neustart, Rotation/Widerruf unter Last sowie Restore ohne Rückkehr alter Freigaben geprüft.
 - [x] Dashboard zeigt Serverstatus, Budget, Datenvorschau, Test- und Verarbeitungsentscheidungen. Zeitplan, Datenstand und blockierte Läufe sind nachvollziehbar.
-- [ ] Release-CI vollständig grün, einschließlich Browser, Safety, Recovery und Produktionskomposition gegen TLS-Emulator.
+- [x] Release-CI vollständig grün, einschließlich Browser, Safety, Recovery und Produktionskomposition gegen TLS-Emulator.
 - [ ] Konto-, Provider-, Modell- und Datenrechte vor realem Betrieb separat belegt. Real-Smoke und Evaluation separat autorisiert und mit begrenztem Budget ausgeführt.
 - [x] Kill, Reconciliation und null Brokerorders unter Researchlast belegt. Kontrollierter Rollback dokumentiert.
 
