@@ -12,7 +12,7 @@ Die verlinkten Work Packages enthalten Abhängigkeiten und Abnahmekriterien. Der
 
 ## 3. Portfolio Hub
 
-- [ ] 3.1 [IEF-03](work-packages/IEF-03.md) Readports für DEMO/FAKE/ALPACA_PAPER, konsistente snapshots und Cursor, MetricValue mit nullable Wert/Einheit/Reason/Methode/Zeiten; Portfolio- und Positionsansicht mit sicheren Leer- und Stalezuständen. Keine neue Finanzwahrheit oder historische Bewertungsengine. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen.
+- [x] 3.1 [IEF-03](work-packages/IEF-03.md) Readports für DEMO/FAKE/ALPACA_PAPER, konsistente snapshots und Cursor, MetricValue mit nullable Wert/Einheit/Reason/Methode/Zeiten; Portfolio- und Positionsansicht mit sicheren Leer- und Stalezuständen. Keine neue Finanzwahrheit oder historische Bewertungsengine. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen.
 
 ## 4. Portfolio Insights und begrenzte Erklärung
 

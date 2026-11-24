@@ -31,3 +31,7 @@ Bei einem Quellkonflikt wird der Portfolio-Read neu geladen. Neustart der lokale
 ### Integrationskorrektur nach erster Remote-CI
 
 Der Research-Runner bestand 18 von 19 Datenbanktests auf 4250759. Der Paper-Test erwartete einen lokalen Entwicklungstag, während der Workflow ein pro Lauf benanntes Testimage baut. Der Test übernimmt jetzt das veröffentlichte Image des isolierten Runners. Die bestehenden Assertions zur Ledgerrevision und zu den Berechtigungen sind unverändert. Der lokale Nachtest mit exakt dieser Image-Übergabe bestand in 7,17 Sekunden. JUnit-SHA256: `9633202f7f05f908338d18f17a0286cbeade4e78bb03a5f2abd1a2bdd1fc8f5a`.
+
+### GitHub-Integration
+
+[Contracts](https://github.com/fjure/agentic-trading-platform/actions/runs/45413702311) und [Research integration](https://github.com/fjure/agentic-trading-platform/actions/runs/45413702373) bestanden auf `c07a0baa3ada54850bae4a948a8b030bb07f7142`. Der Merge `4c865a647511f402dc1a63d26bddaf1dd30c64f2` übernahm denselben geprüften Git-Baum nach main.

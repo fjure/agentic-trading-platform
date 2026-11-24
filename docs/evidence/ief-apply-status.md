@@ -12,8 +12,8 @@ Verifizierter Remote-main und lokaler Issue-Branch-HEAD: `82139cd2f4a87d88b92612
 | --- | --- | --- |
 | IEF-01 / #107 | Additive Contracts, generierter Client und Router/Prototyp lokal umgesetzt. Contract-Suite und ausgewählte Browserregression bestanden. [Paketnachweis](ief-01.md) | Technisch abgeschlossen und nach main integriert. Die formative Prüfung gehört zu IEF-09. |
 | IEF-02 / #108 | Technisch abgeschlossen und nach main integriert. [Paketnachweis](ief-02.md) | Die menschliche Prüfung IEF-T-O05 gehört zu IEF-09. |
-| IEF-03 / #109 | Portfolio Hub lokal umgesetzt. [Paketnachweis](ief-03.md) | Remote-CI und Integration. |
-| IEF-04 / #110 | Nicht begonnen; keine neue lokale Analyse oder externe Erklärung verfügbar | IEF-03; damit mittelbar IEF-01. ARP-10 ist technisch erfüllt, ersetzt aber keine reale Zweck-/Provider-/Kostenfreigabe |
+| IEF-03 / #109 | Technisch abgeschlossen und nach main integriert. [Paketnachweis](ief-03.md) | Die integrierte menschliche Prüfung gehört zu IEF-09. |
+| IEF-04 / #110 | Offen. Die lokale Analyse und externe Erklärung stehen aus. | IEF-03 und ARP-10 sind technisch erfüllt. Reale Zweck-, Provider- und Kostenfreigaben gelten weiterhin separat. |
 | IEF-05 / #111 | Offen. Die Registerprojektion steht aus. | IEF-01 ist technisch erfüllt. |
 | IEF-06 / #112 | Nicht begonnen; keine neue persistente Taskprojektion | IEF-01 und IEF-04; bestehender Supervisor bleibt zuständig |
 | IEF-07 / #113 | Nicht begonnen; neue Preview-/Guided-Laufzeit nicht implementiert | IEF-01, IEF-03 und IEF-05; bestehender Human-/Risk-/Executionpfad unverändert |
@@ -26,7 +26,7 @@ IEF-01–08 werden nach ihren technischen Kriterien abgeschlossen. IEF-09 bünde
 
 | Kennzeichen | Ergebnis |
 | --- | --- |
-| `TECHNICAL_IMPLEMENTATION_COMPLETE` | **Nein**: die Featurepakete IEF-03–09 stehen noch aus |
+| `TECHNICAL_IMPLEMENTATION_COMPLETE` | **Nein**: die Featurepakete IEF-04–09 stehen noch aus |
 | `AUTOMATED_ACCEPTANCE_PASSED` | **Nein**: lokale Teilprüfungen ersetzen keine vollständige integrierte Abnahme oder Remote-CI am Implementierungs-SHA |
 | `HUMAN_UX_VALIDATION_PENDING` | **Ja**, vom Nutzer bestätigt; keine simulierten menschlichen Ergebnisse |
 | `PRODUCT_READINESS_APPROVED` | **Nein** |
@@ -40,7 +40,7 @@ Die tatsächlichen lokalen Tests, Reviews und UI-Aufnahmen werden im [IEF-01-Nac
 
 ## GitHub und Veröffentlichung
 
-Read-back am 23.11.2026: neun offene Issues, neun exakte Managedblockhashes, Marker/Titel/Labels und 26 native Kanten in beiden Richtungen geprüft; ARP-10/#105 geschlossen. Nach tatsächlichem MCP-Updatefehler 403 wurde der autorisierte GH-CLI-Fallback verwendet: neun Managedblocks aktualisiert, keine neuen Issues, keine Schließungen, keine Änderungen an manuellen Außenblöcken, Labels oder Kanten. Der zweite vollständige Lauf ergab **0 Updates, 9 unverändert**, erneut 26 Kanten beidseitig bestätigt. Aktuelle Hashes/UTC-Zeiten und beide Läufe stehen in `openspec/changes/investment-experience-foundation/github-issues.json`. IEF-01 und IEF-02 sind technisch abgeschlossen. Sieben Taskcheckboxen bleiben offen.
+Read-back am 23.11.2026: neun offene Issues, neun exakte Managedblockhashes, Marker/Titel/Labels und 26 native Kanten in beiden Richtungen geprüft; ARP-10/#105 geschlossen. Nach tatsächlichem MCP-Updatefehler 403 wurde der autorisierte GH-CLI-Fallback verwendet: neun Managedblocks aktualisiert, keine neuen Issues, keine Schließungen, keine Änderungen an manuellen Außenblöcken, Labels oder Kanten. Der zweite vollständige Lauf ergab **0 Updates, 9 unverändert**, erneut 26 Kanten beidseitig bestätigt. Aktuelle Hashes/UTC-Zeiten und beide Läufe stehen in `openspec/changes/investment-experience-foundation/github-issues.json`. IEF-01 bis IEF-03 sind technisch abgeschlossen. Sechs Taskcheckboxen bleiben offen.
 
 Nach der Verschiebung der menschlichen Prüfungen wurden am 24.11.2026 erneut alle neun verwalteten Issue-Abschnitte synchronisiert. Neun offene Issues und alle 26 nativen Kanten wurden in beiden Richtungen zurückgelesen. Details stehen im aktuellen GitHub-Mapping.
 

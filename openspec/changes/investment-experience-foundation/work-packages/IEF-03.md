@@ -45,6 +45,6 @@ Eigene Component-/API-/SQL-/Securityprüfungen und betroffene Regressionen mit Q
 
 ## Apply-Status
 
-Portfolio Hub lokal umgesetzt. Die drei Datenquellen, Positionsseiten und konservativen Finanzmetriken sind für die Remote-CI vorbereitet. Die menschliche Abnahme findet in IEF-09 statt.
+Portfolio Hub technisch abgeschlossen und mit Merge `4c865a647511f402dc1a63d26bddaf1dd30c64f2` in main integriert. [Contracts](https://github.com/fjure/agentic-trading-platform/actions/runs/45413702311) und [Research integration](https://github.com/fjure/agentic-trading-platform/actions/runs/45413702373) bestanden auf `c07a0baa3ada54850bae4a948a8b030bb07f7142`. Die menschliche Abnahme findet in IEF-09 statt.
 
 Prüfevidenz, konkreter Dependencyblocker und Wiederanlauf: `docs/evidence/ief-apply-status.md`. Keine Änderung normativer Anforderungen oder Abnahmeschwellen. Issue und Taskcheckbox bleiben bis zur vollständigen Definition of Done offen.
