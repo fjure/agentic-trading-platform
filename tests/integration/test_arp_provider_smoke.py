@@ -141,7 +141,7 @@ def configure(owner, model, agent, binding):
     with owner.begin() as connection:
         config = Config("alembic.ini")
         config.attributes["connection"] = connection
-        command.upgrade(config, "0059_provider_status_time")
+        command.upgrade(config, "head")
         scopes = production_model_budget_scopes(
             agent.agent_id,
             agent.version,

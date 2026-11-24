@@ -10,6 +10,8 @@ depends_on = None
 
 def upgrade():
     op.execute("""
+    DO $ief_preferences$ BEGIN
+    IF current_database() = 'lab_paper_runtime' THEN RETURN; END IF;
     CREATE SCHEMA investment_experience;
     REVOKE ALL ON SCHEMA investment_experience FROM PUBLIC;
     GRANT USAGE ON SCHEMA investment_experience TO atl_control_api;
@@ -180,6 +182,7 @@ def upgrade():
       investment_experience.read_preference_receipt(text,text,text),
       investment_experience.update_preferences(text,text,text,bigint,boolean,jsonb)
       TO atl_control_api;
+    END $ief_preferences$;
     """)
 
 

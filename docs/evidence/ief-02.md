@@ -24,3 +24,9 @@ Die menschliche Prüfung für IEF-T-O05 erfolgt in IEF-09. Automatisierte Ergebn
 - Angular-Produktionsbuild bestanden. 18 Chromium-Prüfungen zu Onboarding, Prototyp, Hosting und Barrierefreiheit bestanden. Der Browser verwendet einen synthetischen HTTP-Testserver. Der erste Lauf identifizierte einen veralteten Aktivierungspfad in der Testassertion. Nach Anpassung an den kanonischen Pfad bestanden alle 18 Tests. Die vorhandene Supervisor-CSS-Budgetwarnung bleibt bestehen.
 - Unabhängiger Backend-Review fand einen P2 beim Replay während einer Demo-Störung. Die Prüfung des persistierten Belegs erfolgt jetzt vor der Demo-Abfrage. HTTP- und SQL-Nachtests bestätigen den korrigierten Pfad.
 - JUnit-SHA256 des finalen PostgreSQL-Falls: `43bf2b947c32c181547ff853a434bac5dc5b7882ad023f9a7bf71d5a506c4928`.
+
+## Integrationskorrektur nach erster Remote-CI
+
+Research integration auf `fdb33be` deckte zwei Annahmen zum alten Migrationskopf auf. Die Paper-ACL-Prüfung akzeptiert Revision 0060 mit exakt demselben Berechtigungsmanifest wie 0059. Migration 0060 führt im isolierten Paper-Ledger keine Präferenz-DDL aus. Die ARP-Release-/Rollback-Fixture aktualisiert den temporären Testbestand auf den aktuellen Migrationskopf.
+
+Lokal bestanden 43 Unit-Fälle sowie vier echte Docker/PostgreSQL-Regressionen in 216,32 Sekunden: Präferenzspeicher samt Replay, ARP-Provider-Smoke, ARP-Release-Rollback und Quant-Worker-/Paper-Isolation einschließlich OOM-Recovery. JUnit-SHA256: `39997ffcbfc7e358182867ee516d3221fe870b0d8265fcb918aa074af6059055`. Der Contracts-Workflow auf `fdb33be` war grün. Die Freigabe erfordert beide Workflows auf dem Korrekturcommit.
