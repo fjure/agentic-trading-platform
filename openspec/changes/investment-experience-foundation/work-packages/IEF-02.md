@@ -49,6 +49,6 @@ Eigene Component-/API-/SQL-/Securityprüfungen und betroffene Regressionen mit Q
 
 ## Apply-Status
 
-Guided Onboarding lokal umgesetzt. Browser-, Vertrags- und PostgreSQL-Nachweise liegen vor. Remote-CI und Integration stehen aus. Die menschliche Onboardingprüfung findet in IEF-09 statt.
+Guided Onboarding technisch abgeschlossen und mit Merge `0f18d0291059759544fd2c7c1bc98c0d568019d8` in main integriert. [Contracts](https://github.com/fjure/agentic-trading-platform/actions/runs/45405586419) und [Research integration](https://github.com/fjure/agentic-trading-platform/actions/runs/45405586547) bestanden auf `dd482c5bbf33cfd58d6f99ae37af7fd7d34082da`. Die menschliche Onboardingprüfung findet in IEF-09 statt.
 
 Prüfevidenz, konkreter Dependencyblocker und Wiederanlauf: `docs/evidence/ief-apply-status.md`. Keine Änderung normativer Anforderungen oder Abnahmeschwellen. Issue und Taskcheckbox bleiben bis zur vollständigen Definition of Done offen.

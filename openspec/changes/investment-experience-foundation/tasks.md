@@ -1,6 +1,6 @@
 # Tasks
 
-Alle Pakete sind offen. Gesonderter Applyauftrag erforderlich; Abhängigkeiten und konkrete Abnahme stehen in den verlinkten Work Packages.
+Die verlinkten Work Packages enthalten Abhängigkeiten und Abnahmekriterien. Der Stand ist an den Aufgaben und den Paketnachweisen abzulesen.
 
 ## 1. Experience Architecture und API Contracts
 
@@ -8,7 +8,7 @@ Alle Pakete sind offen. Gesonderter Applyauftrag erforderlich; Abhängigkeiten u
 
 ## 2. Guided Onboarding
 
-- [ ] 2.1 [IEF-02](work-packages/IEF-02.md) Actor-gebundene versionierte Präferenzen, strukturierte freiwillige Fragen, skip/complete/unseen, Resume/Reset und Demoauswahl; Materialstepper mit Status-/Fehleransage. Backend und UI zusammen liefern. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen. Testfähige Onboarding-Teilstrecke für den menschlichen Nachweis IEF-T-O05 in IEF-09 bereitstellen.
+- [x] 2.1 [IEF-02](work-packages/IEF-02.md) Actor-gebundene versionierte Präferenzen, strukturierte freiwillige Fragen, skip/complete/unseen, Resume/Reset und Demoauswahl; Materialstepper mit Status-/Fehleransage. Backend und UI zusammen liefern. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen. Testfähige Onboarding-Teilstrecke für den menschlichen Nachweis IEF-T-O05 in IEF-09 bereitstellen.
 
 ## 3. Portfolio Hub
 
