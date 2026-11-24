@@ -290,6 +290,7 @@ def run_api(config, ledger, telemetry=None):
     from services.control_api.collection_client import CollectionClient
     from services.control_api.demo_client import DemoClient
     from services.control_api.events import EventFeed
+    from services.control_api.investment_preferences_store import InvestmentPreferencesStore
     from services.control_api.paper_client import PaperClient
     from services.control_api.readiness_client import ReadinessClient
     from services.control_api.research_client import AgentResearchClient, ResearchClient
@@ -337,6 +338,7 @@ def run_api(config, ledger, telemetry=None):
         health=health,
         delivery_observer=sampler.delivered if sampler else None,
         demo=DemoClient(),
+        preferences=InvestmentPreferencesStore(ledger),
         setup=FixedSetupClient(),
         trading_profile=TradingProfileBackend(ledger, config.account_id),
         paper=PaperClient(),

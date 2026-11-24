@@ -49,6 +49,6 @@ Eigene Component-/API-/SQL-/Securityprüfungen und betroffene Regressionen mit Q
 
 ## Apply-Status
 
-Nicht begonnen. Voraussetzung ist der technische Abschluss von IEF-01. Die menschliche Onboardingprüfung findet in IEF-09 statt.
+Guided Onboarding lokal umgesetzt. Browser-, Vertrags- und PostgreSQL-Nachweise liegen vor. Remote-CI und Integration stehen aus. Die menschliche Onboardingprüfung findet in IEF-09 statt.
 
 Prüfevidenz, konkreter Dependencyblocker und Wiederanlauf: `docs/evidence/ief-apply-status.md`. Keine Änderung normativer Anforderungen oder Abnahmeschwellen. Issue und Taskcheckbox bleiben bis zur vollständigen Definition of Done offen.

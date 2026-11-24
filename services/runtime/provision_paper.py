@@ -292,6 +292,7 @@ def _dormant_privilege_manifest(revisions):
         "0052_quant_prepare_read", "0053_quant_prepare_intent", "0054_quant_prepare_handoff",
         "0055_quant_prepare_approval", "0056_provider_authority", "0057_model_budget_periods",
         "0058_provider_smoke", "0059_provider_status_time",
+        "0060_investment_preferences",
     )
     quant_validation_revision = (
         revisions == [("0036_quant_validation_attempts",)] or apf_revision in apf_revisions

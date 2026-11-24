@@ -74,6 +74,8 @@ const snapshot = object({
   asOf: timestamp, cursor, mode: modeState, paperAccount: text(256),
   connections: map(enumeration('HEALTHY', 'DEGRADED', 'UNAVAILABLE'), 32),
   portfolioEquity: decimal, workers: array(agentRun), recentOrders: array(order),
+  portfolioCash: optional(decimal),
+  positions: optional(array(object({ instrument: text(96), quantity: decimal, averagePrice: optional(decimal) }))),
 });
 
 const marketState = object({

@@ -37,7 +37,7 @@ test('IEF actual text and primary action meet normal-text contrast', async ({ pa
 test('IEF 200 percent text enlargement preserves representative mobile and desktop screens', async ({ page }) => {
   for (const width of [360, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    for (const path of ['/home', '/onboarding', '/paper/orders/new?phase=status&status=UNKNOWN&context=PAPER']) {
+    for (const path of ['/home', '/prototype/onboarding', '/paper/orders/new?phase=status&status=UNKNOWN&context=PAPER']) {
       await page.goto(path);
       // Explicit text enlargement; this is not a claim of browser-chrome zoom certification.
       await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
