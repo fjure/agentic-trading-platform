@@ -12,7 +12,7 @@ import pytest
 import yaml
 from jsonschema import Draft202012Validator
 
-from scripts.contract_stages import pending_contract_operations
+from scripts.contract_stages import IEF_OPERATION_MATRIX, pending_contract_operations
 from services.control_api.app import create_app
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -176,6 +176,12 @@ def test_existing_legacy_http_paths_are_unchanged():
     new_paths = {path for path, _, _ in D7.values()} | {
         "/api/v1/integrations/research-provider-readiness"
     }
+    ief_paths = {entry["path"] for entry in IEF_OPERATION_MATRIX.values()}
+    for path in ief_paths:
+        assert set(OAS["paths"][path]) == {
+            entry["method"] for entry in IEF_OPERATION_MATRIX.values() if entry["path"] == path
+        }
+    new_paths.update(ief_paths)
     apf_prefixes = (
         "/api/v1/research/agent/",
         "/api/v1/integrations/research-providers/",

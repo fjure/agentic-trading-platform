@@ -1,0 +1,14 @@
+{
+  "expectedVersion": 1,
+  "reset": false,
+  "experienceLevel": "UNSPECIFIED",
+  "goals": [],
+  "horizon": "UNSPECIFIED",
+  "lossTolerance": "UNSPECIFIED",
+  "contextReference": {
+    "context": "DEMO",
+    "namespace": "demo",
+    "demoRunId": "synthetic-demo-run-1"
+  },
+  "onboardingSteps": []
+}

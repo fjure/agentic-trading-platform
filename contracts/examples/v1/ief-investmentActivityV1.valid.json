@@ -1,0 +1,18 @@
+{
+  "activityId": "synthetic-fixture-",
+  "occurredAt": "2026-11-23T12:00:00Z",
+  "contextReference": {
+    "context": "DEMO",
+    "namespace": "demo",
+    "demoRunId": "synthetic-demo-run-1"
+  },
+  "kind": "ANALYSIS",
+  "title": "synthetic-fixture-",
+  "sourceReference": {
+    "kind": "SNAPSHOT",
+    "id": "synthetic-fixture-",
+    "version": 1
+  },
+  "reasonCodes": [],
+  "allowedActions": []
+}

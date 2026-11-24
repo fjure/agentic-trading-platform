@@ -122,8 +122,11 @@ def test_fixture_suite_covers_distinct_research_states_and_required_observations
 def test_legacy_components_and_standalone_contracts_remain_frozen():
     # Literal pre-QSL baseline, captured from HEAD before authoring QSL-01.
     # In particular this prevents widening the old strategy unions for EMA/RSI.
+    from scripts.contract_stages import IEF_PAPER_SCHEMAS
+
     legacy = {
         name: schema for name, schema in OAS["components"]["schemas"].items()
+        if name not in IEF_PAPER_SCHEMAS and not name.startswith(("Investment", "PortfolioProcessing"))
         if name == "AgentRun" or not name.startswith(("QuantLab", "Agent", "Processing",
                                                       "ResearchHypothesisInterpretationV1",
                                                       "ResearchProviderReadinessV1",

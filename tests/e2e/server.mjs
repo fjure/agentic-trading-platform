@@ -340,6 +340,13 @@ async function staticFile(res, url) {
     res.writeHead(200, { 'Content-Type': mime[extname(target)] ?? 'application/octet-stream', 'Cache-Control': 'no-store' });
     return res.end(data);
   } catch {
+    // Mirror the real bridge's SPA fallback for nested, read-only UI deep links.
+    // Missing assets and API paths must still fail rather than become HTML success.
+    if (!extname(pathname)) {
+      const data = await readFile(join(browserRoot, 'index.html'));
+      res.writeHead(200, { 'Content-Type': mime['.html'], 'Cache-Control': 'no-store' });
+      return res.end(data);
+    }
     return problem(res, 404, 'INVALID_REQUEST', 'Built dashboard missing');
   }
 }
@@ -350,8 +357,16 @@ createServer(async (req, res) => {
       return problem(res, 403, 'INVALID_REQUEST', 'Loopback only');
     }
     const url = new URL(req.url, origin);
+    let decodedPath;
+    try { decodedPath = decodeURIComponent(url.pathname); }
+    catch { return problem(res, 400, 'INVALID_REQUEST', 'Invalid path encoding'); }
+    if (decodedPath !== url.pathname && (decodedPath === '/api' || decodedPath.startsWith('/api/'))) {
+      return problem(res, 404, 'INVALID_REQUEST', 'Encoded API route not found');
+    }
     if (url.pathname.startsWith('/__test/')) return await testControl(req, res, url);
     if (url.pathname.startsWith('/api/v1/')) return await api(req, res, url);
+    if (url.pathname === '/api' || url.pathname.startsWith('/api/')) return problem(res, 404, 'INVALID_REQUEST', 'API route not found');
+    if (!['GET', 'HEAD'].includes(req.method)) return problem(res, 405, 'INVALID_REQUEST', 'UI routes are read-only');
     return await staticFile(res, url);
   } catch {
     problem(res, 500, 'TEMPORARILY_UNAVAILABLE', 'Synthetic fixture failed');

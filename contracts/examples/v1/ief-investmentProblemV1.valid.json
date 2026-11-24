@@ -1,0 +1,7 @@
+{
+  "type": "https://agentic-trading-lab.invalid/problems/invalid-request",
+  "title": "synthetic-fixture-",
+  "status": 401,
+  "code": "LEDGER_NOT_PREPARED",
+  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
+}

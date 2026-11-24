@@ -12,7 +12,9 @@ CONTRACT = "contracts/http/control-api.openapi.yaml"
 
 
 def git(*args: str) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True)
+    return subprocess.run(
+        ["git", *args], cwd=ROOT, capture_output=True, text=True, encoding="utf-8"
+    )
 
 
 def verified_unborn() -> bool:

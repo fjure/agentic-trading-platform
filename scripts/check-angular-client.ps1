@@ -219,6 +219,22 @@ if (-not $SkipCompile) {
     $fixtures += '// @ts-expect-error Uploaded or dynamic strategies are never accepted.'
     $fixtures += 'const uploadedQuantStrategy: QuantLabStrategyId = "python-upload";'
     [IO.File]::WriteAllLines((Join-Path $tooling 'client-contract-fixtures.generated.ts'), $fixtures)
+    $iefFixtures = Get-Content -LiteralPath (Join-Path $root 'contracts/examples/v1/ief-fixtures.json') -Raw | ConvertFrom-Json -AsHashtable
+    foreach ($entry in $iefFixtures.GetEnumerator()) {
+        $model = $entry.Value
+        $modelFile = $model.Substring(0, 1).ToLowerInvariant() + $model.Substring(1)
+        $fixtures += "import type { $model as IefFixtureType$fixtureIndex } from './generated-a/model/$modelFile';"
+        $literal = Get-Content -LiteralPath (Join-Path $root ('contracts/examples/v1/' + $entry.Key)) -Raw
+        $fixtures += "const iefFixture$fixtureIndex : IefFixtureType$fixtureIndex = $literal;"
+        $fixtureIndex++
+    }
+    $fixtures += "import type { PortfolioProcessingPreviewRequestV1 } from './generated-a/model/portfolioProcessingPreviewRequestV1';"
+    $fixtures += '// @ts-expect-error Portfolio purpose cannot reuse hypothesis permission.'
+    $fixtures += 'const invalidPortfolioPurpose: PortfolioProcessingPreviewRequestV1 = { purpose: "HYPOTHESIS_INTERPRETATION_V1", expectedAnalysisVersion: 1, profileId: "fixture" };'
+    $fixtures += "import type { PaperGuidedLimitOrderRequestV1 } from './generated-a/model/paperGuidedLimitOrderRequestV1';"
+    $fixtures += '// @ts-expect-error Guided commit requires explicit human confirmation.'
+    $fixtures += 'const missingPaperConfirmation: PaperGuidedLimitOrderRequestV1 = { previewId: "fixture", expectedPreviewVersion: 1, requestHash: "fixture", accountGeneration: 1 };'
+    [IO.File]::WriteAllLines((Join-Path $tooling 'client-contract-fixtures.generated.ts'), $fixtures)
     $tsc = Join-Path $tooling 'node_modules/.bin/tsc.cmd'
     if (-not (Test-Path -LiteralPath $tsc)) { throw 'Pinned TypeScript compiler is missing.' }
     & $tsc --project (Join-Path $tooling 'tsconfig.generated.json') --noEmit

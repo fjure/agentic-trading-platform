@@ -1,0 +1,7 @@
+{
+  "currency": "USD",
+  "reserved": "1.25",
+  "settled": "1.25",
+  "costState": "NOT_INCURRED",
+  "reasonCodes": []
+}

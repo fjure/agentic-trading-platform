@@ -46,6 +46,11 @@ import { AgentScheduleCommandV1 } from '../model/models';
 import { AgentScheduleUpdateV1 } from '../model/models';
 import { AgentScheduleV1 } from '../model/models';
 import { AgentSendAcceptedV1 } from '../model/models';
+import { InvestmentProblemV1 } from '../model/models';
+import { PortfolioProcessingDecisionV1 } from '../model/models';
+import { PortfolioProcessingPreviewRequestV1 } from '../model/models';
+import { PortfolioProcessingPreviewV1 } from '../model/models';
+import { PortfolioProcessingStatusV1 } from '../model/models';
 import { ProcessingDecisionV1 } from '../model/models';
 import { ProcessingPreviewRequestV1 } from '../model/models';
 import { ProcessingPreviewV1 } from '../model/models';
@@ -120,6 +125,16 @@ export interface AgentResearchServiceInterface {
     createAgentProcessingPreview(id: string, turnId: string, idempotencyKey: string, processingPreviewRequestV1: ProcessingPreviewRequestV1, extraHttpRequestParams?: any): Observable<ProcessingPreviewV1>;
 
     /**
+     * createPortfolioProcessingPreview
+     * IEF additive contract; runtime capability requires IEF-04. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+     * @endpoint post /api/v1/research/agent/portfolio-analyses/{analysisId}/processing-previews
+     * @param analysisId 
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param portfolioProcessingPreviewRequestV1 
+     */
+    createPortfolioProcessingPreview(analysisId: string, idempotencyKey: string, portfolioProcessingPreviewRequestV1: PortfolioProcessingPreviewRequestV1, extraHttpRequestParams?: any): Observable<PortfolioProcessingPreviewV1>;
+
+    /**
      * Record a research decision
      * Requires an active local session and a same-origin JSON request. A decision binds the current idea, dialogue and exact proposal. It neither authorizes provider dispatch nor grants experiment approval.
      * @endpoint post /api/v1/research/agent/dialogues/{id}/decisions
@@ -149,6 +164,16 @@ export interface AgentResearchServiceInterface {
      * @param agentQuantApprovalDecisionV1 
      */
     decideAgentQuantApproval(id: string, idempotencyKey: string, agentQuantApprovalDecisionV1: AgentQuantApprovalDecisionV1, extraHttpRequestParams?: any): Observable<AgentQuantApprovalRejectedV1>;
+
+    /**
+     * decidePortfolioProcessing
+     * IEF additive contract; runtime capability requires IEF-04. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+     * @endpoint post /api/v1/research/agent/portfolio-analyses/{analysisId}/processing-decisions
+     * @param analysisId 
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param portfolioProcessingDecisionV1 
+     */
+    decidePortfolioProcessing(analysisId: string, idempotencyKey: string, portfolioProcessingDecisionV1: PortfolioProcessingDecisionV1, extraHttpRequestParams?: any): Observable<PortfolioProcessingStatusV1>;
 
     /**
      * Resume a visible research dialogue
@@ -218,6 +243,14 @@ export interface AgentResearchServiceInterface {
      * @endpoint get /api/v1/research/agent/schedule
      */
     getAgentSchedule(extraHttpRequestParams?: any): Observable<AgentScheduleV1>;
+
+    /**
+     * getPortfolioProcessingStatus
+     * IEF additive contract; runtime capability requires IEF-04. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+     * @endpoint get /api/v1/research/agent/portfolio-analyses/{analysisId}/processing
+     * @param analysisId 
+     */
+    getPortfolioProcessingStatus(analysisId: string, extraHttpRequestParams?: any): Observable<PortfolioProcessingStatusV1>;
 
     /**
      * Get research provider readiness and catalog evidence

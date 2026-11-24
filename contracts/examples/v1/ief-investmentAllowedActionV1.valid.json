@@ -1,0 +1,9 @@
+{
+  "kind": "OPEN_PORTFOLIO",
+  "resource": {
+    "kind": "SNAPSHOT",
+    "id": "synthetic-fixture-",
+    "version": 1
+  },
+  "reasonCodes": []
+}

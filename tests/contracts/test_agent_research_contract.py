@@ -10,7 +10,11 @@ from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
 
 from scripts.contract_formats import contract_formats
-from scripts.contract_stages import AGENT_RESEARCH_OPERATIONS, pending_contract_operations
+from scripts.contract_stages import (
+    AGENT_RESEARCH_OPERATIONS,
+    IEF_OPERATION_MATRIX,
+    pending_contract_operations,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 OAS = yaml.safe_load((ROOT / "contracts/http/control-api.openapi.yaml").read_text("utf-8"))
@@ -84,11 +88,32 @@ def test_apf_contract_stage_matches_public_routes():
         for method, operation in item.items()
         if method in {"get", "post", "put"}
     }
-    assert public_ids == AGENT_RESEARCH_OPERATIONS.keys()
+    # Shared transport namespace: partition only exact matrix-bound IEF operations.
+    # Unknown IDs and moved routes still fail; no prefix-wide exclusion is allowed.
+    ief_routes = {
+        (entry["path"], entry["method"], operation_id)
+        for operation_id, entry in IEF_OPERATION_MATRIX.items()
+        if entry["path"].startswith(prefixes)
+    }
+    assert {operation_id for _, _, operation_id in ief_routes} == {
+        "createPortfolioProcessingPreview", "getPortfolioProcessingStatus",
+        "decidePortfolioProcessing",
+    }
+    actual_routes = {
+        (path, method, operation["operationId"])
+        for path, item in OAS["paths"].items()
+        if path.startswith(prefixes)
+        for method, operation in item.items()
+        if method in {"get", "post", "put"}
+    }
+    assert ief_routes <= actual_routes
+    ief_ids = {operation_id for _, _, operation_id in ief_routes}
+    assert not ief_ids & AGENT_RESEARCH_OPERATIONS.keys()
+    assert public_ids == AGENT_RESEARCH_OPERATIONS.keys() | ief_ids
     task = "8.1 [APF-08 Control API]"
     pending = pending_contract_operations(agent_research_tasks_text=f"- [ ] {task}")
     done = pending_contract_operations(agent_research_tasks_text=f"- [x] {task}")
-    assert pending - done == public_ids
+    assert pending - done == AGENT_RESEARCH_OPERATIONS.keys()
 
 
 @pytest.mark.parametrize("suffix, methods", OPERATIONS.items())

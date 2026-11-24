@@ -7,6 +7,7 @@ import pytest
 import yaml
 from fastapi.testclient import TestClient
 
+from scripts.contract_stages import IEF_OPERATION_MATRIX, pending_contract_operations
 from services.control_api.agent_research_routes import (
     OPERATIONS,
     PROVIDER_READINESS,
@@ -137,14 +138,30 @@ def test_wire_registry_and_mounted_routes_match_openapi():
         for method, op in item.items()
         if method in {"get", "post", "put"}
     }
-    assert {(op.path, op.method, op.operation_id) for op in OPERATIONS} == expected.keys()
+    # APF owns its wire registry; IEF shares the transport with three exact new routes.
+    # Only pending operations from the bounded matrix may be absent at runtime.
+    ief_routes = {
+        (entry["path"], entry["method"].upper(), operation_id)
+        for operation_id, entry in IEF_OPERATION_MATRIX.items()
+        if entry["path"].startswith(prefixes)
+    }
+    assert {operation_id for _, _, operation_id in ief_routes} == {
+        "createPortfolioProcessingPreview", "getPortfolioProcessingStatus",
+        "decidePortfolioProcessing",
+    }
+    assert ief_routes <= expected.keys()
+    assert {(op.path, op.method, op.operation_id) for op in OPERATIONS} == (
+        expected.keys() - ief_routes
+    )
+    pending = pending_contract_operations()
+    pending_ief_routes = {route for route in ief_routes if route[2] in pending}
     actual = {
         (route.path, method, route.operation_id)
         for route in create_app().routes
         if route.path.startswith(prefixes)
         for method in route.methods
     }
-    assert actual == expected.keys()
+    assert actual == expected.keys() - pending_ief_routes
     for operation in OPERATIONS:
         contract = expected[operation.path, operation.method, operation.operation_id]
         request = contract.get("requestBody", {}).get("content", {}).get("application/json")

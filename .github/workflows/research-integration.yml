@@ -6,7 +6,7 @@ on:
     types: [checks_requested]
     branches: [main]
   push:
-    branches: [main, 'codex/ptv-*-arp-*']
+    branches: [main, 'codex/ptv-*-arp-*', 'codex/ptv-*-ief-*']
     tags: ['v*']
   workflow_dispatch:
 
@@ -118,6 +118,8 @@ jobs:
             case "$GATE" in
               fast) .venv/bin/python -m pytest \
                 tests/contracts/test_agent_research_contract.py \
+                tests/unit/test_ief_frontend_boundary.py \
+                tests/unit/test_agent_processing_projection.py \
                 tests/unit/test_provider_discovery_dispatch.py \
                 tests/unit/test_llm_provider_http.py \
                 tests/unit/test_llm_dispatch_journal.py \

@@ -16,12 +16,14 @@
       ],
       "dependsOn": [],
       "path": "work-packages/IEF-01.md",
-      "state": "planned",
+      "state": "open",
       "issueNumber": 107,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/107",
       "issueId": 6561573630,
-      "contentHash": "8b6eb9fa893e88317c9bb7668f2e76fbdbb802058428a24787f44f48f9f6b053",
-      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
+      "contentHash": "4e9815a15d5c5cccbadae96dcc8c6b7c83f55c1f96b79cb8e8b61a69f0584531",
+      "syncedAt": "2026-11-24T09:00:57.110885+00:00",
+      "applyStatus": "TECHNICAL_INTEGRATION_PENDING",
+      "implementationEvidence": "docs/evidence/ief-apply-status.md"
     },
     {
       "taskId": "IEF-02",
@@ -34,12 +36,14 @@
         "IEF-01"
       ],
       "path": "work-packages/IEF-02.md",
-      "state": "planned",
+      "state": "open",
       "issueNumber": 108,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/108",
       "issueId": 6561574342,
-      "contentHash": "7c559fd3faada814816cd71356e59aa577237905f280e44b91519dbce95104b7",
-      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
+      "contentHash": "066811280084adbcf910c92e891c761c6931b40156ec6465e1c21035c6472e60",
+      "syncedAt": "2026-11-24T09:00:57.110885+00:00",
+      "applyStatus": "TECHNICAL_DEPENDENCIES_PENDING",
+      "implementationEvidence": "docs/evidence/ief-apply-status.md"
     },
     {
       "taskId": "IEF-03",
@@ -52,12 +56,14 @@
         "IEF-01"
       ],
       "path": "work-packages/IEF-03.md",
-      "state": "planned",
+      "state": "open",
       "issueNumber": 109,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/109",
       "issueId": 6561575190,
-      "contentHash": "be4019cebaaf528892a9c927feb3b62dc5d9f1b14f9d81910135e0d0facc9b6d",
-      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
+      "contentHash": "9e80ef1f3a8b55d83f3d4aa72d01fafd4e6b5b2e97e9865537b22d57f27cc7f1",
+      "syncedAt": "2026-11-24T09:00:57.110885+00:00",
+      "applyStatus": "TECHNICAL_DEPENDENCIES_PENDING",
+      "implementationEvidence": "docs/evidence/ief-apply-status.md"
     },
     {
       "taskId": "IEF-04",
@@ -72,12 +78,14 @@
         "ARP-10"
       ],
       "path": "work-packages/IEF-04.md",
-      "state": "planned",
+      "state": "open",
       "issueNumber": 110,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/110",
       "issueId": 6561575866,
-      "contentHash": "3d7b796de9341dd876152a5c3af3a3e91c9d0f1c16c6217f81002ebe96b29ee6",
-      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
+      "contentHash": "a38427c259530893c1cb6fb49539611d1996a3175d78996c847330060e0cab4c",
+      "syncedAt": "2026-11-24T09:00:57.110885+00:00",
+      "applyStatus": "TECHNICAL_DEPENDENCIES_PENDING",
+      "implementationEvidence": "docs/evidence/ief-apply-status.md"
     },
     {
       "taskId": "IEF-05",
@@ -91,12 +99,14 @@
         "IEF-01"
       ],
       "path": "work-packages/IEF-05.md",
-      "state": "planned",
+      "state": "open",
       "issueNumber": 111,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/111",
       "issueId": 6561576576,
-      "contentHash": "9e5c834cd59d5943cd569c1eda7e535466105b4012a2f2aa052fc423d928a3fe",
-      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
+      "contentHash": "2cf3c8c99b4c279208e0a0d4db715831011b2e5258e8098bce3bcea10dadff16",
+      "syncedAt": "2026-11-24T09:00:57.110885+00:00",
+      "applyStatus": "TECHNICAL_DEPENDENCIES_PENDING",
+      "implementationEvidence": "docs/evidence/ief-apply-status.md"
     },
     {
       "taskId": "IEF-06",
@@ -113,12 +123,14 @@
         "ARP-10"
       ],
       "path": "work-packages/IEF-06.md",
-      "state": "planned",
+      "state": "open",
       "issueNumber": 112,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/112",
       "issueId": 6561577273,
-      "contentHash": "4fac1b31fb92e4027233105ccd2fd029103c0aa76a9b835914bb69dca3de4f50",
-      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
+      "contentHash": "b7e634526cfedc9408876750c948f1e30c92e0abf53ec2ac438988c7ffb5dd19",
+      "syncedAt": "2026-11-24T09:00:57.110885+00:00",
+      "applyStatus": "TECHNICAL_DEPENDENCIES_PENDING",
+      "implementationEvidence": "docs/evidence/ief-apply-status.md"
     },
     {
       "taskId": "IEF-07",
@@ -134,12 +146,14 @@
         "IEF-05"
       ],
       "path": "work-packages/IEF-07.md",
-      "state": "planned",
+      "state": "open",
       "issueNumber": 113,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/113",
       "issueId": 6561577997,
-      "contentHash": "9c41c92b24f74c2aa3a20d135d6c1e4af986441f2b6a9082dd04870decd584dd",
-      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
+      "contentHash": "308beb3af53146a0cfb062e3bcaa6780b3b4e2a2d921f1136acd934f5ac02a3b",
+      "syncedAt": "2026-11-24T09:00:57.110885+00:00",
+      "applyStatus": "TECHNICAL_DEPENDENCIES_PENDING",
+      "implementationEvidence": "docs/evidence/ief-apply-status.md"
     },
     {
       "taskId": "IEF-08",
@@ -158,12 +172,14 @@
         "IEF-07"
       ],
       "path": "work-packages/IEF-08.md",
-      "state": "planned",
+      "state": "open",
       "issueNumber": 114,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/114",
       "issueId": 6561578646,
-      "contentHash": "fb70f25d755203749fa03e6b5728bb9502047054d8ccd8876156ab076a732464",
-      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
+      "contentHash": "30302075dc8d7e92dc86407f4df118927753a3a8729b6181cea97cd2a5925ade",
+      "syncedAt": "2026-11-24T09:00:57.110885+00:00",
+      "applyStatus": "TECHNICAL_DEPENDENCIES_PENDING",
+      "implementationEvidence": "docs/evidence/ief-apply-status.md"
     },
     {
       "taskId": "IEF-09",
@@ -183,12 +199,14 @@
         "ARP-10"
       ],
       "path": "work-packages/IEF-09.md",
-      "state": "planned",
+      "state": "open",
       "issueNumber": 115,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/115",
       "issueId": 6561579331,
-      "contentHash": "9bfbffc1a0fbb33a9d006ba8c824f783c6eb062bde4d636507728edec8e733e1",
-      "syncedAt": "2026-11-23T14:54:09.129298+00:00"
+      "contentHash": "7e8f5e555dff03de67496ac1789f34e6ed38538f23d20d5adb2efafa955fb25c",
+      "syncedAt": "2026-11-24T09:00:57.110885+00:00",
+      "applyStatus": "HUMAN_UX_VALIDATION_PENDING",
+      "implementationEvidence": "docs/evidence/ief-apply-status.md"
     }
   ],
   "syncSummary": {
@@ -383,5 +401,53 @@
     "unchanged": 3,
     "dependencyWrites": 0,
     "nativeEdgesVerifiedBothDirections": 26
-  }
+  },
+  "lastApplySync": {
+    "created": 0,
+    "updated": 9,
+    "unchanged": 0,
+    "duplicates": 0,
+    "closed": 0,
+    "open": 9,
+    "nativeEdges": 26,
+    "bothDirectionsVerified": true,
+    "verifiedAt": "2026-11-24T09:00:57.110885+00:00"
+  },
+  "applySyncHistory": [
+    {
+      "created": 0,
+      "updated": 9,
+      "unchanged": 0,
+      "duplicates": 0,
+      "closed": 0,
+      "open": 9,
+      "nativeEdges": 26,
+      "bothDirectionsVerified": true,
+      "verifiedAt": "2026-11-23T20:45:10.778378+00:00"
+    },
+    {
+      "created": 0,
+      "updated": 0,
+      "unchanged": 9,
+      "duplicates": 0,
+      "closed": 0,
+      "open": 9,
+      "nativeEdges": 26,
+      "bothDirectionsVerified": true,
+      "verifiedAt": "2026-11-23T20:46:52.715418+00:00"
+    },
+    {
+      "created": 0,
+      "updated": 9,
+      "unchanged": 0,
+      "duplicates": 0,
+      "closed": 0,
+      "open": 9,
+      "nativeEdges": 26,
+      "bothDirectionsVerified": true,
+      "verifiedAt": "2026-11-24T09:00:57.110885+00:00"
+    }
+  ],
+  "applyTransport": "GitHub MCP update403 FORBIDDEN; authorized GH CLI fallback",
+  "applyStatus": "HUMAN_UX_VALIDATION_PENDING"
 }

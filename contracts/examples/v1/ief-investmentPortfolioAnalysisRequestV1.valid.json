@@ -1,0 +1,9 @@
+{
+  "contextReference": {
+    "context": "DEMO",
+    "namespace": "demo",
+    "demoRunId": "synthetic-demo-run-1"
+  },
+  "snapshotId": "synthetic-fixture-",
+  "expectedSnapshotVersion": 1
+}

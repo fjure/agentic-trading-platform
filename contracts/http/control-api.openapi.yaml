@@ -31,6 +31,8 @@ tags:
   description: Operator-controlled research with isolated external processing.
 - name: Agent provider setup
   description: Local write-only credential setup for research providers.
+- name: Experience
+  description: Bounded local investment projections; no provider or trade authority.
 paths:
   /health:
     get:
@@ -10710,6 +10712,1318 @@ paths:
           $ref: '#/components/responses/AgentProcessing429'
         '503':
           $ref: '#/components/responses/AgentProcessing503'
+  /api/v1/experience/preferences:
+    get:
+      tags:
+      - Experience
+      operationId: getInvestmentPreferences
+      summary: getInvestmentPreferences
+      description: IEF additive contract; runtime capability requires IEF-02. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters: []
+      responses:
+        '200':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentPreferencesV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+    put:
+      tags:
+      - Experience
+      operationId: updateInvestmentPreferences
+      summary: updateInvestmentPreferences
+      description: IEF additive contract; runtime capability requires IEF-02. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentPreferencesV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvestmentPreferencesUpdateV1'
+  /api/v1/experience/portfolio:
+    get:
+      tags:
+      - Experience
+      operationId: getInvestmentPortfolio
+      summary: getInvestmentPortfolio
+      description: IEF additive contract; runtime capability requires IEF-03. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - name: context
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/InvestmentContextV1'
+      - name: demoRunId
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      responses:
+        '200':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentPortfolioViewV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+  /api/v1/experience/portfolio-analyses:
+    post:
+      tags:
+      - Experience
+      operationId: createInvestmentPortfolioAnalysis
+      summary: createInvestmentPortfolioAnalysis
+      description: IEF additive contract; runtime capability requires IEF-04. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentPortfolioAnalysisV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvestmentPortfolioAnalysisRequestV1'
+  /api/v1/experience/portfolio-analyses/{analysisId}:
+    get:
+      tags:
+      - Experience
+      operationId: getInvestmentPortfolioAnalysis
+      summary: getInvestmentPortfolioAnalysis
+      description: IEF additive contract; runtime capability requires IEF-04. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - name: analysisId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      responses:
+        '200':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentPortfolioAnalysisV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+  /api/v1/experience/insights:
+    get:
+      tags:
+      - Experience
+      operationId: getInvestmentInsights
+      summary: getInvestmentInsights
+      description: IEF additive contract; runtime capability requires IEF-04. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - name: context
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/InvestmentContextV1'
+      - name: demoRunId
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - name: snapshotId
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      responses:
+        '200':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentInsightsViewV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+  /api/v1/experience/strategies:
+    get:
+      tags:
+      - Experience
+      operationId: listInvestmentStrategies
+      summary: listInvestmentStrategies
+      description: IEF additive contract; runtime capability requires IEF-05. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - name: context
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/InvestmentContextV1'
+      - name: demoRunId
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 1024
+      responses:
+        '200':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentStrategyPageV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+  /api/v1/experience/strategies/{id}/versions/{version}:
+    get:
+      tags:
+      - Experience
+      operationId: getInvestmentStrategy
+      summary: getInvestmentStrategy
+      description: IEF additive contract; runtime capability requires IEF-05. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - name: version
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentRevision'
+      responses:
+        '200':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentStrategyViewV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+  /api/v1/experience/tasks:
+    get:
+      tags:
+      - Experience
+      operationId: listInvestmentTasks
+      summary: listInvestmentTasks
+      description: IEF additive contract; runtime capability requires IEF-06. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - name: context
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/InvestmentContextV1'
+      - name: demoRunId
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 1024
+      responses:
+        '200':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentTaskPageV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+  /api/v1/experience/tasks/{taskId}:
+    get:
+      tags:
+      - Experience
+      operationId: getInvestmentTask
+      summary: getInvestmentTask
+      description: IEF additive contract; runtime capability requires IEF-06. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      responses:
+        '200':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentTaskViewV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+  /api/v1/experience/activity:
+    get:
+      tags:
+      - Experience
+      operationId: listInvestmentActivity
+      summary: listInvestmentActivity
+      description: IEF additive contract; runtime capability requires IEF-08. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - name: context
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/InvestmentContextV1'
+      - name: demoRunId
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 1024
+      responses:
+        '200':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentActivityPageV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+  /api/v1/paper/order-previews:
+    post:
+      tags:
+      - Paper
+      operationId: createPaperLimitPreview
+      summary: createPaperLimitPreview
+      description: IEF additive contract; runtime capability requires IEF-07. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperLimitPreviewV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaperLimitPreviewRequestV1'
+  /api/v1/paper/guided-order-requests:
+    post:
+      tags:
+      - Paper
+      operationId: createPaperGuidedLimitOrderRequest
+      summary: createPaperGuidedLimitOrderRequest
+      description: IEF additive contract; runtime capability requires IEF-07. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '202':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperOperation'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaperGuidedLimitOrderRequestV1'
+  /api/v1/research/agent/portfolio-analyses/{analysisId}/processing-previews:
+    post:
+      tags:
+      - Agent research
+      operationId: createPortfolioProcessingPreview
+      summary: createPortfolioProcessingPreview
+      description: IEF additive contract; runtime capability requires IEF-04. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - name: analysisId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioProcessingPreviewV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortfolioProcessingPreviewRequestV1'
+  /api/v1/research/agent/portfolio-analyses/{analysisId}/processing:
+    get:
+      tags:
+      - Agent research
+      operationId: getPortfolioProcessingStatus
+      summary: getPortfolioProcessingStatus
+      description: IEF additive contract; runtime capability requires IEF-04. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - name: analysisId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      responses:
+        '200':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioProcessingStatusV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+  /api/v1/research/agent/portfolio-analyses/{analysisId}/processing-decisions:
+    post:
+      tags:
+      - Agent research
+      operationId: decidePortfolioProcessing
+      summary: decidePortfolioProcessing
+      description: IEF additive contract; runtime capability requires IEF-04. Current session and actor/context ownership
+        are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
+        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+      x-ief-requirements:
+      - IEF-C01
+      - IEF-P01
+      - IEF-A01
+      - IEF-G01
+      parameters:
+      - name: analysisId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Bounded result; no trade or provider authority is implied.
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioProcessingStatusV1'
+        '401':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '403':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '404':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '409':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '422':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '429':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+        '503':
+          description: Rejected without disclosing foreign resources.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/InvestmentProblemV1'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortfolioProcessingDecisionV1'
 components:
   securitySchemes:
     LocalSession:
@@ -29071,3 +30385,1980 @@ components:
               additionalProperties: true
       description: Bounded projection of the same report record; cursor binds batch/report/hash/section/session. Only
         the selected section is populated. No duplicate result payload or report store.
+    InvestmentContextV1:
+      type: string
+      enum:
+      - DEMO
+      - FAKE
+      - ALPACA_PAPER
+    InvestmentContextReferenceV1:
+      type: object
+      additionalProperties: false
+      required:
+      - context
+      - namespace
+      properties:
+        context:
+          $ref: '#/components/schemas/InvestmentContextV1'
+        namespace:
+          type: string
+          enum:
+          - demo
+          - fake
+          - alpaca-paper
+        demoRunId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+      allOf:
+      - if:
+          properties:
+            context:
+              type: string
+              enum:
+              - DEMO
+        then:
+          required:
+          - demoRunId
+          properties:
+            namespace:
+              type: string
+              enum:
+              - demo
+            demoRunId: {}
+        else:
+          not:
+            required:
+            - demoRunId
+            properties:
+              demoRunId: {}
+      - if:
+          properties:
+            context:
+              type: string
+              enum:
+              - FAKE
+        then:
+          properties:
+            namespace:
+              type: string
+              enum:
+              - fake
+      - if:
+          properties:
+            context:
+              type: string
+              enum:
+              - ALPACA_PAPER
+        then:
+          properties:
+            namespace:
+              type: string
+              enum:
+              - alpaca-paper
+    InvestmentReasonCodeV1:
+      type: string
+      enum:
+      - LEDGER_NOT_PREPARED
+      - VALUATION_NOT_AVAILABLE
+      - PERFORMANCE_HISTORY_NOT_AVAILABLE
+      - ADMISSION_PREVIEW_REQUIRED
+      - FEE_EVIDENCE_MISSING
+      - SNAPSHOT_INCONSISTENT
+      - SOURCE_REVISION_UNAVAILABLE
+      - STALE_EVIDENCE
+      - TOTAL_WORK_UNKNOWN
+      - CAPABILITY_UNAVAILABLE
+      - PROCESSING_GRANT_REQUIRED
+      - PROVIDER_UNAVAILABLE
+      - VERSION_CONFLICT
+      - IDEMPOTENCY_CONFLICT
+      - CURSOR_EXPIRED
+      - CONTEXT_MISMATCH
+      - RESOURCE_NOT_FOUND
+      - INVALID_REQUEST
+      - SESSION_REQUIRED
+      - REQUEST_FORBIDDEN
+      - PREVIEW_EXPIRED
+      - PREVIEW_CONSUMED
+      - RISK_PRECHECK_BLOCKED
+      - RISK_PRECHECK_UNAVAILABLE
+      - STRATEGY_INELIGIBLE
+      - METHOD_INPUTS_UNAVAILABLE
+      - NO_RESULTS
+      - OUTCOME_UNKNOWN
+      - CASH_OBSERVED
+      - EXPOSURE_OBSERVED
+      - POSITION_QUANTITY_OBSERVED
+      - VALUATION_COMPLETE
+      - CONCENTRATION_OBSERVED
+      - RECONCILIATION_REQUIRED
+      - QUALITY_CURRENT
+    InvestmentSourceReferenceV1:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - id
+      - version
+      properties:
+        kind:
+          type: string
+          enum:
+          - SNAPSHOT
+          - LEDGER
+          - POSITION
+          - MARKET_EVIDENCE
+          - RUN
+          - REPORT
+          - PORTFOLIO_ANALYSIS
+          - STRATEGY
+          - ORDER
+          - FILL
+          - OPERATION
+          - AUDIT
+          - EVIDENCE
+        id:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        version:
+          anyOf:
+          - $ref: '#/components/schemas/AgentRevision'
+          - type: 'null'
+    InvestmentAllowedActionV1:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - resource
+      - reasonCodes
+      properties:
+        kind:
+          type: string
+          enum:
+          - OPEN_PORTFOLIO
+          - OPEN_ANALYSIS
+          - OPEN_TASK
+          - OPEN_RUN
+          - OPEN_REPORT
+          - OPEN_STRATEGY
+          - OPEN_PROCESSING
+          - OPEN_APPROVAL
+          - OPEN_ORDER_STATUS
+          - OPEN_PAPER_SETUP
+          - PREPARE_PAPER_ORDER
+          - OPEN_OPERATIONS
+          - OPEN_RESEARCH
+        resource:
+          $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+        reasonCodes:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+    InvestmentMetricValueV1:
+      type: object
+      additionalProperties: false
+      required:
+      - value
+      - currency
+      - unit
+      - methodVersion
+      - availability
+      - reasonCodes
+      - asOf
+      - sourceReferences
+      properties:
+        value:
+          anyOf:
+          - $ref: '#/components/schemas/Decimal'
+          - type: 'null'
+        currency:
+          type: string
+          enum:
+          - USD
+        unit:
+          type: string
+          enum:
+          - USD
+          - QUANTITY
+          - RATIO
+        methodVersion:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        availability:
+          type: string
+          enum:
+          - AVAILABLE
+          - STALE
+          - UNAVAILABLE
+        reasonCodes:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+        asOf:
+          anyOf:
+          - $ref: '#/components/schemas/UtcTimestamp'
+          - type: 'null'
+        sourceReferences:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+      allOf:
+      - if:
+          properties:
+            value:
+              type: 'null'
+        then:
+          properties:
+            availability:
+              type: string
+              enum:
+              - UNAVAILABLE
+            reasonCodes:
+              minItems: 1
+      - if:
+          properties:
+            availability:
+              type: string
+              enum:
+              - UNAVAILABLE
+        then:
+          properties:
+            value:
+              type: 'null'
+            reasonCodes:
+              minItems: 1
+      - if:
+          properties:
+            availability:
+              type: string
+              enum:
+              - STALE
+        then:
+          properties:
+            reasonCodes:
+              minItems: 1
+    InvestmentPositionViewV1:
+      type: object
+      additionalProperties: false
+      required:
+      - instrument
+      - ledgerVersion
+      - quantity
+      - averagePrice
+      - costBasis
+      - realizedPnl
+      - marketValue
+      - unrealizedPnl
+      - weight
+      - sourceReferences
+      properties:
+        instrument:
+          type: string
+          minLength: 1
+          maxLength: 32
+        ledgerVersion:
+          anyOf:
+          - $ref: '#/components/schemas/AgentRevision'
+          - type: 'null'
+        quantity:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        averagePrice:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        costBasis:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        realizedPnl:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        marketValue:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        unrealizedPnl:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        weight:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        sourceReferences:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+    InvestmentPortfolioMetricsV1:
+      type: object
+      additionalProperties: false
+      required:
+      - cash
+      - equity
+      - exposure
+      - realizedPnl
+      - marketValue
+      - unrealizedPnl
+      - dailyReturn
+      - totalReturn
+      - drawdown
+      properties:
+        cash:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        equity:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        exposure:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        realizedPnl:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        marketValue:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        unrealizedPnl:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        dailyReturn:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        totalReturn:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        drawdown:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+    InvestmentPortfolioViewV1:
+      type: object
+      additionalProperties: false
+      required:
+      - schemaVersion
+      - contextReference
+      - observedAt
+      - snapshotId
+      - snapshotVersion
+      - accountGeneration
+      - portfolioLedgerVersion
+      - asOf
+      - quality
+      - reconciliation
+      - metrics
+      - positions
+      - marketEvidence
+      - blockers
+      - sourceReferences
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+          - '1'
+        contextReference:
+          $ref: '#/components/schemas/InvestmentContextReferenceV1'
+        observedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        snapshotId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        snapshotVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        accountGeneration:
+          anyOf:
+          - $ref: '#/components/schemas/AgentRevision'
+          - type: 'null'
+        portfolioLedgerVersion:
+          anyOf:
+          - $ref: '#/components/schemas/AgentRevision'
+          - type: 'null'
+        asOf:
+          anyOf:
+          - $ref: '#/components/schemas/UtcTimestamp'
+          - type: 'null'
+        quality:
+          type: string
+          enum:
+          - CURRENT
+          - STALE
+          - UNAVAILABLE
+          - INCONSISTENT
+        reconciliation:
+          type: string
+          enum:
+          - CURRENT
+          - REQUIRED
+          - UNKNOWN
+          - NOT_APPLICABLE
+        metrics:
+          $ref: '#/components/schemas/InvestmentPortfolioMetricsV1'
+        positions:
+          anyOf:
+          - type: array
+            maxItems: 100
+            items:
+              $ref: '#/components/schemas/InvestmentPositionViewV1'
+          - type: 'null'
+        marketEvidence:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+        blockers:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+        sourceReferences:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+    InvestmentOnboardingStepV1:
+      type: object
+      additionalProperties: false
+      required:
+      - step
+      - state
+      - updatedAt
+      properties:
+        step:
+          type: string
+          enum:
+          - EXPERIENCE
+          - GOALS
+          - HORIZON
+          - LOSS_TOLERANCE
+          - CONTEXT
+        state:
+          type: string
+          enum:
+          - COMPLETED
+          - SKIPPED
+          - UNSEEN
+        updatedAt:
+          anyOf:
+          - $ref: '#/components/schemas/UtcTimestamp'
+          - type: 'null'
+    InvestmentPreferencesV1:
+      type: object
+      additionalProperties: false
+      required:
+      - schemaVersion
+      - version
+      - updatedAt
+      - experienceLevel
+      - goals
+      - horizon
+      - lossTolerance
+      - contextReference
+      - onboardingSteps
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+          - '1'
+        version:
+          type: integer
+          minimum: 0
+        updatedAt:
+          anyOf:
+          - $ref: '#/components/schemas/UtcTimestamp'
+          - type: 'null'
+        experienceLevel:
+          type: string
+          enum:
+          - UNSPECIFIED
+          - BEGINNER
+          - EXPERIENCED
+        goals:
+          type: array
+          maxItems: 3
+          items:
+            type: string
+            enum:
+            - LEARN
+            - UNDERSTAND_PORTFOLIO
+            - RESEARCH_STRATEGIES
+        horizon:
+          type: string
+          enum:
+          - UNSPECIFIED
+          - SHORT
+          - MEDIUM
+          - LONG
+        lossTolerance:
+          type: string
+          enum:
+          - UNSPECIFIED
+          - LOW
+          - MEDIUM
+          - HIGH
+        contextReference:
+          $ref: '#/components/schemas/InvestmentContextReferenceV1'
+        onboardingSteps:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/InvestmentOnboardingStepV1'
+    InvestmentPreferencesUpdateV1:
+      type: object
+      additionalProperties: false
+      required:
+      - expectedVersion
+      - reset
+      - experienceLevel
+      - goals
+      - horizon
+      - lossTolerance
+      - contextReference
+      - onboardingSteps
+      properties:
+        expectedVersion:
+          type: integer
+          minimum: 0
+        reset:
+          type: boolean
+        experienceLevel:
+          type: string
+          enum:
+          - UNSPECIFIED
+          - BEGINNER
+          - EXPERIENCED
+        goals:
+          type: array
+          maxItems: 3
+          items:
+            type: string
+            enum:
+            - LEARN
+            - UNDERSTAND_PORTFOLIO
+            - RESEARCH_STRATEGIES
+        horizon:
+          type: string
+          enum:
+          - UNSPECIFIED
+          - SHORT
+          - MEDIUM
+          - LONG
+        lossTolerance:
+          type: string
+          enum:
+          - UNSPECIFIED
+          - LOW
+          - MEDIUM
+          - HIGH
+        contextReference:
+          $ref: '#/components/schemas/InvestmentContextReferenceV1'
+        onboardingSteps:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/InvestmentOnboardingStepV1'
+    InvestmentInsightV1:
+      type: object
+      additionalProperties: false
+      required:
+      - insightId
+      - methodVersion
+      - title
+      - explanation
+      - availability
+      - reasonCodes
+      - periodStart
+      - periodEnd
+      - metrics
+      - inputReferences
+      - limitations
+      - allowedActions
+      properties:
+        insightId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        methodVersion:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        explanation:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        availability:
+          type: string
+          enum:
+          - AVAILABLE
+          - UNAVAILABLE
+          - STALE
+        reasonCodes:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+        periodStart:
+          anyOf:
+          - $ref: '#/components/schemas/UtcTimestamp'
+          - type: 'null'
+        periodEnd:
+          anyOf:
+          - $ref: '#/components/schemas/UtcTimestamp'
+          - type: 'null'
+        metrics:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/InvestmentMetricValueV1'
+        inputReferences:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+        limitations:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 300
+        allowedActions:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/InvestmentAllowedActionV1'
+    InvestmentPortfolioAnalysisRequestV1:
+      type: object
+      additionalProperties: false
+      required:
+      - contextReference
+      - snapshotId
+      - expectedSnapshotVersion
+      properties:
+        contextReference:
+          $ref: '#/components/schemas/InvestmentContextReferenceV1'
+        snapshotId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        expectedSnapshotVersion:
+          $ref: '#/components/schemas/AgentRevision'
+    InvestmentPortfolioAnalysisV1:
+      type: object
+      additionalProperties: false
+      required:
+      - schemaVersion
+      - analysisId
+      - version
+      - contextReference
+      - snapshotId
+      - snapshotVersion
+      - methodVersion
+      - createdAt
+      - insights
+      - sourceReferences
+      - traceId
+      - externalExplanationAvailability
+      - reasonCodes
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+          - '1'
+        analysisId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        version:
+          $ref: '#/components/schemas/AgentRevision'
+        contextReference:
+          $ref: '#/components/schemas/InvestmentContextReferenceV1'
+        snapshotId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        snapshotVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        methodVersion:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        createdAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        insights:
+          type: array
+          maxItems: 30
+          items:
+            $ref: '#/components/schemas/InvestmentInsightV1'
+        sourceReferences:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+        externalExplanationAvailability:
+          type: string
+          enum:
+          - UNAVAILABLE
+          - REQUIRES_DECISION
+          - AVAILABLE
+        reasonCodes:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+    InvestmentInsightsViewV1:
+      type: object
+      additionalProperties: false
+      required:
+      - schemaVersion
+      - contextReference
+      - snapshotId
+      - snapshotVersion
+      - methodVersion
+      - observedAt
+      - insights
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+          - '1'
+        contextReference:
+          $ref: '#/components/schemas/InvestmentContextReferenceV1'
+        snapshotId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        snapshotVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        methodVersion:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        observedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        insights:
+          type: array
+          maxItems: 30
+          items:
+            $ref: '#/components/schemas/InvestmentInsightV1'
+    InvestmentBoundedProgressV1:
+      type: object
+      additionalProperties: false
+      required:
+      - completed
+      - total
+      - percentage
+      - reasonCodes
+      properties:
+        completed:
+          type: integer
+          minimum: 0
+        total:
+          anyOf:
+          - type: integer
+            minimum: 1
+          - type: 'null'
+        percentage:
+          anyOf:
+          - $ref: '#/components/schemas/Decimal'
+          - type: 'null'
+        reasonCodes:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+    InvestmentBudgetSummaryV1:
+      type: object
+      additionalProperties: false
+      required:
+      - currency
+      - reserved
+      - settled
+      - costState
+      - reasonCodes
+      properties:
+        currency:
+          type: string
+          enum:
+          - USD
+        reserved:
+          anyOf:
+          - $ref: '#/components/schemas/InvestmentNonnegativeDecimalV1'
+          - type: 'null'
+        settled:
+          anyOf:
+          - $ref: '#/components/schemas/InvestmentNonnegativeDecimalV1'
+          - type: 'null'
+        costState:
+          type: string
+          enum:
+          - NOT_INCURRED
+          - KNOWN
+          - UNKNOWN
+        reasonCodes:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+    InvestmentTaskViewV1:
+      type: object
+      additionalProperties: false
+      required:
+      - schemaVersion
+      - taskId
+      - kind
+      - title
+      - sourceType
+      - sourceId
+      - sourceVersion
+      - runId
+      - rawState
+      - displayState
+      - resultAvailability
+      - reasonCodes
+      - createdAt
+      - updatedAt
+      - deadlineAt
+      - lastActivityAt
+      - agentId
+      - agentVersion
+      - policyVersion
+      - boundedProgress
+      - budgetSummary
+      - approvalReferences
+      - reportReferences
+      - allowedActions
+      - capabilityAvailability
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+          - '1'
+        taskId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        kind:
+          type: string
+          enum:
+          - RESEARCH
+          - PORTFOLIO_ANALYSIS
+          - PORTFOLIO_EXPLANATION
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        sourceType:
+          type: string
+          enum:
+          - RUN
+          - PORTFOLIO_ANALYSIS
+        sourceId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        sourceVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        runId:
+          anyOf:
+          - $ref: '#/components/schemas/AgentOpaqueId'
+          - type: 'null'
+        rawState:
+          type: string
+          enum:
+          - CREATED
+          - QUEUED
+          - RUNNING
+          - WAITING_FOR_INPUT
+          - WAITING_FOR_PROCESSING_DECISION
+          - WAITING_FOR_APPROVAL
+          - WAITING_FOR_BATCH
+          - COMPLETED
+          - BLOCKED
+          - FAILED
+          - CANCELLED
+          - TIMED_OUT
+          - BUDGET_EXHAUSTED
+        displayState:
+          type: string
+          enum:
+          - CREATED
+          - QUEUED
+          - RUNNING
+          - WAITING_FOR_INPUT
+          - WAITING_FOR_PROCESSING_DECISION
+          - WAITING_FOR_APPROVAL
+          - WAITING_FOR_BATCH
+          - COMPLETED
+          - BLOCKED
+          - FAILED
+          - CANCELLED
+          - TIMED_OUT
+          - BUDGET_EXHAUSTED
+        resultAvailability:
+          type: string
+          enum:
+          - AVAILABLE
+          - UNAVAILABLE
+          - ABSTAINED
+        reasonCodes:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+        createdAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        updatedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        deadlineAt:
+          anyOf:
+          - $ref: '#/components/schemas/UtcTimestamp'
+          - type: 'null'
+        lastActivityAt:
+          anyOf:
+          - $ref: '#/components/schemas/UtcTimestamp'
+          - type: 'null'
+        agentId:
+          anyOf:
+          - $ref: '#/components/schemas/AgentOpaqueId'
+          - type: 'null'
+        agentVersion:
+          anyOf:
+          - $ref: '#/components/schemas/AgentRevision'
+          - type: 'null'
+        policyVersion:
+          anyOf:
+          - $ref: '#/components/schemas/AgentRevision'
+          - type: 'null'
+        boundedProgress:
+          $ref: '#/components/schemas/InvestmentBoundedProgressV1'
+        budgetSummary:
+          $ref: '#/components/schemas/InvestmentBudgetSummaryV1'
+        approvalReferences:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+        reportReferences:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+        allowedActions:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/InvestmentAllowedActionV1'
+        capabilityAvailability:
+          type: string
+          enum:
+          - AVAILABLE
+          - UNAVAILABLE
+    InvestmentPaperEligibilityV1:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - instrument
+      - eligibilityId
+      - revision
+      - checkedAt
+      - validUntil
+      - accountGeneration
+      - policyVersion
+      - dataReferences
+      - approvalReferences
+      - reasonCodes
+      properties:
+        status:
+          type: string
+          enum:
+          - ELIGIBLE
+          - BLOCKED
+          - UNAVAILABLE
+        instrument:
+          $ref: '#/components/schemas/PaperSymbol'
+        eligibilityId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        revision:
+          $ref: '#/components/schemas/AgentRevision'
+        checkedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        validUntil:
+          $ref: '#/components/schemas/UtcTimestamp'
+        accountGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        policyVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        dataReferences:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+        approvalReferences:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+        reasonCodes:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+    InvestmentStrategyViewV1:
+      type: object
+      additionalProperties: false
+      required:
+      - schemaVersion
+      - strategyId
+      - version
+      - title
+      - explanation
+      - assumptions
+      - limitations
+      - instrumentReferences
+      - dataRequirements
+      - resultReferences
+      - paperEligibility
+      - reasonCodes
+      - allowedActions
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+          - '1'
+        strategyId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        version:
+          $ref: '#/components/schemas/AgentRevision'
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        explanation:
+          type: string
+          minLength: 1
+          maxLength: 3000
+        assumptions:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 500
+        limitations:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 500
+        instrumentReferences:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 32
+        dataRequirements:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 300
+        resultReferences:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+        paperEligibility:
+          anyOf:
+          - $ref: '#/components/schemas/InvestmentPaperEligibilityV1'
+          - type: 'null'
+        reasonCodes:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+        allowedActions:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/InvestmentAllowedActionV1'
+    InvestmentActivityV1:
+      type: object
+      additionalProperties: false
+      required:
+      - activityId
+      - occurredAt
+      - contextReference
+      - kind
+      - title
+      - sourceReference
+      - reasonCodes
+      - allowedActions
+      properties:
+        activityId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        occurredAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        contextReference:
+          $ref: '#/components/schemas/InvestmentContextReferenceV1'
+        kind:
+          type: string
+          enum:
+          - ANALYSIS
+          - RUN
+          - REPORT
+          - PAPER_OPERATION
+          - ORDER
+          - FILL
+          - RECONCILIATION
+          - CONTROL
+          - PREFERENCES
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        sourceReference:
+          $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+        reasonCodes:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+        allowedActions:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/InvestmentAllowedActionV1'
+    InvestmentTaskPageV1:
+      type: object
+      additionalProperties: false
+      required:
+      - schemaVersion
+      - observedAt
+      - snapshotId
+      - contextReference
+      - items
+      - nextCursor
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+          - '1'
+        observedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        snapshotId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        contextReference:
+          $ref: '#/components/schemas/InvestmentContextReferenceV1'
+        items:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentTaskViewV1'
+        nextCursor:
+          anyOf:
+          - type: string
+            minLength: 1
+            maxLength: 1024
+          - type: 'null'
+    InvestmentStrategyPageV1:
+      type: object
+      additionalProperties: false
+      required:
+      - schemaVersion
+      - observedAt
+      - snapshotId
+      - contextReference
+      - items
+      - nextCursor
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+          - '1'
+        observedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        snapshotId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        contextReference:
+          $ref: '#/components/schemas/InvestmentContextReferenceV1'
+        items:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentStrategyViewV1'
+        nextCursor:
+          anyOf:
+          - type: string
+            minLength: 1
+            maxLength: 1024
+          - type: 'null'
+    InvestmentActivityPageV1:
+      type: object
+      additionalProperties: false
+      required:
+      - schemaVersion
+      - observedAt
+      - snapshotId
+      - contextReference
+      - items
+      - nextCursor
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+          - '1'
+        observedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        snapshotId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        contextReference:
+          $ref: '#/components/schemas/InvestmentContextReferenceV1'
+        items:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentActivityV1'
+        nextCursor:
+          anyOf:
+          - type: string
+            minLength: 1
+            maxLength: 1024
+          - type: 'null'
+    InvestmentProblemV1:
+      type: object
+      additionalProperties: false
+      required:
+      - type
+      - title
+      - status
+      - code
+      - traceId
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        status:
+          type: integer
+          enum:
+          - 401
+          - 403
+          - 404
+          - 409
+          - 422
+          - 429
+          - 503
+        code:
+          $ref: '#/components/schemas/InvestmentReasonCodeV1'
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+    PaperPreviewProvenanceV1:
+      type: object
+      additionalProperties: false
+      required:
+      - origin
+      properties:
+        origin:
+          type: string
+          enum:
+          - PORTFOLIO
+          - STRATEGY
+        strategyId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        strategyVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        instrument:
+          $ref: '#/components/schemas/PaperSymbol'
+        historicalEvidence:
+          $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+        eligibility:
+          $ref: '#/components/schemas/InvestmentPaperEligibilityV1'
+      allOf:
+      - if:
+          properties:
+            origin:
+              type: string
+              enum:
+              - STRATEGY
+        then:
+          required:
+          - strategyId
+          - strategyVersion
+          - instrument
+          - historicalEvidence
+          - eligibility
+          properties:
+            strategyId: {}
+            strategyVersion: {}
+            instrument: {}
+            historicalEvidence: {}
+            eligibility: {}
+        else:
+          not:
+            anyOf:
+            - required:
+              - strategyId
+              properties:
+                strategyId: {}
+            - required:
+              - strategyVersion
+              properties:
+                strategyVersion: {}
+            - required:
+              - instrument
+              properties:
+                instrument: {}
+            - required:
+              - historicalEvidence
+              properties:
+                historicalEvidence: {}
+            - required:
+              - eligibility
+              properties:
+                eligibility: {}
+    PaperLimitPreviewRequestV1:
+      type: object
+      additionalProperties: false
+      required:
+      - terms
+      - provenance
+      - portfolioLedgerVersion
+      - marketStateId
+      - quoteId
+      - evidenceHash
+      properties:
+        terms:
+          $ref: '#/components/schemas/PaperLimitPreviewTermsV1'
+        provenance:
+          $ref: '#/components/schemas/PaperPreviewProvenanceV1'
+        portfolioLedgerVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        marketStateId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        quoteId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        evidenceHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+    PaperRiskPrecheckV1:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - checkedAt
+      - reasonCodes
+      - sourceReferences
+      properties:
+        status:
+          type: string
+          enum:
+          - PASSED_NON_BINDING
+          - BLOCKED
+          - UNAVAILABLE
+        checkedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        reasonCodes:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+        sourceReferences:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+    PaperLimitPreviewV1:
+      type: object
+      additionalProperties: false
+      required:
+      - schemaVersion
+      - previewId
+      - version
+      - requestHash
+      - context
+      - terms
+      - provenance
+      - portfolioLedgerVersion
+      - marketStateId
+      - quoteId
+      - evidenceHash
+      - credentialGeneration
+      - accountGeneration
+      - policyVersion
+      - profileVersion
+      - budgetVersion
+      - limitPolicyVersion
+      - observedAt
+      - validUntil
+      - availability
+      - blockers
+      - riskPrecheck
+      - grossNotional
+      - grossNotionalMeaning
+      - feeAssumption
+      - reserveAssumption
+      - availableCash
+      - availableLongQuantity
+      - cashImpact
+      - weightImpact
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+          - '1'
+        previewId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        version:
+          $ref: '#/components/schemas/AgentRevision'
+        requestHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        context:
+          type: string
+          enum:
+          - ALPACA_PAPER
+        terms:
+          $ref: '#/components/schemas/PaperLimitPreviewTermsV1'
+        provenance:
+          $ref: '#/components/schemas/PaperPreviewProvenanceV1'
+        portfolioLedgerVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        marketStateId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        quoteId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        evidenceHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        credentialGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        accountGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        policyVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        profileVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        budgetVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        limitPolicyVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        observedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        validUntil:
+          $ref: '#/components/schemas/UtcTimestamp'
+        availability:
+          type: string
+          enum:
+          - AVAILABLE
+          - BLOCKED
+          - UNAVAILABLE
+        blockers:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+        riskPrecheck:
+          $ref: '#/components/schemas/PaperRiskPrecheckV1'
+        grossNotional:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        grossNotionalMeaning:
+          type: string
+          enum:
+          - BUY_MAXIMUM_GROSS_COST
+          - SELL_MINIMUM_GROSS_PROCEEDS
+        feeAssumption:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        reserveAssumption:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        availableCash:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        availableLongQuantity:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        cashImpact:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+        weightImpact:
+          $ref: '#/components/schemas/InvestmentMetricValueV1'
+      allOf:
+      - if:
+          properties:
+            terms:
+              properties:
+                side:
+                  const: BUY
+        then:
+          properties:
+            grossNotionalMeaning:
+              const: BUY_MAXIMUM_GROSS_COST
+      - if:
+          properties:
+            terms:
+              properties:
+                side:
+                  const: SELL
+        then:
+          properties:
+            grossNotionalMeaning:
+              const: SELL_MINIMUM_GROSS_PROCEEDS
+      - if:
+          properties:
+            availability:
+              const: AVAILABLE
+        then:
+          properties:
+            riskPrecheck:
+              properties:
+                status:
+                  const: PASSED_NON_BINDING
+            blockers:
+              maxItems: 0
+    PaperGuidedLimitOrderRequestV1:
+      type: object
+      additionalProperties: false
+      required:
+      - previewId
+      - expectedPreviewVersion
+      - requestHash
+      - accountGeneration
+      - confirmation
+      properties:
+        previewId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        expectedPreviewVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        requestHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        accountGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        confirmation:
+          type: string
+          enum:
+          - PLACE_PAPER_LIMIT
+    PortfolioProcessingFindingV1:
+      type: object
+      additionalProperties: false
+      required:
+      - findingReference
+      - code
+      - availability
+      - unit
+      - value
+      properties:
+        findingReference:
+          type: object
+          additionalProperties: false
+          required:
+          - kind
+          - id
+          - version
+          properties:
+            kind:
+              type: string
+              enum:
+              - PORTFOLIO_ANALYSIS
+            id:
+              $ref: '#/components/schemas/AgentOpaqueId'
+            version:
+              $ref: '#/components/schemas/AgentRevision'
+        code:
+          type: string
+          enum:
+          - CASH_OBSERVED
+          - EXPOSURE_OBSERVED
+          - VALUATION_COMPLETE
+          - CONCENTRATION_OBSERVED
+          - VALUATION_NOT_AVAILABLE
+          - PERFORMANCE_HISTORY_NOT_AVAILABLE
+          - STALE_EVIDENCE
+          - RECONCILIATION_REQUIRED
+          - QUALITY_CURRENT
+        availability:
+          type: string
+          enum:
+          - AVAILABLE
+          - STALE
+          - UNAVAILABLE
+        unit:
+          type: string
+          enum:
+          - USD
+          - QUANTITY
+          - RATIO
+          - NONE
+        value:
+          anyOf:
+          - $ref: '#/components/schemas/Decimal'
+          - type: 'null'
+    PortfolioProcessingProjectionV1:
+      type: object
+      additionalProperties: false
+      required:
+      - purpose
+      - projectorVersion
+      - schemaVersion
+      - methodVersion
+      - findings
+      properties:
+        purpose:
+          type: string
+          enum:
+          - PORTFOLIO_EXPLANATION_V1
+        projectorVersion:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        schemaVersion:
+          type: string
+          enum:
+          - '1'
+        methodVersion:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        findings:
+          type: array
+          maxItems: 30
+          items:
+            $ref: '#/components/schemas/PortfolioProcessingFindingV1'
+          minItems: 1
+      description: Minimized deterministic findings only. No accounts, raw position tables, personal preferences, prompts
+        or credentials. Each finding references this immutable analysis revision; provider eligibility, data basis and
+        cost decision remain independent.
+    PortfolioProcessingPreviewRequestV1:
+      type: object
+      additionalProperties: false
+      required:
+      - purpose
+      - expectedAnalysisVersion
+      - profileId
+      properties:
+        purpose:
+          type: string
+          enum:
+          - PORTFOLIO_EXPLANATION_V1
+        expectedAnalysisVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        profileId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+    PortfolioProcessingPreviewV1:
+      type: object
+      additionalProperties: false
+      required:
+      - purpose
+      - previewId
+      - analysisId
+      - analysisVersion
+      - purposeVersion
+      - projectorVersion
+      - schemaVersion
+      - agentVersion
+      - toolPolicyVersion
+      - profileGeneration
+      - credentialGeneration
+      - modelGeneration
+      - policyGeneration
+      - pricePolicyVersion
+      - budgetPolicyVersion
+      - projectionHash
+      - projectionBinding
+      - provider
+      - profileId
+      - modelId
+      - agentId
+      - toolAllowlist
+      - dataClasses
+      - projection
+      - observedAt
+      - validUntil
+      - costCurrency
+      - costUpperBound
+      - costDecisionReference
+      properties:
+        purpose:
+          type: string
+          enum:
+          - PORTFOLIO_EXPLANATION_V1
+        previewId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        analysisId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        analysisVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        purposeVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        projectorVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        schemaVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        agentVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        toolPolicyVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        profileGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        credentialGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        modelGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        policyGeneration:
+          $ref: '#/components/schemas/AgentRevision'
+        pricePolicyVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        budgetPolicyVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        projectionHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        projectionBinding:
+          type: string
+          minLength: 1
+          maxLength: 256
+        provider:
+          $ref: '#/components/schemas/AgentProviderId'
+        profileId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        modelId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        agentId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        toolAllowlist:
+          type: array
+          maxItems: 1
+          items:
+            type: string
+            enum:
+            - READ_APPROVED_PORTFOLIO_FINDINGS
+          minItems: 1
+        dataClasses:
+          type: array
+          maxItems: 1
+          items:
+            type: string
+            enum:
+            - MINIMIZED_PORTFOLIO_FINDINGS
+          minItems: 1
+        projection:
+          $ref: '#/components/schemas/PortfolioProcessingProjectionV1'
+        observedAt:
+          $ref: '#/components/schemas/UtcTimestamp'
+        validUntil:
+          $ref: '#/components/schemas/UtcTimestamp'
+        costCurrency:
+          type: string
+          enum:
+          - USD
+        costUpperBound:
+          $ref: '#/components/schemas/InvestmentNonnegativeDecimalV1'
+        costDecisionReference:
+          $ref: '#/components/schemas/AgentOpaqueId'
+    PortfolioProcessingSendV1:
+      type: object
+      additionalProperties: false
+      required:
+      - purpose
+      - action
+      - expectedAnalysisVersion
+      - previewId
+      - projectionBinding
+      - costDecisionReference
+      properties:
+        purpose:
+          type: string
+          enum:
+          - PORTFOLIO_EXPLANATION_V1
+        action:
+          type: string
+          enum:
+          - SEND
+        expectedAnalysisVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        previewId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        projectionBinding:
+          type: string
+          minLength: 1
+          maxLength: 256
+        costDecisionReference:
+          $ref: '#/components/schemas/AgentOpaqueId'
+    PortfolioProcessingDeclineV1:
+      type: object
+      additionalProperties: false
+      required:
+      - purpose
+      - action
+      - expectedAnalysisVersion
+      properties:
+        purpose:
+          type: string
+          enum:
+          - PORTFOLIO_EXPLANATION_V1
+        action:
+          type: string
+          enum:
+          - DECLINE
+        expectedAnalysisVersion:
+          $ref: '#/components/schemas/AgentRevision'
+    PortfolioProcessingRevokeV1:
+      type: object
+      additionalProperties: false
+      required:
+      - purpose
+      - action
+      - expectedAnalysisVersion
+      - receiptId
+      properties:
+        purpose:
+          type: string
+          enum:
+          - PORTFOLIO_EXPLANATION_V1
+        action:
+          type: string
+          enum:
+          - REVOKE
+        expectedAnalysisVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        receiptId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+    PortfolioProcessingDecisionV1:
+      oneOf:
+      - $ref: '#/components/schemas/PortfolioProcessingSendV1'
+      - $ref: '#/components/schemas/PortfolioProcessingDeclineV1'
+      - $ref: '#/components/schemas/PortfolioProcessingRevokeV1'
+      discriminator:
+        propertyName: action
+        mapping:
+          SEND: '#/components/schemas/PortfolioProcessingSendV1'
+          DECLINE: '#/components/schemas/PortfolioProcessingDeclineV1'
+          REVOKE: '#/components/schemas/PortfolioProcessingRevokeV1'
+    PortfolioProcessingStatusV1:
+      type: object
+      additionalProperties: false
+      required:
+      - purpose
+      - analysisId
+      - analysisVersion
+      - state
+      - delivery
+      - costState
+      - receiptId
+      - previewConsumed
+      - revokedAt
+      - runId
+      - resultReference
+      - reasonCodes
+      properties:
+        purpose:
+          type: string
+          enum:
+          - PORTFOLIO_EXPLANATION_V1
+        analysisId:
+          $ref: '#/components/schemas/AgentOpaqueId'
+        analysisVersion:
+          $ref: '#/components/schemas/AgentRevision'
+        state:
+          $ref: '#/components/schemas/AgentProcessingState'
+        delivery:
+          type: string
+          enum:
+          - NOT_SENT
+          - MAY_HAVE_BEEN_SENT
+          - SENT
+        costState:
+          type: string
+          enum:
+          - NOT_INCURRED
+          - KNOWN
+          - UNKNOWN
+        receiptId:
+          anyOf:
+          - $ref: '#/components/schemas/AgentOpaqueId'
+          - type: 'null'
+        previewConsumed:
+          type: boolean
+        revokedAt:
+          anyOf:
+          - $ref: '#/components/schemas/UtcTimestamp'
+          - type: 'null'
+        runId:
+          anyOf:
+          - $ref: '#/components/schemas/AgentOpaqueId'
+          - type: 'null'
+        resultReference:
+          anyOf:
+          - $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+          - type: 'null'
+        reasonCodes:
+          type: array
+          maxItems: 32
+          items:
+            $ref: '#/components/schemas/InvestmentReasonCodeV1'
+    InvestmentProcessingPreviewV1:
+      oneOf:
+      - $ref: '#/components/schemas/ProcessingPreviewV1'
+      - $ref: '#/components/schemas/PortfolioProcessingPreviewV1'
+      discriminator:
+        propertyName: purpose
+        mapping:
+          HYPOTHESIS_INTERPRETATION_V1: '#/components/schemas/ProcessingPreviewV1'
+          PORTFOLIO_EXPLANATION_V1: '#/components/schemas/PortfolioProcessingPreviewV1'
+    InvestmentProcessingStatusV1:
+      oneOf:
+      - $ref: '#/components/schemas/ProcessingStatusV1'
+      - $ref: '#/components/schemas/PortfolioProcessingStatusV1'
+      discriminator:
+        propertyName: purpose
+        mapping:
+          HYPOTHESIS_INTERPRETATION_V1: '#/components/schemas/ProcessingStatusV1'
+          PORTFOLIO_EXPLANATION_V1: '#/components/schemas/PortfolioProcessingStatusV1'
+    InvestmentProcessingDecisionV1:
+      oneOf:
+      - $ref: '#/components/schemas/ProcessingDecisionV1'
+      - $ref: '#/components/schemas/PortfolioProcessingDecisionV1'
+    PaperLimitPreviewTermsV1:
+      type: object
+      additionalProperties: false
+      required:
+      - credentialGeneration
+      - accountGeneration
+      - policyVersion
+      - profileVersion
+      - limitPolicyVersion
+      - symbol
+      - side
+      - quantity
+      - limitPrice
+      - orderType
+      - timeInForce
+      - session
+      - currency
+      - expiresAt
+      - budgetVersion
+      - riskBudget
+      properties:
+        credentialGeneration:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        accountGeneration:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        policyVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        profileVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        limitPolicyVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        symbol:
+          $ref: '#/components/schemas/PaperSymbol'
+        side:
+          type: string
+          enum:
+          - BUY
+          - SELL
+        quantity:
+          $ref: '#/components/schemas/PaperQuantity'
+        limitPrice:
+          $ref: '#/components/schemas/PaperLimitPrice'
+        orderType:
+          type: string
+          const: LIMIT
+        timeInForce:
+          type: string
+          const: DAY
+        session:
+          type: string
+          const: REGULAR
+        currency:
+          type: string
+          const: USD
+        expiresAt:
+          type: string
+          format: date-time
+          pattern: Z$
+          maxLength: 30
+        budgetVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        riskBudget:
+          $ref: '#/components/schemas/PositiveBudget'
+      description: Exact human-entered LIMIT/DAY/REGULAR terms for a non-binding preview. No confirmation or reservation
+        occurs until guided commit.
+    InvestmentNonnegativeDecimalV1:
+      type: string
+      pattern: ^(0|[1-9][0-9]{0,19})(\.[0-9]{1,18})?$
+      example: '123.45'

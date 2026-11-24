@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "1",
+  "observedAt": "2026-11-23T12:00:00Z",
+  "snapshotId": "synthetic-fixture-",
+  "contextReference": {
+    "context": "DEMO",
+    "namespace": "demo",
+    "demoRunId": "synthetic-demo-run-1"
+  },
+  "items": [],
+  "nextCursor": "synthetic-fixture-"
+}

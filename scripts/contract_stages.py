@@ -3,6 +3,7 @@
 Der Abschluss des jeweiligen Runtimepakets erzwingt dessen exakte Routen.
 """
 
+import json
 import re
 from pathlib import Path
 
@@ -57,8 +58,24 @@ AGENT_RESEARCH_OPERATIONS = dict.fromkeys((
 ), "APF-08")
 
 
+# IEF-01 deliberately stages additive contracts; IEF-09 must prove full runtime parity.
+# This explicit bounded operation matrix must never exempt unrelated operations.
+IEF_TASKS = (
+    Path(__file__).resolve().parents[1]
+    / "openspec/changes/investment-experience-foundation/tasks.md"
+)
+IEF_OPERATION_MATRIX = json.loads(
+    (Path(__file__).resolve().parents[1] / "contracts/ief-operations.json").read_text("utf-8")
+)
+IEF_OPERATIONS = dict.fromkeys(IEF_OPERATION_MATRIX, "IEF-09")
+IEF_PAPER_SCHEMAS = frozenset({
+    "PaperPreviewProvenanceV1", "PaperLimitPreviewRequestV1", "PaperRiskPrecheckV1",
+    "PaperLimitPreviewV1", "PaperGuidedLimitOrderRequestV1", "PaperLimitPreviewTermsV1",
+})
+
+
 def _pending(text: str, operations: dict[str, str]) -> set[str]:
-    parsed = re.findall(r"^- \[([ x])\] \d+\.\d+ \[?([A-Z]+-\d{2}) ", text, re.M)
+    parsed = re.findall(r"^- \[([ x])\] \d+\.\d+ \[?([A-Z]+-\d{2})(?:\]\([^)]+\)|\])? ", text, re.M)
     pending = set()
     for operation, task in operations.items():
         matching = [status for status, task_id in parsed if task_id == task]
@@ -72,6 +89,7 @@ def _pending(text: str, operations: dict[str, str]) -> set[str]:
 def pending_contract_operations(
     tasks_text: str | None = None, retrospective_tasks_text: str | None = None,
     quant_lab_tasks_text: str | None = None, agent_research_tasks_text: str | None = None,
+    investment_experience_tasks_text: str | None = None,
 ) -> set[str]:
     text = TASKS.read_text("utf-8") if tasks_text is None else tasks_text
     retrospective = (
@@ -91,4 +109,10 @@ def pending_contract_operations(
         | _pending(retrospective, RETROSPECTIVE_OPERATIONS)
         | _pending(quant_lab, QUANT_LAB_OPERATIONS)
         | _pending(agent_research, AGENT_RESEARCH_OPERATIONS)
+        | _pending(
+            IEF_TASKS.read_text("utf-8")
+            if investment_experience_tasks_text is None
+            else investment_experience_tasks_text,
+            IEF_OPERATIONS,
+        )
     )

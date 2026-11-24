@@ -37,7 +37,7 @@ Geltende Screenverträge aus ux-architecture.md und navigation-design.md: deutsc
 
 ## Verbindliche Refinement-Abnahme
 
-IEF-T-C06/C07. Den freigegebenen IEF-01-Flow in allen zehn Screens umsetzen und Abweichungen begründen. Desktop/Mobile, Tastatur, Screenreader, Progressive Disclosure, vier klare Wirkungsarten und sichere Fehlerfolgen gegen die Prototypfassung prüfen. Die menschliche Gesamtfreigabe erfolgt in IEF-09.
+IEF-T-C06/C07. Den technisch geprüften IEF-01-Flow in allen zehn Screens umsetzen und Abweichungen begründen. Desktop/Mobile, Tastatur, Screenreader, Progressive Disclosure, vier klare Wirkungsarten und sichere Fehlerfolgen gegen die Prototypfassung prüfen. Die menschliche Gesamtfreigabe erfolgt in IEF-09.
 
 ## Evidenznachweis und Definition of Done
 
@@ -46,3 +46,9 @@ Eigene Component-/API-/SQL-/Securityprüfungen und betroffene Regressionen mit Q
 ## OpenSpec-Referenz
 
 `openspec/changes/investment-experience-foundation/work-packages/IEF-08.md`; design.md und zugehörige Capability-Deltas.
+
+## Apply-Status
+
+Nicht begonnen. Es gelten die technischen Voraussetzungen aus dem Dependencygraph. Die menschliche Abnahme findet in IEF-09 statt.
+
+Prüfevidenz, konkreter Dependencyblocker und Wiederanlauf: `docs/evidence/ief-apply-status.md`. Keine Änderung normativer Anforderungen oder Abnahmeschwellen. Issue und Taskcheckbox bleiben bis zur vollständigen Definition of Done offen.

@@ -11,10 +11,14 @@ import { HttpHeaders }                                       from '@angular/comm
 
 import { Observable }                                        from 'rxjs';
 
+import { InvestmentProblemV1 } from '../model/models';
 import { PaperCancelRequest } from '../model/models';
 import { PaperControlRequest } from '../model/models';
 import { PaperFillPage } from '../model/models';
+import { PaperGuidedLimitOrderRequestV1 } from '../model/models';
 import { PaperLimitOrderRequest } from '../model/models';
+import { PaperLimitPreviewRequestV1 } from '../model/models';
+import { PaperLimitPreviewV1 } from '../model/models';
 import { PaperOperation } from '../model/models';
 import { PaperOperationPage } from '../model/models';
 import { PaperOrderPage } from '../model/models';
@@ -59,6 +63,15 @@ export interface PaperServiceInterface {
     controlPaperWorkflow(idempotencyKey: string, paperControlRequest: PaperControlRequest, traceparent?: string, extraHttpRequestParams?: any): Observable<PaperOperation>;
 
     /**
+     * createPaperGuidedLimitOrderRequest
+     * IEF additive contract; runtime capability requires IEF-07. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+     * @endpoint post /api/v1/paper/guided-order-requests
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param paperGuidedLimitOrderRequestV1 
+     */
+    createPaperGuidedLimitOrderRequest(idempotencyKey: string, paperGuidedLimitOrderRequestV1: PaperGuidedLimitOrderRequestV1, extraHttpRequestParams?: any): Observable<PaperOperation>;
+
+    /**
      * Persist a human LIMIT requirement for the shared risk path
      * REQ-APW-002/005/006/007/010; APW-01. Authenticated loopback, exact same Origin and CSRF boundaries apply. Public fields are strict allowlists; no credentials or provider payloads. 202 confirms durable command acceptance only. Same actor/key/body replays the same operation; a different body returns IDEMPOTENCY_CONFLICT. START is fenced again before execution and expires at expiresAt. No GET performs provider I/O.
      * @endpoint post /api/v1/paper/order-requests
@@ -67,6 +80,15 @@ export interface PaperServiceInterface {
      * @param traceparent W3C Trace Context; absent or invalid input is replaced by a server trace.
      */
     createPaperLimitOrderRequest(idempotencyKey: string, paperLimitOrderRequest: PaperLimitOrderRequest, traceparent?: string, extraHttpRequestParams?: any): Observable<PaperOperation>;
+
+    /**
+     * createPaperLimitPreview
+     * IEF additive contract; runtime capability requires IEF-07. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+     * @endpoint post /api/v1/paper/order-previews
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param paperLimitPreviewRequestV1 
+     */
+    createPaperLimitPreview(idempotencyKey: string, paperLimitPreviewRequestV1: PaperLimitPreviewRequestV1, extraHttpRequestParams?: any): Observable<PaperLimitPreviewV1>;
 
     /**
      * Read the actual durable command outcome

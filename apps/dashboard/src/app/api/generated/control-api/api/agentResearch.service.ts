@@ -87,6 +87,16 @@ import { AgentScheduleV1 } from '../model/agentScheduleV1';
 // @ts-ignore
 import { AgentSendAcceptedV1 } from '../model/agentSendAcceptedV1';
 // @ts-ignore
+import { InvestmentProblemV1 } from '../model/investmentProblemV1';
+// @ts-ignore
+import { PortfolioProcessingDecisionV1 } from '../model/portfolioProcessingDecisionV1';
+// @ts-ignore
+import { PortfolioProcessingPreviewRequestV1 } from '../model/portfolioProcessingPreviewRequestV1';
+// @ts-ignore
+import { PortfolioProcessingPreviewV1 } from '../model/portfolioProcessingPreviewV1';
+// @ts-ignore
+import { PortfolioProcessingStatusV1 } from '../model/portfolioProcessingStatusV1';
+// @ts-ignore
 import { ProcessingDecisionV1 } from '../model/processingDecisionV1';
 // @ts-ignore
 import { ProcessingPreviewRequestV1 } from '../model/processingPreviewRequestV1';
@@ -595,6 +605,87 @@ export class AgentResearchService extends BaseService implements AgentResearchSe
     }
 
     /**
+     * createPortfolioProcessingPreview
+     * IEF additive contract; runtime capability requires IEF-04. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+     * @endpoint post /api/v1/research/agent/portfolio-analyses/{analysisId}/processing-previews
+     * @param analysisId 
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param portfolioProcessingPreviewRequestV1 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public createPortfolioProcessingPreview(analysisId: string, idempotencyKey: string, portfolioProcessingPreviewRequestV1: PortfolioProcessingPreviewRequestV1, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<PortfolioProcessingPreviewV1>;
+    public createPortfolioProcessingPreview(analysisId: string, idempotencyKey: string, portfolioProcessingPreviewRequestV1: PortfolioProcessingPreviewRequestV1, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<PortfolioProcessingPreviewV1>>;
+    public createPortfolioProcessingPreview(analysisId: string, idempotencyKey: string, portfolioProcessingPreviewRequestV1: PortfolioProcessingPreviewRequestV1, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<PortfolioProcessingPreviewV1>>;
+    public createPortfolioProcessingPreview(analysisId: string, idempotencyKey: string, portfolioProcessingPreviewRequestV1: PortfolioProcessingPreviewRequestV1, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (analysisId === null || analysisId === undefined) {
+            throw new Error('Required parameter analysisId was null or undefined when calling createPortfolioProcessingPreview.');
+        }
+        if (idempotencyKey === null || idempotencyKey === undefined) {
+            throw new Error('Required parameter idempotencyKey was null or undefined when calling createPortfolioProcessingPreview.');
+        }
+        if (portfolioProcessingPreviewRequestV1 === null || portfolioProcessingPreviewRequestV1 === undefined) {
+            throw new Error('Required parameter portfolioProcessingPreviewRequestV1 was null or undefined when calling createPortfolioProcessingPreview.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (idempotencyKey !== undefined && idempotencyKey !== null) {
+            localVarHeaders = localVarHeaders.set('Idempotency-Key', String(idempotencyKey));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/agent/portfolio-analyses/${this.configuration.encodeParam({name: "analysisId", value: analysisId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/processing-previews`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<PortfolioProcessingPreviewV1>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: portfolioProcessingPreviewRequestV1,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
      * Record a research decision
      * Requires an active local session and a same-origin JSON request. A decision binds the current idea, dialogue and exact proposal. It neither authorizes provider dispatch nor grants experiment approval.
      * @endpoint post /api/v1/research/agent/dialogues/{id}/decisions
@@ -831,6 +922,87 @@ export class AgentResearchService extends BaseService implements AgentResearchSe
             {
                 context: localVarHttpContext,
                 body: agentQuantApprovalDecisionV1,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * decidePortfolioProcessing
+     * IEF additive contract; runtime capability requires IEF-04. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+     * @endpoint post /api/v1/research/agent/portfolio-analyses/{analysisId}/processing-decisions
+     * @param analysisId 
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param portfolioProcessingDecisionV1 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public decidePortfolioProcessing(analysisId: string, idempotencyKey: string, portfolioProcessingDecisionV1: PortfolioProcessingDecisionV1, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<PortfolioProcessingStatusV1>;
+    public decidePortfolioProcessing(analysisId: string, idempotencyKey: string, portfolioProcessingDecisionV1: PortfolioProcessingDecisionV1, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<PortfolioProcessingStatusV1>>;
+    public decidePortfolioProcessing(analysisId: string, idempotencyKey: string, portfolioProcessingDecisionV1: PortfolioProcessingDecisionV1, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<PortfolioProcessingStatusV1>>;
+    public decidePortfolioProcessing(analysisId: string, idempotencyKey: string, portfolioProcessingDecisionV1: PortfolioProcessingDecisionV1, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (analysisId === null || analysisId === undefined) {
+            throw new Error('Required parameter analysisId was null or undefined when calling decidePortfolioProcessing.');
+        }
+        if (idempotencyKey === null || idempotencyKey === undefined) {
+            throw new Error('Required parameter idempotencyKey was null or undefined when calling decidePortfolioProcessing.');
+        }
+        if (portfolioProcessingDecisionV1 === null || portfolioProcessingDecisionV1 === undefined) {
+            throw new Error('Required parameter portfolioProcessingDecisionV1 was null or undefined when calling decidePortfolioProcessing.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (idempotencyKey !== undefined && idempotencyKey !== null) {
+            localVarHeaders = localVarHeaders.set('Idempotency-Key', String(idempotencyKey));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/agent/portfolio-analyses/${this.configuration.encodeParam({name: "analysisId", value: analysisId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/processing-decisions`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<PortfolioProcessingStatusV1>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: portfolioProcessingDecisionV1,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
@@ -1376,6 +1548,66 @@ export class AgentResearchService extends BaseService implements AgentResearchSe
         let localVarPath = `/api/v1/research/agent/schedule`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<AgentScheduleV1>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * getPortfolioProcessingStatus
+     * IEF additive contract; runtime capability requires IEF-04. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+     * @endpoint get /api/v1/research/agent/portfolio-analyses/{analysisId}/processing
+     * @param analysisId 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getPortfolioProcessingStatus(analysisId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<PortfolioProcessingStatusV1>;
+    public getPortfolioProcessingStatus(analysisId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<PortfolioProcessingStatusV1>>;
+    public getPortfolioProcessingStatus(analysisId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<PortfolioProcessingStatusV1>>;
+    public getPortfolioProcessingStatus(analysisId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (analysisId === null || analysisId === undefined) {
+            throw new Error('Required parameter analysisId was null or undefined when calling getPortfolioProcessingStatus.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/research/agent/portfolio-analyses/${this.configuration.encodeParam({name: "analysisId", value: analysisId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/processing`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<PortfolioProcessingStatusV1>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
