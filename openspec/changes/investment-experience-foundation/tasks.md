@@ -4,7 +4,7 @@ Alle Pakete sind offen. Gesonderter Applyauftrag erforderlich; Abhängigkeiten u
 
 ## 1. Experience Architecture und API Contracts
 
-- [ ] 1.1 [IEF-01](work-packages/IEF-01.md) Additive Experience- und Previewverträge aus design.md D1-D6, Schemas/Problemcodes/Beispiele/Operationenmatrix, gepinnter Angular Router, Shell-Routebasis und sichere Legacy-Linkadapter. Vertrag zuerst, keine Stub-Routen zum Vortäuschen von Fähigkeiten. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen. Klickbaren Screen-Flow gemäß IEF-T-C06 technisch prüfen und für die formative Prüfung in IEF-09 sichern.
+- [x] 1.1 [IEF-01](work-packages/IEF-01.md) Additive Experience- und Previewverträge aus design.md D1-D6, Schemas/Problemcodes/Beispiele/Operationenmatrix, gepinnter Angular Router, Shell-Routebasis und sichere Legacy-Linkadapter. Vertrag zuerst, keine Stub-Routen zum Vortäuschen von Fähigkeiten. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen. Klickbaren Screen-Flow gemäß IEF-T-C06 technisch prüfen und für die formative Prüfung in IEF-09 sichern.
 
 ## 2. Guided Onboarding
 

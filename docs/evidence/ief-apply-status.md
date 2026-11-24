@@ -10,7 +10,7 @@ Verifizierter Remote-main und lokaler Issue-Branch-HEAD: `82139cd2f4a87d88b92612
 
 | Paket / Issue | Tatsächlicher Stand | Abschlussblocker |
 | --- | --- | --- |
-| IEF-01 / #107 | Additive Contracts, generierter Client und Router/Prototyp lokal umgesetzt. Contract-Suite und ausgewählte Browserregression bestanden. [Paketnachweis](ief-01.md) | Technischer Paketabschluss, Git-Integration und Remote-CI stehen aus. Die formative Prüfung gehört zu IEF-09. |
+| IEF-01 / #107 | Additive Contracts, generierter Client und Router/Prototyp lokal umgesetzt. Contract-Suite und ausgewählte Browserregression bestanden. [Paketnachweis](ief-01.md) | Technisch abgeschlossen und nach main integriert. Die formative Prüfung gehört zu IEF-09. |
 | IEF-02 / #108 | Nicht begonnen; kein funktionaler Preferences-Store behauptet | Technischer Abschluss IEF-01. Die menschliche Prüfung IEF-T-O05 gehört zu IEF-09. |
 | IEF-03 / #109 | Nicht begonnen; neue Finanz-Readmodels nicht implementiert | Technischer Abschluss IEF-01 |
 | IEF-04 / #110 | Nicht begonnen; keine neue lokale Analyse oder externe Erklärung verfügbar | IEF-03; damit mittelbar IEF-01. ARP-10 ist technisch erfüllt, ersetzt aber keine reale Zweck-/Provider-/Kostenfreigabe |
@@ -40,7 +40,7 @@ Die tatsächlichen lokalen Tests, Reviews und UI-Aufnahmen werden im [IEF-01-Nac
 
 ## GitHub und Veröffentlichung
 
-Read-back am 23.11.2026: neun offene Issues, neun exakte Managedblockhashes, Marker/Titel/Labels und 26 native Kanten in beiden Richtungen geprüft; ARP-10/#105 geschlossen. Nach tatsächlichem MCP-Updatefehler 403 wurde der autorisierte GH-CLI-Fallback verwendet: neun Managedblocks aktualisiert, keine neuen Issues, keine Schließungen, keine Änderungen an manuellen Außenblöcken, Labels oder Kanten. Der zweite vollständige Lauf ergab **0 Updates, 9 unverändert**, erneut 26 Kanten beidseitig bestätigt. Aktuelle Hashes/UTC-Zeiten und beide Läufe stehen in `openspec/changes/investment-experience-foundation/github-issues.json`. Alle Taskcheckboxen bleiben offen.
+Read-back am 23.11.2026: neun offene Issues, neun exakte Managedblockhashes, Marker/Titel/Labels und 26 native Kanten in beiden Richtungen geprüft; ARP-10/#105 geschlossen. Nach tatsächlichem MCP-Updatefehler 403 wurde der autorisierte GH-CLI-Fallback verwendet: neun Managedblocks aktualisiert, keine neuen Issues, keine Schließungen, keine Änderungen an manuellen Außenblöcken, Labels oder Kanten. Der zweite vollständige Lauf ergab **0 Updates, 9 unverändert**, erneut 26 Kanten beidseitig bestätigt. Aktuelle Hashes/UTC-Zeiten und beide Läufe stehen in `openspec/changes/investment-experience-foundation/github-issues.json`. IEF-01 ist technisch abgeschlossen. Die übrigen acht Taskcheckboxen bleiben offen.
 
 Nach der Verschiebung der menschlichen Prüfungen wurden am 24.11.2026 erneut alle neun verwalteten Issue-Abschnitte synchronisiert. Neun offene Issues und alle 26 nativen Kanten wurden in beiden Richtungen zurückgelesen. Details stehen im aktuellen GitHub-Mapping.
 
@@ -48,4 +48,6 @@ Kein Push, Merge oder Remote-CI-Erfolg für einen noch nicht vollständig abgeno
 
 ## Nächste Nutzerabnahme und Produktphase
 
-Die [Start- und Abnahmeanleitung](../runbooks/ief-prototype.md) und das [menschliche Testprotokoll](ief-human-ux-protocol.md) beschreiben Vorbereitung, Stichprobe, Aufgaben, Zeitlimits, Sicherheitskriterien, Redaktion, Korrektur und Nachtest. Als Nächstes folgt der formale technische Abschluss von IEF-01. Danach können IEF-02/03/05 entlang des bestehenden Graphen beginnen. Die drei menschlichen Runden schließen den Change gemeinsam mit der integrierten technischen Abnahme in IEF-09 ab.
+Die [Start- und Abnahmeanleitung](../runbooks/ief-prototype.md) und das [menschliche Testprotokoll](ief-human-ux-protocol.md) beschreiben Vorbereitung, Stichprobe, Aufgaben, Zeitlimits, Sicherheitskriterien, Redaktion, Korrektur und Nachtest. IEF-02/03/05 können entlang des bestehenden Graphen beginnen. Die drei menschlichen Runden schließen den Change gemeinsam mit der integrierten technischen Abnahme in IEF-09 ab.
+
+IEF-01 ist mit Commit `3eb6e97eb03c50bfb5c46c1c7ba774e4e44d7ba0` geprüft und als `41db26fa10cc69800753bec4a8998612166d7534` nach main integriert. Der Remote-Read-back bestätigt den Merge und der Merge-Baum stimmt bytegleich mit dem Issue-Commit überein. Beide Branch-Pflichtworkflows sind erfolgreich: [Contracts](https://github.com/fjure/agentic-trading-platform/actions/runs/45362409582) und [Research integration](https://github.com/fjure/agentic-trading-platform/actions/runs/45362409461).

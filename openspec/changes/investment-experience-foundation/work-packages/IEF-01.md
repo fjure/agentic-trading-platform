@@ -49,6 +49,6 @@ Eigene Component-/API-/SQL-/Securityprüfungen und betroffene Regressionen mit Q
 
 ## Apply-Status
 
-Verträge, Router und Prototyp sind lokal technisch geprüft. Der formale technische Abschluss und die Integration folgen dem Repositoryworkflow. Die formative Prüfung findet in IEF-09 statt.
+Technisch abgeschlossen. Beide Pflichtworkflows auf Issue-Commit 3eb6e97 bestanden. Der bytegleiche Stand ist unter 41db26f nach main integriert. Die formative Prüfung findet in IEF-09 statt.
 
 Prüfevidenz, konkreter Dependencyblocker und Wiederanlauf: `docs/evidence/ief-apply-status.md`. Keine Änderung normativer Anforderungen oder Abnahmeschwellen. Issue und Taskcheckbox bleiben bis zur vollständigen Definition of Done offen.
