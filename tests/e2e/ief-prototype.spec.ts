@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '../../apps/dashboard/node_modules/@playwright/test/index.mjs';
 
 const screens = [
-  ['/prototype/onboarding', 'Willkommen'], ['/home', 'Mein Überblick'], ['/portfolio', 'Mein Portfolio'],
+  ['/prototype/onboarding', 'Willkommen'], ['/home', 'Mein Überblick'], ['/prototype/portfolio', 'Mein Portfolio'],
   ['/portfolio/insights', 'Portfolio verstehen'], ['/strategies', 'Strategien entdecken'],
   ['/strategies/trend-long-flat?version=1', 'Strategie verstehen'], ['/tasks', 'AI-Aufgaben'],
   ['/tasks/local-analysis', 'Auftrag verstehen'], ['/paper/orders/new', 'Paperanforderung vorbereiten'], ['/activity', 'Aktivität'],
@@ -26,7 +26,7 @@ test('all ten prototype screens deep link and reload without API, persistence, o
   }
   expect(calls).toEqual([]);
   expect(errors).toEqual([]);
-  for (const path of ['/strategies/local-analysis', '/tasks/trend-long-flat', '/strategies/trend-long-flat?version=2', '/portfolio?context=PAPER', '/portfolio?demoRunId=foreign', '/paper/orders/new?strategy=foreign&version=1']) {
+  for (const path of ['/strategies/local-analysis', '/tasks/trend-long-flat', '/strategies/trend-long-flat?version=2', '/prototype/portfolio?context=PAPER', '/prototype/portfolio?demoRunId=foreign', '/paper/orders/new?strategy=foreign&version=1']) {
     await page.goto(path);
     await expect(page.getByRole('heading', { name: 'Objekt, Version oder Quellkontext nicht verfügbar' })).toBeVisible();
     await expect(page.getByText('1 000.00 USD', { exact: true })).toHaveCount(0);

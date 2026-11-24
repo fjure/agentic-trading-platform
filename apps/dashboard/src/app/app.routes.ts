@@ -25,9 +25,10 @@ export const routes: Routes = [
   { path: 'operations', loadComponent: supervisor, title: 'Daten und Betrieb · Agentic Trading Lab' },
   { path: 'onboarding', loadComponent: () => import('./onboarding/onboarding.component').then(m => m.OnboardingComponent), title: 'Sicher einsteigen · Agentic Trading Lab' },
   { path: 'onboarding/demo/:runId', loadComponent: () => import('./onboarding/onboarding.component').then(m => m.OnboardingComponent), title: 'Gewähltes Demo-Cockpit · Agentic Trading Lab' },
+  { path: 'portfolio', pathMatch: 'full', loadComponent: () => import('./portfolio/portfolio.component').then(m => m.PortfolioComponent), title: 'Mein Portfolio · Agentic Trading Lab' },
   ...[
     ['prototype/onboarding', 'onboarding', 'Willkommen'], ['home', 'home', 'Mein Überblick'],
-    ['portfolio/insights', 'insights', 'Portfolio verstehen'], ['portfolio', 'portfolio', 'Mein Portfolio'],
+    ['portfolio/insights', 'insights', 'Portfolio verstehen'], ['prototype/portfolio', 'portfolio', 'Mein Portfolio'],
     ['strategies/:strategyId', 'strategy', 'Strategie verstehen'], ['strategies', 'strategies', 'Strategien entdecken'],
     ['tasks/:taskId', 'task', 'Auftrag verstehen'], ['tasks', 'tasks', 'AI-Aufgaben'],
     ['paper/orders/new', 'order', 'Paperanforderung vorbereiten'], ['activity', 'activity', 'Aktivität'],

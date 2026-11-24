@@ -251,8 +251,17 @@ class DemoCoordinator:
             )
         return {"items": [public_run(row) for row in rows], "nextCursor": None}
 
-    def get_run(self, run_id):
-        return public_run(self._row(run_id))
+    def _owned_run(self, run_id, actor):
+        if type(actor) is not str or not 1 <= len(actor) <= 255:
+            raise DemoError("INVALID_REQUEST", 400)
+        row = self._row(run_id)
+        if row["actor"] != actor:
+            raise DemoError("INVALID_REQUEST", 404)
+        return row
+
+    def get_run(self, run_id, actor=None):
+        row = self._row(run_id) if actor is None else self._owned_run(run_id, actor)
+        return public_run(row)
 
     @contextmanager
     def _reader(self, run_id):
@@ -269,6 +278,28 @@ class DemoCoordinator:
         valid_trace(trace)
         with self._reader(run_id) as reader:
             return reader.snapshot(trace)
+
+    def portfolio(self, run_id: str, actor: str, trace: str) -> dict:
+        from services.control_api.investment_portfolio_local import (
+            read_local_ledger,
+            unavailable_local_portfolio,
+        )
+
+        valid_trace(trace)
+        self._owned_run(run_id, actor)
+        database = database_name(run_id)
+        with self.engine.connect() as connection:
+            exists = connection.execute(
+                text("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = :name)"),
+                {"name": database},
+            ).scalar_one()
+        if not exists:
+            return unavailable_local_portfolio()
+        engine = financial_engine(self.engine, run_id, role="atl_control_api")
+        try:
+            return read_local_ledger(PostgresLedger(engine=engine), "paper", database)
+        finally:
+            engine.dispose()
 
     def history(self, run_id, resource, **kwargs):
         with self._reader(run_id) as reader:

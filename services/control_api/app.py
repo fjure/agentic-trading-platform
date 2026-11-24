@@ -199,6 +199,7 @@ def create_app(
     delivery_observer=None,
     demo=None,
     preferences=None,
+    fake_portfolio=None,
     setup=None,
     trading_profile=None,
     paper=None,
@@ -216,6 +217,11 @@ def create_app(
         agent_research_path,
         agent_research_problem,
         register_agent_research_routes,
+    )
+    from services.control_api.investment_portfolio_routes import (
+        PORTFOLIO_PATH,
+        portfolio_problem,
+        register_portfolio_route,
     )
     from services.control_api.investment_preferences_routes import (
         PREFERENCES_PATH,
@@ -236,6 +242,11 @@ def create_app(
     research_scope_key = secrets.token_bytes(32)
 
     def public_problem(request, status, code):
+        if request.url.path == PORTFOLIO_PATH:
+            origins = request.headers.getlist("origin")
+            if status == 400 and origins not in ([], [auth.origin]):
+                status = 403
+            return portfolio_problem(status, request.state.trace_id)
         if request.url.path == PREFERENCES_PATH:
             origins = request.headers.getlist("origin")
             allowed = ([], [auth.origin]) if request.method in {"GET", "HEAD"} else ([auth.origin],)
@@ -387,6 +398,7 @@ def create_app(
             raise AuthDenied(400, "INVALID_REQUEST")
         return value
 
+    register_portfolio_route(app, fake_reader=fake_portfolio, demo=demo, paper=paper)
     register_preferences_routes(
         app, preferences=preferences, demo=demo, body_reader=_body, key_reader=key,
     )

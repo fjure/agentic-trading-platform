@@ -293,6 +293,7 @@ def _dormant_privilege_manifest(revisions):
         "0055_quant_prepare_approval", "0056_provider_authority", "0057_model_budget_periods",
         "0058_provider_smoke", "0059_provider_status_time",
         "0060_investment_preferences",
+        "0061_investment_paper_read",
     )
     quant_validation_revision = (
         revisions == [("0036_quant_validation_attempts",)] or apf_revision in apf_revisions
@@ -791,6 +792,11 @@ def _dormant_privilege_manifest(revisions):
                 "agent_research.record_quant_preparation(uuid,uuid,uuid)",
             )
         )
+    if apf_revision == "0061_investment_paper_read":
+        expected.add((
+            "function", "public.paper_investment_portfolio(text)",
+            "atl_paper_control_api", "EXECUTE", False,
+        ))
     return expected
 
 

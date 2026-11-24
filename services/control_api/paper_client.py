@@ -11,6 +11,7 @@ import httpx
 from services.setup.store import generation_filename
 
 from . import paper_dto as dto
+from .investment_portfolio_paper import PaperPortfolioProjection
 from .paper_commands import ERROR_CODES, PaperCommandError
 
 
@@ -89,6 +90,11 @@ class PaperClient:
     def read_snapshot(self, trace_id):
         dto.read_query([("trace", trace_id)], private=True)
         return self._projection(dto.Snapshot, self._request("GET", "/snapshot?trace=" + trace_id))
+
+    def read_investment_portfolio(self, trace_id):
+        dto.read_query([("trace", trace_id)], private=True)
+        value = self._request("GET", "/investment-portfolio?trace=" + trace_id)
+        return self._projection(PaperPortfolioProjection, value)
 
     def _read_page(self, resource, model, limit, cursor, trace_id):
         from urllib.parse import urlencode

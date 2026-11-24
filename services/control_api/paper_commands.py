@@ -94,6 +94,10 @@ class PaperCommands:
         dto.read_query([("trace", trace_id)], private=True)
         return self._call("SELECT public.paper_snapshot(:trace)", {"trace": trace_id})
 
+    def read_investment_portfolio(self, trace_id):
+        dto.read_query([("trace", trace_id)], private=True)
+        return self._call("SELECT public.paper_investment_portfolio(:trace)", {"trace": trace_id})
+
     def _read_page(self, statement, limit, cursor, trace_id):
         values = dto.read_arguments(limit, cursor, trace_id)
         return self._call(statement, values)

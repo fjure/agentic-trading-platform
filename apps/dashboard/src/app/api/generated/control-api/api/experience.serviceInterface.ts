@@ -55,12 +55,14 @@ export interface ExperienceServiceInterface {
 
     /**
      * getInvestmentPortfolio
-     * IEF additive contract; runtime capability requires IEF-03. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+     * IEF additive contract; runtime capability requires IEF-03. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Position cursors are bound to the source snapshot. Cursor expiry or a changed snapshot requires a reload. No navigation grants authority.
      * @endpoint get /api/v1/experience/portfolio
      * @param context 
      * @param demoRunId 
+     * @param limit 
+     * @param cursor 
      */
-    getInvestmentPortfolio(context: InvestmentContextV1, demoRunId?: string, extraHttpRequestParams?: any): Observable<InvestmentPortfolioViewV1>;
+    getInvestmentPortfolio(context: InvestmentContextV1, demoRunId?: string, limit?: number, cursor?: string, extraHttpRequestParams?: any): Observable<InvestmentPortfolioViewV1>;
 
     /**
      * getInvestmentPortfolioAnalysis

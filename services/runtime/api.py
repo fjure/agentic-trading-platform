@@ -330,15 +330,19 @@ def run_api(config, ledger, telemetry=None):
         agent_quant_approval = QuantAdmissionClient(load_quant_admission_authentication())
     except ValueError:
         agent_quant_approval = None
+    supervisor = SnapshotReader(ledger, config.account_id)
     canonical = create_app(
         auth=auth,
         backend=ControlBackend(ledger, config.account_id),
-        supervisor=SnapshotReader(ledger, config.account_id),
+        supervisor=supervisor,
         events=EventFeed(ledger, config.account_id),
         health=health,
         delivery_observer=sampler.delivered if sampler else None,
         demo=DemoClient(),
         preferences=InvestmentPreferencesStore(ledger),
+        fake_portfolio=(
+            supervisor if config.deployment == "lab" and config.broker_provider == "fake" else None
+        ),
         setup=FixedSetupClient(),
         trading_profile=TradingProfileBackend(ledger, config.account_id),
         paper=PaperClient(),

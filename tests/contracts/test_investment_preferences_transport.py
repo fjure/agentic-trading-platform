@@ -104,11 +104,13 @@ def test_demo_selection_requires_existing_run_and_get_never_starts_one():
             self.reads = []
             self.offline = False
 
-        def get_run(self, run_id):
-            self.reads.append(run_id)
+        def get_run(self, run_id, *, actor):
+            self.reads.append((run_id, actor))
             if self.offline:
                 raise AuthDenied(503, "TEMPORARILY_UNAVAILABLE")
-            return {"runId": run_id} if run_id == "demo-1" else None
+            if run_id == "foreign":
+                raise AuthDenied(404, "RESOURCE_NOT_FOUND")
+            return {"runId": run_id} if (run_id, actor) == ("demo-1", "local-operator") else None
 
     backend, demo = PreferencesPort(), DemoReadOnly()
     http, auth = create_client(backend, demo)
@@ -123,14 +125,21 @@ def test_demo_selection_requires_existing_run_and_get_never_starts_one():
     assert response.status_code == 404
     validate("InvestmentProblemV1", response.json())
     assert backend.calls == [("read", "local-operator")]
+    payload["contextReference"]["demoRunId"] = "foreign"
+    response = write(http, PREFERENCES_PATH, payload, method="PUT")
+    assert response.status_code == 404
     payload["contextReference"]["demoRunId"] = "demo-1"
     response = write(http, PREFERENCES_PATH, payload, method="PUT")
     assert response.status_code == 200
     validate("InvestmentPreferencesV1", response.json())
-    assert demo.reads == ["unknown", "demo-1"]
+    assert demo.reads == [
+        ("unknown", "local-operator"), ("foreign", "local-operator"), ("demo-1", "local-operator"),
+    ]
     demo.offline = True
     replay = write(http, PREFERENCES_PATH, payload, method="PUT")
     assert replay.status_code == 200 and replay.json() == response.json()
     conflict = write(http, PREFERENCES_PATH, payload | {"horizon": "LONG"}, method="PUT")
     assert conflict.status_code == 409 and conflict.json()["code"] == "IDEMPOTENCY_CONFLICT"
-    assert demo.reads == ["unknown", "demo-1"]
+    assert demo.reads == [
+        ("unknown", "local-operator"), ("foreign", "local-operator"), ("demo-1", "local-operator"),
+    ]

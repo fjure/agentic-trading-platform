@@ -52,6 +52,13 @@ def test_agent_heads_preserve_the_exact_paper_acl_boundary():
     assert all(not grant[4] for grant in apf - quant)
 
 
+def test_investment_paper_read_adds_only_one_fixed_control_function():
+    assert manifest("0061_investment_paper_read") == manifest("0060_investment_preferences") | {
+        ("function", "public.paper_investment_portfolio(text)",
+         "atl_paper_control_api", "EXECUTE", False),
+    }
+
+
 def test_retrospective_storage_adds_only_its_eight_control_read_and_request_grants():
     previous = manifest("0032_collection_control")
     current = manifest("0033_retrospective_storage")

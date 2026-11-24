@@ -9,19 +9,20 @@
  */
 import { InvestmentSourceReferenceV1 } from './investmentSourceReferenceV1';
 import { InvestmentReasonCodeV1 } from './investmentReasonCodeV1';
-import { InvestmentMetricValueV1AsOf } from './investmentMetricValueV1AsOf';
 import { InvestmentMetricValueV1Value } from './investmentMetricValueV1Value';
+import { InvestmentMetricValueV1NativeAmount } from './investmentMetricValueV1NativeAmount';
 
 
 export interface InvestmentMetricValueV1 { 
-    value: InvestmentMetricValueV1Value;
+    value: InvestmentMetricValueV1Value | null;
     currency: InvestmentMetricValueV1.CurrencyEnum;
     unit: InvestmentMetricValueV1.UnitEnum;
     methodVersion: string;
     availability: InvestmentMetricValueV1.AvailabilityEnum;
     reasonCodes: Array<InvestmentReasonCodeV1>;
-    asOf: InvestmentMetricValueV1AsOf;
+    asOf: any | null;
     sourceReferences: Array<InvestmentSourceReferenceV1>;
+    nativeAmount?: InvestmentMetricValueV1NativeAmount;
 }
 export namespace InvestmentMetricValueV1 {
     export const CurrencyEnum = {

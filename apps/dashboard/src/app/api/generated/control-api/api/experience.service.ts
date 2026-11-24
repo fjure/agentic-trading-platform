@@ -236,18 +236,20 @@ export class ExperienceService extends BaseService implements ExperienceServiceI
 
     /**
      * getInvestmentPortfolio
-     * IEF additive contract; runtime capability requires IEF-03. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+     * IEF additive contract; runtime capability requires IEF-03. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Position cursors are bound to the source snapshot. Cursor expiry or a changed snapshot requires a reload. No navigation grants authority.
      * @endpoint get /api/v1/experience/portfolio
      * @param context 
      * @param demoRunId 
+     * @param limit 
+     * @param cursor 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public getInvestmentPortfolio(context: InvestmentContextV1, demoRunId?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<InvestmentPortfolioViewV1>;
-    public getInvestmentPortfolio(context: InvestmentContextV1, demoRunId?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<InvestmentPortfolioViewV1>>;
-    public getInvestmentPortfolio(context: InvestmentContextV1, demoRunId?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<InvestmentPortfolioViewV1>>;
-    public getInvestmentPortfolio(context: InvestmentContextV1, demoRunId?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public getInvestmentPortfolio(context: InvestmentContextV1, demoRunId?: string, limit?: number, cursor?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<InvestmentPortfolioViewV1>;
+    public getInvestmentPortfolio(context: InvestmentContextV1, demoRunId?: string, limit?: number, cursor?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<InvestmentPortfolioViewV1>>;
+    public getInvestmentPortfolio(context: InvestmentContextV1, demoRunId?: string, limit?: number, cursor?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<InvestmentPortfolioViewV1>>;
+    public getInvestmentPortfolio(context: InvestmentContextV1, demoRunId?: string, limit?: number, cursor?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (context === null || context === undefined) {
             throw new Error('Required parameter context was null or undefined when calling getInvestmentPortfolio.');
         }
@@ -267,6 +269,24 @@ export class ExperienceService extends BaseService implements ExperienceServiceI
             localVarQueryParameters,
             'demoRunId',
             <any>demoRunId,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'limit',
+            <any>limit,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'cursor',
+            <any>cursor,
             QueryParamStyle.Form,
             true,
         );

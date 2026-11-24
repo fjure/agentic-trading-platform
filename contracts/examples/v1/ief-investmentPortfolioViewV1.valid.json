@@ -12,7 +12,9 @@
   "portfolioLedgerVersion": 1,
   "asOf": "2026-10-12T10:00:00Z",
   "quality": "CURRENT",
-  "reconciliation": "CURRENT",
+  "reconciliation": "NOT_APPLICABLE",
+  "reconciliationAt": null,
+  "nextCursor": null,
   "metrics": {
     "cash": {
       "value": "123.45",
@@ -105,7 +107,91 @@
       "sourceReferences": []
     }
   },
-  "positions": [],
+  "positions": [
+    {
+      "instrument": "SYNTHETIC-EUR",
+      "ledgerVersion": 1,
+      "quantity": {
+        "value": "123.45",
+        "currency": "USD",
+        "unit": "USD",
+        "methodVersion": "synthetic-fixture-",
+        "availability": "AVAILABLE",
+        "reasonCodes": [],
+        "asOf": "2026-10-12T10:00:00Z",
+        "sourceReferences": []
+      },
+      "averagePrice": {
+        "value": null,
+        "currency": "USD",
+        "unit": "USD",
+        "methodVersion": "synthetic-fixture-",
+        "availability": "UNAVAILABLE",
+        "reasonCodes": [
+          "METHOD_INPUTS_UNAVAILABLE"
+        ],
+        "asOf": null,
+        "sourceReferences": [],
+        "nativeAmount": {
+          "currency": "EUR",
+          "value": "123.45",
+          "asOf": "2026-10-12T10:00:00Z",
+          "availability": "AVAILABLE"
+        }
+      },
+      "costBasis": {
+        "value": "123.45",
+        "currency": "USD",
+        "unit": "USD",
+        "methodVersion": "synthetic-fixture-",
+        "availability": "AVAILABLE",
+        "reasonCodes": [],
+        "asOf": "2026-10-12T10:00:00Z",
+        "sourceReferences": []
+      },
+      "realizedPnl": {
+        "value": "123.45",
+        "currency": "USD",
+        "unit": "USD",
+        "methodVersion": "synthetic-fixture-",
+        "availability": "AVAILABLE",
+        "reasonCodes": [],
+        "asOf": "2026-10-12T10:00:00Z",
+        "sourceReferences": []
+      },
+      "marketValue": {
+        "value": "123.45",
+        "currency": "USD",
+        "unit": "USD",
+        "methodVersion": "synthetic-fixture-",
+        "availability": "AVAILABLE",
+        "reasonCodes": [],
+        "asOf": "2026-10-12T10:00:00Z",
+        "sourceReferences": []
+      },
+      "unrealizedPnl": {
+        "value": "123.45",
+        "currency": "USD",
+        "unit": "USD",
+        "methodVersion": "synthetic-fixture-",
+        "availability": "AVAILABLE",
+        "reasonCodes": [],
+        "asOf": "2026-10-12T10:00:00Z",
+        "sourceReferences": []
+      },
+      "weight": {
+        "value": "123.45",
+        "currency": "USD",
+        "unit": "USD",
+        "methodVersion": "synthetic-fixture-",
+        "availability": "AVAILABLE",
+        "reasonCodes": [],
+        "asOf": "2026-10-12T10:00:00Z",
+        "sourceReferences": []
+      },
+      "sourceReferences": []
+    }
+  ],
   "marketEvidence": [],
   "blockers": [],
   "sourceReferences": []

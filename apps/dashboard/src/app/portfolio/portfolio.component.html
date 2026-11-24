@@ -1,0 +1,232 @@
+<div class="portfolio">
+  <header>
+    <h1 tabindex="-1">Mein Portfolio</h1>
+    <p>Cash und Positionen aus einer gewählten Quelle.</p>
+  </header>
+
+  <nav aria-label="Portfolioquelle" class="source-picker">
+    @for (source of sources; track source) {
+      <a
+        mat-stroked-button
+        routerLink="/portfolio"
+        [queryParams]="{ context: source }"
+        [attr.aria-current]="context() === source ? 'true' : null"
+      >{{ contextNames[source] }}</a>
+    }
+  </nav>
+
+  @if (loading()) {
+    <p role="status">{{ view() ? 'Weitere Positionen werden geladen.' : 'Portfolio wird geladen.' }}</p>
+  }
+  @if (failure(); as problem) {
+    <div class="notice" role="alert">
+      <p>{{ failureLabels[problem] }}</p>
+      @switch (problem) {
+        @case ('missing-demo') {
+          <a mat-stroked-button routerLink="/onboarding">Demo in der Einführung wählen</a>
+        }
+        @case ('unauthorized') {
+          <a mat-stroked-button routerLink="/onboarding">Lokale Sitzung aktivieren</a>
+        }
+        @case ('invalid-link') {}
+        @default {
+          <button mat-stroked-button type="button" (click)="reload()">Aktuellen Stand neu laden</button>
+        }
+      }
+    </div>
+  } @else if (!context()) {
+    <p>Wählen Sie Fake-Ledger, Ihre gespeicherte Demo oder Alpaca Paper.</p>
+  }
+
+  @if (view(); as portfolio) {
+    <section aria-labelledby="portfolio-state">
+      <div class="snapshot-heading">
+        <div>
+          <h2 id="portfolio-state">{{ contextNames[portfolio.contextReference.context] }}</h2>
+          <p class="quality" role="status">{{ qualityLabels[portfolio.quality] }}</p>
+        </div>
+        <button mat-stroked-button type="button" (click)="reload()" [disabled]="loading()">Aktuellen Stand neu laden</button>
+      </div>
+      <dl class="metadata">
+        <div><dt>Bestätigter Bewertungsstand</dt><dd>{{ portfolio.asOf || 'Nicht verfügbar' }}</dd></div>
+        <div>
+          <dt>Brokerabgleich</dt>
+          <dd>
+            {{ reconciliationLabels[portfolio.reconciliation] }}
+            @if (portfolio.reconciliationAt) { <span class="description">Prüfzeit {{ portfolio.reconciliationAt }}</span> }
+            @else if (portfolio.reconciliation !== 'NOT_APPLICABLE') {
+              <span class="description">Prüfzeit nicht verfügbar</span>
+            }
+          </dd>
+        </div>
+      </dl>
+      @if (portfolio.blockers.length) {
+        <ul class="notice">
+          @for (reason of portfolio.blockers; track $index) { <li>{{ reasonLabel(reason) }}</li> }
+        </ul>
+      }
+      @if (portfolio.contextReference.context === 'ALPACA_PAPER' && portfolio.blockers.includes('LEDGER_NOT_PREPARED')) {
+        <a mat-stroked-button routerLink="/operations" fragment="alpaca-paper">Paper einrichten</a>
+      }
+      <dl class="metrics">
+        @for (field of primaryMetrics; track field[0]) {
+          <div>
+            <dt>{{ field[1] }}</dt>
+            <dd><ng-container [ngTemplateOutlet]="metric" [ngTemplateOutletContext]="{ $implicit: portfolio.metrics[field[0]] }" /></dd>
+          </div>
+        }
+      </dl>
+      <p>Offene Verpflichtungen sind in diesem Bestand nicht bestätigt.</p>
+    </section>
+
+    <section aria-labelledby="portfolio-positions" [attr.aria-busy]="loading()">
+      <h2 id="portfolio-positions">Positionen</h2>
+      @if (portfolio.positions === null) {
+        <p>Der Positionsbestand ist unbekannt.</p>
+      } @else if (!portfolio.positions.length) {
+        <p>Für diesen Bestand sind keine offenen Positionen bestätigt.</p>
+      } @else {
+        @if (mobile()?.matches) {
+          <ul class="position-cards">
+            @for (position of portfolio.positions; track $index) {
+              <li>
+                <mat-card appearance="outlined">
+                  <mat-card-content>
+                    <ng-container [ngTemplateOutlet]="positionButton" [ngTemplateOutletContext]="{ $implicit: position }" />
+                    <dl class="metadata">
+                      <div><dt>Menge</dt><dd><ng-container [ngTemplateOutlet]="metric" [ngTemplateOutletContext]="{ $implicit: position.quantity }" /></dd></div>
+                      <div><dt>Marktwert</dt><dd><ng-container [ngTemplateOutlet]="metric" [ngTemplateOutletContext]="{ $implicit: position.marketValue }" /></dd></div>
+                    </dl>
+                  </mat-card-content>
+                </mat-card>
+                @if (selectedPosition() === position) {
+                  <ng-container [ngTemplateOutlet]="positionDetail" [ngTemplateOutletContext]="{ $implicit: position }" />
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <table aria-labelledby="portfolio-positions">
+            <thead><tr><th scope="col">Instrument</th><th scope="col">Menge</th><th scope="col">Marktwert</th></tr></thead>
+            <tbody>
+              @for (position of portfolio.positions; track $index) {
+                <tr>
+                  <th scope="row"><ng-container [ngTemplateOutlet]="positionButton" [ngTemplateOutletContext]="{ $implicit: position }" /></th>
+                  <td><ng-container [ngTemplateOutlet]="metric" [ngTemplateOutletContext]="{ $implicit: position.quantity }" /></td>
+                  <td><ng-container [ngTemplateOutlet]="metric" [ngTemplateOutletContext]="{ $implicit: position.marketValue }" /></td>
+                </tr>
+                @if (selectedPosition() === position) {
+                  <tr><td colspan="3"><ng-container [ngTemplateOutlet]="positionDetail" [ngTemplateOutletContext]="{ $implicit: position }" /></td></tr>
+                }
+              }
+            </tbody>
+          </table>
+        }
+        @if (portfolio.nextCursor) {
+          <button mat-stroked-button type="button" class="load-more" (click)="morePositions()" [disabled]="loading()">
+            Weitere Positionen laden
+          </button>
+        }
+      }
+    </section>
+
+    <details>
+      <summary>Bewertung und Performance</summary>
+      <dl class="metrics">
+        @for (field of additionalMetrics; track field[0]) {
+          <div>
+            <dt>{{ field[1] }}</dt>
+            <dd><ng-container [ngTemplateOutlet]="metric" [ngTemplateOutletContext]="{ $implicit: portfolio.metrics[field[0]], provenance: true }" /></dd>
+          </div>
+        }
+      </dl>
+    </details>
+
+    <details>
+      <summary>Datenherkunft und Revisionen</summary>
+      <dl class="metadata">
+        <div><dt>Quelle</dt><dd>{{ portfolio.contextReference.namespace }}</dd></div>
+        @if (portfolio.contextReference.demoRunId) {
+          <div><dt>Demolauf</dt><dd>{{ portfolio.contextReference.demoRunId }}</dd></div>
+        }
+        <div><dt>Snapshot</dt><dd>{{ portfolio.snapshotId }} · Version {{ portfolio.snapshotVersion }}</dd></div>
+        <div><dt>Ledgerrevision</dt><dd>{{ portfolio.portfolioLedgerVersion ?? 'Nicht verfügbar' }}</dd></div>
+        @if (portfolio.accountGeneration !== null) {
+          <div><dt>Kontogeneration</dt><dd>{{ portfolio.accountGeneration }}</dd></div>
+        }
+        <div><dt>Abgerufen am</dt><dd>{{ portfolio.observedAt }}</dd></div>
+      </dl>
+      <ng-container [ngTemplateOutlet]="sourcesList" [ngTemplateOutletContext]="{ $implicit: portfolio.sourceReferences }" />
+      <dl class="metadata">
+        @for (field of primaryMetrics; track field[0]) {
+          <div>
+            <dt>{{ field[1] }}</dt>
+            <dd><ng-container [ngTemplateOutlet]="metricProvenance" [ngTemplateOutletContext]="{ $implicit: portfolio.metrics[field[0]] }" /></dd>
+          </div>
+        }
+      </dl>
+      @if (portfolio.marketEvidence.length) {
+        <p>Marktbelege werden getrennt von der Portfoliobewertung ausgewiesen.</p>
+        <ng-container [ngTemplateOutlet]="sourcesList" [ngTemplateOutletContext]="{ $implicit: portfolio.marketEvidence }" />
+      }
+    </details>
+  }
+</div>
+
+<ng-template #metric let-value let-provenance="provenance">
+  <span class="number">{{ metricValue(value) }}</span>
+  @if (value.value !== null && value.unit === 'QUANTITY') { <span> Stück</span> }
+  @if (value.value !== null && value.unit === 'RATIO') { <span> (Verhältnis)</span> }
+  @if (value.nativeAmount; as amount) {
+    <span class="description">Originalwährung · {{ amount.value }} {{ amount.currency }}</span>
+    <span class="description">Stand {{ amount.asOf }} @if (amount.availability === 'STALE') { · veraltet }</span>
+    <span class="description">Für eine Umrechnung in USD fehlt ein belegter Wechselkurs.</span>
+  }
+  @if (value.availability === 'STALE') { <span class="description">Letzter Beleg · veraltet</span> }
+  @for (reason of value.reasonCodes; track $index) {
+    @if (value.availability !== 'AVAILABLE') { <span class="description">{{ reasonLabel(reason) }}</span> }
+  }
+  @if (provenance) {
+    <ng-container [ngTemplateOutlet]="metricProvenance" [ngTemplateOutletContext]="{ $implicit: value }" />
+  }
+</ng-template>
+
+<ng-template #metricProvenance let-value>
+  <span class="description">Methode {{ value.methodVersion }} @if (value.asOf) { · Stand {{ value.asOf }} }</span>
+  <ng-container [ngTemplateOutlet]="sourcesList" [ngTemplateOutletContext]="{ $implicit: value.sourceReferences }" />
+</ng-template>
+
+<ng-template #positionButton let-position>
+  <button
+    mat-button type="button"
+    [attr.aria-label]="position.instrument + ' · Positionsdetails'"
+    [attr.aria-expanded]="selectedPosition() === position"
+    (click)="togglePosition(position)"
+  >{{ position.instrument }}</button>
+</ng-template>
+
+<ng-template #positionDetail let-position>
+  <section class="position-detail" aria-labelledby="portfolio-position-detail">
+    <h3 id="portfolio-position-detail">{{ position.instrument }} · Positionsdetails</h3>
+    <p>Positionsrevision {{ position.ledgerVersion ?? 'nicht verfügbar' }}</p>
+    <dl class="metrics">
+      @for (field of positionMetrics; track field[0]) {
+        <div>
+          <dt>{{ field[1] }}</dt>
+          <dd><ng-container [ngTemplateOutlet]="metric" [ngTemplateOutletContext]="{ $implicit: position[field[0]], provenance: true }" /></dd>
+        </div>
+      }
+    </dl>
+    <ng-container [ngTemplateOutlet]="sourcesList" [ngTemplateOutletContext]="{ $implicit: position.sourceReferences }" />
+  </section>
+</ng-template>
+
+<ng-template #sourcesList let-references>
+  @if (references.length) {
+    <ul class="references">
+      @for (reference of references; track $index) {
+        <li>{{ reference.kind }} · {{ reference.id }} @if (reference.version !== null) { · Version {{ reference.version }} }</li>
+      }
+    </ul>
+  }
+</ng-template>

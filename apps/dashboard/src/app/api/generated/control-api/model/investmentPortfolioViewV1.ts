@@ -25,6 +25,14 @@ export interface InvestmentPortfolioViewV1 {
     asOf: string | null;
     quality: InvestmentPortfolioViewV1.QualityEnum;
     reconciliation: InvestmentPortfolioViewV1.ReconciliationEnum;
+    /**
+     * Last successful reconciliation of this Paper ledger revision.
+     */
+    reconciliationAt?: string | null;
+    /**
+     * Opaque cursor for the next positions page within this source snapshot.
+     */
+    nextCursor?: string | null;
     metrics: InvestmentPortfolioMetricsV1;
     positions: Array<InvestmentPositionViewV1> | null;
     marketEvidence: Array<InvestmentSourceReferenceV1>;

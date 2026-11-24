@@ -96,7 +96,7 @@ def test_ief_linked_stage_lifecycle_is_bounded_and_fail_closed():
         if re.match(r'^- \[[ x]\] 9\.1 \[IEF-09\]\(', line)
     )
     pending = pending_contract_operations(investment_experience_tasks_text=text)
-    assert len(IEF_OPERATIONS) == 14
+    assert len(IEF_OPERATIONS) == 13
     assert not IEF_IMPLEMENTED & pending
     assert set(IEF_OPERATIONS) <= pending
     assert 'unknownInvestmentExecute' not in pending

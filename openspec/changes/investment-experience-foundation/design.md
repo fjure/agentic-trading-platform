@@ -21,7 +21,7 @@ Geplante API unter `/api/v1/experience`:
 | Pfad | Semantik / ausführendes Paket |
 | --- | --- |
 | `GET/PUT /preferences` | Betreiberpräferenzen, expectedVersion + Idempotency-Key / IEF-02 |
-| `GET /portfolio?context=...` | konsistente nullable Finanzprojektion / IEF-03 |
+| `GET /portfolio?context=...&limit=&cursor=` | konsistente nullable Finanzprojektion und revisionsgebundene Positionsseiten / IEF-03 |
 | `POST /portfolio-analyses`, `GET /portfolio-analyses/{analysisId}` | begrenzter lokaler Analyseauftrag / IEF-04 |
 | `GET /insights?context=...&snapshotId=...` | deterministische versionierte Befunde / IEF-04 |
 | `GET /strategies` und `/{id}/versions/{version}` | Register, Ergebnisreferenzen, getrennte Paperfähigkeit / IEF-05 |

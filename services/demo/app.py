@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from starlette.concurrency import run_in_threadpool
 
 from services.demo.coordinator import DemoError, create_coordinator
 
@@ -38,6 +39,14 @@ def create_app(coordinator=None):
             if op == "start" and set(payload) == {"payload", "key", "actor", "trace"}:
                 status, body, headers = api.start(**payload)
                 return JSONResponse(body, status_code=status, headers=headers)
+            if op == "portfolio":
+                if set(payload) != {"run_id", "actor", "trace"}:
+                    raise DemoError("INVALID_REQUEST", 400)
+                return await run_in_threadpool(api.portfolio, **payload)
+            if op == "get_run" and set(payload) == {"run_id", "actor"}:
+                if type(payload["actor"]) is not str:
+                    raise DemoError("INVALID_REQUEST", 400)
+                return await run_in_threadpool(api.get_run, **payload)
             methods = {
                 "list_runs": (set(), api.list_runs),
                 "get_run": ({"run_id"}, api.get_run),

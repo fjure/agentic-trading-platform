@@ -262,7 +262,7 @@ model/investmentContextV1.ts
 model/investmentInsightV1.ts
 model/investmentInsightsViewV1.ts
 model/investmentMetricValueV1.ts
-model/investmentMetricValueV1AsOf.ts
+model/investmentMetricValueV1NativeAmount.ts
 model/investmentMetricValueV1Value.ts
 model/investmentOnboardingStepV1.ts
 model/investmentPaperEligibilityV1.ts

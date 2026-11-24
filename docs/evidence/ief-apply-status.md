@@ -12,7 +12,7 @@ Verifizierter Remote-main und lokaler Issue-Branch-HEAD: `82139cd2f4a87d88b92612
 | --- | --- | --- |
 | IEF-01 / #107 | Additive Contracts, generierter Client und Router/Prototyp lokal umgesetzt. Contract-Suite und ausgewählte Browserregression bestanden. [Paketnachweis](ief-01.md) | Technisch abgeschlossen und nach main integriert. Die formative Prüfung gehört zu IEF-09. |
 | IEF-02 / #108 | Technisch abgeschlossen und nach main integriert. [Paketnachweis](ief-02.md) | Die menschliche Prüfung IEF-T-O05 gehört zu IEF-09. |
-| IEF-03 / #109 | Offen. Neue Finanz-Readmodels stehen aus. | IEF-01 und ARP-10 sind technisch erfüllt. |
+| IEF-03 / #109 | Portfolio Hub lokal umgesetzt. [Paketnachweis](ief-03.md) | Remote-CI und Integration. |
 | IEF-04 / #110 | Nicht begonnen; keine neue lokale Analyse oder externe Erklärung verfügbar | IEF-03; damit mittelbar IEF-01. ARP-10 ist technisch erfüllt, ersetzt aber keine reale Zweck-/Provider-/Kostenfreigabe |
 | IEF-05 / #111 | Offen. Die Registerprojektion steht aus. | IEF-01 ist technisch erfüllt. |
 | IEF-06 / #112 | Nicht begonnen; keine neue persistente Taskprojektion | IEF-01 und IEF-04; bestehender Supervisor bleibt zuständig |

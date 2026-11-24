@@ -142,7 +142,7 @@ def register_preferences_routes(app, *, preferences, demo, body_reader, key_read
                     return response(receipt)
                 if demo is None:
                     raise AuthDenied(503, "CAPABILITY_UNAVAILABLE")
-                run = await run_in_threadpool(demo.get_run, demo_id)
+                run = await run_in_threadpool(demo.get_run, demo_id, actor=actor)
                 if not isinstance(run, dict) or run.get("runId") != demo_id:
                     raise AuthDenied(404, "RESOURCE_NOT_FOUND")
             result = await run_in_threadpool(service.update, actor, data, idem)

@@ -807,12 +807,14 @@
             }
           },
           "asOf": {
-            "anyOf": [
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "Z$",
+            "allOf": [
               {
-                "$ref": "#/components/schemas/UtcTimestamp"
-              },
-              {
-                "type": "null"
+                "format": "date-time"
               }
             ]
           },
@@ -822,9 +824,56 @@
             "items": {
               "$ref": "#/components/schemas/InvestmentSourceReferenceV1"
             }
+          },
+          "nativeAmount": {
+            "description": "An independently denominated source amount. No USD value is inferred.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "currency",
+              "value",
+              "asOf",
+              "availability"
+            ],
+            "properties": {
+              "currency": {
+                "type": "string",
+                "pattern": "^[A-Z]{3}$",
+                "not": {
+                  "const": "USD"
+                }
+              },
+              "value": {
+                "$ref": "#/components/schemas/Decimal"
+              },
+              "asOf": {
+                "$ref": "#/components/schemas/UtcTimestamp"
+              },
+              "availability": {
+                "type": "string",
+                "enum": [
+                  "AVAILABLE",
+                  "STALE"
+                ]
+              }
+            }
           }
         },
         "allOf": [
+          {
+            "if": {
+              "required": [
+                "nativeAmount"
+              ]
+            },
+            "then": {
+              "properties": {
+                "value": {
+                  "type": "null"
+                }
+              }
+            }
+          },
           {
             "if": {
               "properties": {
@@ -1081,6 +1130,26 @@
               "UNKNOWN",
               "NOT_APPLICABLE"
             ]
+          },
+          "reconciliationAt": {
+            "description": "Last successful reconciliation of this Paper ledger revision.",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UtcTimestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nextCursor": {
+            "description": "Opaque cursor for the next positions page within this source snapshot.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 1024
           },
           "metrics": {
             "$ref": "#/components/schemas/InvestmentPortfolioMetricsV1"

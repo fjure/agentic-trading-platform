@@ -116,6 +116,11 @@ def create_private_paper_app(commands, *, research=None, backtesting=None, readi
         values = dto.read_query(request.query_params.multi_items(), private=True)
         return await run_in_threadpool(commands.read_snapshot, values["trace"])
 
+    @app.get("/investment-portfolio")
+    async def investment_portfolio(request: Request):
+        values = dto.read_query(request.query_params.multi_items(), private=True)
+        return await run_in_threadpool(commands.read_investment_portfolio, values["trace"])
+
     def add_page(resource):
         async def page(request: Request):
             values = dto.read_query(request.query_params.multi_items(), private=True, paged=True)
