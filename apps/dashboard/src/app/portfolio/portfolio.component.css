@@ -1,0 +1,141 @@
+:host {
+  display: block;
+}
+
+.portfolio {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 64rem;
+  margin-inline: auto;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  overflow-wrap: anywhere;
+}
+
+h1, h2, h3, p {
+  margin: 0;
+}
+
+header p, section > p {
+  margin-block-start: .5rem;
+}
+
+section, details, .notice {
+  border: 1px solid var(--atl-border);
+  border-radius: .75rem;
+  background: var(--atl-surface);
+  padding: 1rem;
+}
+
+.source-picker, .snapshot-heading {
+  display: flex;
+  align-items: start;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.source-picker a, .load-more, .snapshot-heading button, .notice button, .notice a {
+  min-height: 44px;
+}
+
+.source-picker [aria-current] {
+  background: #dce9ff;
+  color: #173c76;
+  font-weight: 700;
+}
+
+.snapshot-heading {
+  justify-content: space-between;
+}
+
+.quality {
+  margin-block: .4rem;
+  font-weight: 600;
+}
+
+.notice p {
+  margin-block-end: .5rem;
+}
+
+.metadata, .metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: .75rem 1.25rem;
+  margin: 1rem 0 0;
+}
+
+dt, .description {
+  font-size: .875rem;
+  color: var(--atl-secondary);
+}
+
+dd {
+  margin: .2rem 0 0;
+}
+
+.description {
+  display: block;
+  margin-block-start: .25rem;
+}
+
+.number {
+  font-variant-numeric: tabular-nums;
+}
+
+.metrics .number {
+  font-weight: 600;
+}
+
+table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin-block-start: .65rem;
+}
+
+th, td {
+  text-align: start;
+  padding: .5rem;
+  border-bottom: 1px solid var(--atl-border);
+  vertical-align: top;
+}
+
+th button, mat-card button {
+  max-width: 100%;
+  min-height: 44px;
+}
+
+.position-cards, .references {
+  display: grid;
+  gap: .5rem;
+}
+
+.position-cards {
+  list-style: none;
+  padding: 0;
+}
+
+.position-detail {
+  margin-block-start: .5rem;
+}
+
+.references {
+  padding-inline-start: 1.1rem;
+  font-size: .875rem;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: .5rem 0;
+}
+
+.load-more {
+  margin-block-start: 1rem;
+}
+
+@media (max-width: 767px) {
+  .snapshot-heading, .source-picker {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

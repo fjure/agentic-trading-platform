@@ -42,11 +42,15 @@ class DemoClient:
     def list_runs(self):
         return self._call("list_runs")[1]
 
-    def get_run(self, run_id):
-        return self._call("get_run", run_id=run_id)[1]
+    def get_run(self, run_id, actor=None):
+        scope = {} if actor is None else {"actor": actor}
+        return self._call("get_run", run_id=run_id, **scope)[1]
 
     def snapshot(self, run_id, trace):
         return self._call("snapshot", run_id=run_id, trace=trace)[1]
+
+    def portfolio(self, run_id: str, actor: str, trace: str) -> dict:
+        return self._call("portfolio", run_id=run_id, actor=actor, trace=trace)[1]
 
     def history(self, run_id, resource, **kwargs):
         return self._call("history", run_id=run_id, resource=resource, **kwargs)[1]

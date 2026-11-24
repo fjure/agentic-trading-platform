@@ -10868,10 +10868,12 @@ paths:
       summary: getInvestmentPortfolio
       description: IEF additive contract; runtime capability requires IEF-03. Current session and actor/context ownership
         are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated
-        JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+        JSON. Position cursors are bound to the source snapshot. Cursor expiry or a changed snapshot requires a reload.
+        No navigation grants authority.
       x-ief-requirements:
       - IEF-C01
       - IEF-P01
+      - IEF-P02
       - IEF-A01
       - IEF-G01
       parameters:
@@ -10885,6 +10887,21 @@ paths:
         required: false
         schema:
           $ref: '#/components/schemas/AgentOpaqueId'
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 1024
       responses:
         '200':
           description: Bounded result; no trade or provider authority is implied.
@@ -30594,15 +30611,40 @@ components:
           items:
             $ref: '#/components/schemas/InvestmentReasonCodeV1'
         asOf:
-          anyOf:
-          - $ref: '#/components/schemas/UtcTimestamp'
-          - type: 'null'
+          type: [string, 'null']
+          pattern: Z$
+          allOf:
+          - format: date-time
         sourceReferences:
           type: array
           maxItems: 100
           items:
             $ref: '#/components/schemas/InvestmentSourceReferenceV1'
+        nativeAmount:
+          description: An independently denominated source amount. No USD value is inferred.
+          type: object
+          additionalProperties: false
+          required: [currency, value, asOf, availability]
+          properties:
+            currency:
+              type: string
+              pattern: ^[A-Z]{3}$
+              not:
+                const: USD
+            value:
+              $ref: '#/components/schemas/Decimal'
+            asOf:
+              $ref: '#/components/schemas/UtcTimestamp'
+            availability:
+              type: string
+              enum: [AVAILABLE, STALE]
       allOf:
+      - if:
+          required: [nativeAmount]
+        then:
+          properties:
+            value:
+              type: 'null'
       - if:
           properties:
             value:
@@ -30769,6 +30811,16 @@ components:
           - REQUIRED
           - UNKNOWN
           - NOT_APPLICABLE
+        reconciliationAt:
+          description: Last successful reconciliation of this Paper ledger revision.
+          anyOf:
+          - $ref: '#/components/schemas/UtcTimestamp'
+          - type: 'null'
+        nextCursor:
+          description: Opaque cursor for the next positions page within this source snapshot.
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 1024
         metrics:
           $ref: '#/components/schemas/InvestmentPortfolioMetricsV1'
         positions:

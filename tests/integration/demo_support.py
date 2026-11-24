@@ -12,19 +12,18 @@ from pathlib import Path
 
 
 def host():
-    from tests.integration.ledger_support import GROUPS, _admin
+    from tests.integration.ledger_support import (
+        GROUPS,
+        _admin,
+        ensure_role_test_groups,
+        guest_target,
+    )
 
     root = Path(__file__).resolve().parents[2]
     name = "atl_demo_test_" + uuid.uuid4().hex[:20]
     password = secrets.token_urlsafe(32)
-    _admin(
-        "\n".join(
-            f"DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='{group}') "
-            f"THEN CREATE ROLE {group} NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT; "
-            "END IF; END $$;"
-            for group in GROUPS
-        )
-    )
+    ensure_role_test_groups()
+    network, image = guest_target("agentic-trading-lab-dev-build-smoke:latest")
     _admin(
         f"CREATE ROLE {name} LOGIN CREATEDB NOSUPERUSER NOCREATEROLE NOINHERIT "
         f"PASSWORD '{password}';"
@@ -45,7 +44,7 @@ def host():
             "--rm",
             "-i",
             "--network",
-            "agentic-trading-lab-dev_local",
+            network,
             "--read-only",
             "--cap-drop",
             "ALL",
@@ -64,7 +63,7 @@ def host():
             (Path(__file__).resolve(), "/opt/lab/test_guest.py"),
         ):
             command.extend(("--mount", f"type=bind,source={source},target={target},readonly"))
-        command.extend(("agentic-trading-lab-dev-build-smoke:latest", "test_guest.py", "guest"))
+        command.extend((image, "test_guest.py", "guest"))
         result = subprocess.run(
             command,
             input=json.dumps({"database": name, "username": name, "password": password}),
@@ -172,6 +171,34 @@ def guest():
         ):
             items = coordinator.history(run_id, resource, trace_id=run["traceId"])["items"]
             assert items, resource
+        portfolio = coordinator.portfolio(run_id, "demo-test", uuid.uuid4().hex)
+        assert Decimal(portfolio["cash"]) == Decimal(budget) - 5
+        assert portfolio["currency"] == "USD"
+        assert portfolio["reconciliation"] == "NOT_APPLICABLE"
+        assert portfolio["positions"] == [
+            {
+                "instrument": "SPY", "currency": "USD",
+                "revision": portfolio["positions"][0]["revision"],
+                "quantity": "1.000000000000000000",
+                "average_price": "5.000000000000000000",
+                "cost_basis": None, "realized_pnl": None,
+            }
+        ]
+        assert portfolio["positions"][0]["revision"] > 1
+        assert coordinator.get_run(run_id, actor="demo-test")["runId"] == run_id
+        for invalid_run, actor in ((run_id, "other-operator"), (str(uuid.uuid4()), "demo-test")):
+            try:
+                coordinator.portfolio(invalid_run, actor, uuid.uuid4().hex)
+            except DemoError as error:
+                assert error.status == 404
+            else:
+                raise AssertionError("foreign or missing Demo portfolio became readable")
+        try:
+            coordinator.get_run(run_id, actor="other-operator")
+        except DemoError as error:
+            assert error.status == 404
+        else:
+            raise AssertionError("foreign Demo became selectable")
         owner = financial_engine(engine, run_id)
         with owner.connect() as c:
             assert not c.execute(
@@ -194,6 +221,13 @@ def guest():
               WHERE id=(SELECT portfolio_snapshot_id FROM risk_account_context)""")
             ).scalar_one()
             assert cash == Decimal(budget) - 5, cash
+            valuation = c.execute(
+                text("SELECT id, ledger_version, as_of FROM portfolio_snapshots WHERE id="
+                     "(SELECT portfolio_snapshot_id FROM risk_account_context)")
+            ).one()
+            assert portfolio["snapshot_id"] == valuation.id
+            assert portfolio["revision"] == valuation.ledger_version
+            assert portfolio["as_of"] == valuation.as_of.isoformat().replace("+00:00", "Z")
             assert (
                 c.execute(
                     text("SELECT count(*) FROM demo_transport_journal WHERE kind='accept'")

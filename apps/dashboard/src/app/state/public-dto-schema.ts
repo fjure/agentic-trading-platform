@@ -1,6 +1,11 @@
 import type {
-  ModeState, RiskPolicy, SupervisorSnapshot,
+  ModeState, RiskPolicy, SupervisorSnapshot, InvestmentPortfolioMetricsV1, InvestmentPositionViewV1,
 } from '../api/generated/control-api/model/models';
+import { InvestmentContextV1 } from '../api/generated/control-api/model/investmentContextV1';
+import { InvestmentMetricValueV1 } from '../api/generated/control-api/model/investmentMetricValueV1';
+import { InvestmentPortfolioViewV1 } from '../api/generated/control-api/model/investmentPortfolioViewV1';
+import { InvestmentReasonCodeV1 } from '../api/generated/control-api/model/investmentReasonCodeV1';
+import { InvestmentSourceReferenceV1 } from '../api/generated/control-api/model/investmentSourceReferenceV1';
 import { ReasonCode } from '../api/generated/control-api/model/reasonCode';
 import type { HistoryItem, Resource } from './supervisor.models';
 
@@ -77,6 +82,95 @@ const snapshot = object({
   portfolioCash: optional(decimal),
   positions: optional(array(object({ instrument: text(96), quantity: decimal, averagePrice: optional(decimal) }))),
 });
+
+const opaqueId = text(128, /^[A-Za-z0-9._:-]+$/);
+const investmentSources = array(object({
+  kind: enumeration(...Object.values(InvestmentSourceReferenceV1.KindEnum)),
+  id: opaqueId,
+  version: nullable(integer(1)),
+}), 100);
+const investmentReasons = array(enumeration(...Object.values(InvestmentReasonCodeV1)), 32);
+const investmentMetric = object({
+  value: nullable(decimal),
+  currency: enumeration(...Object.values(InvestmentMetricValueV1.CurrencyEnum)),
+  unit: enumeration(...Object.values(InvestmentMetricValueV1.UnitEnum)),
+  methodVersion: opaqueId,
+  availability: enumeration(...Object.values(InvestmentMetricValueV1.AvailabilityEnum)),
+  reasonCodes: investmentReasons,
+  asOf: nullable(timestamp),
+  sourceReferences: investmentSources,
+  nativeAmount: optional(object({
+    currency: text(3, /^(?!USD$)[A-Z]{3}$/),
+    value: decimal,
+    asOf: timestamp,
+    availability: enumeration('AVAILABLE', 'STALE'),
+  })),
+});
+const investmentPosition = object({
+  instrument: text(32, /^.{1,32}$/),
+  ledgerVersion: nullable(integer(1)),
+  quantity: investmentMetric, averagePrice: investmentMetric, costBasis: investmentMetric,
+  realizedPnl: investmentMetric, marketValue: investmentMetric, unrealizedPnl: investmentMetric,
+  weight: investmentMetric, sourceReferences: investmentSources,
+});
+const investmentPortfolio = object({
+  schemaVersion: enumeration('1'),
+  contextReference: object({
+    context: enumeration(...Object.values(InvestmentContextV1)),
+    namespace: enumeration('demo', 'fake', 'alpaca-paper'),
+    demoRunId: optional(opaqueId),
+  }),
+  observedAt: timestamp,
+  snapshotId: opaqueId,
+  snapshotVersion: integer(1),
+  accountGeneration: nullable(integer(1)),
+  portfolioLedgerVersion: nullable(integer(1)),
+  asOf: nullable(timestamp),
+  quality: enumeration(...Object.values(InvestmentPortfolioViewV1.QualityEnum)),
+  reconciliation: enumeration(...Object.values(InvestmentPortfolioViewV1.ReconciliationEnum)),
+  metrics: object({
+    cash: investmentMetric, equity: investmentMetric, exposure: investmentMetric,
+    realizedPnl: investmentMetric, marketValue: investmentMetric, unrealizedPnl: investmentMetric,
+    dailyReturn: investmentMetric, totalReturn: investmentMetric, drawdown: investmentMetric,
+  }),
+  positions: nullable(array(investmentPosition, 100)),
+  marketEvidence: investmentSources,
+  blockers: investmentReasons,
+  sourceReferences: investmentSources,
+  nextCursor: optional(nullable(text(1024, /^.+$/))),
+  reconciliationAt: optional(nullable(timestamp)),
+});
+
+export type PortfolioMetric = Omit<InvestmentMetricValueV1, 'value' | 'asOf' | 'nativeAmount'> & {
+  value: string | null;
+  asOf: string | null;
+  nativeAmount?: { currency: string; value: string; asOf: string; availability: 'AVAILABLE' | 'STALE' };
+};
+type MetricFields<T> = {
+  [Key in keyof T]: T[Key] extends InvestmentMetricValueV1 ? PortfolioMetric : T[Key];
+};
+export type PortfolioPosition = MetricFields<InvestmentPositionViewV1>;
+export type PortfolioView = Omit<InvestmentPortfolioViewV1, 'metrics' | 'positions'> & {
+  metrics: MetricFields<InvestmentPortfolioMetricsV1>;
+  positions: PortfolioPosition[] | null;
+};
+
+export function projectInvestmentPortfolio(input: unknown): PortfolioView {
+  const portfolio = project(investmentPortfolio, input) as PortfolioView;
+  const metrics = [
+    ...Object.values(portfolio.metrics),
+    ...(portfolio.positions ?? []).flatMap(position => [
+      position.quantity, position.averagePrice, position.costBasis, position.realizedPnl,
+      position.marketValue, position.unrealizedPnl, position.weight,
+    ]),
+  ];
+  if (metrics.some(metric =>
+    (metric.value === null) !== (metric.availability === 'UNAVAILABLE') ||
+    (metric.availability !== 'AVAILABLE' && !metric.reasonCodes.length) ||
+    (metric.nativeAmount && (metric.value !== null || metric.unit !== 'USD'))
+  )) throw new InvalidPublicDto();
+  return portfolio;
+}
 
 const marketState = object({
   id: text(256), instrument: text(256), market: enumeration('US_EQUITY', 'CRYPTO'),

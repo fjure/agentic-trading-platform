@@ -226,7 +226,7 @@ export * from './investmentContextV1';
 export * from './investmentInsightV1';
 export * from './investmentInsightsViewV1';
 export * from './investmentMetricValueV1';
-export * from './investmentMetricValueV1AsOf';
+export * from './investmentMetricValueV1NativeAmount';
 export * from './investmentMetricValueV1Value';
 export * from './investmentOnboardingStepV1';
 export * from './investmentPaperEligibilityV1';

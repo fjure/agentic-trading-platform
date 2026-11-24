@@ -13,6 +13,8 @@ from uuid import uuid4
 ROOT = Path(__file__).resolve().parents[1]
 TESTS = (
     "tests/integration/test_investment_preferences_store.py",
+    "tests/integration/test_investment_portfolio_paper.py",
+    "tests/integration/test_dashboard_demo.py",
     "tests/integration/test_agent_research_runtime.py",
     "tests/integration/test_arp_model_attempts.py",
     "tests/integration/test_arp_evaluation_supervisor.py",

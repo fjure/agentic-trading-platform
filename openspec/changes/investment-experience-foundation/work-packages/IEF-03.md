@@ -45,6 +45,6 @@ Eigene Component-/API-/SQL-/Securityprüfungen und betroffene Regressionen mit Q
 
 ## Apply-Status
 
-Nicht begonnen. Es gelten die technischen Voraussetzungen aus dem Dependencygraph. Die menschliche Abnahme findet in IEF-09 statt.
+Portfolio Hub lokal umgesetzt. Die drei Datenquellen, Positionsseiten und konservativen Finanzmetriken sind für die Remote-CI vorbereitet. Die menschliche Abnahme findet in IEF-09 statt.
 
 Prüfevidenz, konkreter Dependencyblocker und Wiederanlauf: `docs/evidence/ief-apply-status.md`. Keine Änderung normativer Anforderungen oder Abnahmeschwellen. Issue und Taskcheckbox bleiben bis zur vollständigen Definition of Done offen.
