@@ -11,7 +11,7 @@
       @for (item of navigation; track item[0]) {
         <a [routerLink]="item[0]" routerLinkActive="current" ariaCurrentWhenActive="page" (click)="closeNavigation(drawer)">{{ item[1] }}</a>
       }
-      <a routerLink="/onboarding" (click)="closeNavigation(drawer)">Einführung / Prototyp starten</a>
+      <a routerLink="/onboarding" (click)="closeNavigation(drawer)">Einführung / Präferenzen</a>
     </nav>
     <p class="nav-note">Experience-Prototyp v1<br>Menschliche UX-Freigabe ausstehend</p>
   </mat-sidenav>

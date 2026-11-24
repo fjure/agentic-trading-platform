@@ -40,10 +40,10 @@
       "issueNumber": 108,
       "issueUrl": "https://github.com/fjure/agentic-trading-platform/issues/108",
       "issueId": 6561574342,
-      "contentHash": "066811280084adbcf910c92e891c761c6931b40156ec6465e1c21035c6472e60",
-      "syncedAt": "2026-11-24T09:00:57.110885+00:00",
-      "applyStatus": "TECHNICAL_DEPENDENCIES_PENDING",
-      "implementationEvidence": "docs/evidence/ief-apply-status.md"
+      "contentHash": "ab5da8777a797c45df1381883d20dfb01b46766edbfea43282550ca4513231f9",
+      "syncedAt": "2026-11-24T13:27:20.973263+00:00",
+      "applyStatus": "TECHNICAL_INTEGRATION_PENDING",
+      "implementationEvidence": "docs/evidence/ief-02.md"
     },
     {
       "taskId": "IEF-03",
@@ -468,6 +468,20 @@
         111,
         112,
         113,
+        115
+      ]
+    }
+  },
+  "ief02ReadBack": {
+    "verifiedAt": "2026-11-24T13:27:20.973263+00:00",
+    "issueNumber": 108,
+    "state": "open",
+    "nativeDependencies": {
+      "blocked_by": [
+        107
+      ],
+      "blocking": [
+        114,
         115
       ]
     }

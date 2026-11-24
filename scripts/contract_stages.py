@@ -67,7 +67,8 @@ IEF_TASKS = (
 IEF_OPERATION_MATRIX = json.loads(
     (Path(__file__).resolve().parents[1] / "contracts/ief-operations.json").read_text("utf-8")
 )
-IEF_OPERATIONS = dict.fromkeys(IEF_OPERATION_MATRIX, "IEF-09")
+IEF_IMPLEMENTED = frozenset({"getInvestmentPreferences", "updateInvestmentPreferences"})
+IEF_OPERATIONS = dict.fromkeys(set(IEF_OPERATION_MATRIX) - IEF_IMPLEMENTED, "IEF-09")
 IEF_PAPER_SCHEMAS = frozenset({
     "PaperPreviewProvenanceV1", "PaperLimitPreviewRequestV1", "PaperRiskPrecheckV1",
     "PaperLimitPreviewV1", "PaperGuidedLimitOrderRequestV1", "PaperLimitPreviewTermsV1",

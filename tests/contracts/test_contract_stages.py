@@ -88,7 +88,7 @@ def test_ambiguous_quant_stage_cannot_bypass_route_checks(mutation):
 
 
 def test_ief_linked_stage_lifecycle_is_bounded_and_fail_closed():
-    from scripts.contract_stages import IEF_OPERATIONS, IEF_TASKS
+    from scripts.contract_stages import IEF_IMPLEMENTED, IEF_OPERATIONS, IEF_TASKS
 
     text = IEF_TASKS.read_text('utf-8')
     line = next(
@@ -96,7 +96,8 @@ def test_ief_linked_stage_lifecycle_is_bounded_and_fail_closed():
         if re.match(r'^- \[[ x]\] 9\.1 \[IEF-09\]\(', line)
     )
     pending = pending_contract_operations(investment_experience_tasks_text=text)
-    assert len(IEF_OPERATIONS) == 16
+    assert len(IEF_OPERATIONS) == 14
+    assert not IEF_IMPLEMENTED & pending
     assert set(IEF_OPERATIONS) <= pending
     assert 'unknownInvestmentExecute' not in pending
     complete = text.replace(line, line.replace('- [ ]', '- [x]', 1))

@@ -11,7 +11,7 @@ Verifizierter Remote-main und lokaler Issue-Branch-HEAD: `82139cd2f4a87d88b92612
 | Paket / Issue | Tatsächlicher Stand | Abschlussblocker |
 | --- | --- | --- |
 | IEF-01 / #107 | Additive Contracts, generierter Client und Router/Prototyp lokal umgesetzt. Contract-Suite und ausgewählte Browserregression bestanden. [Paketnachweis](ief-01.md) | Technisch abgeschlossen und nach main integriert. Die formative Prüfung gehört zu IEF-09. |
-| IEF-02 / #108 | Nicht begonnen; kein funktionaler Preferences-Store behauptet | Technischer Abschluss IEF-01. Die menschliche Prüfung IEF-T-O05 gehört zu IEF-09. |
+| IEF-02 / #108 | Lokal umgesetzt und geprüft. [Paketnachweis](ief-02.md) | Remote-CI und Integration. Die menschliche Prüfung IEF-T-O05 gehört zu IEF-09. |
 | IEF-03 / #109 | Nicht begonnen; neue Finanz-Readmodels nicht implementiert | Technischer Abschluss IEF-01 |
 | IEF-04 / #110 | Nicht begonnen; keine neue lokale Analyse oder externe Erklärung verfügbar | IEF-03; damit mittelbar IEF-01. ARP-10 ist technisch erfüllt, ersetzt aber keine reale Zweck-/Provider-/Kostenfreigabe |
 | IEF-05 / #111 | Nicht begonnen; Prototypkarten sind keine neue Registerprojektion | Technischer Abschluss IEF-01 |

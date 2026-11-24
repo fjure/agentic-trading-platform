@@ -198,6 +198,7 @@ def create_app(
     health=None,
     delivery_observer=None,
     demo=None,
+    preferences=None,
     setup=None,
     trading_profile=None,
     paper=None,
@@ -216,6 +217,11 @@ def create_app(
         agent_research_problem,
         register_agent_research_routes,
     )
+    from services.control_api.investment_preferences_routes import (
+        PREFERENCES_PATH,
+        preferences_problem,
+        register_preferences_routes,
+    )
     from services.control_api.paper_commands import PaperCommandError
     from services.control_api.paper_routes import paper_problem, register_paper_routes
     from services.control_api.quant_lab_routes import (
@@ -230,6 +236,12 @@ def create_app(
     research_scope_key = secrets.token_bytes(32)
 
     def public_problem(request, status, code):
+        if request.url.path == PREFERENCES_PATH:
+            origins = request.headers.getlist("origin")
+            allowed = ([], [auth.origin]) if request.method in {"GET", "HEAD"} else ([auth.origin],)
+            if status == 400 and origins not in allowed:
+                status = 403
+            return preferences_problem(status, code, request.state.trace_id)
         if agent_research_path(request.url.path):
             origins = request.headers.getlist("origin")
             valid_origins = ([], [auth.origin]) if request.method in {"GET", "HEAD"} else (
@@ -374,6 +386,10 @@ def create_app(
         if value is None or not _KEY.fullmatch(value):
             raise AuthDenied(400, "INVALID_REQUEST")
         return value
+
+    register_preferences_routes(
+        app, preferences=preferences, demo=demo, body_reader=_body, key_reader=key,
+    )
 
     @app.post("/api/v1/session", operation_id="activateLocalSession")
     async def activate(request: Request):

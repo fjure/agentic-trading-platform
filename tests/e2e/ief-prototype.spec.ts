@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '../../apps/dashboard/node_modules/@playwright/test/index.mjs';
 
 const screens = [
-  ['/onboarding', 'Willkommen'], ['/home', 'Mein Überblick'], ['/portfolio', 'Mein Portfolio'],
+  ['/prototype/onboarding', 'Willkommen'], ['/home', 'Mein Überblick'], ['/portfolio', 'Mein Portfolio'],
   ['/portfolio/insights', 'Portfolio verstehen'], ['/strategies', 'Strategien entdecken'],
   ['/strategies/trend-long-flat?version=1', 'Strategie verstehen'], ['/tasks', 'AI-Aufgaben'],
   ['/tasks/local-analysis', 'Auftrag verstehen'], ['/paper/orders/new', 'Paperanforderung vorbereiten'], ['/activity', 'Aktivität'],
@@ -35,7 +35,7 @@ test('all ten prototype screens deep link and reload without API, persistence, o
 
 test('J1 and J2 explicitly choose demo and confirm local analysis, retaining stable synthetic source on reload', async ({ page }) => {
   const calls = recordApi(page);
-  await page.goto('/onboarding');
+  await page.goto('/prototype/onboarding');
   await page.getByRole('button', { name: 'Weiter zu freiwilligen Angaben' }).click();
   await page.getByRole('button', { name: 'Präferenzen überspringen' }).click();
   await click(page, 'Diese Demo wählen und zum Überblick');
