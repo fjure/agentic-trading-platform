@@ -1,5 +1,6 @@
 """Actual temporary Paper SQL and revision-bound evidence, with synthetic provider fixtures."""
 
+import os
 from pathlib import Path
 
 MARKER = "PASS: isolated Paper portfolio revision and reconciliation read"
@@ -9,9 +10,11 @@ QUERY = "SELECT public.paper_investment_portfolio(:trace)"
 def test_investment_portfolio_paper_postgres():
     from tests.integration.test_paper_provision import host
 
+    image = os.environ.get("ATL_RESEARCH_TEST_IMAGE", "agentic-trading-lab-dev-build-smoke:latest")
     assert host(
         Path(__file__), MARKER,
         support_paths=(Path(__file__).with_name("test_paper_lifecycle.py"),),
+        python_image=image,
     ) == MARKER
 
 

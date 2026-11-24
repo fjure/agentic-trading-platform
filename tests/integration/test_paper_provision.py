@@ -28,7 +28,8 @@ POSTGRES = (
 )
 
 
-def host(guest_path=None, expected_marker=None, support_paths=(), guest_args=()):
+def host(guest_path=None, expected_marker=None, support_paths=(), guest_args=(), *,
+         python_image="agentic-trading-lab-dev-build-smoke:latest"):
     root = Path(__file__).resolve().parents[2]
     guest_path = Path(__file__).resolve() if guest_path is None else guest_path.resolve()
     if not guest_path.is_relative_to(root / "tests/integration") or guest_path.suffix != ".py":
@@ -61,7 +62,6 @@ def host(guest_path=None, expected_marker=None, support_paths=(), guest_args=())
     if clock_mode not in {"0", "1"}:
         raise ValueError("invalid isolated integration clock selection")
     postgres_image = POSTGRES
-    python_image = "agentic-trading-lab-dev-build-smoke:latest"
     postgres_clock, python_clock = [], []
     if clock_mode == "1":
         from tests.integration.paper_clock.runtime import (

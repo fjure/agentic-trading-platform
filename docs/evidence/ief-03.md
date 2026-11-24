@@ -27,3 +27,7 @@ Die Projektion unterscheidet bestätigtes Cash von unbekannter Finanzbasis sowie
 Migration `0061_investment_paper_read` hat nur im Paper-Ledger Wirkung. Sie ergänzt eine lesende Funktion für die bestehende Paper-Control-API-Rolle. Die SQL-Prüfung verlangt die exakte DB-, Login- und Rollenidentität. Nur gebundene Ledgernachweise verlassen den Dienst. Die Projektion hat keine Broker-Credentials, Befehlsoperation oder Reconciliation-Seiteneffekte. LIVE-, Risk-, Budget-, Pause- und Execution-Entscheidungen verwenden weiter ihre bestehenden Pfade.
 
 Bei einem Quellkonflikt wird der Portfolio-Read neu geladen. Neustart der lokalen API beendet vorhandene Sitzungen und Cursor. Ein Rollback auf den vorherigen Anwendungsstand entfernt die neue Oberfläche. Ein Downgrade von 0061 entfernt ausschließlich die additive Lesefunktion. Kein Finanz- oder Auditbestand wird gelöscht. Die integrierte menschliche Prüfung bleibt Teil von IEF-09.
+
+### Integrationskorrektur nach erster Remote-CI
+
+Der Research-Runner bestand 18 von 19 Datenbanktests auf 4250759. Der Paper-Test erwartete einen lokalen Entwicklungstag, während der Workflow ein pro Lauf benanntes Testimage baut. Der Test übernimmt jetzt das veröffentlichte Image des isolierten Runners. Die bestehenden Assertions zur Ledgerrevision und zu den Berechtigungen sind unverändert. Der lokale Nachtest mit exakt dieser Image-Übergabe bestand in 7,17 Sekunden. JUnit-SHA256: `9633202f7f05f908338d18f17a0286cbeade4e78bb03a5f2abd1a2bdd1fc8f5a`.
