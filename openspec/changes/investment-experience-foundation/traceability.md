@@ -48,8 +48,8 @@ Jedes Paket führt `docs/evidence/ief-NN.md` mit Quell-SHA, Werkzeug-/Datenversi
 
 | Szenarien | Requirement | Paket | Journey und Evidenz |
 | --- | --- | --- | --- |
-| IEF-T-O05 | IEF-O01 | IEF-02 | J1, funktionaler menschlicher Onboardingtest |
-| IEF-T-C06 | IEF-C02 | IEF-01, IEF-08 | J1–J6, Prototypfreigabe und dokumentierter Integrationsabgleich |
+| IEF-T-O05 | IEF-O01 | IEF-02, IEF-09 | J1, technische Onboarding-Teilstrecke in IEF-02, menschlicher Test in IEF-09 |
+| IEF-T-C06 | IEF-C02 | IEF-01, IEF-08, IEF-09 | J1–J6, technische Prototypprüfung, dokumentierter Integrationsabgleich und formative menschliche Freigabe in IEF-09 |
 | IEF-T-C07 | IEF-C02 | IEF-08, IEF-09 | J5/J6, Browser, Accessibility, menschliche sichere Folgeaktion |
 | IEF-T-C08 | IEF-C04 | IEF-09 | J1–J6, menschliche Produktabnahme und Nachtests |
 | IEF-T-S06/S07 | IEF-S02 | IEF-05 | J3/J5, aktuelle Eignung und ungültiger Übergang |

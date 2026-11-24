@@ -56,7 +56,7 @@ def test_preview_contract_exposes_exact_bound_fields(validator):
         deadline=datetime.now(UTC) + timedelta(minutes=1),
     )
     try:
-        response = _preview_response(preview, vault.read(preview, session="browser-session"))
+        response = _preview_response(preview, vault.read(preview, session="browser-session"), None)
         validator("ProcessingPreviewV1").validate(response)
         assert response["projectionBinding"] == preview.commitment
         assert response["modelGeneration"] == binding.model_generation

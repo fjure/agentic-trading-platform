@@ -1,0 +1,27 @@
+{
+  "terms": {
+    "credentialGeneration": 1,
+    "accountGeneration": 1,
+    "policyVersion": 1,
+    "profileVersion": 1,
+    "limitPolicyVersion": 1,
+    "symbol": "SPY",
+    "side": "BUY",
+    "quantity": "1.25",
+    "limitPrice": "1.25",
+    "orderType": "LIMIT",
+    "timeInForce": "DAY",
+    "session": "REGULAR",
+    "currency": "USD",
+    "expiresAt": "2026-11-23T12:00:00Z",
+    "budgetVersion": 1,
+    "riskBudget": "1.25"
+  },
+  "provenance": {
+    "origin": "PORTFOLIO"
+  },
+  "portfolioLedgerVersion": 1,
+  "marketStateId": "synthetic-fixture-",
+  "quoteId": "synthetic-fixture-",
+  "evidenceHash": "0000000000000000000000000000000000000000000000000000000000000000"
+}

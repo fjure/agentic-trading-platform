@@ -45,7 +45,31 @@ def postgres_command() -> list[str]:
     return PSQL[:11]
 
 
+def guest_target(default_image: str) -> tuple[str, str]:
+    """Keep the guest and its database in the same explicitly selected test project."""
+    container = os.environ.get("ATL_RESEARCH_TEST_POSTGRES")
+    network = os.environ.get("ATL_RESEARCH_TEST_NETWORK")
+    image = os.environ.get("ATL_RESEARCH_TEST_IMAGE")
+    if container and network and image:
+        return network, image
+    if container or network or image:
+        raise RuntimeError("Incomplete isolated PostgreSQL guest configuration")
+    return "agentic-trading-lab-dev_local", default_image
+
+
 GROUPS = ("atl_worker", "atl_execution", "atl_control_api", "atl_watchdog", "atl_backtest_worker")
+# The temporary migration owner has NOCREATEROLE. Provision the groups used by
+# the full migration chain before the guest connects with that limited login.
+ROLE_TEST_GROUPS = (*GROUPS, "atl_evidence_importer", "atl_agent_research", "atl_agent_quant_admission")
+
+
+def ensure_role_test_groups() -> None:
+    _admin("\n".join(
+        f"DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '{group}') "
+        f"THEN CREATE ROLE {group} NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT; "
+        "END IF; END $$;"
+        for group in ROLE_TEST_GROUPS
+    ))
 
 
 def _admin(sql: str, *, database: str = "lab", restore_diagnostic: bool = False) -> str:

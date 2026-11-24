@@ -37,7 +37,7 @@ Geltende Screenverträge aus ux-architecture.md und navigation-design.md: deutsc
 
 ## Verbindliche Refinement-Abnahme
 
-IEF-T-C08. Mindestens fünf fachfremde Personen am integrierten Build in allen sechs Journeys prüfen. Je Aufgabe und Begriffsfrage mindestens 80 Prozent, Sicherheitsfälle 100 Prozent. Kritische Fehlbedienung oder Kernwegsperre blockiert bis zum menschlichen Nachtest. Technische CI, Prototypfreigabe und Nutzernachweis separat protokollieren.
+IEF-T-C06, IEF-T-O05 und IEF-T-C08. Die formative Prototypprüfung, die funktionale Onboardingprüfung und die integrierte Abnahme gemeinsam in IEF-09 durchführen und separat auswerten. Je Prüfung mindestens fünf fachfremde Personen gemäß ux-validation.md. Für die integrierte Prüfung frische Personen einsetzen. Alle festgelegten Zeitgrenzen, Erfolgsquoten, 100 Prozent sichere Entscheidungen sowie Korrektur und menschliche Nachtests bleiben verpflichtend. Technische CI und menschliche Ergebnisse separat protokollieren.
 
 ## Evidenznachweis und Definition of Done
 
@@ -46,3 +46,9 @@ Eigene Component-/API-/SQL-/Securityprüfungen und betroffene Regressionen mit Q
 ## OpenSpec-Referenz
 
 `openspec/changes/investment-experience-foundation/work-packages/IEF-09.md`; design.md und zugehörige Capability-Deltas.
+
+## Apply-Status
+
+Nicht begonnen. IEF-01–08 sind technische Voraussetzungen. Die drei menschlichen Prüfungen sind vor Abschluss von IEF-09 durchzuführen (HUMAN_UX_VALIDATION_PENDING).
+
+Prüfevidenz, konkreter Dependencyblocker und Wiederanlauf: `docs/evidence/ief-apply-status.md`. Keine Änderung normativer Anforderungen oder Abnahmeschwellen. Issue und Taskcheckbox bleiben bis zur vollständigen Definition of Done offen.

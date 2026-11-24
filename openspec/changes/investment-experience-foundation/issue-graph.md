@@ -67,4 +67,4 @@ ARP-10 = #105, am ersten Discoveryzeitpunkt offen, nach aktualisiertem Remoteche
 
 ## Refinement
 
-Der Prototyp liegt in IEF-01, das bereits vor den abhängigen Featurepaketen und transitiv vor IEF-08 liegt. IEF-07 hängt bereits von IEF-05 ab. IEF-09 hängt von allen erforderlichen Paketen ab. Die menschliche Abnahme ist ein Nachweis innerhalb der bestehenden Pakete. Es entsteht keine neue technische Voraussetzung zwischen Issues.
+Der Prototyp liegt in IEF-01, das bereits vor den abhängigen Featurepaketen und transitiv vor IEF-08 liegt. IEF-07 hängt bereits von IEF-05 ab. IEF-09 hängt von allen erforderlichen Paketen ab. IEF-09 bündelt die drei menschlichen Nachweise. Die bestehenden Abhängigkeiten IEF-01–08 richten sich nach der technischen Fertigstellung. Es entsteht keine neue technische Voraussetzung zwischen Issues.

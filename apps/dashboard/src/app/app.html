@@ -1,1 +1,25 @@
-<atl-supervisor />
+<a class="skip" href="#main-content" (click)="$event.preventDefault(); mainContent.focus()">Zum Seiteninhalt</a>
+<header class="shell-header">
+  <button #menu mat-button class="menu" (click)="drawer.toggle()" [attr.aria-expanded]="drawer.opened" aria-controls="navigation">Menü</button>
+  <a routerLink="/home" class="brand">Agentic Trading Lab</a>
+  <span class="scope">Research &amp; Paper · LIVE gesperrt</span>
+  <a mat-stroked-button routerLink="/operations" fragment="alpaca-paper">Paperkontrollen / Pause / Kill</a>
+</header>
+<mat-sidenav-container>
+  <mat-sidenav #drawer id="navigation" [mode]="narrow() ? 'over' : 'side'" [opened]="!narrow()" (closedStart)="narrow() && menu.focus()">
+    <nav aria-label="Hauptnavigation">
+      @for (item of navigation; track item[0]) {
+        <a [routerLink]="item[0]" routerLinkActive="current" ariaCurrentWhenActive="page" (click)="closeNavigation(drawer)">{{ item[1] }}</a>
+      }
+      <a routerLink="/onboarding" (click)="closeNavigation(drawer)">Einführung / Prototyp starten</a>
+    </nav>
+    <p class="nav-note">Experience-Prototyp v1<br>Menschliche UX-Freigabe ausstehend</p>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <main #mainContent id="main-content" tabindex="-1">
+      @if (linkProblem()) {
+        <section class="link-error" role="alert"><h1 tabindex="-1">Link kann nicht sicher geöffnet werden</h1><p>{{ linkProblem() }}</p><a mat-button routerLink="/operations">Ohne Objektauswahl zum Betrieb</a></section>
+      } @else { <router-outlet /> }
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

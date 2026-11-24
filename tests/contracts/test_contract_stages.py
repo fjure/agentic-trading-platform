@@ -85,3 +85,24 @@ def test_ambiguous_quant_stage_cannot_bypass_route_checks(mutation):
     changed = text.replace(line, "") if mutation == "missing" else text + "\n" + line
     with pytest.raises(AssertionError, match="Eindeutige Abnahmestufe fehlt: QSL-07"):
         pending_contract_operations(quant_lab_tasks_text=changed)
+
+
+def test_ief_linked_stage_lifecycle_is_bounded_and_fail_closed():
+    from scripts.contract_stages import IEF_OPERATIONS, IEF_TASKS
+
+    text = IEF_TASKS.read_text('utf-8')
+    line = next(
+        line for line in text.splitlines()
+        if re.match(r'^- \[[ x]\] 9\.1 \[IEF-09\]\(', line)
+    )
+    pending = pending_contract_operations(investment_experience_tasks_text=text)
+    assert len(IEF_OPERATIONS) == 16
+    assert set(IEF_OPERATIONS) <= pending
+    assert 'unknownInvestmentExecute' not in pending
+    complete = text.replace(line, line.replace('- [ ]', '- [x]', 1))
+    assert not set(IEF_OPERATIONS) & pending_contract_operations(
+        investment_experience_tasks_text=complete
+    )
+    for changed in (text.replace(line, ''), text + '\n' + line):
+        with pytest.raises(AssertionError, match='Eindeutige Abnahmestufe fehlt: IEF-09'):
+            pending_contract_operations(investment_experience_tasks_text=changed)

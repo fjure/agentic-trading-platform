@@ -27,7 +27,7 @@ Alle Hauptansichten SHALL deutsche verständliche Texte, Loading-, Leer-, Fehler
 #### Scenario: IEF-T-C06 Durchgängiger früher Prototyp
 - **GIVEN** IEF-01 plant die gemeinsame Shell vor Übergabe an die Featurepakete
 - **WHEN** der klickbare Prototyp in Desktop- und Mobileansicht geprüft wird
-- **THEN** sind alle zehn Screens und sechs Wege verbunden, einschließlich Sperre, Abbruch und Wiederaufnahme. Navigation, Statussprache, Fokusreihenfolge und Offenlegung von Fachdetails sind dokumentiert und freigegeben, bevor Featureteams den Flow übernehmen. Die Freigabe gilt für den Entwurf.
+- **THEN** sind alle zehn Screens und sechs Wege verbunden, einschließlich Sperre, Abbruch und Wiederaufnahme. Navigation, Statussprache, Fokusreihenfolge und Offenlegung von Fachdetails sind dokumentiert. Featureteams übernehmen den technisch geprüften Entwurf. Die formative menschliche Prüfung und Freigabe des Entwurfs erfolgen in IEF-09 gemäß ux-validation.md.
 
 #### Scenario: IEF-T-C07 Fehler mit sicherer Folgeaktion
 - **GIVEN** ein fachfremder Nutzer sieht eine abgelaufene Vorschau oder einen unbekannten Orderausgang
@@ -49,6 +49,8 @@ Die sechs Nutzerreisen SHALL mit Produktionsfrontend, Control API, temporärem P
 - **THEN** werden nur tatsächlich bestandene Offline-Prüfungen ausgewiesen und die betroffene produktive Freigabe bleibt offen; Tests senden keine echten Provider- oder Brokerrequests.
 
 #### Scenario: IEF-T-C08 Abnahme durch fachfremde Personen
+Vor Abschluss von IEF-09 MUST zusätzlich zum integrierten Test die formative Prototypprüfung IEF-T-C06 und die funktionale Onboardingprüfung IEF-T-O05 nach ux-validation.md dokumentiert und bestanden sein.
+
 - **GIVEN** mindestens fünf fachfremde Testpersonen prüfen den integrierten Build nach dem Protokoll in ux-validation.md
 - **WHEN** die sechs Aufgaben und die vier Begriffs- und Wirkungsfragen ausgewertet werden
 - **THEN** erfüllen mindestens 80 Prozent je Aufgabe und mindestens 80 Prozent je Begriffsfrage die Kriterien. Alle Personen verstehen vor Bestätigung den Paperkontext und die anstehende Übermittlung und wählen in den Sicherheitsfällen den sicheren Weg. Jede kritische Fehlbedienung oder Sperre eines Kernwegs blockiert die UX-Freigabe bis zur Korrektur und zum menschlichen Nachtest.

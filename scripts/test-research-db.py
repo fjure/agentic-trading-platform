@@ -28,6 +28,11 @@ TESTS = (
     "tests/security/test_quant_lab_isolation.py",
     "tests/integration/test_research_network_smoke.py",
 )
+ROLE_TESTS = (
+    "tests/security/test_backtest_roles.py::test_backtest_roles_actual_postgresql",
+    "tests/security/test_execution_isolation.py::"
+    "test_actual_worker_role_and_unsafe_modes_never_contact_broker",
+)
 
 
 def run(args, *, env=None, timeout=900, quiet=False, check=True):
@@ -37,7 +42,10 @@ def run(args, *, env=None, timeout=900, quiet=False, check=True):
     )
 
 
-def provision_and_test(project: str, directory: Path, junit: Path, compose: list[str]) -> int:
+def provision_and_test(
+    project: str, directory: Path, junit: Path, compose: list[str], *,
+    tests: tuple[str, ...] = TESTS,
+) -> int:
     api = run(["docker", "version", "--format", "{{.Server.Os}}"], timeout=20, quiet=True)
     if api.stdout.strip() != "linux":
         raise RuntimeError("A Linux Docker server is required.")
@@ -80,7 +88,7 @@ secrets:
         "--build-arg", f"RESEARCH_TEST_BASE={base_image}", ".",
     ])
     return run([
-        sys.executable, "-m", "pytest", *TESTS, "--tb=short", "--show-capture=no",
+        sys.executable, "-m", "pytest", *tests, "--tb=short", "--show-capture=no",
         "-o", "junit_logging=no",
         "--junitxml", str(junit),
     ], env=os.environ | {
@@ -93,6 +101,7 @@ secrets:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--junitxml", required=True, type=Path)
+    parser.add_argument("--roles-only", action="store_true", help="Run the four SQL role cases.")
     args = parser.parse_args()
     junit = args.junitxml.resolve()
     junit.unlink(missing_ok=True)
@@ -104,7 +113,10 @@ def main() -> int:
             "--file", "infra/compose/compose.yaml", "--file", str(directory / "postgres.yaml"),
         ]
         try:
-            status = provision_and_test(project, directory, junit, compose)
+            status = provision_and_test(
+                project, directory, junit, compose,
+                tests=ROLE_TESTS if args.roles_only else TESTS,
+            )
             # A pytest usage or collection failure represents an incomplete test run.
             status = 0 if status == 0 else 1
         except (OSError, RuntimeError, subprocess.SubprocessError):

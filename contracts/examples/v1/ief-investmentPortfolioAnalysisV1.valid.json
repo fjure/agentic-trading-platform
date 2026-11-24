@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1",
+  "analysisId": "synthetic-fixture-",
+  "version": 1,
+  "contextReference": {
+    "context": "DEMO",
+    "namespace": "demo",
+    "demoRunId": "synthetic-demo-run-1"
+  },
+  "snapshotId": "synthetic-fixture-",
+  "snapshotVersion": 1,
+  "methodVersion": "synthetic-fixture-",
+  "createdAt": "2026-11-23T12:00:00Z",
+  "insights": [],
+  "sourceReferences": [],
+  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "externalExplanationAvailability": "UNAVAILABLE",
+  "reasonCodes": []
+}

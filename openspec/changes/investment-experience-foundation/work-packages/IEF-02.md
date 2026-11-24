@@ -37,7 +37,7 @@ Geltende Screenverträge aus ux-architecture.md und navigation-design.md: deutsc
 
 ## Verbindliche Refinement-Abnahme
 
-IEF-T-O05. Onboarding-Teilstrecke mit mindestens fünf fachfremden Personen am funktionsfähigen Onboarding prüfen. Mindestens 80 Prozent erreichen ohne Hilfe binnen drei Minuten das markierte Demo-Cockpit und erkennen die lokale Analyse als nächsten Schritt. Vollständiger Analysebefund und Wiederaufnahme gehören zur integrierten J1-Abnahme.
+IEF-T-O05. Funktionsfähige Onboarding-Teilstrecke und Testszenario für IEF-09 bereitstellen. In IEF-09 prüfen mindestens fünf fachfremde Personen diese Teilstrecke. Mindestens 80 Prozent erreichen ohne Hilfe binnen drei Minuten das markierte Demo-Cockpit und erkennen die lokale Analyse als nächsten Schritt.
 
 ## Evidenznachweis und Definition of Done
 
@@ -46,3 +46,9 @@ Eigene Component-/API-/SQL-/Securityprüfungen und betroffene Regressionen mit Q
 ## OpenSpec-Referenz
 
 `openspec/changes/investment-experience-foundation/work-packages/IEF-02.md`; design.md und zugehörige Capability-Deltas.
+
+## Apply-Status
+
+Nicht begonnen. Voraussetzung ist der technische Abschluss von IEF-01. Die menschliche Onboardingprüfung findet in IEF-09 statt.
+
+Prüfevidenz, konkreter Dependencyblocker und Wiederanlauf: `docs/evidence/ief-apply-status.md`. Keine Änderung normativer Anforderungen oder Abnahmeschwellen. Issue und Taskcheckbox bleiben bis zur vollständigen Definition of Done offen.

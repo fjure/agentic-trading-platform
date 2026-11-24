@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "1",
+  "previewId": "synthetic-fixture-",
+  "version": 1,
+  "requestHash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "context": "ALPACA_PAPER",
+  "terms": {
+    "credentialGeneration": 1,
+    "accountGeneration": 1,
+    "policyVersion": 1,
+    "profileVersion": 1,
+    "limitPolicyVersion": 1,
+    "symbol": "SPY",
+    "side": "BUY",
+    "quantity": "1.25",
+    "limitPrice": "1.25",
+    "orderType": "LIMIT",
+    "timeInForce": "DAY",
+    "session": "REGULAR",
+    "currency": "USD",
+    "expiresAt": "2026-11-23T12:00:00Z",
+    "budgetVersion": 1,
+    "riskBudget": "1.25"
+  },
+  "provenance": {
+    "origin": "PORTFOLIO"
+  },
+  "portfolioLedgerVersion": 1,
+  "marketStateId": "synthetic-fixture-",
+  "quoteId": "synthetic-fixture-",
+  "evidenceHash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "credentialGeneration": 1,
+  "accountGeneration": 1,
+  "policyVersion": 1,
+  "profileVersion": 1,
+  "budgetVersion": 1,
+  "limitPolicyVersion": 1,
+  "observedAt": "2026-11-23T12:00:00Z",
+  "validUntil": "2026-11-23T12:00:00Z",
+  "availability": "AVAILABLE",
+  "blockers": [],
+  "riskPrecheck": {
+    "status": "PASSED_NON_BINDING",
+    "checkedAt": "2026-11-23T12:00:00Z",
+    "reasonCodes": [],
+    "sourceReferences": []
+  },
+  "grossNotional": {
+    "value": "123.45",
+    "currency": "USD",
+    "unit": "USD",
+    "methodVersion": "synthetic-fixture-",
+    "availability": "AVAILABLE",
+    "reasonCodes": [],
+    "asOf": "2026-10-12T10:00:00Z",
+    "sourceReferences": []
+  },
+  "grossNotionalMeaning": "BUY_MAXIMUM_GROSS_COST",
+  "feeAssumption": {
+    "value": "123.45",
+    "currency": "USD",
+    "unit": "USD",
+    "methodVersion": "synthetic-fixture-",
+    "availability": "AVAILABLE",
+    "reasonCodes": [],
+    "asOf": "2026-10-12T10:00:00Z",
+    "sourceReferences": []
+  },
+  "reserveAssumption": {
+    "value": "123.45",
+    "currency": "USD",
+    "unit": "USD",
+    "methodVersion": "synthetic-fixture-",
+    "availability": "AVAILABLE",
+    "reasonCodes": [],
+    "asOf": "2026-10-12T10:00:00Z",
+    "sourceReferences": []
+  },
+  "availableCash": {
+    "value": "123.45",
+    "currency": "USD",
+    "unit": "USD",
+    "methodVersion": "synthetic-fixture-",
+    "availability": "AVAILABLE",
+    "reasonCodes": [],
+    "asOf": "2026-10-12T10:00:00Z",
+    "sourceReferences": []
+  },
+  "availableLongQuantity": {
+    "value": "123.45",
+    "currency": "USD",
+    "unit": "USD",
+    "methodVersion": "synthetic-fixture-",
+    "availability": "AVAILABLE",
+    "reasonCodes": [],
+    "asOf": "2026-10-12T10:00:00Z",
+    "sourceReferences": []
+  },
+  "cashImpact": {
+    "value": "123.45",
+    "currency": "USD",
+    "unit": "USD",
+    "methodVersion": "synthetic-fixture-",
+    "availability": "AVAILABLE",
+    "reasonCodes": [],
+    "asOf": "2026-10-12T10:00:00Z",
+    "sourceReferences": []
+  },
+  "weightImpact": {
+    "value": "123.45",
+    "currency": "USD",
+    "unit": "USD",
+    "methodVersion": "synthetic-fixture-",
+    "availability": "AVAILABLE",
+    "reasonCodes": [],
+    "asOf": "2026-10-12T10:00:00Z",
+    "sourceReferences": []
+  }
+}

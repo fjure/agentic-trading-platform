@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1",
+  "version": 1,
+  "updatedAt": "2026-11-23T12:00:00Z",
+  "experienceLevel": "UNSPECIFIED",
+  "goals": [],
+  "horizon": "UNSPECIFIED",
+  "lossTolerance": "UNSPECIFIED",
+  "contextReference": {
+    "context": "DEMO",
+    "namespace": "demo",
+    "demoRunId": "synthetic-demo-run-1"
+  },
+  "onboardingSteps": []
+}

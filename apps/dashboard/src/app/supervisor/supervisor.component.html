@@ -18,9 +18,9 @@
     <div class="sidebar-foot">Getrennter Alpaca-Paperbereich<br>Fake-Supervisor und Demo erhalten</div>
   </aside>
 
-  <main class="main">
+  <section class="main" aria-label="Supervisorinhalt">
     <header class="page-heading">
-      <div><div class="eyebrow">{{ paperActive() ? 'ALPACA PAPER / EIGENER LEDGER' : 'FAKE / SUPERVISOR' }}</div><h1>{{ paperActive() ? 'Alpaca Paper' : 'Paper-Supervisor' }}</h1><p>Kontrollzustand, Historie und Trace-Evidenz</p></div>
+      <div><div class="eyebrow">{{ paperActive() ? 'ALPACA PAPER / EIGENER LEDGER' : 'FAKE / SUPERVISOR' }}</div><h1 tabindex="-1">{{ paperActive() ? 'Alpaca Paper' : 'Paper-Supervisor' }}</h1><p>Kontrollzustand, Historie und Trace-Evidenz</p></div>
       @if (store.authenticated() && !paperActive()) { <button mat-stroked-button type="button" (click)="store.refresh()">Aktualisieren</button> }
     </header>
 
@@ -137,5 +137,5 @@
         </mat-card-content></mat-card>
       }
     }
-  </main>
+  </section>
 </div>

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1",
+  "taskId": "synthetic-fixture-",
+  "kind": "RESEARCH",
+  "title": "synthetic-fixture-",
+  "sourceType": "RUN",
+  "sourceId": "synthetic-fixture-",
+  "sourceVersion": 1,
+  "runId": "synthetic-fixture-",
+  "rawState": "CREATED",
+  "displayState": "CREATED",
+  "resultAvailability": "AVAILABLE",
+  "reasonCodes": [],
+  "createdAt": "2026-11-23T12:00:00Z",
+  "updatedAt": "2026-11-23T12:00:00Z",
+  "deadlineAt": "2026-11-23T12:00:00Z",
+  "lastActivityAt": "2026-11-23T12:00:00Z",
+  "agentId": "synthetic-fixture-",
+  "agentVersion": 1,
+  "policyVersion": 1,
+  "boundedProgress": {
+    "completed": 1,
+    "total": 1,
+    "percentage": "123.45",
+    "reasonCodes": []
+  },
+  "budgetSummary": {
+    "currency": "USD",
+    "reserved": "1.25",
+    "settled": "1.25",
+    "costState": "NOT_INCURRED",
+    "reasonCodes": []
+  },
+  "approvalReferences": [],
+  "reportReferences": [],
+  "allowedActions": [],
+  "capabilityAvailability": "AVAILABLE"
+}

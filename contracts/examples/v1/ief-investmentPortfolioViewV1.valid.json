@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "1",
+  "contextReference": {
+    "context": "DEMO",
+    "namespace": "demo",
+    "demoRunId": "synthetic-demo-run-1"
+  },
+  "observedAt": "2026-11-23T12:00:00Z",
+  "snapshotId": "synthetic-fixture-",
+  "snapshotVersion": 1,
+  "accountGeneration": 1,
+  "portfolioLedgerVersion": 1,
+  "asOf": "2026-10-12T10:00:00Z",
+  "quality": "CURRENT",
+  "reconciliation": "CURRENT",
+  "metrics": {
+    "cash": {
+      "value": "123.45",
+      "currency": "USD",
+      "unit": "USD",
+      "methodVersion": "synthetic-fixture-",
+      "availability": "AVAILABLE",
+      "reasonCodes": [],
+      "asOf": "2026-10-12T10:00:00Z",
+      "sourceReferences": []
+    },
+    "equity": {
+      "value": "123.45",
+      "currency": "USD",
+      "unit": "USD",
+      "methodVersion": "synthetic-fixture-",
+      "availability": "AVAILABLE",
+      "reasonCodes": [],
+      "asOf": "2026-10-12T10:00:00Z",
+      "sourceReferences": []
+    },
+    "exposure": {
+      "value": "123.45",
+      "currency": "USD",
+      "unit": "USD",
+      "methodVersion": "synthetic-fixture-",
+      "availability": "AVAILABLE",
+      "reasonCodes": [],
+      "asOf": "2026-10-12T10:00:00Z",
+      "sourceReferences": []
+    },
+    "realizedPnl": {
+      "value": "123.45",
+      "currency": "USD",
+      "unit": "USD",
+      "methodVersion": "synthetic-fixture-",
+      "availability": "AVAILABLE",
+      "reasonCodes": [],
+      "asOf": "2026-10-12T10:00:00Z",
+      "sourceReferences": []
+    },
+    "marketValue": {
+      "value": "123.45",
+      "currency": "USD",
+      "unit": "USD",
+      "methodVersion": "synthetic-fixture-",
+      "availability": "AVAILABLE",
+      "reasonCodes": [],
+      "asOf": "2026-10-12T10:00:00Z",
+      "sourceReferences": []
+    },
+    "unrealizedPnl": {
+      "value": "123.45",
+      "currency": "USD",
+      "unit": "USD",
+      "methodVersion": "synthetic-fixture-",
+      "availability": "AVAILABLE",
+      "reasonCodes": [],
+      "asOf": "2026-10-12T10:00:00Z",
+      "sourceReferences": []
+    },
+    "dailyReturn": {
+      "value": "123.45",
+      "currency": "USD",
+      "unit": "USD",
+      "methodVersion": "synthetic-fixture-",
+      "availability": "AVAILABLE",
+      "reasonCodes": [],
+      "asOf": "2026-10-12T10:00:00Z",
+      "sourceReferences": []
+    },
+    "totalReturn": {
+      "value": "123.45",
+      "currency": "USD",
+      "unit": "USD",
+      "methodVersion": "synthetic-fixture-",
+      "availability": "AVAILABLE",
+      "reasonCodes": [],
+      "asOf": "2026-10-12T10:00:00Z",
+      "sourceReferences": []
+    },
+    "drawdown": {
+      "value": "123.45",
+      "currency": "USD",
+      "unit": "USD",
+      "methodVersion": "synthetic-fixture-",
+      "availability": "AVAILABLE",
+      "reasonCodes": [],
+      "asOf": "2026-10-12T10:00:00Z",
+      "sourceReferences": []
+    }
+  },
+  "positions": [],
+  "marketEvidence": [],
+  "blockers": [],
+  "sourceReferences": []
+}

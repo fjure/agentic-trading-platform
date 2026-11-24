@@ -1,0 +1,18 @@
+{
+  "purpose": "PORTFOLIO_EXPLANATION_V1",
+  "analysisId": "synthetic-fixture-",
+  "analysisVersion": 1,
+  "state": "LOCAL_CLARIFICATION",
+  "delivery": "NOT_SENT",
+  "costState": "NOT_INCURRED",
+  "receiptId": "synthetic-fixture-",
+  "previewConsumed": false,
+  "revokedAt": "2026-11-23T12:00:00Z",
+  "runId": "synthetic-fixture-",
+  "resultReference": {
+    "kind": "SNAPSHOT",
+    "id": "synthetic-fixture-",
+    "version": 1
+  },
+  "reasonCodes": []
+}

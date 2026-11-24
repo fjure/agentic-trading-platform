@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1",
+  "contextReference": {
+    "context": "DEMO",
+    "namespace": "demo",
+    "demoRunId": "synthetic-demo-run-1"
+  },
+  "snapshotId": "synthetic-fixture-",
+  "snapshotVersion": 1,
+  "methodVersion": "synthetic-fixture-",
+  "observedAt": "2026-11-23T12:00:00Z",
+  "insights": []
+}

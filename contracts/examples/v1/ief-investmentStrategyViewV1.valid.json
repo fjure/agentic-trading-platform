@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1",
+  "strategyId": "synthetic-fixture-",
+  "version": 1,
+  "title": "synthetic-fixture-",
+  "explanation": "synthetic-fixture-",
+  "assumptions": [],
+  "limitations": [],
+  "instrumentReferences": [],
+  "dataRequirements": [],
+  "resultReferences": [],
+  "paperEligibility": {
+    "status": "ELIGIBLE",
+    "instrument": "SPY",
+    "eligibilityId": "synthetic-fixture-",
+    "revision": 1,
+    "checkedAt": "2026-11-23T12:00:00Z",
+    "validUntil": "2026-11-23T12:00:00Z",
+    "accountGeneration": 1,
+    "policyVersion": 1,
+    "dataReferences": [],
+    "approvalReferences": [],
+    "reasonCodes": []
+  },
+  "reasonCodes": [],
+  "allowedActions": []
+}

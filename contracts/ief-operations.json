@@ -1,0 +1,290 @@
+{
+  "getInvestmentPreferences": {
+    "path": "/api/v1/experience/preferences",
+    "method": "get",
+    "implementationPackage": "IEF-02",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-O01",
+      "IEF-O02"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-O01",
+      "IEF-T-O02",
+      "IEF-T-O03",
+      "IEF-T-O04"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "updateInvestmentPreferences": {
+    "path": "/api/v1/experience/preferences",
+    "method": "put",
+    "implementationPackage": "IEF-02",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-O01",
+      "IEF-O02"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-O01",
+      "IEF-T-O02",
+      "IEF-T-O03",
+      "IEF-T-O04"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "getInvestmentPortfolio": {
+    "path": "/api/v1/experience/portfolio",
+    "method": "get",
+    "implementationPackage": "IEF-03",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-P01",
+      "IEF-P02"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-P01",
+      "IEF-T-P02",
+      "IEF-T-P03",
+      "IEF-T-P04"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "createInvestmentPortfolioAnalysis": {
+    "path": "/api/v1/experience/portfolio-analyses",
+    "method": "post",
+    "implementationPackage": "IEF-04",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-P03",
+      "IEF-P04"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-P05",
+      "IEF-T-P06",
+      "IEF-T-P07",
+      "IEF-T-P08"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "getInvestmentPortfolioAnalysis": {
+    "path": "/api/v1/experience/portfolio-analyses/{analysisId}",
+    "method": "get",
+    "implementationPackage": "IEF-04",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-P03",
+      "IEF-P04"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-P05",
+      "IEF-T-P06",
+      "IEF-T-P07",
+      "IEF-T-P08"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "getInvestmentInsights": {
+    "path": "/api/v1/experience/insights",
+    "method": "get",
+    "implementationPackage": "IEF-04",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-P03",
+      "IEF-P04"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-P05",
+      "IEF-T-P06",
+      "IEF-T-P07",
+      "IEF-T-P08"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "listInvestmentStrategies": {
+    "path": "/api/v1/experience/strategies",
+    "method": "get",
+    "implementationPackage": "IEF-05",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-S01",
+      "IEF-S02",
+      "IEF-S03"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-S01",
+      "IEF-T-S06",
+      "IEF-T-S07"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "getInvestmentStrategy": {
+    "path": "/api/v1/experience/strategies/{id}/versions/{version}",
+    "method": "get",
+    "implementationPackage": "IEF-05",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-S01",
+      "IEF-S02",
+      "IEF-S03"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-S01",
+      "IEF-T-S06",
+      "IEF-T-S07"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "listInvestmentTasks": {
+    "path": "/api/v1/experience/tasks",
+    "method": "get",
+    "implementationPackage": "IEF-06",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-A01",
+      "IEF-A02"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-A01",
+      "IEF-T-A02"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "getInvestmentTask": {
+    "path": "/api/v1/experience/tasks/{taskId}",
+    "method": "get",
+    "implementationPackage": "IEF-06",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-A01",
+      "IEF-A02"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-A01",
+      "IEF-T-A02"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "listInvestmentActivity": {
+    "path": "/api/v1/experience/activity",
+    "method": "get",
+    "implementationPackage": "IEF-08",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-C01",
+      "IEF-C02"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-C01",
+      "IEF-T-C02"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "createPaperLimitPreview": {
+    "path": "/api/v1/paper/order-previews",
+    "method": "post",
+    "implementationPackage": "IEF-07",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-G01",
+      "IEF-G02",
+      "IEF-G03"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-G01",
+      "IEF-T-G02",
+      "IEF-T-G03",
+      "IEF-T-G06",
+      "IEF-T-G07",
+      "IEF-T-G08"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "createPaperGuidedLimitOrderRequest": {
+    "path": "/api/v1/paper/guided-order-requests",
+    "method": "post",
+    "implementationPackage": "IEF-07",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-G01",
+      "IEF-G02",
+      "IEF-G03"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-G01",
+      "IEF-T-G02",
+      "IEF-T-G03",
+      "IEF-T-G06",
+      "IEF-T-G07",
+      "IEF-T-G08"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "createPortfolioProcessingPreview": {
+    "path": "/api/v1/research/agent/portfolio-analyses/{analysisId}/processing-previews",
+    "method": "post",
+    "implementationPackage": "IEF-04",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-P03",
+      "IEF-P04"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-P05",
+      "IEF-T-P06",
+      "IEF-T-P07",
+      "IEF-T-P08"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "getPortfolioProcessingStatus": {
+    "path": "/api/v1/research/agent/portfolio-analyses/{analysisId}/processing",
+    "method": "get",
+    "implementationPackage": "IEF-04",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-P03",
+      "IEF-P04"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-P05",
+      "IEF-T-P06",
+      "IEF-T-P07",
+      "IEF-T-P08"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  },
+  "decidePortfolioProcessing": {
+    "path": "/api/v1/research/agent/portfolio-analyses/{analysisId}/processing-decisions",
+    "method": "post",
+    "implementationPackage": "IEF-04",
+    "contractPackage": "IEF-01",
+    "routeParityGate": "IEF-09",
+    "requirementIds": [
+      "IEF-P03",
+      "IEF-P04"
+    ],
+    "plannedRuntimeTestIds": [
+      "IEF-T-P05",
+      "IEF-T-P06",
+      "IEF-T-P07",
+      "IEF-T-P08"
+    ],
+    "contractValidation": "scripts/validate-contracts.py; scripts/check-angular-client.ps1"
+  }
+}

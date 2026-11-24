@@ -1,0 +1,53 @@
+{
+  "purpose": "PORTFOLIO_EXPLANATION_V1",
+  "previewId": "synthetic-fixture-",
+  "analysisId": "synthetic-fixture-",
+  "analysisVersion": 1,
+  "purposeVersion": 1,
+  "projectorVersion": 1,
+  "schemaVersion": 1,
+  "agentVersion": 1,
+  "toolPolicyVersion": 1,
+  "profileGeneration": 1,
+  "credentialGeneration": 1,
+  "modelGeneration": 1,
+  "policyGeneration": 1,
+  "pricePolicyVersion": 1,
+  "budgetPolicyVersion": 1,
+  "projectionHash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "projectionBinding": "synthetic-fixture-",
+  "provider": "OPENAI",
+  "profileId": "synthetic-fixture-",
+  "modelId": "synthetic-fixture-",
+  "agentId": "synthetic-fixture-",
+  "toolAllowlist": [
+    "READ_APPROVED_PORTFOLIO_FINDINGS"
+  ],
+  "dataClasses": [
+    "MINIMIZED_PORTFOLIO_FINDINGS"
+  ],
+  "projection": {
+    "purpose": "PORTFOLIO_EXPLANATION_V1",
+    "projectorVersion": "synthetic-fixture-",
+    "schemaVersion": "1",
+    "methodVersion": "synthetic-fixture-",
+    "findings": [
+      {
+        "findingReference": {
+          "kind": "PORTFOLIO_ANALYSIS",
+          "id": "synthetic-fixture-",
+          "version": 1
+        },
+        "code": "CASH_OBSERVED",
+        "availability": "AVAILABLE",
+        "unit": "USD",
+        "value": "123.45"
+      }
+    ]
+  },
+  "observedAt": "2026-11-23T12:00:00Z",
+  "validUntil": "2026-11-23T12:00:00Z",
+  "costCurrency": "USD",
+  "costUpperBound": "1.25",
+  "costDecisionReference": "synthetic-fixture-"
+}

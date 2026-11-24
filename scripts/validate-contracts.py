@@ -135,6 +135,9 @@ def main() -> None:
         ).validate(json.loads((EXAMPLES / filename).read_text("utf-8")))
     print(f"PASS: {len(quant_manifest)} Quant Strategy Lab fixtures (contract only)")
 
+    from validate_ief_contracts import validate_ief_contracts
+    validate_ief_contracts(document)
+
     operations: list[str] = []
     for path, path_item in document["paths"].items():
         if not path.startswith("/api/v1/") and path not in {"/health", "/ready"}:

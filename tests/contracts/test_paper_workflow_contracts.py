@@ -11,9 +11,14 @@ from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
 
 from scripts.contract_formats import contract_formats
+from scripts.contract_stages import IEF_OPERATION_MATRIX, IEF_PAPER_SCHEMAS
 
 ROOT = Path(__file__).resolve().parents[2]
 OAS = yaml.safe_load((ROOT / "contracts/http/control-api.openapi.yaml").read_text(encoding="utf-8"))
+IEF_PAPER_ROUTES = {
+    entry["path"]: entry["method"] for entry in IEF_OPERATION_MATRIX.values()
+    if entry["path"].startswith("/api/v1/paper/")
+}
 URI = "https://agentic-trading-lab.invalid/control-api"
 REGISTRY = Registry().with_resource(
     URI, Resource.from_contents(OAS, default_specification=DRAFT202012)
@@ -71,15 +76,23 @@ def test_all_paper_components_are_mirrored_in_versioned_workflow_schema():
             return [normalize(item) for item in value]
         return value
 
+    experience = json.loads(
+        (ROOT / "contracts/schemas/investment-experience-v1.schema.json").read_text("utf-8")
+    )["components"]["schemas"]
     for name, component in OAS["components"]["schemas"].items():
         if name.startswith("Paper"):
-            assert schema["$defs"][name] == normalize(component)
+            if name in IEF_PAPER_SCHEMAS:
+                assert experience[name] == component
+            else:
+                assert schema["$defs"][name] == normalize(component)
 
 
 def test_async_routes_are_authenticated_idempotent_and_have_stable_errors():
     routes = {
         path: item for path, item in OAS["paths"].items() if path.startswith("/api/v1/paper/")
     }
+    for path, method in IEF_PAPER_ROUTES.items():
+        assert set(routes.pop(path)) == {method}
     assert len(routes) == 14
     for _path, item in routes.items():
         for method, op in item.items():
@@ -297,7 +310,7 @@ def test_acceptance_examples_match_the_requested_operation():
         "cancelPaperOrder": "CANCEL_ORDER",
     }
     for path, item in OAS["paths"].items():
-        if path.startswith("/api/v1/paper/") and "post" in item:
+        if path.startswith("/api/v1/paper/") and path not in IEF_PAPER_ROUTES and "post" in item:
             operation = item["post"]
             response = operation["responses"]["202"]["content"]["application/json"]["example"]
             assert response["operationType"] == expected[operation["operationId"]]

@@ -255,6 +255,15 @@ test('Quant decisions bind the displayed version and reports retain exact server
   await page.reload();
   await expect(companion.getByText(exact, { exact: true })).toBeVisible();
   await expect(companion.getByText(/Freigabeversion 8.*REJECTED/)).toBeVisible();
+  const generatedQuantLink = await companion.getByRole('link', { name: 'Quant-Evidenz öffnen' }).getAttribute('href');
+  expect(generatedQuantLink).toContain('researchReport=report-1');
+  expect(generatedQuantLink).toContain('researchReportVersion=2');
+  expect(generatedQuantLink).toContain('quantBatch=batch-1');
+  await page.goto(generatedQuantLink!);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Link kann nicht sicher geöffnet werden' })).toHaveCount(0);
+  await expect(companion.getByText(exact, { exact: true })).toBeVisible();
+  expect(decisions).toHaveLength(1);
 });
 
 test('local clarification uses the active turn and preserves an Advanced experiment binding', async ({ page }) => {
@@ -321,4 +330,18 @@ test('local clarification uses the active turn and preserves an Advanced experim
     { kind: 'LOCAL_STRUCTURED_ANSWER', questionId: 'question-2', field: 'MEASUREMENT_HORIZON',
       value: 'Fünf Handelstage', expectedDialogueVersion: 3, expectedIdeaVersion: 1 },
   ]);
+  const generatedExperimentLink = await companion.getByRole('link', { name: 'Experiment öffnen' }).getAttribute('href');
+  expect(generatedExperimentLink).toContain('researchIdea=idea-2');
+  expect(generatedExperimentLink).toContain('quantExperiment=experiment-2');
+  await page.goto(generatedExperimentLink!);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Link kann nicht sicher geöffnet werden' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Alpaca Paper', exact: true }).click();
+  const paperUrl = page.url();
+  expect(paperUrl).toContain('researchIdea=idea-2');
+  expect(paperUrl).toContain('quantExperiment=experiment-2');
+  expect(paperUrl).toContain('#alpaca-paper');
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Link kann nicht sicher geöffnet werden' })).toHaveCount(0);
+  expect(captured).toHaveLength(3);
 });

@@ -44,4 +44,4 @@ Abnahme deckt sämtliche zehn Screens, Deep Link vor/nach Login, Browserhistorie
 
 ## Übergabestand IEF-01
 
-IEF-01 prototypisiert die vollständige Karte oben vor dem Start der abhängigen Featurepakete. Für S5/S6/S9/S10 werden belegte Eignung, Sperre, Rückweg und UNKNOWN gemeinsam dargestellt. Die Fokus- und Zustandskarte ist Teil der freigegebenen Prototypversion gemäß [UX-Validierung](ux-validation.md). IEF-08 übernimmt sie und prüft die echte Integration.
+IEF-01 prototypisiert die vollständige Karte oben vor dem Start der abhängigen Featurepakete. Für S5/S6/S9/S10 werden belegte Eignung, Sperre, Rückweg und UNKNOWN gemeinsam dargestellt. Die Fokus- und Zustandskarte ist Teil der technisch geprüften Prototypversion gemäß [UX-Validierung](ux-validation.md). IEF-08 übernimmt sie und prüft die echte Integration.

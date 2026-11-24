@@ -1,0 +1,19 @@
+{
+  "purpose": "PORTFOLIO_EXPLANATION_V1",
+  "projectorVersion": "synthetic-fixture-",
+  "schemaVersion": "1",
+  "methodVersion": "synthetic-fixture-",
+  "findings": [
+    {
+      "findingReference": {
+        "kind": "PORTFOLIO_ANALYSIS",
+        "id": "synthetic-fixture-",
+        "version": 1
+      },
+      "code": "CASH_OBSERVED",
+      "availability": "AVAILABLE",
+      "unit": "USD",
+      "value": "123.45"
+    }
+  ]
+}

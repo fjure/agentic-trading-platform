@@ -9,23 +9,22 @@ from uuid import uuid4
 
 
 def host(module="tests.integration.test_backtest_dataset"):
-    from tests.integration.ledger_support import GROUPS, _admin
+    from tests.integration.ledger_support import (
+        ROLE_TEST_GROUPS, _admin, ensure_role_test_groups, guest_target,
+    )
 
     root = Path(__file__).resolve().parents[2]
+    network, image = guest_target("agentic-trading-lab-research-test:local")
     name = "atl_bkt_" + uuid4().hex[:20]
     password = secrets.token_urlsafe(32)
-    _admin(
-        "DO $$ BEGIN IF NOT EXISTS(SELECT FROM pg_roles WHERE rolname='atl_backtest_worker') "
-        "THEN CREATE ROLE atl_backtest_worker NOLOGIN NOSUPERUSER NOCREATEDB "
-        "NOCREATEROLE NOINHERIT; END IF; END $$"
-    )
+    ensure_role_test_groups()
     _admin(f"CREATE ROLE {name} LOGIN PASSWORD '{password}' NOINHERIT")
     created = False
     try:
         _admin(
             "\n".join(
                 f"GRANT {group} TO {name} WITH ADMIN OPTION;"
-                for group in GROUPS
+                for group in ROLE_TEST_GROUPS
             )
         )
         _admin(f"CREATE DATABASE {name} OWNER {name}")
@@ -36,7 +35,7 @@ def host(module="tests.integration.test_backtest_dataset"):
             "--rm",
             "-i",
             "--network",
-            "agentic-trading-lab-dev_local",
+            network,
             "--read-only",
             "--cap-drop",
             "ALL",
@@ -57,7 +56,7 @@ def host(module="tests.integration.test_backtest_dataset"):
         command += [
             "--mount",
             f"type=bind,source={root / 'alembic.ini'},target=/opt/lab/alembic.ini,readonly",
-            "agentic-trading-lab-research-test:local",
+            image,
             "-m",
             module,
             "guest",
@@ -67,6 +66,7 @@ def host(module="tests.integration.test_backtest_dataset"):
             input=json.dumps(dict(database=name, role=name, password=password)),
             text=True,
             capture_output=True,
+            timeout=180,
         )
         if result.returncode:
             raise RuntimeError("backtest PostgreSQL guest failed: " + result.stdout.strip()[:600])

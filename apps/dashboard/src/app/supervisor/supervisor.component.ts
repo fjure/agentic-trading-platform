@@ -14,6 +14,8 @@ import { DemoSetupComponent } from '../demo-setup/demo-setup.component';
 import { ResearchProviderSetupComponent } from '../research/research-provider-setup.component';
 import { PaperWorkflowComponent } from '../paper-workflow/paper-workflow.component';
 import { ResearchComponent } from '../research/research.component';
+import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type View = 'overview' | Resource;
 type FieldSpec = readonly [label: string, path: string];
@@ -93,6 +95,12 @@ export class ConfirmDialogComponent { readonly data = inject<DialogData>(MAT_DIA
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SupervisorComponent implements OnInit {
+  private readonly router = inject(Router);
+  constructor() {
+    // Router fragment changes are read-only. Existing Paper links must also work
+    // when this routed component remains mounted during client navigation.
+    inject(ActivatedRoute).fragment.pipe(takeUntilDestroyed()).subscribe(fragment => this.paperActive.set(fragment === 'alpaca-paper'));
+  }
   readonly store = inject(SupervisorStore);
   private readonly dialog = inject(MatDialog);
   readonly active = signal<View>('overview');
@@ -158,7 +166,10 @@ export class SupervisorComponent implements OnInit {
 
   selectPaper(): void {
     this.paperActive.set(true);
-    history.replaceState(null, '', '#alpaca-paper');
+    // Earlier selection controls use history.replaceState. Read the current URL
+    // rather than a stale Router snapshot so existing provenance survives.
+    const queryParams = Object.fromEntries(new URL(location.href).searchParams);
+    void this.router.navigate(['/operations'], { queryParams, fragment: 'alpaca-paper' });
   }
 
   paperSessionLost(): void { void this.store.refresh(); }

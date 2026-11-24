@@ -20,9 +20,12 @@ def host(
     guest_args: tuple[str, ...] = (),
     support_paths: tuple[Path, ...] = (),
 ) -> str:
-    from tests.integration.ledger_support import GROUPS, _admin
+    from tests.integration.ledger_support import (
+        ROLE_TEST_GROUPS, _admin, ensure_role_test_groups, guest_target,
+    )
 
     root = Path(__file__).resolve().parents[2]
+    network, image = guest_target("agentic-trading-lab-dev-build-smoke:latest")
     fixtures = []
     for support_path in support_paths:
         support_path = support_path.resolve()
@@ -36,13 +39,7 @@ def host(
     database = f"atl_risk_{suffix}"
     role = f"atl_risk_{suffix}"
     password = secrets.token_urlsafe(32)
-    setup = "\n".join(
-        f"DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '{group}') "
-        f"THEN CREATE ROLE {group} NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT; "
-        "END IF; END $$;"
-        for group in GROUPS
-    )
-    _admin(setup)
+    ensure_role_test_groups()
     _admin(f"CREATE ROLE {role} LOGIN PASSWORD '{password}' NOINHERIT;")
     created = False
     command = [
@@ -51,7 +48,7 @@ def host(
         "--rm",
         "-i",
         "--network",
-        "agentic-trading-lab-dev_local",
+        network,
         "--read-only",
         "--cap-drop",
         "ALL",
@@ -86,14 +83,14 @@ def host(
         )
     command.extend(
         (
-            "agentic-trading-lab-dev-build-smoke:latest",
+            image,
             "test_guest.py" if guest_path else "risk_support.py",
             "guest",
         )
     )
     command.extend(guest_args)
     try:
-        _admin("\n".join(f"GRANT {group} TO {role} WITH ADMIN OPTION;" for group in GROUPS))
+        _admin("\n".join(f"GRANT {group} TO {role} WITH ADMIN OPTION;" for group in ROLE_TEST_GROUPS))
         _admin(f"CREATE DATABASE {database} OWNER {role};")
         created = True
         result = subprocess.run(
@@ -102,6 +99,7 @@ def host(
             text=True,
             capture_output=True,
             check=False,
+            timeout=180,
         )
         if result.returncode:
             diagnostic = result.stderr.replace(password, "[redacted]").splitlines()

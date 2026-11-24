@@ -17,13 +17,21 @@ import { Observable }                                        from 'rxjs';
 import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
+import { InvestmentProblemV1 } from '../model/investmentProblemV1';
+// @ts-ignore
 import { PaperCancelRequest } from '../model/paperCancelRequest';
 // @ts-ignore
 import { PaperControlRequest } from '../model/paperControlRequest';
 // @ts-ignore
 import { PaperFillPage } from '../model/paperFillPage';
 // @ts-ignore
+import { PaperGuidedLimitOrderRequestV1 } from '../model/paperGuidedLimitOrderRequestV1';
+// @ts-ignore
 import { PaperLimitOrderRequest } from '../model/paperLimitOrderRequest';
+// @ts-ignore
+import { PaperLimitPreviewRequestV1 } from '../model/paperLimitPreviewRequestV1';
+// @ts-ignore
+import { PaperLimitPreviewV1 } from '../model/paperLimitPreviewV1';
 // @ts-ignore
 import { PaperOperation } from '../model/paperOperation';
 // @ts-ignore
@@ -235,6 +243,83 @@ export class PaperService extends BaseService implements PaperServiceInterface {
     }
 
     /**
+     * createPaperGuidedLimitOrderRequest
+     * IEF additive contract; runtime capability requires IEF-07. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+     * @endpoint post /api/v1/paper/guided-order-requests
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param paperGuidedLimitOrderRequestV1 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public createPaperGuidedLimitOrderRequest(idempotencyKey: string, paperGuidedLimitOrderRequestV1: PaperGuidedLimitOrderRequestV1, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<PaperOperation>;
+    public createPaperGuidedLimitOrderRequest(idempotencyKey: string, paperGuidedLimitOrderRequestV1: PaperGuidedLimitOrderRequestV1, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<PaperOperation>>;
+    public createPaperGuidedLimitOrderRequest(idempotencyKey: string, paperGuidedLimitOrderRequestV1: PaperGuidedLimitOrderRequestV1, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<PaperOperation>>;
+    public createPaperGuidedLimitOrderRequest(idempotencyKey: string, paperGuidedLimitOrderRequestV1: PaperGuidedLimitOrderRequestV1, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (idempotencyKey === null || idempotencyKey === undefined) {
+            throw new Error('Required parameter idempotencyKey was null or undefined when calling createPaperGuidedLimitOrderRequest.');
+        }
+        if (paperGuidedLimitOrderRequestV1 === null || paperGuidedLimitOrderRequestV1 === undefined) {
+            throw new Error('Required parameter paperGuidedLimitOrderRequestV1 was null or undefined when calling createPaperGuidedLimitOrderRequest.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (idempotencyKey !== undefined && idempotencyKey !== null) {
+            localVarHeaders = localVarHeaders.set('Idempotency-Key', String(idempotencyKey));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/paper/guided-order-requests`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<PaperOperation>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: paperGuidedLimitOrderRequestV1,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
      * Persist a human LIMIT requirement for the shared risk path
      * REQ-APW-002/005/006/007/010; APW-01. Authenticated loopback, exact same Origin and CSRF boundaries apply. Public fields are strict allowlists; no credentials or provider payloads. 202 confirms durable command acceptance only. Same actor/key/body replays the same operation; a different body returns IDEMPOTENCY_CONFLICT. START is fenced again before execution and expires at expiresAt. No GET performs provider I/O.
      * @endpoint post /api/v1/paper/order-requests
@@ -305,6 +390,83 @@ export class PaperService extends BaseService implements PaperServiceInterface {
             {
                 context: localVarHttpContext,
                 body: paperLimitOrderRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * createPaperLimitPreview
+     * IEF additive contract; runtime capability requires IEF-07. Current session and actor/context ownership are mandatory. GET and preview never perform provider I/O or trading. Writes require same-origin authenticated JSON. Cursor expiry requires a new snapshot. No navigation grants authority.
+     * @endpoint post /api/v1/paper/order-previews
+     * @param idempotencyKey Opaque caller-generated key scoped to actor and operation, retained at least 24 hours. Same key and same payload return the original semantic result; same key with different payload is a 409 IDEMPOTENCY_CONFLICT.
+     * @param paperLimitPreviewRequestV1 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public createPaperLimitPreview(idempotencyKey: string, paperLimitPreviewRequestV1: PaperLimitPreviewRequestV1, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<PaperLimitPreviewV1>;
+    public createPaperLimitPreview(idempotencyKey: string, paperLimitPreviewRequestV1: PaperLimitPreviewRequestV1, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<PaperLimitPreviewV1>>;
+    public createPaperLimitPreview(idempotencyKey: string, paperLimitPreviewRequestV1: PaperLimitPreviewRequestV1, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<PaperLimitPreviewV1>>;
+    public createPaperLimitPreview(idempotencyKey: string, paperLimitPreviewRequestV1: PaperLimitPreviewRequestV1, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json' | 'application/problem+json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (idempotencyKey === null || idempotencyKey === undefined) {
+            throw new Error('Required parameter idempotencyKey was null or undefined when calling createPaperLimitPreview.');
+        }
+        if (paperLimitPreviewRequestV1 === null || paperLimitPreviewRequestV1 === undefined) {
+            throw new Error('Required parameter paperLimitPreviewRequestV1 was null or undefined when calling createPaperLimitPreview.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (idempotencyKey !== undefined && idempotencyKey !== null) {
+            localVarHeaders = localVarHeaders.set('Idempotency-Key', String(idempotencyKey));
+        }
+
+        // authentication (LocalSession) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json',
+            'application/problem+json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/paper/order-previews`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<PaperLimitPreviewV1>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: paperLimitPreviewRequestV1,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

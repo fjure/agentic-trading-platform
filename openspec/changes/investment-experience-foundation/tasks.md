@@ -4,11 +4,11 @@ Alle Pakete sind offen. Gesonderter Applyauftrag erforderlich; Abhängigkeiten u
 
 ## 1. Experience Architecture und API Contracts
 
-- [ ] 1.1 [IEF-01](work-packages/IEF-01.md) Additive Experience- und Previewverträge aus design.md D1-D6, Schemas/Problemcodes/Beispiele/Operationenmatrix, gepinnter Angular Router, Shell-Routebasis und sichere Legacy-Linkadapter. Vertrag zuerst, keine Stub-Routen zum Vortäuschen von Fähigkeiten. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen. Verbindlichen klickbaren Screen-Flow vor Übergabe an Featurepakete gemäß IEF-T-C06 abnehmen.
+- [ ] 1.1 [IEF-01](work-packages/IEF-01.md) Additive Experience- und Previewverträge aus design.md D1-D6, Schemas/Problemcodes/Beispiele/Operationenmatrix, gepinnter Angular Router, Shell-Routebasis und sichere Legacy-Linkadapter. Vertrag zuerst, keine Stub-Routen zum Vortäuschen von Fähigkeiten. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen. Klickbaren Screen-Flow gemäß IEF-T-C06 technisch prüfen und für die formative Prüfung in IEF-09 sichern.
 
 ## 2. Guided Onboarding
 
-- [ ] 2.1 [IEF-02](work-packages/IEF-02.md) Actor-gebundene versionierte Präferenzen, strukturierte freiwillige Fragen, skip/complete/unseen, Resume/Reset und Demoauswahl; Materialstepper mit Status-/Fehleransage. Backend und UI zusammen liefern. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen. Menschlichen Onboardingtest gemäß IEF-T-O05 belegen.
+- [ ] 2.1 [IEF-02](work-packages/IEF-02.md) Actor-gebundene versionierte Präferenzen, strukturierte freiwillige Fragen, skip/complete/unseen, Resume/Reset und Demoauswahl; Materialstepper mit Status-/Fehleransage. Backend und UI zusammen liefern. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen. Testfähige Onboarding-Teilstrecke für den menschlichen Nachweis IEF-T-O05 in IEF-09 bereitstellen.
 
 ## 3. Portfolio Hub
 
@@ -32,12 +32,16 @@ Alle Pakete sind offen. Gesonderter Applyauftrag erforderlich; Abhängigkeiten u
 
 ## 8. Personal Cockpit und Activity Timeline
 
-- [ ] 8.1 [IEF-08](work-packages/IEF-08.md) Gemeinsame Navigation, zehn Screens, Dashboardkarten und quellengebundene Timeline mit Cursor/Filter, progressive Details, Legacylinks und direkte Betriebskontrollen. Keine clientseitige Fachaggregation. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen. Freigegebenen frühen Flow integrieren und Fehlerzustände gemäß IEF-T-C07 prüfen.
+- [ ] 8.1 [IEF-08](work-packages/IEF-08.md) Gemeinsame Navigation, zehn Screens, Dashboardkarten und quellengebundene Timeline mit Cursor/Filter, progressive Details, Legacylinks und direkte Betriebskontrollen. Keine clientseitige Fachaggregation. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen. Technisch geprüften frühen Flow integrieren und Fehlerzustände gemäß IEF-T-C07 prüfen.
 
 ## 9. Integrated Experience Acceptance
 
-- [ ] 9.1 [IEF-09](work-packages/IEF-09.md) Sechs vollständige Journeys mit echtem Angularbuild/API/tempPG/Research/Quant und synthetischen Provider-/Paperdoubles, verbindliche CIauswahl, Manifeste, Deployment/Rollback/Recovery und unabhängige Reviews. Kein erneutes Sammeln zuvor geschuldeter Pakettests. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen. Separaten menschlichen Usability-Nachweis gemäß IEF-T-C08 abnehmen.
+- [ ] 9.1 [IEF-09](work-packages/IEF-09.md) Sechs vollständige Journeys mit echtem Angularbuild/API/tempPG/Research/Quant und synthetischen Provider-/Paperdoubles, verbindliche CIauswahl, Manifeste, Deployment/Rollback/Recovery und unabhängige Reviews. Kein erneutes Sammeln zuvor geschuldeter Pakettests. Verifikation: paketbezogene Positiv-/Negativfälle, Dokumentation und unabhängigen Review gemäß Work Package nachweisen. Menschliche Prüfungen IEF-T-C06, IEF-T-O05 und IEF-T-C08 gebündelt durchführen und separat belegen.
 
 ## Workflow follow-up
 
 - Main-Spec-Sync und Archivierung nur auf gesonderten Auftrag; Propose führt kein Apply aus.
+
+## Apply-Nachweis
+
+Nutzerauftrag für Apply liegt vor. Menschliche Testpersonen sind laut Nutzer derzeit nicht verfügbar: **HUMAN_UX_VALIDATION_PENDING**. Der technische IEF-01-Stand, verbleibende Pflichtnachweise und die davon abhängigen Pakete sind in [Apply-Status](../../../docs/evidence/ief-apply-status.md) dokumentiert. Die menschlichen Prüfungen sind in IEF-09 gebündelt. Die Checkboxes folgen dem jeweiligen technischen Paketabschluss, bei IEF-09 zusätzlich der vollständigen menschlichen Abnahme.
